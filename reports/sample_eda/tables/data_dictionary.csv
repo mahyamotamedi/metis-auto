@@ -1,0 +1,16 @@
+field,observed_type,grain,observed_presence_or_missingness,meaning_and_uncertainty
+category,str,category bucket,4 buckets; 25 sessions each,Opaque stratum; meaning intentionally undocumented
+session_id,str,session,0 missing in parsed sample,100 unique values observed
+created_at,str/datetime,session,0 missing in parsed sample,Naive ISO-like timestamp; timezone absent
+session_len,int,session,0 missing in parsed sample,Matches message array size in this sample
+user_turns,int,session,0 missing in parsed sample,Declared count matches parsed roles in sample
+bot_turns,int,session,0 missing in parsed sample,Declared count matches parsed roles in sample
+role,str,message,0 missing in parsed sample,"Observed values: user, bot"
+content,str,message,0 missing in parsed sample,May contain serialized payloads; sensitive text retained only in memory
+timestamp,str/datetime,message,0 missing in parsed sample,Naive ISO-like timestamp; not an API latency guarantee
+model,str/null,bot message,27/442 bot values null,'default' and workflow entries are not normalized away
+provider,str/null,bot message,27/442 bot values null,"Provider labels are export values, not verified billing entities"
+instructions,str/null,bot message,27 null among 442 bot records,Unverified metadata; analyzed separately from request/context totals
+rag,dict,bot message,71/442 bot records,Contains query and context; absence does not prove retrieval was unused
+attachments,list,message,14/907 messages,Observed only on user messages; payload/URLs excluded from outputs
+input,dict,bot message,29/442 bot records,Items-based uncertain proxy for structured-input configuration

@@ -1,0 +1,4 @@
+check,sessions
+month differs,1
+absolute gap >1h,5
+first message precedes created_at,1

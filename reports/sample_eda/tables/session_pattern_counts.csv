@@ -1,0 +1,8 @@
+pattern,sessions,percent
+one user turn,0,0.0
+multiple user turns,100,100.0
+retrieval metadata,24,24.0
+attachment,5,5.0
+input-config proxy,8,8.0
+multiple models,0,0.0
+multiple providers,0,0.0

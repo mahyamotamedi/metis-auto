@@ -1,0 +1,8 @@
+opportunity,sample evidence,classification,not shown
+Semantic caching,21 exact-repeat groups; 76 user-message occurrences,Suggestive; validate safety/scale,"Safe hits, production rate, quality, savings"
+Intelligent routing,Multiple model/provider labels; prompt size 2–4666 chars and varied proxies,Suggestive; compare matched outcomes,Cheaper model preserves quality or improves latency
+Context optimization,71 bot messages with RAG; context lengths vary,Suggestive; test ablations,Context can be removed without quality loss
+Model/provider selection,18 model and 7 provider labels,Direct: usage heterogeneity only,"Relative price, capability, or waste"
+User model-selection burden,"No preference, user-selected model, satisfaction, or abandonment field",Cannot evaluate,Whether users want automation
+Cost/quality/true latency,"No verified billing, price, quality, or lifecycle latency fields",Cannot evaluate,"Dollar savings, quality preservation, API latency"
+Observability,"Some model/provider, timestamp, prompt, and optional RAG fields",Direct: candidate dimensions only,"Tokens saved, cost avoided, quality maintained"

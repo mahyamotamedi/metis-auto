@@ -1,0 +1,4 @@
+normalization,groups,occurrences,percent_user_messages,groups_cross_session
+literal exact,21,76,16.344086021505376,11
+whitespace collapse,21,76,16.344086021505376,11
+NFKC/casefold/whitespace,21,76,16.344086021505376,11

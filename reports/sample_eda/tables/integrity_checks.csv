@@ -1,0 +1,7 @@
+check,count,interpretation
+duplicate session ID occurrences,0,Expect 0
+declared session counter mismatches,0,Expect 0 across three counters per session
+unexpected message roles,0,Expect 0 if role vocabulary is stable
+unparseable message timestamps,0,Expect 0; naive timestamps remain timezone-ambiguous
+within-session timestamp decreases,0,May indicate ordering or export issues; equal timestamps allowed
+empty message content,0,Inspect as structural edge cases

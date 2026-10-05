@@ -1,0 +1,3 @@
+query_language,retrieval_messages,median_context_chars,p90_context_chars
+Persian-script,67,1420.0,4019.0
+mixed Persian/English,4,2746.5,3902.3
