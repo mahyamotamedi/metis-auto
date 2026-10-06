@@ -1,0 +1,8 @@
+﻿metric,document,observed,agrees
+sessions,100,100,True
+messages,907,907,True
+models_non_null,18,18,True
+providers_non_null,7,7,True
+rag_messages,71,71,True
+input_messages,29,29,True
+attachment_messages,14,14,True

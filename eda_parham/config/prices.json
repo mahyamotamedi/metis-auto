@@ -1,0 +1,17 @@
+{
+  "currency": "USD",
+  "status": "hypothetical_not_market_prices",
+  "source": null,
+  "as_of": null,
+  "premium_input_per_million": 5.0,
+  "premium_output_per_million": 15.0,
+  "economy_input_per_million": 0.15,
+  "economy_output_per_million": 0.6,
+  "classifier_per_request": 0.00001,
+  "retrieval_per_request": 0.0001,
+  "embedding_per_request": 0.00002,
+  "cache_lookup_per_request": 0.000001,
+  "escalation_rate": 0.2,
+  "judge_per_cascade_request": 0.00002,
+  "characters_per_token": 4.0
+}

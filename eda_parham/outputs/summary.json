@@ -1,0 +1,12 @@
+{
+  "sessions": 100,
+  "messages": 907,
+  "user_messages": 465,
+  "bot_messages": 442,
+  "groups": 4,
+  "rag_messages": 71,
+  "input_messages": 29,
+  "attachment_messages": 14,
+  "models_non_null": 18,
+  "providers_non_null": 7
+}

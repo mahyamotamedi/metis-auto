@@ -1,0 +1,12 @@
+﻿scope,issue,field,count,denominator,percent,example
+message,before_session_created,timestamp,2,907,0.2205071664829107,2026-04-15T06:25:54
+message,consecutive_role,role,19,907,2.094818081587652,user
+message,duplicate_message_content,content,75,907,8.26901874310915,مشکل یا سوالتون رو مطرح کنید تا بتونم راهنماییتون کنم.
+message,empty_string,instructions,7,442,1.583710407239819,
+message,invalid_json_like,content,8,907,0.8820286659316428,"{""size"":76,""new_price"":[NATIONAL_ID],""has_loan"":false,""cabinet_material"":[],""occupancy_status"":""تخلیه"",""elevator"":""true"",""price"":{""mode"":""مق"
+message,mixed_text_json,content,32,907,3.528114663726571,"{""ownership_transfer"":""بله"",""successfully_inspected_by_ai"":false,""price"":{""mode"":""مقطوع"",""value"":225000000},""camera_status"":""ok"",""status"":""l"
+message,null,instructions,27,442,6.108597285067873,
+message,null,model,27,442,6.108597285067873,
+message,null,provider,27,442,6.108597285067873,
+message,orphan_response,role,6,907,0.6615214994487321,Error
+request,unanswered_request,role,19,465,4.086021505376344,تخلف یک راننده رو می خواستم گزارش بدهم

@@ -1,0 +1,6 @@
+﻿scenario,requests,total_usd_estimate,mean_usd_estimate,assumptions_status
+premium_all,422,7.123273749999999,0.016879795616113743,hypothetical_not_market_prices
+economy_all,422,0.22793723749999997,0.0005401356338862558,hypothetical_not_market_prices
+feature_routing,422,4.2038537,0.009961738625592416,hypothetical_not_market_prices
+routing_text_cache_simulated,422,4.2004018499999995,0.009953558886255922,hypothetical_not_market_prices
+cascade_expected,422,1.6652519875,0.003946094757109005,hypothetical_not_market_prices

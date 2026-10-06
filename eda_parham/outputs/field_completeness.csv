@@ -1,0 +1,30 @@
+﻿path,parent_objects,present,absent,null,empty_string,empty_container,nonempty,example
+root[].category,4,4,0,0,0,0,4,developer_pegahdev
+root[].sessions,4,4,0,0,0,0,4,"[{""bot_turns"": 3, ""created_at"": ""2026-03-02T19:31:46"", ""messages"": [{""content"": ""این اطلاعات سلامت من است: \\n نام: [NAME]\\nوضعیت تاهل: مجر"
+root[].sessions[].bot_turns,100,100,0,0,0,0,100,3
+root[].sessions[].created_at,100,100,0,0,0,0,100,2026-03-02T19:31:46
+root[].sessions[].messages,100,100,0,0,0,0,100,"[{""content"": ""این اطلاعات سلامت من است: \\n نام: [NAME]\\nوضعیت تاهل: مجرد\\nوضعیت تحصیل: دانشجو\\nوضعیت پریود: منظم ¦ آخرین دوره قاعدگی کار"
+root[].sessions[].session_id,100,100,0,0,0,0,100,sess_dd1f3903
+root[].sessions[].session_len,100,100,0,0,0,0,100,6
+root[].sessions[].user_turns,100,100,0,0,0,0,100,3
+root[].sessions[].messages[].attachments,907,14,893,0,0,0,14,"[{""content"": ""https://s100.divarcdn.com/static/photo/neda/post/j4kSWQThMfMoKlAHzVEZbQ/aa4df72d-b818-444c-8511-7b3bb0585ef7.jpg"", ""contentTyp"
+root[].sessions[].messages[].content,907,907,0,0,0,0,907,این اطلاعات سلامت من است: \n نام: [NAME]\nوضعیت تاهل: مجرد\nوضعیت تحصیل: دانشجو\nوضعیت پریود: منظم ¦ آخرین دوره قاعدگی کاربر: یک دوره 28 روز
+root[].sessions[].messages[].input,907,29,878,0,0,0,29,"{""items"": [{""choices"": [""تبلیغ‌دهنده"", ""ناشر""], ""default"": null, ""label"": ""Deterministic Transition"", ""name"": ""tapsell_user_type"", ""placehol"
+root[].sessions[].messages[].instructions,907,442,465,27,7,0,408,🎯 هویت ربات  شما «علامه» هستید؛ ربات رسمی پزشکی اپلیکیشن سلامت بانوان لیوم. به زبان‌های فارسی، عربی، انگلیسی و ترکی مسلط هستید و همیشه به زب
+root[].sessions[].messages[].model,907,442,465,27,0,0,415,gpt-4.1-mini
+root[].sessions[].messages[].provider,907,442,465,27,0,0,415,openai_chat_completion
+root[].sessions[].messages[].rag,907,71,836,0,0,0,71,"{""context"": [""در صورتی که راننده درباره نوتیفیکیشن‌ها سؤالی داشت یا با مشکلی مواجه شد، به او اطلاع دهید که حتماً درخواست ایشان ثبت میشه و هم"
+root[].sessions[].messages[].role,907,907,0,0,0,0,907,user
+root[].sessions[].messages[].timestamp,907,907,0,0,0,0,907,2026-03-02T19:31:47
+root[].sessions[].messages[].attachments[].content,15,15,0,0,0,0,15,https://s100.divarcdn.com/static/photo/neda/post/j4kSWQThMfMoKlAHzVEZbQ/aa4df72d-b818-444c-8511-7b3bb0585ef7.jpg
+root[].sessions[].messages[].attachments[].contentType,15,15,0,0,0,0,15,IMAGE
+root[].sessions[].messages[].input.items,29,29,0,0,0,0,29,"[{""choices"": [""تبلیغ‌دهنده"", ""ناشر""], ""default"": null, ""label"": ""Deterministic Transition"", ""name"": ""tapsell_user_type"", ""placeholder"": null"
+root[].sessions[].messages[].input.items[].choices,29,29,0,0,0,0,29,"[""تبلیغ‌دهنده"", ""ناشر""]"
+root[].sessions[].messages[].input.items[].default,29,29,0,29,0,0,0,
+root[].sessions[].messages[].input.items[].label,29,29,0,0,16,0,13,Deterministic Transition
+root[].sessions[].messages[].input.items[].name,29,29,0,0,20,0,9,tapsell_user_type
+root[].sessions[].messages[].input.items[].placeholder,29,29,0,29,0,0,0,
+root[].sessions[].messages[].input.items[].required,29,29,0,0,0,0,29,true
+root[].sessions[].messages[].input.items[].type,29,29,0,0,0,0,29,SINGLE_CHOICE
+root[].sessions[].messages[].rag.context,71,71,0,0,0,0,71,"[""در صورتی که راننده درباره نوتیفیکیشن‌ها سؤالی داشت یا با مشکلی مواجه شد، به او اطلاع دهید که حتماً درخواست ایشان ثبت میشه و همکاران پشتیبا"
+root[].sessions[].messages[].rag.query,71,71,0,0,0,0,71,پیگیری تماس کارشناسان
