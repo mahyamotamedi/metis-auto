@@ -46,9 +46,23 @@ def load_sessions(path: str | Path = DEFAULT_DATA_PATH) -> tuple[list[dict[str, 
     if not isinstance(categories, list):
         raise ValueError("Expected the JSON root to be a list of category objects")
     sessions = []
-    for category in categories:
+    for category_index, category in enumerate(categories):
+        if not isinstance(category, dict):
+            raise ValueError(f"Expected category {category_index} to be an object")
         label = category.get("category")
-        for session in category.get("sessions", []):
+        category_sessions = category.get("sessions", [])
+        if not isinstance(category_sessions, list):
+            raise ValueError(f"Expected sessions in category {category_index} to be a list")
+        for session_index, session in enumerate(category_sessions):
+            if not isinstance(session, dict):
+                raise ValueError(
+                    f"Expected session {session_index} in category {category_index} to be an object"
+                )
+            messages = session.get("messages", [])
+            if not isinstance(messages, list) or any(not isinstance(message, dict) for message in messages):
+                raise ValueError(
+                    f"Expected messages in session {session_index} of category {category_index} to be a list of objects"
+                )
             sessions.append({"category": label, "session": session})
     return categories, sessions
 
@@ -142,21 +156,19 @@ def add_text_features(frame: pd.DataFrame, text_column: str = "content") -> pd.D
     normalized = text.str.replace(r"\s+", " ", regex=True).str.strip()
     result["char_count"] = text.str.len()
     result["normalized_char_count"] = normalized.str.len()
-    result["word_count"] = text.map(lambda x: len(WORD_RE.findall(x)))
-    result["line_count"] = text.map(lambda x: 0 if not x else x.count("\n") + 1)
+    result["word_count"] = text.map(_word_count)
+    result["line_count"] = text.map(_line_count)
     result["newline_count"] = text.str.count("\n")
-    result["sentence_count_approx"] = text.map(
-        lambda x: sum(x.count(mark) for mark in (".", "!", "?", "؟", "۔")) or (1 if x.strip() else 0)
-    )
-    result["punctuation_count"] = text.map(lambda x: sum(unicodedata.category(ch).startswith("P") for ch in x))
-    result["digit_count"] = text.map(lambda x: sum(ch.isdigit() for ch in x))
-    result["question_mark_count"] = text.map(lambda x: x.count("?") + x.count("؟"))
-    result["has_url"] = text.map(lambda x: bool(URL_RE.search(x)))
-    result["has_code_like_text"] = text.map(lambda x: bool(CODE_RE.search(x)))
+    result["sentence_count_approx"] = text.map(_sentence_count)
+    result["punctuation_count"] = text.map(_punctuation_count)
+    result["digit_count"] = text.map(_digit_count)
+    result["question_mark_count"] = text.str.count(r"\?") + text.str.count("؟")
+    result["has_url"] = text.map(_contains_url)
+    result["has_code_like_text"] = text.map(_contains_code)
     result["has_fenced_code"] = text.str.contains("```", regex=False)
-    result["has_markdown_like_formatting"] = text.map(lambda x: bool(MARKDOWN_RE.search(x)))
-    result["persian_char_count"] = text.map(lambda x: len(PERSIAN_RE.findall(x)))
-    result["latin_char_count"] = text.map(lambda x: len(LATIN_RE.findall(x)))
+    result["has_markdown_like_formatting"] = text.map(_contains_markdown)
+    result["persian_char_count"] = text.map(_persian_character_count)
+    result["latin_char_count"] = text.map(_latin_character_count)
     denominator = result["persian_char_count"] + result["latin_char_count"]
     result["persian_char_proportion"] = np.where(denominator > 0, result["persian_char_count"] / denominator, np.nan)
     result["latin_char_proportion"] = np.where(denominator > 0, result["latin_char_count"] / denominator, np.nan)
@@ -166,6 +178,131 @@ def add_text_features(frame: pd.DataFrame, text_column: str = "content") -> pd.D
     result["is_extremely_long"] = result["char_count"] >= 5000
     result["approx_tokens_char_div4"] = text.map(approximate_tokens)
     return result
+
+
+def _word_count(text: str) -> int:
+    return len(WORD_RE.findall(text))
+
+
+def _line_count(text: str) -> int:
+    return 0 if not text else text.count("\n") + 1
+
+
+def _sentence_count(text: str) -> int:
+    sentence_marks = (".", "!", "?", "؟", "۔")
+    return sum(text.count(mark) for mark in sentence_marks) or int(bool(text.strip()))
+
+
+def _punctuation_count(text: str) -> int:
+    return sum(unicodedata.category(char).startswith("P") for char in text)
+
+
+def _digit_count(text: str) -> int:
+    return sum(char.isdigit() for char in text)
+
+
+def _contains_url(text: str) -> bool:
+    return bool(URL_RE.search(text))
+
+
+def _contains_code(text: str) -> bool:
+    return bool(CODE_RE.search(text))
+
+
+def _contains_markdown(text: str) -> bool:
+    return bool(MARKDOWN_RE.search(text))
+
+
+def _persian_character_count(text: str) -> int:
+    return len(PERSIAN_RE.findall(text))
+
+
+def _latin_character_count(text: str) -> int:
+    return len(LATIN_RE.findall(text))
+
+
+def _short_hash(value: Any) -> str:
+    """Return a short stable identifier without exposing the source value."""
+    return hashlib.sha256(str(value).encode("utf-8")).hexdigest()[:10]
+
+
+def percentile_90(values: pd.Series) -> float:
+    """Return the 90th percentile for use in named pandas aggregations."""
+    available = values.dropna()
+    return float(available.quantile(0.90)) if not available.empty else float("nan")
+
+
+def most_common_value(values: pd.Series, default: str = "other/unknown") -> str:
+    """Return the first mode, or a stable fallback when no value is present."""
+    modes = values.dropna().mode()
+    return str(modes.iloc[0]) if not modes.empty else default
+
+
+def pair_bot_responses_with_preceding_users(
+    messages: pd.DataFrame,
+    user_requests: pd.DataFrame,
+) -> pd.DataFrame:
+    """Attach each bot message to the latest earlier user message in its session.
+
+    Matching uses message order rather than timestamps, which may be equal or
+    timezone-naive. Bot responses without a preceding user message are retained
+    with missing request features.
+    """
+    bots = messages.loc[messages["role"].eq("bot")].copy()
+    users = user_requests.loc[user_requests["role"].eq("user")].copy()
+    request_columns = [
+        "session_id",
+        "message_index",
+        "message_id",
+        "char_count",
+        "language",
+        "has_code_like_text",
+        "exploratory_complexity_score",
+    ]
+    user_lookup = users[request_columns].rename(
+        columns={
+            "message_index": "request_message_index",
+            "message_id": "request_message_id",
+            "char_count": "request_char_count",
+            "language": "request_language",
+            "has_code_like_text": "request_has_code_like_text",
+            "exploratory_complexity_score": "request_complexity_score",
+        }
+    )
+    user_lookup = user_lookup.sort_values(["session_id", "request_message_index"])
+    paired_groups = []
+    for session_id, bot_group in bots.groupby("session_id", sort=False, dropna=False):
+        bot_group = bot_group.copy()
+        session_users = user_lookup.loc[user_lookup["session_id"].eq(session_id)]
+        bot_group = bot_group.reset_index(drop=True)
+        feature_columns = user_lookup.columns.drop("session_id")
+        if session_users.empty:
+            for column in feature_columns:
+                bot_group[column] = np.nan
+            paired_groups.append(bot_group)
+            continue
+        request_indices = session_users["request_message_index"].to_numpy()
+        preceding_positions = np.searchsorted(
+            request_indices,
+            bot_group["message_index"].to_numpy(),
+            side="left",
+        ) - 1
+        matched_users = session_users.iloc[np.maximum(preceding_positions, 0)].reset_index(drop=True)
+        has_preceding_user = preceding_positions >= 0
+        matched_users[feature_columns] = matched_users[feature_columns].astype(object)
+        matched_users.loc[~has_preceding_user, feature_columns] = np.nan
+        for column in feature_columns:
+            bot_group[column] = matched_users[column].to_numpy()
+        paired_groups.append(bot_group)
+    if not paired_groups:
+        return bots.assign(
+            request_message_id=pd.Series(dtype="object"),
+            request_char_count=pd.Series(dtype="float64"),
+            request_language=pd.Series(dtype="object"),
+            request_has_code_like_text=pd.Series(dtype="object"),
+            request_complexity_score=pd.Series(dtype="float64"),
+        )
+    return pd.concat(paired_groups, ignore_index=True)
 
 
 def build_session_dataframe(sessions: Iterable[dict[str, Any]], messages: pd.DataFrame) -> pd.DataFrame:
@@ -275,13 +412,13 @@ def analyze_request_heuristics(frame: pd.DataFrame) -> pd.DataFrame:
     text = result["content"].fillna("")
     # Keywords are intentionally broad and multilingual-light; overlap is possible.
     patterns = {
-        "coding": r"\b(code|python|javascript|sql|bug|function|api|html|css)\b|کد|برنامه نویسی|خطا",
-        "math": r"\b(math|calculate|equation|sum|integral|probability)\b|ریاضی|حساب کن|محاسبه",
-        "translation": r"\b(translate|translation)\b|ترجمه",
-        "rewrite_edit": r"\b(rewrite|edit|proofread|improve this text)\b|بازنویسی|ویرایش|اصلاح متن",
-        "summarization": r"\b(summarize|summary|tl;dr)\b|خلاصه|خلاصه کن",
-        "structured_output": r"\b(json|yaml|xml|csv|table|schema)\b|خروجی ساختاریافته",
-        "long_form_generation": r"\b(write an article|essay|long form|detailed report)\b|مقاله بنویس|گزارش مفصل",
+        "coding": r"\b(?:code|python|javascript|sql|bug|function|api|html|css)\b|کد|برنامه نویسی|خطا",
+        "math": r"\b(?:math|calculate|equation|sum|integral|probability)\b|ریاضی|حساب کن|محاسبه",
+        "translation": r"\b(?:translate|translation)\b|ترجمه",
+        "rewrite_edit": r"\b(?:rewrite|edit|proofread|improve this text)\b|بازنویسی|ویرایش|اصلاح متن",
+        "summarization": r"\b(?:summarize|summary|tl;dr)\b|خلاصه|خلاصه کن",
+        "structured_output": r"\b(?:json|yaml|xml|csv|table|schema)\b|خروجی ساختاریافته",
+        "long_form_generation": r"\b(?:write an article|essay|long form|detailed report)\b|مقاله بنویس|گزارش مفصل",
     }
     for label, pattern in patterns.items():
         result[f"heuristic_{label}"] = user_mask & text.str.contains(pattern, case=False, regex=True, na=False)
@@ -289,7 +426,7 @@ def analyze_request_heuristics(frame: pd.DataFrame) -> pd.DataFrame:
         result["char_count"].ge(500).astype(int)
         + result["sentence_count_approx"].ge(3).astype(int)
         + result["has_code_like_text"].astype(int)
-        + text.map(lambda value: len(INSTRUCTION_RE.findall(value)) >= 2).astype(int)
+        + text.map(_has_multiple_instruction_markers).astype(int)
     )
     result["exploratory_complexity_score"] = np.where(user_mask, complexity, np.nan)
     result["complexity_band"] = pd.cut(
@@ -297,6 +434,10 @@ def analyze_request_heuristics(frame: pd.DataFrame) -> pd.DataFrame:
     ).astype("object")
     result.loc[~user_mask, "complexity_band"] = np.nan
     return result
+
+
+def _has_multiple_instruction_markers(text: str) -> bool:
+    return len(INSTRUCTION_RE.findall(text)) >= 2
 
 
 def normalize_exact(text: str) -> str:
@@ -351,9 +492,7 @@ def near_duplicate_pairs(frame: pd.DataFrame, minimum_similarity: float = 0.55) 
     normalized_values = users["content"].map(normalize_safe).to_numpy()
     exact_normalized = normalized_values[upper_i] == normalized_values[upper_j]
     select = scores >= minimum_similarity
-    session_hashes = users["session_id"].map(
-        lambda value: hashlib.sha256(str(value).encode("utf-8")).hexdigest()[:10]
-    ).to_numpy()
+    session_hashes = users["session_id"].map(_short_hash).to_numpy()
     pairs = pd.DataFrame(
         {
             "left_message_id": users.loc[upper_i[select], "message_id"].to_numpy(),
@@ -376,7 +515,7 @@ def context_features(messages: pd.DataFrame) -> pd.DataFrame:
     retrieval = messages[messages["has_rag"]].copy()
     retrieval["context_text"] = retrieval["rag_context"].map(_context_as_text)
     retrieval["context_chars"] = retrieval["context_text"].str.len()
-    retrieval["context_words"] = retrieval["context_text"].map(lambda value: len(WORD_RE.findall(value)))
+    retrieval["context_words"] = retrieval["context_text"].map(_word_count)
     retrieval["context_approx_tokens_char_div4"] = retrieval["context_text"].map(approximate_tokens)
     retrieval["rag_query_chars"] = retrieval["rag_query"].fillna("").astype(str).str.len()
     retrieval["context_to_query_char_ratio"] = np.where(
@@ -385,29 +524,89 @@ def context_features(messages: pd.DataFrame) -> pd.DataFrame:
     return retrieval
 
 
-def data_dictionary(categories: list[dict[str, Any]], messages: pd.DataFrame, sessions: pd.DataFrame) -> pd.DataFrame:
-    """Construct a concise dictionary from observed fields and known semantics."""
-    rows = [
-        ("category", "str", "category bucket", "4 buckets; 25 sessions each", "Opaque stratum; meaning intentionally undocumented"),
-        ("session_id", "str", "session", "0 missing in parsed sample", "100 unique values observed"),
-        ("created_at", "str/datetime", "session", "0 missing in parsed sample", "Naive ISO-like timestamp; timezone absent"),
-        ("session_len", "int", "session", "0 missing in parsed sample", "Matches message array size in this sample"),
-        ("user_turns", "int", "session", "0 missing in parsed sample", "Declared count matches parsed roles in sample"),
-        ("bot_turns", "int", "session", "0 missing in parsed sample", "Declared count matches parsed roles in sample"),
-        ("role", "str", "message", "0 missing in parsed sample", "Observed values: user, bot"),
-        ("content", "str", "message", "0 missing in parsed sample", "May contain serialized payloads; sensitive text retained only in memory"),
-        ("timestamp", "str/datetime", "message", "0 missing in parsed sample", "Naive ISO-like timestamp; not an API latency guarantee"),
-        ("model", "str/null", "bot message", "27/442 bot values null", "'default' and workflow entries are not normalized away"),
-        ("provider", "str/null", "bot message", "27/442 bot values null", "Provider labels are export values, not verified billing entities"),
-        ("instructions", "str/null", "bot message", "27 null among 442 bot records", "Unverified metadata; analyzed separately from request/context totals"),
-        ("rag", "dict", "bot message", "71/442 bot records", "Contains query and context; absence does not prove retrieval was unused"),
-        ("attachments", "list", "message", "14/907 messages", "Observed only on user messages; payload/URLs excluded from outputs"),
-        ("input", "dict", "bot message", "29/442 bot records", "Items-based uncertain proxy for structured-input configuration"),
-    ]
-    return pd.DataFrame(rows, columns=["field", "observed_type", "grain", "observed_presence_or_missingness", "meaning_and_uncertainty"])
+def data_dictionary(categories: list[dict[str, Any]]) -> pd.DataFrame:
+    """Build a data-driven dictionary for the fields present in raw records."""
+    descriptions = {
+        "category": ("category bucket", "Opaque stratum; meaning intentionally undocumented"),
+        "session_id": ("session", "Session identifier; uniqueness is checked separately"),
+        "created_at": ("session", "Naive timestamp; timezone semantics are unknown"),
+        "session_len": ("session", "Declared message count; compared with parsed messages"),
+        "user_turns": ("session", "Declared user-message count; checked against roles"),
+        "bot_turns": ("session", "Declared bot-message count; checked against roles"),
+        "role": ("message", "Observed message role"),
+        "content": ("message", "Text payload; potentially sensitive and kept in memory"),
+        "timestamp": ("message", "Naive message timestamp; not an API latency guarantee"),
+        "model": ("bot message", "Logged model label; default/workflow labels are retained"),
+        "provider": ("bot message", "Logged provider label; not verified billing identity"),
+        "instructions": ("bot message", "Unverified metadata, separate from message content"),
+        "rag": ("bot message", "Retrieval metadata; absence does not prove retrieval was unused"),
+        "attachments": ("message", "Attachment metadata; payloads/URLs excluded from outputs"),
+        "input": ("bot message", "Items-based proxy; configuration semantics are uncertain"),
+    }
+    records_by_level = {
+        "category": [(record, "category") for record in categories],
+        "session": [
+            (session, "session")
+            for category in categories
+            for session in category.get("sessions", [])
+        ],
+        "message": [
+            (message, "message")
+            for category in categories
+            for session in category.get("sessions", [])
+            for message in session.get("messages", [])
+        ],
+    }
+    rows = []
+    for records in records_by_level.values():
+        fields = sorted({key for record, _ in records for key in record})
+        for field in fields:
+            values = [record[field] for record, _ in records if field in record]
+            non_null = [value for value in values if value is not None]
+            types = sorted({_python_type_name(value) for value in non_null})
+            null_count = len(values) - len(non_null)
+            description = descriptions.get(field, ("unverified", "Meaning not documented"))
+            rows.append(
+                {
+                    "field": field,
+                    "observed_type": "/".join(types) if types else "unknown",
+                    "grain": description[0],
+                    "observed_presence_or_missingness": (
+                        f"{len(values)}/{len(records)} have field; {null_count} null values"
+                    ),
+                    "meaning_and_uncertainty": description[1],
+                }
+            )
+    return pd.DataFrame(
+        rows,
+        columns=[
+            "field",
+            "observed_type",
+            "grain",
+            "observed_presence_or_missingness",
+            "meaning_and_uncertainty",
+        ],
+    )
 
 
-def schema_summary(categories: list[dict[str, Any]], messages: pd.DataFrame) -> pd.DataFrame:
+def _python_type_name(value: Any) -> str:
+    """Return a concise type label for values in the raw JSON schema."""
+    if isinstance(value, bool):
+        return "bool"
+    if isinstance(value, int):
+        return "int"
+    if isinstance(value, float):
+        return "float"
+    if isinstance(value, str):
+        return "str"
+    if isinstance(value, dict):
+        return "dict"
+    if isinstance(value, list):
+        return "list"
+    return type(value).__name__
+
+
+def schema_summary(categories: list[dict[str, Any]]) -> pd.DataFrame:
     """Summarize the top-level and nested record shapes without exposing values."""
     rows = []
     for level, records in (

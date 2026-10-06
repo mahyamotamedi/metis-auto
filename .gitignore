@@ -5,3 +5,7 @@ __pycache__/
 .venv/
 venv/
 .env
+.idea/
+.vscode/
+AGENTS.md
+docs/agents/

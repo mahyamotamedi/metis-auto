@@ -1,113 +1,140 @@
-feature,model,feature_value,sessions,median_prompt_chars,median_turns
-dominant_user_language,(missing),English/Latin-script,1,305.0,6.0
-dominant_user_language,(missing),Persian-script,1,30.0,23.0
-dominant_user_language,claude-sonnet-4-6,Persian-script,7,27.5,4.0
-dominant_user_language,dalle,Persian-script,1,1104.0,2.0
-dominant_user_language,deepseek-chat,English/Latin-script,1,40.5,4.0
-dominant_user_language,deepseek-reasoner,Persian-script,1,74.5,2.0
-dominant_user_language,deepseek-v4-flash,Persian-script,21,22.0,6.0
-dominant_user_language,default,Persian-script,10,17.5,3.0
-dominant_user_language,gemini-2.0-flash,Persian-script,1,56.5,2.0
-dominant_user_language,gemini-2.5-flash,Persian-script,15,47.0,3.0
-dominant_user_language,gemini-2.5-flash-lite,Persian-script,2,59.0,9.0
-dominant_user_language,gpt-4.1,Persian-script,1,59.0,2.0
-dominant_user_language,gpt-4.1-mini,Persian-script,4,21.0,3.0
-dominant_user_language,gpt-4.1-nano,English/Latin-script,1,7.5,2.0
-dominant_user_language,gpt-4o-mini,English/Latin-script,1,1797.0,3.0
-dominant_user_language,gpt-4o-mini,Persian-script,15,23.0,4.0
-dominant_user_language,gpt-5-nano,Persian-script,3,15.0,4.0
-dominant_user_language,gpt-5.2,English/Latin-script,1,1430.0,2.0
-dominant_user_language,gpt-5.2,mixed Persian/English,2,1269.75,2.5
-dominant_user_language,gpt-5.4,English/Latin-script,3,2303.5,2.0
-dominant_user_language,grok-4-1-fast,English/Latin-script,2,565.5,2.0
-dominant_user_language,grok-4-1-fast,Persian-script,5,7.0,3.0
-dominant_user_language,o3-mini,Persian-script,1,8.0,4.0
-has_retrieval,(missing),False,2,167.5,14.5
-has_retrieval,claude-sonnet-4-6,False,2,19.0,2.5
-has_retrieval,claude-sonnet-4-6,True,5,41.0,7.0
-has_retrieval,dalle,False,1,1104.0,2.0
-has_retrieval,deepseek-chat,False,1,40.5,4.0
-has_retrieval,deepseek-reasoner,False,1,74.5,2.0
-has_retrieval,deepseek-v4-flash,False,20,23.5,6.0
-has_retrieval,deepseek-v4-flash,True,1,12.0,2.0
-has_retrieval,default,False,8,17.5,3.0
-has_retrieval,default,True,2,32.5,3.0
-has_retrieval,gemini-2.0-flash,False,1,56.5,2.0
-has_retrieval,gemini-2.5-flash,False,5,36.0,3.0
-has_retrieval,gemini-2.5-flash,True,10,47.75,3.0
-has_retrieval,gemini-2.5-flash-lite,False,2,59.0,9.0
-has_retrieval,gpt-4.1,False,1,59.0,2.0
-has_retrieval,gpt-4.1-mini,False,4,21.0,3.0
-has_retrieval,gpt-4.1-nano,True,1,7.5,2.0
-has_retrieval,gpt-4o-mini,False,16,23.25,4.0
-has_retrieval,gpt-5-nano,False,3,15.0,4.0
-has_retrieval,gpt-5.2,False,3,1430.0,2.0
-has_retrieval,gpt-5.4,False,3,2303.5,2.0
-has_retrieval,grok-4-1-fast,False,2,561.25,2.0
-has_retrieval,grok-4-1-fast,True,5,13.5,3.0
-has_retrieval,o3-mini,False,1,8.0,4.0
-has_attachment,(missing),False,1,305.0,6.0
-has_attachment,(missing),True,1,30.0,23.0
-has_attachment,claude-sonnet-4-6,False,7,27.5,4.0
-has_attachment,dalle,False,1,1104.0,2.0
-has_attachment,deepseek-chat,False,1,40.5,4.0
-has_attachment,deepseek-reasoner,False,1,74.5,2.0
-has_attachment,deepseek-v4-flash,False,21,22.0,6.0
-has_attachment,default,False,10,17.5,3.0
-has_attachment,gemini-2.0-flash,False,1,56.5,2.0
-has_attachment,gemini-2.5-flash,False,14,44.75,3.0
-has_attachment,gemini-2.5-flash,True,1,61.0,8.0
-has_attachment,gemini-2.5-flash-lite,False,2,59.0,9.0
-has_attachment,gpt-4.1,False,1,59.0,2.0
-has_attachment,gpt-4.1-mini,False,4,21.0,3.0
-has_attachment,gpt-4.1-nano,False,1,7.5,2.0
-has_attachment,gpt-4o-mini,False,16,23.25,4.0
-has_attachment,gpt-5-nano,False,1,15.0,9.0
-has_attachment,gpt-5-nano,True,2,27.25,3.0
-has_attachment,gpt-5.2,False,3,1430.0,2.0
-has_attachment,gpt-5.4,False,3,2303.5,2.0
-has_attachment,grok-4-1-fast,False,6,10.25,2.5
-has_attachment,grok-4-1-fast,True,1,1117.5,2.0
-has_attachment,o3-mini,False,1,8.0,4.0
-has_input_config_proxy,(missing),False,2,167.5,14.5
-has_input_config_proxy,claude-sonnet-4-6,False,7,27.5,4.0
-has_input_config_proxy,dalle,False,1,1104.0,2.0
-has_input_config_proxy,deepseek-chat,False,1,40.5,4.0
-has_input_config_proxy,deepseek-reasoner,False,1,74.5,2.0
-has_input_config_proxy,deepseek-v4-flash,False,21,22.0,6.0
-has_input_config_proxy,default,False,2,29.0,3.0
-has_input_config_proxy,default,True,8,17.5,3.0
-has_input_config_proxy,gemini-2.0-flash,False,1,56.5,2.0
-has_input_config_proxy,gemini-2.5-flash,False,15,47.0,3.0
-has_input_config_proxy,gemini-2.5-flash-lite,False,2,59.0,9.0
-has_input_config_proxy,gpt-4.1,False,1,59.0,2.0
-has_input_config_proxy,gpt-4.1-mini,False,4,21.0,3.0
-has_input_config_proxy,gpt-4.1-nano,False,1,7.5,2.0
-has_input_config_proxy,gpt-4o-mini,False,16,23.25,4.0
-has_input_config_proxy,gpt-5-nano,False,3,15.0,4.0
-has_input_config_proxy,gpt-5.2,False,3,1430.0,2.0
-has_input_config_proxy,gpt-5.4,False,3,2303.5,2.0
-has_input_config_proxy,grok-4-1-fast,False,7,13.5,2.0
-has_input_config_proxy,o3-mini,False,1,8.0,4.0
-code_like_any,(missing),False,1,30.0,23.0
-code_like_any,(missing),True,1,305.0,6.0
-code_like_any,claude-sonnet-4-6,False,7,27.5,4.0
-code_like_any,dalle,False,1,1104.0,2.0
-code_like_any,deepseek-chat,False,1,40.5,4.0
-code_like_any,deepseek-reasoner,False,1,74.5,2.0
-code_like_any,deepseek-v4-flash,False,21,22.0,6.0
-code_like_any,default,False,10,17.5,3.0
-code_like_any,gemini-2.0-flash,False,1,56.5,2.0
-code_like_any,gemini-2.5-flash,False,15,47.0,3.0
-code_like_any,gemini-2.5-flash-lite,False,2,59.0,9.0
-code_like_any,gpt-4.1,False,1,59.0,2.0
-code_like_any,gpt-4.1-mini,False,4,21.0,3.0
-code_like_any,gpt-4.1-nano,False,1,7.5,2.0
-code_like_any,gpt-4o-mini,False,15,23.0,4.0
-code_like_any,gpt-4o-mini,True,1,1797.0,3.0
-code_like_any,gpt-5-nano,False,3,15.0,4.0
-code_like_any,gpt-5.2,False,3,1430.0,2.0
-code_like_any,gpt-5.4,True,3,2303.5,2.0
-code_like_any,grok-4-1-fast,False,6,10.25,2.5
-code_like_any,grok-4-1-fast,True,1,1117.5,2.0
-code_like_any,o3-mini,False,1,8.0,4.0
+feature,model,feature_value,bot_messages,sessions,median_prompt_chars
+language,claude-sonnet-4-6,Persian-script,39,7,36.0
+language,deepseek-chat,English/Latin-script,1,1,35.0
+language,deepseek-reasoner,Persian-script,1,1,4.0
+language,deepseek-v4-flash,Persian-script,124,21,30.0
+language,deepseek-v4-flash,mixed Persian/English,1,1,27.0
+language,deepseek-v4-flash,other/unknown,2,1,2.0
+language,default,English/Latin-script,1,1,7.0
+language,default,Persian-script,32,10,19.0
+language,gemini-2.0-flash,Persian-script,2,1,56.5
+language,gemini-2.5-flash,English/Latin-script,2,1,6.0
+language,gemini-2.5-flash,Persian-script,47,15,48.0
+language,gemini-2.5-flash,mixed Persian/English,1,1,95.0
+language,gemini-2.5-flash-lite,Persian-script,18,2,62.0
+language,gpt-4.1,Persian-script,2,1,59.0
+language,gpt-4.1-mini,Persian-script,10,4,38.5
+language,gpt-4.1-nano,English/Latin-script,1,1,6.0
+language,gpt-4.1-nano,mixed Persian/English,1,1,9.0
+language,gpt-4o-mini,English/Latin-script,4,2,1659.0
+language,gpt-4o-mini,Persian-script,66,15,27.0
+language,gpt-4o-mini,mixed Persian/English,1,1,7.0
+language,gpt-5-nano,Persian-script,15,3,16.0
+language,gpt-5.2,English/Latin-script,2,1,1430.0
+language,gpt-5.2,mixed Persian/English,5,2,1287.0
+language,gpt-5.4,English/Latin-script,6,3,2173.5
+language,grok-4-1-fast,English/Latin-script,2,2,978.0
+language,grok-4-1-fast,Persian-script,19,6,10.0
+language,o3-mini,Persian-script,4,1,8.0
+language,,English/Latin-script,5,1,332.0
+language,,Persian-script,18,2,22.5
+language,,mixed Persian/English,4,1,47.0
+retrieval,claude-sonnet-4-6,False,4,2,26.5
+retrieval,claude-sonnet-4-6,True,35,5,36.0
+retrieval,deepseek-chat,False,1,1,35.0
+retrieval,deepseek-reasoner,False,1,1,4.0
+retrieval,deepseek-v4-flash,False,126,20,29.0
+retrieval,deepseek-v4-flash,True,1,1,20.0
+retrieval,default,False,27,8,19.0
+retrieval,default,True,6,2,15.5
+retrieval,gemini-2.0-flash,False,2,1,56.5
+retrieval,gemini-2.5-flash,False,18,5,50.5
+retrieval,gemini-2.5-flash,True,32,10,47.5
+retrieval,gemini-2.5-flash-lite,False,18,2,62.0
+retrieval,gpt-4.1,False,2,1,59.0
+retrieval,gpt-4.1-mini,False,10,4,38.5
+retrieval,gpt-4.1-nano,True,2,1,7.5
+retrieval,gpt-4o-mini,False,71,16,28.0
+retrieval,gpt-5-nano,False,15,3,16.0
+retrieval,gpt-5.2,False,7,3,1428.0
+retrieval,gpt-5.4,False,6,3,2173.5
+retrieval,grok-4-1-fast,False,3,2,6.0
+retrieval,grok-4-1-fast,True,18,5,10.0
+retrieval,o3-mini,False,4,1,8.0
+retrieval,,False,27,2,39.0
+attachment,claude-sonnet-4-6,False,39,7,36.0
+attachment,deepseek-chat,False,1,1,35.0
+attachment,deepseek-reasoner,False,1,1,4.0
+attachment,deepseek-v4-flash,False,127,21,29.0
+attachment,default,False,33,10,19.0
+attachment,gemini-2.0-flash,False,2,1,56.5
+attachment,gemini-2.5-flash,False,44,14,47.5
+attachment,gemini-2.5-flash,True,6,1,50.5
+attachment,gemini-2.5-flash-lite,False,18,2,62.0
+attachment,gpt-4.1,False,2,1,59.0
+attachment,gpt-4.1-mini,False,10,4,38.5
+attachment,gpt-4.1-nano,False,2,1,7.5
+attachment,gpt-4o-mini,False,71,16,28.0
+attachment,gpt-5-nano,False,9,1,15.0
+attachment,gpt-5-nano,True,6,2,32.5
+attachment,gpt-5.2,False,7,3,1428.0
+attachment,gpt-5.4,False,6,3,2173.5
+attachment,grok-4-1-fast,False,20,6,9.5
+attachment,grok-4-1-fast,True,1,1,1949.0
+attachment,o3-mini,False,4,1,8.0
+attachment,,False,6,1,305.0
+attachment,,True,21,1,31.0
+input_config_proxy,claude-sonnet-4-6,False,39,7,36.0
+input_config_proxy,deepseek-chat,False,1,1,35.0
+input_config_proxy,deepseek-reasoner,False,1,1,4.0
+input_config_proxy,deepseek-v4-flash,False,127,21,29.0
+input_config_proxy,default,False,6,2,14.5
+input_config_proxy,default,True,27,8,19.0
+input_config_proxy,gemini-2.0-flash,False,2,1,56.5
+input_config_proxy,gemini-2.5-flash,False,50,15,47.5
+input_config_proxy,gemini-2.5-flash-lite,False,18,2,62.0
+input_config_proxy,gpt-4.1,False,2,1,59.0
+input_config_proxy,gpt-4.1-mini,False,10,4,38.5
+input_config_proxy,gpt-4.1-nano,False,2,1,7.5
+input_config_proxy,gpt-4o-mini,False,71,16,28.0
+input_config_proxy,gpt-5-nano,False,15,3,16.0
+input_config_proxy,gpt-5.2,False,7,3,1428.0
+input_config_proxy,gpt-5.4,False,6,3,2173.5
+input_config_proxy,grok-4-1-fast,False,21,7,10.0
+input_config_proxy,o3-mini,False,4,1,8.0
+input_config_proxy,,False,27,2,39.0
+code_like,claude-sonnet-4-6,False,39,7,36.0
+code_like,deepseek-chat,False,1,1,35.0
+code_like,deepseek-reasoner,False,1,1,4.0
+code_like,deepseek-v4-flash,False,127,21,29.0
+code_like,default,False,33,10,19.0
+code_like,gemini-2.0-flash,False,2,1,56.5
+code_like,gemini-2.5-flash,False,50,15,47.5
+code_like,gemini-2.5-flash-lite,False,18,2,62.0
+code_like,gpt-4.1,False,2,1,59.0
+code_like,gpt-4.1-mini,False,10,4,38.5
+code_like,gpt-4.1-nano,False,2,1,7.5
+code_like,gpt-4o-mini,False,68,15,26.0
+code_like,gpt-4o-mini,True,3,1,1797.0
+code_like,gpt-5-nano,False,15,3,16.0
+code_like,gpt-5.2,False,7,3,1428.0
+code_like,gpt-5.4,False,3,3,424.0
+code_like,gpt-5.4,True,3,3,4170.0
+code_like,grok-4-1-fast,False,20,6,9.5
+code_like,grok-4-1-fast,True,1,1,1949.0
+code_like,o3-mini,False,4,1,8.0
+code_like,,False,25,2,35.0
+code_like,,True,2,1,366.0
+complexity,claude-sonnet-4-6,low (0-1),39,7,36.0
+complexity,deepseek-chat,low (0-1),1,1,35.0
+complexity,deepseek-reasoner,low (0-1),1,1,4.0
+complexity,deepseek-v4-flash,low (0-1),127,21,29.0
+complexity,default,low (0-1),33,10,19.0
+complexity,gemini-2.0-flash,low (0-1),2,1,56.5
+complexity,gemini-2.5-flash,low (0-1),47,15,39.0
+complexity,gemini-2.5-flash,medium (2),3,2,4416.0
+complexity,gemini-2.5-flash-lite,low (0-1),18,2,62.0
+complexity,gpt-4.1,low (0-1),2,1,59.0
+complexity,gpt-4.1-mini,low (0-1),10,4,38.5
+complexity,gpt-4.1-nano,low (0-1),2,1,7.5
+complexity,gpt-4o-mini,high (3+),3,1,1797.0
+complexity,gpt-4o-mini,low (0-1),68,15,26.0
+complexity,gpt-5-nano,low (0-1),15,3,16.0
+complexity,gpt-5.2,medium (2),7,3,1428.0
+complexity,gpt-5.4,high (3+),3,3,4170.0
+complexity,gpt-5.4,low (0-1),3,3,424.0
+complexity,grok-4-1-fast,high (3+),1,1,1949.0
+complexity,grok-4-1-fast,low (0-1),20,6,9.5
+complexity,o3-mini,low (0-1),4,1,8.0
+complexity,,low (0-1),26,2,37.0
+complexity,,medium (2),1,1,399.0
