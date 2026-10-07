@@ -1,0 +1,7 @@
+pattern,count,interpretation
+consecutive bot-role transitions,3,transcript shape only
+same-normalized-request pairs in same session,23,could be repetition; not necessarily retry
+same-session repeated-request pairs with an intervening bot,17,sequence proxy; not a retry label
+same-request pairs with different model labels,226,assignment variation; not escalation evidence
+same-request pairs with different provider labels,213,assignment variation; not failover evidence
+short (<20 chars) or error-keyword-like bot responses followed by user message,11,text/sequence proxy only

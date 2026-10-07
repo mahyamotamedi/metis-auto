@@ -1,0 +1,3 @@
+normalization,duplicate_groups,bot_messages_in_groups,percent_bot_messages,groups_cross_session,within_session_repeat_occurrences
+literal exact,13,33,7.46606334841629,4,15
+NFKC/casefold/whitespace,13,33,7.46606334841629,4,15

@@ -1,0 +1,6 @@
+candidate_screen,request_event_pairs,distinct_request_events_in_pairs,percent_of_all_user_messages_involved,distinct_prompt_groups
+stage_1_same_normalized_request,367,76,16.344086021505376,21
+stage_2_same_request_and_instruction,9,18,3.870967741935484,9
+stage_3_same_instruction_and_no_logged_rag,6,12,2.5806451612903225,6
+stage_4_no_prior_history,0,0,0.0,0
+stage_5_similar_response,0,0,0.0,0

@@ -6,6 +6,8 @@
 
 The parsed sample contains 465 `user` and 442 `bot` messages. The actual role names are `user` and `bot` (not `assistant`). All 100 session IDs are unique. Declared session/message/user/bot counters match the parsed records, and all message roles are one of the two observed values.
 
+Under the EDA's preserved latest-preceding-user association, 436 bot records are paired to 434 distinct user-message events; 2 user events have multiple associated bot records and 6 bot records have no preceding user. The transcript also contains 16 consecutive-user transitions across 11 sessions and 3 consecutive-bot transitions across 3 sessions. These are pairing limitations, not evidence of missing or duplicate API requests.
+
 ## Record structure and field inventory
 
 | Field | Grain | Observed form and presence | Meaning / uncertainty |
@@ -24,6 +26,8 @@ The parsed sample contains 465 `user` and 442 `bot` messages. The actual role na
 | `rag` | Bot message | 71/442 bot records | Object with `query` string and `context` list; context elements observed as strings. Missing `rag` does not prove retrieval was unused. |
 | `attachments` | User message | Present on 14 messages; 15 items total | Lists include `contentType` and `content`; observed content type is `IMAGE`. Payloads/URLs are not reproduced. |
 | `input` | Bot message | Present on 29 records across 8 sessions | Object with `items` list. Treated only as an uncertain structured-input-configuration proxy, not proof a user used a widget. |
+
+The project draft describes `input` as structured-input widgets, but the export only exposes the bot-side `input.items` configuration object; actual widget use cannot be confirmed. The `instructions` field is kept separate from user request text and is not presumed to be provider input. The EDA's hypothetical size scenario includes logged instructions only as an explicit assumption.
 
 The full field-presence table and data dictionary are in `reports/sample_eda/tables/schema_presence.csv` and `reports/sample_eda/tables/data_dictionary.csv`.
 
@@ -49,3 +53,5 @@ Attachments occur in 14 user messages (15 attachment records) and the uncertain 
 ## Limitations
 
 This is a small sample, not a production census. It has no verified exact input/output/billed tokens, prices, provider cost, request lifecycle latency, quality labels, cache outcomes, or user-selected-model field. Prompt and attachment content may be sensitive; the analysis avoids reproducing it. Embedded serialized content is not assumed to have a uniform schema and is not parsed as ground truth.
+
+The latest-preceding-user association uses array order, not a request ID or timestamp; consecutive user turns may be bypassed and a single user event may map to multiple bot records. A missing logged `rag` or `instructions` value does not prove absence from the provider request. No actual prompt composition, token billing, retries/fallbacks, answer quality, or causal effects can be recovered from these records.

@@ -1,0 +1,13 @@
+metric,count,denominator,percent
+bot messages,442,442,100.0
+null instructions among bot messages,27,442,6.108597285067873
+non-null instruction values,415,442,93.89140271493213
+blank non-null instructions,7,442,1.583710407239819
+unique exact non-null instructions,79,442,
+unique normalized nonempty instruction groups,78,442,
+normalized instruction groups repeated,74,78,94.87179487179488
+bot records in repeated normalized groups,404,442,91.4027149321267
+groups reused across sessions,11,78,14.102564102564102
+groups reused across categories,0,78,0.0
+groups reused across models,2,78,2.564102564102564
+groups reused across providers,1,78,1.282051282051282

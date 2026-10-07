@@ -44,6 +44,38 @@ User messages are transformed locally using scikit-learn `TfidfVectorizer(analyz
 
 For each `rag` record, nested context is recursively converted to text in memory. Character/word counts and character/4 token proxies are computed, plus context-character / logged-query-character ratio. Summaries segment by provider/model, retrieval-query script, preceding user complexity band, and session depth. The ratio is not complete provider prompt composition. Missing `rag` does not necessarily mean retrieval was absent. Context length alone is not evidence that content is irrelevant or removable.
 
+## Inferred user-to-bot association and response-level analysis
+
+`pair_bot_responses_with_preceding_users` is preserved: each bot record is associated with the latest earlier user record in the same session by message-array order, regardless of timestamp. This is a heuristic, not an explicit request ID. Consecutive user messages can be bypassed; a user message can be associated with multiple bot records; bot records without a prior user remain unmatched. Pairing diagnostics report affected records and role-transition counts. Paired user-to-bot timestamp differences retain their sign and remain observed timestamp gaps, not API latency.
+
+`build_response_level_analysis` joins request features to bot rows and keeps raw text in memory only. The exported response-level tables contain features, opaque category labels, opaque normalized-text group labels, and hashed session/message IDs, but no prompt, response, instruction, RAG text, or attachment URL. Instruction group IDs are sequential labels within the run after NFKC/casefold/whitespace normalization; they are not content hashes.
+
+## Instructions and response sizes
+
+`instructions` is treated as a separate bot-side logged string, not assumed to be a system prompt or actual provider input. Null and blank values are distinguished. Instruction character/word/token-proxy summaries use nonempty strings; reuse groups use NFKC, casefold, and whitespace collapse. Group comparisons across request/category/model/provider are descriptive associations only.
+
+Bot response sizes use the same character, word, line, sentence, and `ceil(characters / 4)` proxy metrics as messages generally. Exact and conservative-normalized response repeats, plus near-duplicate candidates, are calculated in memory. The near-duplicate output uses character n-gram TF-IDF cosine and a 0.70 exploratory threshold. No response text is displayed or exported; repetition and similarity do not measure response correctness, answer equivalence, or quality.
+
+## Hypothetical input/history growth scenario
+
+For each matched bot row, the scenario character total is:
+
+`all earlier transcript message content in the session + matched current user content + this bot row's logged instructions + this bot row's logged RAG context`.
+
+Each component is reported separately. Missing logged instruction/context contributes zero to this *logged-field scenario* only; it does not establish that the component was absent from the provider request. Attachments and the `input` configuration proxy are presence signals and are not converted to text/token counts. The aggregate character/4 estimate applies `ceil(total characters / 4)` and is not a provider tokenizer, actual prompt composition, input-token count, or billing estimate. Prior history counts every earlier user and bot `content` in array order and can therefore include messages that an application did not send, filtered, summarized, or truncated. Turn/session growth is descriptive and may count overlapping history across successive hypothetical calls.
+
+## Repeated request → instruction → model/provider → response comparisons
+
+Repeated request events are grouped using conservative NFKC/casefold/whitespace normalization. For pairwise response comparisons, each user-message event is represented by its first associated bot record; that choice does not resolve ambiguous pairing. Comparisons include request group, instruction group/presence, logged RAG state and context similarity, prior transcript size, model/provider labels, response size, and local response character n-gram TF-IDF cosine. Similarity at or above 0.85 is an exploratory comparison threshold, not a semantic-equivalence judgment.
+
+Progressive cache-candidate screens require (1) the same normalized request, (2) the same nonempty normalized instruction, (3) no logged RAG on either record, (4) no earlier transcript messages before either request, and (5) response similarity at least 0.85. These are conservative inspection screens—not cache-hit rates, cache-safety rates, counterfactual savings, or proof a cache would preserve quality. Actual cache safety also depends on user/session identity, time sensitivity, personalization, data freshness, hidden context, and application behavior that are not established here.
+
+## Segment, routing, RAG, and retry-pattern summaries
+
+Response size, instruction presence/size, logged RAG rate/context size, observed timestamp gap, and model assignment are grouped by available category, model/provider, request language/length/complexity/task flags/code/URL, attachment and input-config proxies, instruction status/group, and session depth. Counts accompany summaries; small strata should not be overinterpreted. Opaque categories remain labels, and their definitions are not inferred.
+
+For logged RAG rows, request↔context and context↔response character n-gram cosine similarities are computed in memory. These are lexical overlap proxies only; they do not show that context was included in the provider prompt, useful, or causally influential. Timestamp-gap rank associations and RAG/context size associations are exploratory, noncausal descriptions. Consecutive bot turns, repeated requests, model/provider variation, and short/error-keyword-like responses followed by another user message are pattern proxies only; the export contains no explicit retry, fallback, escalation, failure, or outage outcome.
+
 ## Interpretation and privacy
 
-Counts and percentages are descriptive; medians/percentiles are emphasized for skewed distributions. Small groups are not overinterpreted. No significance tests, causal claims, fabricated prices, or savings estimates are made. Sensitive text, attachment payloads, and URLs are not included in notebook outputs or exported candidate tables. Hashes are pseudonymous join aids, not anonymization guarantees.
+Counts and percentages are descriptive; medians/percentiles are emphasized for skewed distributions. Small groups are not overinterpreted. No significance tests, causal claims, fabricated prices, or savings estimates are made. Sensitive text, attachment payloads, and URLs are not included in notebook outputs or exported candidate tables. Hashes are pseudonymous join aids, not anonymization guarantees. Categories are opaque. The project draft's description of `input` as structured-input widgets is not verifiable from the export: only bot-side `input.items` configuration is observed, so the EDA retains cautious proxy wording. No LLM-as-a-judge or routed-versus-baseline quality analysis is possible without paired routed outputs or quality labels.

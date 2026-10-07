@@ -175,3 +175,51 @@ Observed timestamp facts are high confidence; interpretation is uncertain. See `
 # Requirements for the Full Dataset
 
 Collect request-linked exact input/output/billed tokens; normalized model/version/provider; request and provider cost; request lifecycle latency including time-to-first-token; retries/failures; selected model and routing decision/reason; cache eligibility/lookup/hit/invalidation and outcome; retrieval document IDs/scores and actual prompt composition; quality/evaluation labels; and privacy-safe customer/workload grouping. Preserve timezone and clock semantics plus stable request/session correlation IDs.
+
+## Request/response association and pairing limitations
+
+The notebook retains the established latest-preceding-user-by-array-order convention. It links 436 bot records to 434 distinct user-message events; 2 user events have multiple associated bot records, while 6 bot records have no preceding user. There are 16 consecutive-user transitions across 11 sessions and 3 consecutive-bot transitions across 3 sessions. Consequently, paired request/response summaries are descriptive and heuristic, not request-keyed measurements. In particular, consecutive user turns may be skipped by the convention, and a bot record may not be a one-to-one response to the selected request.
+
+See `response_pairing_diagnostics.csv`, `requests_with_multiple_bot_associations.csv`, and `response_level_analysis.csv` (feature-only, with opaque IDs).
+
+## Logged instructions
+
+Among 442 bot records, 27 instructions are null and 7 are blank non-null values; 408 are nonempty. There are 79 distinct exact non-null strings and 78 nonempty groups after NFKC/casefold/whitespace normalization. Seventy-four normalized groups recur, covering 404 bot records. These counts describe logged metadata only; they do not establish that instructions were sent to a provider or were stable system prompts.
+
+For the 408 nonempty instruction strings, median size is 3,578 characters (p90 8,258; maximum 271,155); the character/4 median is 895, not a tokenizer count. Reuse is mostly within opaque category groupings: 11 normalized groups appear across multiple sessions, none across categories, 2 across model labels, and 1 across providers. Missing/blank instruction prevalence differs by category in this sample (for example, 32/127 bot rows in `general_athena`, versus none in two other strata); category labels remain uninterpreted. See `instruction_summary.csv`, `instruction_size_statistics.csv`, `instruction_group_reuse.csv`, and `instruction_missingness_by_features.csv`.
+
+## Hypothetical full-history input-size scenario
+
+For matched bot records, the notebook constructs a **scenario** by adding all earlier message content in the session, the matched current user content, the bot row's logged instruction string, and its logged RAG context. The calculation is not a claim about actual provider-prompt composition. Missing metadata contributes zero only to the logged-field scenario; it is not evidence that the field was absent upstream. Attachments and the uncertain `input` configuration proxy are presence signals only.
+
+Across matched records, summed scenario characters are 1.16% current request, 13.80% earlier transcript history, 82.58% logged instructions, and 2.46% logged RAG context. The instruction share reflects the unusually large logged strings and should not be read as provider input-token share or cost share. At user turn 1 (98 response rows), median scenario size is 3,661 characters; at turn 10 (12 rows), it is 6,876. Median prior-history characters rise from 0 at turn 1 to 2,645 at turn 10. Later-turn samples are smaller and summaries count repeated prior transcript content by construction. Character/4 is only a rough size proxy.
+
+See `hypothetical_input_growth_by_turn.csv`, `hypothetical_input_growth_by_session.csv`, `hypothetical_input_component_shares.csv`, `hypothetical_input_growth.png`, and `session_input_growth_examples.png`.
+
+## Repeated requests and progressively restricted cache-candidate screens
+
+At the conservative normalized-request level, 21 repeated prompt groups cover 76 user-message events. Comparing all event pairs yields 367 same-request pairs. At least one associated bot record had the same nonempty normalized instruction in 9 such pairs; 6 of those also had no logged RAG on either side. No pairs passed both the no-prior-history screen and the final response-similarity threshold of 0.85. These pair counts overlap and are not cache hit or safety rates. Exact, whitespace, and NFKC/casefold/whitespace repetition counts happen to be equal in this sample (17 repeated request groups among the response-associated request rows; 62 request events in those groups), but association multiplicity and denominator differ from prompt-only counts elsewhere in the notebook.
+
+Among repeated request groups, instruction assignment often varies: 6 groups had one nonmissing instruction group and no missing instruction associations, 9 had multiple instruction groups; the remaining groups include missing instructions. Same-prompt response pairs also span different model/provider labels. For the 226 pairs with different non-null model labels, median response lexical cosine is about 0.105 (p90 0.258); this is lexical dissimilarity only, not a quality or correctness comparison. A pair can differ in hidden context, routing, time, or prompt composition even when its user text is identical.
+
+The response-level candidate screens deliberately use the logged instruction, logged-RAG, prior-history, and response similarity fields. Their zero count at the strictest stages does not establish zero cache opportunity: it shows only that none of these sample pairs satisfies this specific evidence screen. Conversely, passing a screen would not establish safe reuse. See `request_instruction_by_normalization.csv`, `repeated_request_instruction_consistency.csv`, `repeated_request_response_pair_comparisons.csv`, `repeated_request_response_variability.csv`, and `restricted_cache_candidate_screens.csv`.
+
+## Bot response sizes and repetition
+
+Bot response content has median 210 characters (p90 1,025; maximum 13,795) and median character/4 proxy 53 (p90 257); these are content-size summaries, not output-token billing. Thirteen exact/normalized repeated response groups cover 33 bot records (7.5%), with four groups crossing sessions. At a 0.70 character n-gram similarity threshold, 129 response candidate pairs are identified, 98 nonidentical after conservative normalization. Similarity is not answer equivalence or quality. Response size segments by model/provider, request characteristics, instruction, RAG, and depth are exploratory, with sparse groups in places.
+
+See `bot_response_numeric_summary.csv`, `bot_response_token_proxy_by_segments.csv`, `bot_response_repetition_summary.csv`, and `bot_near_duplicate_pair_summary.csv`.
+
+## Retrieval, observed timestamp gaps, and routing patterns
+
+The request↔logged-context character n-gram cosine has median 0.195 (p90 0.322); logged-context↔bot-response cosine has median 0.315 (p90 0.600), each across 71 logged RAG records with an inferred request association. These are lexical-overlap proxies only. Logged context size correlates descriptively with response length in this sample (Spearman rho 0.580, n=71); this does not show usefulness or causation. RAG occurrence and context sizes vary across observed model, request, instruction, and category strata, but some cells are small. Actual retrieval-to-provider prompt construction requires application code or payload instrumentation.
+
+There are 436 paired user-to-bot observed timestamp gaps: median 2 seconds, p90 7 seconds, maximum 118 seconds; all are nonnegative for the matched pairs under this sample. These are not confirmed API latency measurements. Exploratory Spearman associations with log1p of nonnegative gaps are modest (for example, response character count rho 0.305 and request character count rho 0.238, n=436), not causal and not evidence that routing would reduce latency.
+
+Opaque categories differ in request mix, logged RAG prevalence, instruction missingness, response sizes, and model/provider labels. The notebook reports these cross-tabs without assigning semantic meaning to category names or inferring model quality, efficiency, or a routing policy. Consecutive bot turns (3), same-request pairs within sessions (23), and short/error-keyword-like bot outputs followed by a user message (11) are sequence/text proxies only. The export has no explicit retry, fallback, failure, escalation, or outage labels.
+
+See `rag_lexical_overlap_summary.csv`, `rag_usage_by_features.csv`, `rag_context_exploratory_associations.csv`, `observed_user_to_bot_gap_summary.csv`, `observed_gap_by_features.csv`, `model_assignment_by_request_features.csv`, `opaque_category_workload_comparison.csv`, and `retry_fallback_pattern_proxies.csv`.
+
+## Updated executive interpretation
+
+The sample supports prioritizing instrumented experiments around repeated requests, context construction, long logged instructions, history growth, and workload-aware routing. It does **not** establish the actual provider prompt, token billing, cost savings, API latency, safe-cache share, response quality, or retry/failover behavior. The attached project draft's characterization of `input` as structured-input widgets is not confirmed by the export: the observed field is a bot-side `input.items` configuration object, retained as a cautious proxy. Routed-versus-baseline evaluation or LLM-as-a-judge scoring remains out of scope until paired outputs and suitable quality labels exist.

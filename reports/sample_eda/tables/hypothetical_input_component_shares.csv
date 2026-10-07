@@ -1,0 +1,5 @@
+component,characters_across_matched_responses,share_of_scenario_characters
+current request,62657.0,0.011571634729567959
+prior transcript history,747454.0,0.13804147445863174
+logged instructions,4471621.0,0.8258289554409787
+logged RAG context,132974.0,0.02455793537082161

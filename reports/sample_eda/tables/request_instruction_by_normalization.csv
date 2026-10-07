@@ -1,0 +1,4 @@
+normalization,repeated_request_groups,request_events_in_repeated_groups,bot_associations_in_repeated_groups,groups_with_one_nonmissing_instruction,groups_with_multiple_instruction_groups
+literal exact,17,62,63,6,9
+whitespace normalized,17,62,63,6,9
+NFKC/casefold/whitespace,17,62,63,6,9

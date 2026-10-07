@@ -1,0 +1,5 @@
+instruction_assignment,model_assignment,request_pairs,exact_same_response_pairs,median_response_similarity,p90_response_similarity,median_left_response_chars,median_right_response_chars
+different/missing instruction,different logged models,226,3,0.10536507499736816,0.25753037600263107,58.0,65.0
+different/missing instruction,model missing on at least one side,67,0,0.3005205474738881,0.35862240568662834,75.0,136.0
+different/missing instruction,same logged model,65,3,0.21937452071525537,0.31859483497113733,117.0,132.0
+same nonempty instruction,same logged model,9,4,0.7983505768635335,1.0,132.0,178.0

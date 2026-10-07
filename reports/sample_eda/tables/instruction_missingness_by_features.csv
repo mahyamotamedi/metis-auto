@@ -1,0 +1,60 @@
+feature,feature_value,bot_records,instruction_present,instruction_missing_or_blank,missing_or_blank_percent
+category,developer_pegahdev,88,88,0,0.0
+category,general_athena,127,95,32,25.196850393700785
+category,operator_gapify,85,85,0,0.0
+category,other_other,142,140,2,1.4084507042253522
+model,claude-sonnet-4-6,39,39,0,0.0
+model,dalle,2,2,0,0.0
+model,deepseek-chat,1,0,1,100.0
+model,deepseek-reasoner,1,1,0,0.0
+model,deepseek-v4-flash,127,127,0,0.0
+model,default,36,36,0,0.0
+model,gemini-2.0-flash,2,0,2,100.0
+model,gemini-2.5-flash,50,50,0,0.0
+model,gemini-2.5-flash-lite,18,18,0,0.0
+model,gpt-4.1,2,2,0,0.0
+model,gpt-4.1-mini,11,11,0,0.0
+model,gpt-4.1-nano,2,2,0,0.0
+model,gpt-4o-mini,71,71,0,0.0
+model,gpt-5-nano,15,15,0,0.0
+model,gpt-5.2,7,7,0,0.0
+model,gpt-5.4,6,6,0,0.0
+model,grok-4-1-fast,21,21,0,0.0
+model,o3-mini,4,0,4,100.0
+model,nan,27,0,27,100.0
+provider,anthropic,39,39,0,0.0
+provider,deepseek,129,128,1,0.7751937984496124
+provider,google,70,68,2,2.857142857142857
+provider,grok,21,21,0,0.0
+provider,imagination,2,2,0,0.0
+provider,openai_chat_completion,118,114,4,3.389830508474576
+provider,workflow,36,36,0,0.0
+provider,nan,27,0,27,100.0
+request_language,English/Latin-script,24,18,6,25.0
+request_language,Persian-script,397,373,24,6.045340050377834
+request_language,mixed Persian/English,13,9,4,30.76923076923077
+request_language,other/unknown,2,2,0,0.0
+request_language,nan,6,6,0,0.0
+request_complexity_band,high (3+),7,7,0,0.0
+request_complexity_band,low (0-1),418,385,33,7.894736842105263
+request_complexity_band,medium (2),11,10,1,9.090909090909092
+request_complexity_band,nan,6,6,0,0.0
+has_rag,False,371,337,34,9.164420485175203
+has_rag,True,71,71,0,0.0
+request_has_attachment,False,425,399,26,6.11764705882353
+request_has_attachment,True,11,3,8,72.72727272727273
+request_has_attachment,nan,6,6,0,0.0
+has_input_config,False,413,379,34,8.232445520581114
+has_input_config,True,29,29,0,0.0
+request_has_code_like_text,False,427,395,32,7.494145199063232
+request_has_code_like_text,True,9,7,2,22.22222222222222
+request_has_code_like_text,nan,6,6,0,0.0
+request_has_url,False,429,395,34,7.925407925407925
+request_has_url,True,7,7,0,0.0
+request_has_url,nan,6,6,0,0.0
+request_length_bucket,short ≤100,363,336,27,7.43801652892562
+request_length_bucket,medium 101–500,61,54,7,11.475409836065573
+request_length_bucket,long >500,18,18,0,0.0
+session_depth_band,≤2 user turns,61,59,2,3.278688524590164
+session_depth_band,3–5 user turns,130,125,5,3.8461538461538463
+session_depth_band,>5 user turns,251,224,27,10.756972111553784
