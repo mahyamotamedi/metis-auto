@@ -1,0 +1,8 @@
+heuristic,messages,percent_users
+heuristic_coding,15,3.225806451612903
+heuristic_math,1,0.21505376344086022
+heuristic_translation,11,2.3655913978494625
+heuristic_rewrite_edit,7,1.5053763440860215
+heuristic_summarization,2,0.43010752688172044
+heuristic_structured_output,10,2.150537634408602
+heuristic_long_form_generation,0,0.0

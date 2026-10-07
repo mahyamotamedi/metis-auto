@@ -1,0 +1,5 @@
+category,sessions,median_turns,median_user_chars,retrieval_sessions,attachment_sessions,input_proxy_sessions
+developer_pegahdev,25,3.0,296.0,6,3,0
+general_athena,25,4.0,149.0,0,2,0
+operator_gapify,25,3.0,75.0,16,0,7
+other_other,25,4.0,137.0,2,0,1

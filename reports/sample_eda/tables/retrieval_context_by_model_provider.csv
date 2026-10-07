@@ -1,0 +1,7 @@
+provider,model,messages,median_context_chars,p90_context_chars
+anthropic,claude-sonnet-4-6,28,626.5,879.8000000000001
+google,gemini-2.5-flash,27,2758.0,4019.0
+grok,grok-4-1-fast,10,2845.0,4019.0
+workflow,default,4,1476.0,1716.1000000000001
+deepseek,deepseek-v4-flash,1,798.0,798.0
+openai_chat_completion,gpt-4.1-nano,1,884.0,884.0

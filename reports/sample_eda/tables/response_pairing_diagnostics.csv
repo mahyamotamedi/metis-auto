@@ -1,0 +1,7 @@
+diagnostic,count,sessions
+bot messages,442,100.0
+bots without preceding user association,6,
+consecutive user-role transitions,16,11.0
+consecutive bot-role transitions,3,3.0
+distinct user requests associated with at least one bot,434,
+user requests with multiple bot associations,2,

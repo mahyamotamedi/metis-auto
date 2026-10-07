@@ -1,0 +1,3 @@
+preceding_user_complexity,retrieval_messages,median_context_chars,p90_context_chars
+low (0-1),70,1476.0,4019.0
+medium (2),1,4019.0,4019.0

@@ -1,0 +1,30 @@
+feature,feature_value,bot_records,distinct_instruction_groups,instruction_present_percent,median_instruction_chars,median_request_chars
+category,developer_pegahdev,88,11,100.0,4696.0,43.0
+category,general_athena,127,20,74.80314960629921,348.0,34.0
+category,operator_gapify,85,23,100.0,4360.0,19.0
+category,other_other,142,24,98.59154929577466,3706.0,29.0
+request_language,English/Latin-script,24,9,75.0,4808.5,424.0
+request_language,Persian-script,397,72,93.95465994962217,3578.0,27.0
+request_language,mixed Persian/English,13,5,69.23076923076923,7166.0,95.0
+request_language,other/unknown,2,1,100.0,4984.0,2.0
+request_language,nan,6,5,100.0,14809.0,0.0
+request_complexity_band,high (3+),7,3,100.0,1706.0,1949.0
+request_complexity_band,low (0-1),418,74,92.10526315789474,3578.0,27.0
+request_complexity_band,medium (2),11,3,90.9090909090909,7166.0,1428.0
+request_complexity_band,nan,6,5,100.0,14809.0,0.0
+request_has_code_like_text,False,427,75,92.50585480093677,3578.0,28.0
+request_has_code_like_text,True,9,3,77.77777777777779,1706.0,1922.0
+request_has_code_like_text,nan,6,5,100.0,14809.0,0.0
+request_has_url,False,429,76,92.07459207459208,3578.0,28.0
+request_has_url,True,7,1,100.0,7166.0,1428.0
+request_has_url,nan,6,5,100.0,14809.0,0.0
+request_has_attachment,False,425,76,93.88235294117648,3578.0,29.0
+request_has_attachment,True,11,2,27.27272727272727,733.0,39.0
+request_has_attachment,nan,6,5,100.0,14809.0,0.0
+has_rag,False,371,69,90.83557951482479,3560.0,26.0
+has_rag,True,71,19,100.0,4481.0,47.0
+has_input_config,False,413,71,91.76755447941889,3560.0,31.0
+has_input_config,True,29,8,100.0,93998.0,19.0
+request_length_bucket,short ≤100,363,74,92.56198347107438,3578.0,21.0
+request_length_bucket,medium 101–500,61,22,88.52459016393442,3560.0,168.0
+request_length_bucket,long >500,18,7,100.0,7166.0,1581.0

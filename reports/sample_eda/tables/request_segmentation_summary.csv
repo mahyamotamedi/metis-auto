@@ -1,0 +1,14 @@
+segmentation,segment,user_messages,median_chars,p90_chars
+language,English/Latin-script,42,347.0,4510.2
+language,Persian-script,800,73.5,499.4000000000001
+language,mixed Persian/English,60,258.5,1581.0
+language,other/unknown,5,10.0,10.0
+prompt length,short ≤100,482,28.0,76.0
+prompt length,medium 101–500,312,204.0,391.90000000000003
+prompt length,long >500,113,1054.0,3280.999999999999
+code-like,False,871,77.0,561.0
+code-like,True,36,786.5,5531.5
+complexity,high (3+),7,1949.0,4321.2
+complexity,low (0-1),446,27.0,141.5
+complexity,medium (2),12,1430.0,4132.500000000001
+complexity,,442,210.0,1025.2000000000007

@@ -1,0 +1,5 @@
+language,messages,median_chars,p90_chars
+English/Latin-script,28,365.5,2537.3000000000015
+Persian-script,422,27.0,134.8000000000004
+mixed Persian/English,13,95.0,1522.2000000000003
+other/unknown,2,2.0,2.0

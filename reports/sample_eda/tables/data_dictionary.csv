@@ -1,0 +1,18 @@
+field,observed_type,grain,observed_presence_or_missingness,meaning_and_uncertainty
+category,str,category bucket,4/4 have field; 0 null values,Opaque stratum; meaning intentionally undocumented
+sessions,list,unverified,4/4 have field; 0 null values,Meaning not documented
+bot_turns,int,session,100/100 have field; 0 null values,Declared bot-message count; checked against roles
+created_at,str,session,100/100 have field; 0 null values,Naive timestamp; timezone semantics are unknown
+messages,list,unverified,100/100 have field; 0 null values,Meaning not documented
+session_id,str,session,100/100 have field; 0 null values,Session identifier; uniqueness is checked separately
+session_len,int,session,100/100 have field; 0 null values,Declared message count; compared with parsed messages
+user_turns,int,session,100/100 have field; 0 null values,Declared user-message count; checked against roles
+attachments,list,message,14/907 have field; 0 null values,Attachment metadata; payloads/URLs excluded from outputs
+content,str,message,907/907 have field; 0 null values,Text payload; potentially sensitive and kept in memory
+input,dict,bot message,29/907 have field; 0 null values,Items-based proxy; configuration semantics are uncertain
+instructions,str,bot message,442/907 have field; 27 null values,"Unverified metadata, separate from message content"
+model,str,bot message,442/907 have field; 27 null values,Logged model label; default/workflow labels are retained
+provider,str,bot message,442/907 have field; 27 null values,Logged provider label; not verified billing identity
+rag,dict,bot message,71/907 have field; 0 null values,Retrieval metadata; absence does not prove retrieval was unused
+role,str,message,907/907 have field; 0 null values,Observed message role
+timestamp,str,message,907/907 have field; 0 null values,Naive message timestamp; not an API latency guarantee

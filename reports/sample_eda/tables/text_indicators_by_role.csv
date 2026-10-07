@@ -1,0 +1,15 @@
+role,feature,messages,percent_role
+bot,has_url,14,3.167420814479638
+bot,has_code_like_text,27,6.108597285067873
+bot,has_fenced_code,7,1.583710407239819
+bot,has_markdown_like_formatting,92,20.81447963800905
+bot,is_empty,0,0.0
+bot,is_extremely_short,6,1.3574660633484164
+bot,is_extremely_long,5,1.1312217194570136
+user,has_url,7,1.5053763440860215
+user,has_code_like_text,9,1.935483870967742
+user,has_fenced_code,0,0.0
+user,has_markdown_like_formatting,5,1.075268817204301
+user,is_empty,0,0.0
+user,is_extremely_short,119,25.591397849462364
+user,is_extremely_long,0,0.0

@@ -1,0 +1,7 @@
+feature,n,spearman_rho_with_logged_context_chars
+request_char_count,71,0.030356753918065953
+char_count,71,0.5799260369333726
+observed_user_to_bot_gap_seconds,71,-0.2780866825695426
+instruction_chars,71,-0.634937474556347
+prior_history_chars,71,0.1608309566619176
+request_exploratory_complexity_score,71,0.23775452949802092

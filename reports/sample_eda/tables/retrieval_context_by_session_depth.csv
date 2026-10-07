@@ -1,0 +1,4 @@
+depth_band,retrieval_messages,median_context_chars,p90_context_chars
+≤2 user turns,14,2461.0,4019.0
+3–5 user turns,29,1970.0,4019.0
+>5 user turns,28,655.0,3401.0

@@ -1,0 +1,2 @@
+metric,count,mean,median,std,min,p25,p50,p75,p90,p95,p99,max
+observed_user_to_bot_gap_seconds,436,3.846330275229358,2.0,8.573241467542058,0.0,1.0,2.0,3.0,7.0,11.0,43.399999999999636,118.0

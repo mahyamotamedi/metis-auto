@@ -1,0 +1,9 @@
+feature,n,spearman_rho_with_log1p_nonnegative_gap
+request_char_count,436,0.23775789561790114
+request_exploratory_complexity_score,436,0.15705797819454462
+request_word_count,436,0.24417354619831194
+instruction_chars,436,0.01257824721738899
+context_chars,436,0.1433414644295141
+char_count,436,0.3047425950107245
+prior_history_chars,436,0.19112934177636914
+hypothetical_input_chars_proxy,436,0.09969803551609274
