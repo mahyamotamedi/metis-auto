@@ -1,5 +1,7 @@
 # Sample data overview
 
+> **Preliminary — sample-only, exploratory.** This EDA ran on a 100-session sample to judge whether the project was worth doing. Its numbers are provisional signals to re-verify on the full dataset, not established facts, and its helper code is simplified and not reusable. See [ADR-0008](../adr/0008-sample-eda-is-exploratory.md).
+
 ## What the file represents
 
 `data/sample_data/raw/data.json` is a read-only JSON export containing 100 anonymized sessions and 907 messages. Its root is a list of four category objects, each with 25 sessions. The category names are treated as opaque strata; their meanings are undocumented and are not inferred here.

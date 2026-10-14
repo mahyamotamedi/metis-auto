@@ -127,3 +127,22 @@ None of these blocks Stage 2.
 **Interpretations to confirm:**
 - In Q-13, the percentages are relative to the baseline mean.
 - In Q-14, the overhead covers all of Metis's pre-model work (features, embeddings, cache lookup, routing, context building).
+
+### Stage 1 follow-up — sample EDA is exploratory (2026-10-14)
+
+**Decision:** [ADR-0008](../adr/0008-sample-eda-is-exploratory.md).
+- Sample-EDA numbers are provisional signals.
+- The EDA helpers are reference-only and must not be reused.
+- No sample-shaped contracts.
+- The full-dataset EDA gets its own home.
+
+**Updated:**
+- `CLAUDE.md`: new durable rule.
+- context.md: §4 and §5.1 reframed as sample signals; helper row changed.
+- requirements.md: source note; BR-01; FR-REQ-03 and FR-DATA-03 changed; new FR-DATA-06…08; the §6 caveat.
+- Register: A-01 revised, A-08 split into principle and share, new A-23 and A-24.
+- Sample EDA marked preliminary: banners on `docs/sample_eda/*.md`, and READMEs in `experiments/sample_eda/` and `reports/sample_eda/`. No content changed.
+
+**Carried into later stages:**
+- **Stage 2:** propose a dedicated full-dataset EDA home (notebooks, analysis code, reports, outputs), separate from the sample EDA. Add a dependency rule that nothing outside the sample EDA imports from `experiments/sample_eda/`.
+- **Stage 9:** the onboarding checklist starts with a proper full EDA that re-checks every sample signal (`F-n`, the master prompt's EDA list) and Q-04, Q-06, and Q-09.

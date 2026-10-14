@@ -18,7 +18,7 @@ This document turns the project brief and the sample EDA into requirements. Ever
 **Source codes.**
 - `B§x`: section of the [brief](../brief/project-draft.pdf).
 - `MP§x`: section of the [master prompt](../../metis_claude_code_master_prompt.md).
-- `F-n` / `H-n` / `U-n` / `C-n`: facts, hypotheses, unknowns, and conflicts in [context.md](context.md).
+- `F-n` / `H-n` / `U-n` / `C-n`: sample signals, hypotheses, unknowns, and conflicts in [context.md](context.md). `F-n` and other sample-EDA sources mean "**informed by**" a provisional signal, never "established by" ([ADR-0008](../adr/0008-sample-eda-is-exploratory.md)). No requirement depends on an exact sample value.
 - `A-n` / `Q-n`: the [register](assumptions_and_questions.md).
 - `ADR-n`: [decision records](../adr/).
 
@@ -61,7 +61,7 @@ Every goal must be *demonstrated with evidence*. None is assumed to be achievabl
 |---|---|---|---|---|
 | FR-REQ-01 | A request consists of the current user message plus optional: conversation history, instructions (system-level text), retrieved context, attachments (type and reference), and structured-input configuration. Each component may be **present**, **absent**, or **unknown**. | B§4, data overview, C-03, C-04 | current | decided |
 | FR-REQ-02 | The system mints its own IDs: request, session, and one ID per *attempt* (cache lookup, model call, escalation, failover). All attempts link to their request. | A-05, EDA "full dataset" list | current | decided (names are Stage 4) |
-| FR-REQ-03 | Offline replay builds requests from logged sessions using the documented pairing heuristic (A-04). It carries a **pairing-quality flag** per request (clean / multiple bots / no preceding user / skipped consecutive user) and never presents pairs as a clean 1:1 log. | A-04, context §4 | current | decided |
+| FR-REQ-03 | Offline replay builds requests from logged sessions using a pairing heuristic (A-04), re-implemented and tested rather than taken from the EDA helpers (FR-DATA-08). It carries a **pairing-quality flag** per request (clean / multiple bots / no preceding user / skipped consecutive user) and never presents pairs as a clean 1:1 log. | A-04, context §4 | current | decided |
 | FR-REQ-04 | "Unknown" is distinct from "absent". For example, a missing `rag` field in logged data is *unknown retrieval state*, not *no retrieval*. Null model/instructions are unknown. | C-04, F-3 | current | decided |
 | FR-REQ-05 | Logged timestamps are carried as naive values with timezone marked unknown. The online phase records timezone-aware UTC. Analyses state which timestamp (`created_at` vs message) they use. | A-06, C-01 | current | provisional |
 | FR-REQ-06 | Offline replay processes each session's turns in order, and only uses information available before each turn (no look-ahead into later turns or the logged answer, except as the evaluation reference). | MP§4 offline-first, counterfactual problem | current | decided |
@@ -189,9 +189,12 @@ Feature extraction is shared by routing, caching, context handling, and evaluati
 |---|---|---|---|---|
 | FR-DATA-01 | `data/sample_data/raw/` is read-only. Derived data is written elsewhere, and the raw file's hash is checked by tests. | CLAUDE.md | current | decided |
 | FR-DATA-02 | Data access goes through an interface. Nothing outside the data layer depends on storage location or format. | MP§5 Stage 9 | current | decided |
-| FR-DATA-03 | Synthetic fixtures mirror the sample's shape (Persian-dominant, multi-turn, optional RAG, attachments, and instructions). They contain no real content and are clearly labelled synthetic. | CLAUDE.md, MP§5 Stage 9 | current | decided |
+| FR-DATA-03 | Synthetic fixtures model the domain generically: multilingual with Persian well represented, multi-turn, and optional RAG, attachments, and instructions. They do **not** reproduce sample-specific quirks. They contain no real content and are clearly labelled synthetic. | CLAUDE.md, MP§5 Stage 9, ADR-0008 | current | decided |
 | FR-DATA-04 | Onboarding the full dataset needs changes only in the data layer and configuration. | MP§5 Stage 9 | future | decided |
 | FR-DATA-05 | No final persistent schema is designed before the full dataset is inspected. | MP§1 | current | decided |
+| FR-DATA-06 | Contracts and data interfaces are not shaped around sample quirks. Sample-specific handling lives in a sample loader/adapter. | ADR-0008 | current | decided |
+| FR-DATA-07 | Full-dataset onboarding begins with a full EDA in its own home, separate from the sample EDA. It uses re-implemented, tested analysis code, and re-checks every sample signal and the data-owner questions. | ADR-0008 | future | decided |
+| FR-DATA-08 | No system code imports, copies, or builds on the sample-EDA helpers. Needed analysis logic (language detection, normalisation, pairing, near-duplicates, size estimates) is re-implemented with tests. | ADR-0008 | current | decided |
 
 ### 3.13 Unified interface and provider adapters (`FR-API`)
 
@@ -261,7 +264,7 @@ Legend:
 
 | ID | Brief requirement | Sample now | Full dataset | Live calls | Requirements |
 |---|---|---|---|---|---|
-| BR-01 | Feature: language (B§3.1, B§4) | Yes. Script heuristic validated on 465 user messages. | Validate at scale and on rare languages. | — | FR-FEAT-01, FR-FEAT-03 |
+| BR-01 | Feature: language (B§3.1, B§4) | Design only. The EDA's script heuristic is a simplified signal, not a validated detector. | Build and evaluate a tested detector at scale, including rare languages. | — | FR-FEAT-01, FR-FEAT-03 |
 | BR-02 | Feature: semantic intent | Exploratory only; no labels. | Clustering and labelling at scale. | If an LLM-based intent method is tried | FR-FEAT-02 |
 | BR-03 | Feature: code presence | Detector can be built. Only 9 user messages (1.9%) are code-like by the EDA heuristic (`text_indicators_by_role.csv`), and 0 contain fenced code. Too few to evaluate. | Enough positives to evaluate. | — | FR-FEAT-01 |
 | BR-04 | Feature: attachments (image/audio) | Presence and type for image only (15 items). | Audio, if present (A-12). | — | FR-FEAT-01, NG-07 |
@@ -279,6 +282,8 @@ Legend:
 | BR-16 | Latency vs. baseline | Pipeline overhead only. Logged gaps are **not** latency. | Lifecycle latency fields, if present. | **Needed** for model latency and end-to-end time. | QA-LAT |
 | BR-17 | Generalise across the four categories | Per-category stratified reporting (small n). | Adequate n per stratum. | — | FR-EVAL-06, NG-08 |
 | BR-18 | Unified, highly available gateway | In-process API and fake adapters. | — | Real adapters | FR-API-*, FR-FAIL-* |
+
+All "Sample now" entries are exploratory: the sample is small and may not be representative (ADR-0008).
 
 **Takeaway:** the sample supports **design, feature extraction, candidate analysis, overhead measurement, and fault-injection testing**. It cannot support any claim about **quality, real savings, real latency, or safe-cache share**. Those need live calls, the full dataset, or both.
 

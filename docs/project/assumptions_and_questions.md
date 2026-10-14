@@ -13,14 +13,14 @@ When an item is resolved, keep it in place, update its status, and say how it wa
 
 | ID | Assumption | Kind | Status | Basis / what would overturn it |
 |---|---|---|---|---|
-| A-01 | The sample's schema (roles, fields, nesting) is representative of the full dataset's schema. | current | provisional | The full dataset's inspection (Stage 9 checklist). |
+| A-01 | The sample's schema (roles, fields, nesting) is **not** assumed to represent the full dataset's schema or quality. Contracts are generic; sample quirks are confined to a sample loader. | current | decided (revised 2026-10-14, [ADR-0008](../adr/0008-sample-eda-is-exploratory.md)) | Previously: "representative, provisional". The full EDA (Stage 9) establishes the real schema. |
 | A-02 | Category labels are opaque strata. We never infer their meaning or tune to one category. | current | decided | The brief says categories are intentionally unnamed. |
 | A-03 | Logged `instructions` *may* be the system prompt sent to providers, but this is unproven. Designs must work either way. | current | open | Production prompt-construction code or payload logs (U-04). |
 | A-04 | Bot↔user pairing in the sample is the EDA's "latest preceding user by array order" heuristic. It is never treated as a clean 1:1 log. | current | decided | A request ID in the full dataset would replace it. |
 | A-05 | The online system will mint its own correlation IDs (request, session, attempt). The sample's absence of IDs is not carried into the online design. | future | provisional | Confirmed in Stage 4 contracts. |
 | A-06 | Timestamps are kept **naive**. No timezone is inferred. Analyses never mix `created_at` with message timestamps without saying so. | current | provisional (unverified) | Data owner states the timezone (Q-06). Confirmed as the working assumption 2026-10-14. |
 | A-07 | Model and provider labels are not billing entities. Cost needs a curated mapping from label to priced model. | current | decided | C-02. |
-| A-08 | Persian is the dominant language. Tokenization, embeddings, and similarity must be Persian-aware. | current | decided | F-2. |
+| A-08 | Tokenization, embeddings, and similarity must be Persian-aware (a design principle). That Persian is *dominant* is a sample signal (F-2) to re-verify. | current | decided (principle); provisional (share) | Brief §4 says "predominantly Persian"; the full EDA gives the real mix. |
 | A-09 | Content is sensitive despite the brief's PII claim. No raw text goes into docs, logs, fixtures, commits, or exported tables. | current | decided | Master prompt §2 Privacy; C-12. |
 | A-10 | Python 3.13 is the implementation language. | current | decided | [ADR-0001](../adr/0001-python-tooling.md). |
 | A-11 | Offline replay over the dataset is the first consumer of the architecture. An online gateway comes later. | current | decided | Master prompt §4. |
@@ -35,6 +35,8 @@ When an item is resolved, keep it in place, update its status, and say how it wa
 | A-20 | No single cheap signal is assumed sufficient to detect an unsatisfactory answer. Escalation will combine detectors, and the useful ones are found by experiment. | current | provisional | Cascade experiments (U-07). |
 | A-21 | Quality claims rest on non-inferiority against a baseline, or on judge scores, not on agreement with as-logged answers alone. | current | decided (δ provisional, Q-13) | [ADR-0006](../adr/0006-evaluation-metric-definitions.md). |
 | A-22 | Pipeline overhead measured on a local dev machine is indicative only. Hardware is recorded with every measurement. | current | decided | Online-phase measurement. |
+| A-23 | Every sample-EDA number is a provisional signal, not a fact. Designs may be informed by it but not depend on its exact value. | current | decided | [ADR-0008](../adr/0008-sample-eda-is-exploratory.md). Re-verified by the full EDA. |
+| A-24 | The sample-EDA helpers are unreliable and reference-only. | current | decided | [ADR-0008](../adr/0008-sample-eda-is-exploratory.md). |
 
 ## Open questions — project decisions
 

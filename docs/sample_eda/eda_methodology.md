@@ -1,5 +1,7 @@
 # EDA methodology
 
+> **Preliminary — sample-only, exploratory.** This EDA ran on a 100-session sample to judge whether the project was worth doing. Its numbers are provisional signals to re-verify on the full dataset, not established facts, and its helper code is simplified and not reusable. See [ADR-0008](../adr/0008-sample-eda-is-exploratory.md).
+
 ## Loading and grain
 
 `eda_helpers.load_sessions` reads the JSON array and flattens category/session pairs without changing the source. `flatten_messages` creates one message row with category, session linkage, array index, role, timestamp, text, model/provider, separate `instructions`, separate `rag` query/context, attachment metadata, and an `input`-configuration indicator. Session and message identifiers in candidate outputs are hashed; raw prompts and attachment URLs are not exported.

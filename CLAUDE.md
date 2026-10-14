@@ -15,6 +15,11 @@ Durable working rules for agent sessions on Metis-Auto. Keep this file short and
 - `data/sample_data/raw/` is **read-only**. Never modify it; write derived data elsewhere.
 - Never put raw message content, instructions, RAG context, or attachments into docs, commits, logs, test fixtures, or exported tables. Use hashed or opaque IDs and derived features. Synthetic fixtures must be clearly labelled synthetic.
 - Category names are opaque strata. Do not interpret them or tune to one category.
+- **The sample EDA is exploratory only** ([ADR-0008](docs/adr/0008-sample-eda-is-exploratory.md)):
+  - Its numbers (including the master prompt's "Key EDA facts") are provisional signals to re-verify on the full dataset. Designs may be informed by them but must not depend on their exact values.
+  - Never import, copy, or build on `experiments/sample_eda/eda_helpers.py`. Read it only for reference; re-implement needed logic properly, with tests.
+  - Don't shape contracts or data interfaces around sample quirks.
+  - The full-dataset EDA lives separately from the sample EDA, which is preliminary.
 
 ## How to work
 - Work stage by stage. At the end of each stage, give the 6-part report (changes, decisions, assumptions, questions, next stage, exit criteria). Update `progress.md` and then **stop** for review.

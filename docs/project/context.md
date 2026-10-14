@@ -3,7 +3,9 @@
 Status: **decided** as a Stage 0 baseline; individual items carry their own status. Last updated 2026-10-14.
 Related: [assumptions & open questions](assumptions_and_questions.md) · [progress](progress.md) · sample EDA ([results](../sample_eda/eda_results.md), [methodology](../sample_eda/eda_methodology.md), [data overview](../sample_eda/data_overview.md), [questions](../sample_eda/eda_questions.md)).
 
-This is the one document to read to understand the problem, the real shape and limits of the data, and what is unknown. It summarises; the EDA documents hold the evidence.
+This is the one document to read to understand the problem, the shape and limits of the **sample** data, and what is unknown. It summarises; the EDA documents hold the evidence.
+
+> **Sample EDA is exploratory** ([ADR-0008](../adr/0008-sample-eda-is-exploratory.md)). Every sample number below (§4, §5.1) is a **provisional signal** from a small, possibly unrepresentative sample, to be re-verified on the full dataset. Designs may be informed by these signals but must not depend on their exact values.
 
 ---
 
@@ -39,10 +41,10 @@ Source: [`docs/brief/project-draft.pdf`](../brief/project-draft.pdf) (Metis-OS T
 | Master prompt | `metis_claude_code_master_prompt.md` | Standing instructions for this engagement. |
 | Sample data (read-only) | `data/sample_data/raw/data.json` | sha256 `e0f56a2f2340b2ac70bf273e05ee2e9b56126cd3874c0c58659f46b4983549e1` (2026-10-14). The brief calls it `sample-data/data.json`. |
 | EDA notebook | `experiments/sample_eda/eda.ipynb` | 64 cells, kernel Python 3.13.5. Imports pandas, numpy, scipy, matplotlib, and scikit-learn (inside the helpers). |
-| EDA helper module | `experiments/sample_eda/eda_helpers.py` | ~1,170 lines. Loading/flattening, text features, `approximate_tokens` (= ceil(chars/4)), `detect_language`, normalisation (`normalize_exact`, `normalize_safe`), `pair_bot_responses_with_preceding_users`, duplicate/near-duplicate detection, response-level analysis. These are **experiment code**, not a library. Reuse candidates go through the promotion process defined in Stage 2. |
+| EDA helper module | `experiments/sample_eda/eda_helpers.py` | ~1,170 lines. Loading/flattening, text features, `approximate_tokens` (= ceil(chars/4)), `detect_language`, normalisation (`normalize_exact`, `normalize_safe`), `pair_bot_responses_with_preceding_users`, duplicate/near-duplicate detection, response-level analysis. Deliberately simplified and **not reliable**. **Reference only:** never imported, copied, or built on by system code. Needed logic is re-implemented with tests ([ADR-0008](../adr/0008-sample-eda-is-exploratory.md)). |
 | EDA docs | `docs/sample_eda/*.md` | Results, methodology, questions, data overview. |
 | EDA outputs | `reports/sample_eda/figures/` (12 PNG), `reports/sample_eda/tables/` (~80 CSV) | Feature-only; they use hashed or opaque IDs. |
-| Tests | `tests/test_sample_eda_helpers.py` | 3 unittest-style tests. Pass under pytest 8.3.4 (3/3, 2026-10-14). |
+| Tests | `tests/test_sample_eda_helpers.py` | 3 unittest-style tests of the EDA helpers only. Pass under pytest 8.3.4 (3/3, 2026-10-14). |
 | Package | `src/metis_auto/` | Empty (`.gitkeep`). |
 | Agent conventions | `AGENTS.md`, `docs/agents/` | `.scratch/` issue tracker, triage labels, `GLOSSARY.md` (not yet created) + `docs/adr/` (ADR-0001…0004). |
 | Tooling | (none committed yet) | Decided in [ADR-0001](../adr/0001-python-tooling.md): Python 3.13, venv + pip, `pyproject.toml`, locked dependencies, ruff, pytest. The EDA was formatted with black via `.vscode`, which is now untracked. No CI or Docker yet. |
@@ -52,7 +54,9 @@ Git notes:
 - Teammate EDA branches exist (`origin/eda-saba`, `origin/shakib`, `origin/eda_parham`) but are **not** the baseline. `eda_parham` contains a price file that is explicitly hypothetical, with no source. It must not be reused as price data.
 - Resolved by [ADR-0004](../adr/0004-repository-hygiene.md): `.idea/` and `.vscode/` are untracked and ignored; `AGENTS.md` and `docs/agents/` are tracked.
 
-## 4. The data's real shape (verified against the raw file, 2026-10-14)
+## 4. The sample's shape (counted from the raw file, 2026-10-14; sample-only)
+
+These describe this sample file. They are not assumed to hold for the full dataset's schema or quality (A-01, [ADR-0008](../adr/0008-sample-eda-is-exploratory.md)).
 
 - **Structure:** a list of 4 category objects × 25 sessions = 100 sessions, 907 messages (465 `user`, 442 `bot`). Roles are `user`/`bot`, not `assistant`. Category names are **opaque strata** and are never interpreted.
 - **Session fields:** `session_id`, `created_at`, `session_len`, `user_turns`, `bot_turns`, `messages`. All declared counters match the arrays. Sessions have 3–44 messages (median 6), and every session has more than one user turn.
@@ -62,9 +66,10 @@ Git notes:
 - **Time:** timestamps are naive (no timezone). `created_at` runs 2026-01-14 to 09-09; message timestamps run 03-02 to 09-09. One session's creation month differs from its first message; five have gaps over an hour, one with the first message *before* `created_at`.
 - **Pairing is heuristic:** there is no request ID. The "latest preceding user message in array order" rule links 436 bots to 434 user events. 6 bots have no preceding user, 2 user events map to multiple bots, and there are 16 consecutive-user and 3 consecutive-bot transitions.
 
-## 5. Established facts, hypotheses, unknowns
+## 5. Sample signals, hypotheses, unknowns
 
-### 5.1 Established facts (about this sample only)
+### 5.1 Sample signals (provisional; re-verify on the full dataset)
+The `F-n` IDs are kept for traceability. Each is an exploratory observation from the sample EDA with its simplified helpers, **not an established fact or a design constraint** ([ADR-0008](../adr/0008-sample-eda-is-exploratory.md)).
 - **F-1** User prompts are short and right-skewed: median 29 chars, p90 182, p99 2,655, max 4,666.
 - **F-2** About 91% of user messages are Persian-script by a Unicode heuristic, plus English (6%), mixed (3%), and other.
 - **F-3** Logged `instructions` are large and reused. 408 are non-empty, with median 3,578 chars, p90 8,258, and max 271,155. They form 78 normalised groups, mostly reused within a category.

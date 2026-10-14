@@ -1,5 +1,7 @@
 # EDA questions
 
+> **Preliminary — sample-only, exploratory.** This EDA ran on a 100-session sample to judge whether the project was worth doing. Its numbers are provisional signals to re-verify on the full dataset, not established facts, and its helper code is simplified and not reusable. See [ADR-0008](../adr/0008-sample-eda-is-exploratory.md).
+
 The notebook investigates each question with descriptive counts, distributions, and plots. “Sample can answer” means it can describe this export—not establish production behavior or causal impact.
 
 | Area | Question and why it matters | Investigation | Can this sample answer? |

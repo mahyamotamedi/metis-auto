@@ -1,5 +1,7 @@
 # Sample EDA results
 
+> **Preliminary — sample-only, exploratory.** This EDA ran on a 100-session sample to judge whether the project was worth doing. Its numbers are provisional signals to re-verify on the full dataset, not established facts, and its helper code is simplified and not reusable. See [ADR-0008](../adr/0008-sample-eda-is-exploratory.md).
+
 This document summarizes `experiments/sample_eda/eda.ipynb`. All results describe the provided sample only (100 sessions, 907 messages); they are not production estimates.
 
 ## Dataset structure and integrity
