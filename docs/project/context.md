@@ -13,7 +13,7 @@ Metis-Auto is a middleware "virtual meta-model" between users/applications and s
 
 ## 2. The project brief, summarised
 
-Source: `project-draft.pdf` (Metis-OS Team, dated 2026-09-29). It is **not in the repository**; the copy found is one directory above the repo root (see [Q-01](assumptions_and_questions.md#open-questions)).
+Source: [`docs/brief/project-draft.pdf`](../brief/project-draft.pdf) (Metis-OS Team, dated 2026-09-29), copied into the repo on 2026-10-14 ([ADR-0004](../adr/0004-repository-hygiene.md)).
 
 **Motivations stated:** remove "AI decision fatigue" (users shouldn't pick models by hand), hide API fragmentation behind one highly available gateway (routing, semantic cache, failover), and control unit economics and SLAs with real-time observability of tokens, savings, and routing decisions.
 
@@ -35,6 +35,8 @@ Source: `project-draft.pdf` (Metis-OS Team, dated 2026-09-29). It is **not in th
 
 | Item | Real location | Notes |
 |---|---|---|
+| Project brief | `docs/brief/project-draft.pdf` | Byte-identical copy of the original (outside the repo). |
+| Master prompt | `metis_claude_code_master_prompt.md` | Standing instructions for this engagement. |
 | Sample data (read-only) | `data/sample_data/raw/data.json` | sha256 `e0f56a2f2340b2ac70bf273e05ee2e9b56126cd3874c0c58659f46b4983549e1` (2026-10-14). The brief calls it `sample-data/data.json`. |
 | EDA notebook | `experiments/sample_eda/eda.ipynb` | 64 cells, kernel Python 3.13.5. Imports pandas, numpy, scipy, matplotlib, and scikit-learn (inside the helpers). |
 | EDA helper module | `experiments/sample_eda/eda_helpers.py` | ~1,170 lines. Loading/flattening, text features, `approximate_tokens` (= ceil(chars/4)), `detect_language`, normalisation (`normalize_exact`, `normalize_safe`), `pair_bot_responses_with_preceding_users`, duplicate/near-duplicate detection, response-level analysis. These are **experiment code**, not a library. Reuse candidates go through the promotion process defined in Stage 2. |
@@ -42,13 +44,13 @@ Source: `project-draft.pdf` (Metis-OS Team, dated 2026-09-29). It is **not in th
 | EDA outputs | `reports/sample_eda/figures/` (12 PNG), `reports/sample_eda/tables/` (~80 CSV) | Feature-only; they use hashed or opaque IDs. |
 | Tests | `tests/test_sample_eda_helpers.py` | 3 unittest-style tests. Pass under pytest 8.3.4 (3/3, 2026-10-14). |
 | Package | `src/metis_auto/` | Empty (`.gitkeep`). |
-| Agent conventions | `AGENTS.md`, `docs/agents/` | `.scratch/` issue tracker, triage labels, `GLOSSARY.md` + `docs/adr/` (none exist yet). |
-| Tooling | `.vscode/` (black format-on-save), `.idea/` (`src/` as source root) | No `pyproject.toml`, requirements, lockfile, linter config, CI, or Docker. |
+| Agent conventions | `AGENTS.md`, `docs/agents/` | `.scratch/` issue tracker, triage labels, `GLOSSARY.md` (not yet created) + `docs/adr/` (ADR-0001…0004). |
+| Tooling | (none committed yet) | Decided in [ADR-0001](../adr/0001-python-tooling.md): Python 3.13, venv + pip, `pyproject.toml`, locked dependencies, ruff, pytest. The EDA was formatted with black via `.vscode`, which is now untracked. No CI or Docker yet. |
 
 Git notes:
 - On 2026-10-14, `sys-des` was rebased onto `main` (= `origin/main` `5a9421a`). The branch had been cut from a stale local `main` that lacked the EDA.
 - Teammate EDA branches exist (`origin/eda-saba`, `origin/shakib`, `origin/eda_parham`) but are **not** the baseline. `eda_parham` contains a price file that is explicitly hypothetical, with no source. It must not be reused as price data.
-- `.gitignore` lists `.idea/`, `.vscode/`, `AGENTS.md`, and `docs/agents/`, yet those files are tracked (Q-03).
+- Resolved by [ADR-0004](../adr/0004-repository-hygiene.md): `.idea/` and `.vscode/` are untracked and ignored; `AGENTS.md` and `docs/agents/` are tracked.
 
 ## 4. The data's real shape (verified against the raw file, 2026-10-14)
 
@@ -109,13 +111,13 @@ Each unknown has an entry in the [register](assumptions_and_questions.md#missing
 | C-01 | Traffic collected "between January and September 2026" | Only `created_at` spans Jan–Sep. Messages span Mar 2–Sep 9, and some created/first-message times disagree. | Time windows must name which timestamp they use. Timezone is unknown. |
 | C-02 | "18 distinct models across 7 providers" | 18 / 7 labels, including `default`/`workflow` (36 records), which aren't models. 27 bots have null labels. | Labels can't be priced as-is. A normalised model catalogue is needed. |
 | C-03 | 29 messages include "structured input widgets" | Only a bot-side `input.items` config on 29 bot records (8 sessions). User widget use is not observable. | Treat it as an uncertain proxy feature, not a user-action signal. |
-| C-04 | Bots include retrieved context "when retrieval was used" | A missing `rag` doesn't prove there was no retrieval. Context is capped or plateaus at exactly 4,019 chars. | RAG absence isn't a cache-key-safe fact. Truncation is unverified. |
+| C-04 | Bots include retrieved context "when retrieval was used" | A missing `rag` doesn't prove there was no retrieval. Context is capped or plateaus at exactly 4,019 chars. | RAG absence isn't a cache-key-safe fact. Working assumption: treat 4,019-char contexts as possibly truncated (A-14, unverified). |
 | C-05 | (no mention of `instructions`) | Instructions exist on 415 bots and dominate the logged size (F-3, F-4). | The brief's cost model ignores what is probably the largest input component. |
 | C-06 | Attachments are "image/audio" | Only `IMAGE` is observed (15 items). | Audio support is a future need, not current. |
 | C-07 | Quality = similarity to "actual bot answers" | The logged answers come from 18 heterogeneous labels and aren't gold. Pairing is heuristic. | Similarity-to-logged measures *agreement*, not correctness (see §7). |
 | C-08 | Latency = end-to-end response time vs. baseline | No latency fields. Timestamp gaps aren't API latency. | Latency must come from live or replayed calls, or be marked unmeasured. |
 | C-09 | Hit rate = share of queries served from cache | 0 pairs pass the strictest safe-candidate screen. | Hit rate must always be paired with a hit-correctness measure. |
-| C-10 | Failover "to ensure 100…" | Truncated text. The data has no failure events. | The availability target is undefined (Q-04). |
+| C-10 | Failover "to ensure 100…" | Truncated text. The data has no failure events. | Working assumption: a high-availability target, exact SLA unknown (A-15, unverified; Q-04). |
 | C-11 | Example models (Gemini 1.5 Flash, GPT-4o-mini, Claude 3.5 Sonnet, o3-mini) | The logs use other labels (e.g. `deepseek-v4-flash`). | The catalogue is configuration chosen later from verified current options. |
 | C-12 | "All PII removed" | Content, instructions, RAG, and attachments may still be sensitive. | Apply the stricter rule: no raw content anywhere outside in-memory analysis. |
 
@@ -125,7 +127,7 @@ Each unknown has an entry in the [register](assumptions_and_questions.md#missing
 - **Cache hit rate.** It is meaningless without hit correctness: whether the served answer was valid for this request's context. Report it as hit rate × false-hit rate, broken down by key-composition variant.
 - **Simulated cost.** This depends on (a) verified, dated prices; (b) the right tokenizer per model, since Persian makes chars/4 unreliable; (c) the true prompt composition (U-04); and (d) cached-input discounts. Every cost figure must carry its token-count method and price source.
 - **Latency.** It can't be measured offline from this data. Router or classifier overhead must be measured separately and added.
-- **Single premium baseline.** "Premium" must be a concrete, priced model choice, and it is open (Q-05). An **as-logged baseline** is also needed, and every experiment reports against both.
+- **Single premium baseline.** "Premium" must be a concrete, priced model choice, and it is open (Q-05). Until then it is a configurable placeholder. Every experiment also reports against the **as-logged baseline** ([ADR-0002](../adr/0002-configurable-baselines.md)).
 
 ## 8. The counterfactual problem (introduced; designed in Stages 3 and 8)
 
@@ -134,7 +136,7 @@ The dataset only contains the answer of the model that was actually used. Evalua
 2. **Recorded or mocked responses.** These are cheap and reproducible, but only as good as what was recorded.
 3. **Proxy metrics** such as size, similarity, and heuristics. These are free, but weak.
 
-Stage 3/8 documents will state which one each experiment uses.
+Stage 3/8 documents will state which one each experiment uses. Until providers and a budget exist, experiments default to option 2 (mocks or recorded responses). Live calls are opt-in under a spending cap ([ADR-0003](../adr/0003-offline-by-default-model-calls.md)).
 
 ## 9. Pointers
 

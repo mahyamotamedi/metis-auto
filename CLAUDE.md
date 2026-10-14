@@ -8,6 +8,7 @@ Durable working rules for agent sessions on Metis-Auto. Keep this file short and
 - Assumptions & open questions: [`docs/project/assumptions_and_questions.md`](docs/project/assumptions_and_questions.md).
 - Decision records: `docs/adr/` (`NNNN-slug.md`: context, alternatives, decision, consequences).
 - Sample EDA: `experiments/sample_eda/`, `docs/sample_eda/`, `reports/sample_eda/`.
+- Project brief: [`docs/brief/project-draft.pdf`](docs/brief/project-draft.pdf). Master prompt: [`metis_claude_code_master_prompt.md`](metis_claude_code_master_prompt.md).
 
 ## Data and privacy
 - `data/sample_data/raw/` is **read-only**. Never modify it; write derived data elsewhere.
@@ -21,4 +22,5 @@ Durable working rules for agent sessions on Metis-Auto. Keep this file short and
 - Never fabricate prices, model capabilities, tokenizer behaviour, API signatures, or data facts. Cite the source and the check date, and mark the fact for re-verification.
 - Keep the design simple and replaceable. Prices, catalogues, thresholds, and strategies are configuration, not code.
 - Tests run offline with no API keys. Network tests are opt-in.
-- Python 3.13, black formatting, pytest (tooling still provisional; see the progress doc).
+- Tooling ([ADR-0001](docs/adr/0001-python-tooling.md)): Python 3.13 in a venv created from a real Python 3.13 interpreter, **not from conda base**. pip, with dependencies in `pyproject.toml` and locked versions. **ruff** for lint and format (not black). pytest.
+- No real model calls by default. Use mocks or recorded responses. Live calls are opt-in under a spending cap ([ADR-0003](docs/adr/0003-offline-by-default-model-calls.md)). Baselines are configuration ([ADR-0002](docs/adr/0002-configurable-baselines.md)).
