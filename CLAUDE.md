@@ -5,6 +5,7 @@ Durable working rules for agent sessions on Metis-Auto. Keep this file short and
 ## Where things live
 - Project state: [`docs/project/progress.md`](docs/project/progress.md). Read it first.
 - Context & unknowns: [`docs/project/context.md`](docs/project/context.md).
+- Requirements & traceability: [`docs/project/requirements.md`](docs/project/requirements.md). Every design element must cite an `FR-`/`QA-`/`NG-` or hypothesis/experiment ID. Terms: [`GLOSSARY.md`](GLOSSARY.md).
 - Assumptions & open questions: [`docs/project/assumptions_and_questions.md`](docs/project/assumptions_and_questions.md).
 - Decision records: `docs/adr/` (`NNNN-slug.md`: context, alternatives, decision, consequences).
 - Sample EDA: `experiments/sample_eda/`, `docs/sample_eda/`, `reports/sample_eda/`.

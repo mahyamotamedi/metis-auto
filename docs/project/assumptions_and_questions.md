@@ -1,6 +1,6 @@
 # Assumptions & Open-Questions Register
 
-Living register. Last updated 2026-10-14 (Stage 0, after your answers). Context: [context.md](context.md). Decision records: [`docs/adr/`](../adr/).
+Living register. Last updated 2026-10-14 (Stage 1). Context: [context.md](context.md). Decision records: [`docs/adr/`](../adr/).
 
 Tags:
 - **Kind:** `current` (a current requirement), `future` (a likely future need), `spec` (speculative).
@@ -30,6 +30,11 @@ When an item is resolved, keep it in place, update its status, and say how it wa
 | A-15 | The failover target ("to ensure 100…") is likely 100% availability. Treat it as a **high-availability target with the exact SLA unknown**. | current | provisional (unverified) | Brief owner (Q-04). |
 | A-16 | `input.items` and the `default`/`workflow` labels have **unknown meaning**. Keep the cautious proxy treatment: an uncertain configuration feature, and labels that aren't models. | current | provisional (unverified) | Data owner (Q-09). |
 | A-17 | The premium baseline is a configuration setting with a clearly marked placeholder. The as-logged baseline is mandatory for every experiment. | current | decided | [ADR-0002](../adr/0002-configurable-baselines.md). |
+| A-18 | All of Metis-Auto's own work (router, embeddings, judge, verifier, failed and escalated attempts) counts against savings. | current | decided | FR-ACCT-03, [ADR-0006](../adr/0006-evaluation-metric-definitions.md). |
+| A-19 | Requests with attachments are **not cache-eligible** by default, because attachment content is unseen. | current | provisional | A content-hash rule plus evidence from the full dataset. |
+| A-20 | No single cheap signal is assumed sufficient to detect an unsatisfactory answer. Escalation will combine detectors, and the useful ones are found by experiment. | current | provisional | Cascade experiments (U-07). |
+| A-21 | Quality claims rest on non-inferiority against a baseline, or on judge scores, not on agreement with as-logged answers alone. | current | decided (δ provisional, Q-13) | [ADR-0006](../adr/0006-evaluation-metric-definitions.md). |
+| A-22 | Pipeline overhead measured on a local dev machine is indicative only. Hardware is recorded with every measurement. | current | decided | Online-phase measurement. |
 
 ## Open questions — project decisions
 
@@ -44,6 +49,11 @@ When an item is resolved, keep it in place, update its status, and say how it wa
 | Q-10 | Should teammate EDA branches feed this work? | **open** | Not addressed. `origin/main`'s EDA remains the sole baseline. |
 | Q-11 | When is the full dataset expected, and at what size? | **open** | Not addressed. |
 | Q-12 | Budget amount for live runs. | **open** | Needed before any live run (ADR-0003). |
+| Q-13 | What quality loss counts as "material"? That is, the non-inferiority margin δ, and which signal (judge or human) is authoritative. | **answered (provisional)** | 2026-10-14:<ul><li>δ: mean judge score drops at most **3%** vs. baseline overall, **and** no stratum (opaque category, language) drops more than **5%**.</li><li>Primary judge: **LLM-as-a-judge**, calibrated against a small human-rated set.</li><li>Similarity to logged answers is a secondary metric only.</li><li>Revisit with the full dataset.</li></ul>Working interpretation, to confirm: "%" is **relative** to the baseline's mean judge score. Thresholds are configuration. Recorded in [ADR-0006](../adr/0006-evaluation-metric-definitions.md) and QA-QUAL. |
+| Q-14 | Latency budget: the maximum acceptable pipeline overhead (p95), and the end-to-end tolerance vs. baseline. | **answered (provisional)** | 2026-10-14: Metis's own added overhead (cache lookup + routing), excluding model response time, is **≤ 100 ms at p95**. Revisit once real model latencies are measured. The end-to-end tolerance is still open.<br>Working interpretation, to confirm: the budget covers **all** pre-model work Metis adds: feature extraction, embedding for semantic lookup, cache lookup, routing, and context building. It excludes provider time, and escalation attempts are reported separately. Recorded in QA-LAT and [ADR-0006](../adr/0006-evaluation-metric-definitions.md). |
+| Q-15 | Online phase only: must the future gateway's wire API be compatible with an existing client API (e.g. whatever production Metis clients call today)? | **open** (question for the Metis team) | 2026-10-14: unknown, because there is no production access. **Provisional default:** a separate external-API adapter layer, assuming an **OpenAI-compatible chat-completions style**. Internal contracts stay independent of it (FR-API-03, [ADR-0005](../adr/0005-current-phase-scope.md)). |
+| Q-16 | May a cached answer be served across sessions or users at all, and if so, within what scope? This is a product/privacy decision. | **partly answered** | 2026-10-14:<ul><li>The default for anything serving users is reuse **within the same session only**.</li><li>Scope is configurable: `session` / `user` / `global`.</li><li>Offline experiments measure cross-session and cross-user reuse candidates **separately**, to quantify the opportunity.</li><li>**The final policy stays open** as a product/privacy decision.</li></ul>Note: the sample has no user ID, so cross-user candidates need a privacy-safe user ID in the full dataset. Recorded in [ADR-0007](../adr/0007-cache-sharing-scope.md) and FR-XCACHE-05. |
+| Q-17 | Do you confirm deferring brief Action 3 (pricing engine and dashboard UI), keeping only its data enablers in scope? | **answered** | 2026-10-14: confirmed. The pricing engine and dashboard UI are deferred. The observability/event design must still capture everything a dashboard would need (tokens, cost, savings, latency, routing decisions), so one can be added without redesign ([ADR-0005](../adr/0005-current-phase-scope.md), FR-OBS-05). |
 
 ## Open questions — for the data owner
 These were all unanswered as of 2026-10-14: this is sample data and the full dataset hasn't arrived. The working assumptions are A-06, A-14, A-15, A-16, all unverified.

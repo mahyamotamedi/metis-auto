@@ -141,4 +141,5 @@ Stage 3/8 documents will state which one each experiment uses. Until providers a
 ## 9. Pointers
 
 - Durable working rules: [`CLAUDE.md`](../../CLAUDE.md).
+- Requirements, quality attributes, non-goals, and traceability (Stage 1): [requirements.md](requirements.md). Terms: [`GLOSSARY.md`](../../GLOSSARY.md).
 - Fields the full dataset must provide: the "Requirements for the Full Dataset" section of [eda_results.md](../sample_eda/eda_results.md). The system's own event model must produce these fields (Stages 3–4).
