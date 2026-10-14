@@ -7,7 +7,8 @@ Durable working rules for agent sessions on Metis-Auto. Keep this file short and
 - Context & unknowns: [`docs/project/context.md`](docs/project/context.md).
 - Requirements & traceability: [`docs/project/requirements.md`](docs/project/requirements.md). Every design element must cite an `FR-`/`QA-`/`NG-` or hypothesis/experiment ID. Terms: [`GLOSSARY.md`](GLOSSARY.md).
 - Assumptions & open questions: [`docs/project/assumptions_and_questions.md`](docs/project/assumptions_and_questions.md).
-- Decision records: `docs/adr/` (`NNNN-slug.md`: context, alternatives, decision, consequences).
+- Decision records: `docs/adr/` (`NNNN-slug.md`: context, alternatives, decision, consequences). Docs index: [`docs/README.md`](docs/README.md).
+- **Where a new file goes and what it may import:** [`docs/architecture/repository_structure.md`](docs/architecture/repository_structure.md) ([ADR-0009](docs/adr/0009-repository-structure-and-dependency-rules.md)). Layer rules are enforced by `tests/architecture/test_import_rules.py`. Candidate strategies stay in `experiments/` until promoted.
 - Sample EDA: `experiments/sample_eda/`, `docs/sample_eda/`, `reports/sample_eda/`.
 - Project brief: [`docs/brief/project-draft.pdf`](docs/brief/project-draft.pdf). Master prompt: [`metis_claude_code_master_prompt.md`](metis_claude_code_master_prompt.md).
 
@@ -20,6 +21,10 @@ Durable working rules for agent sessions on Metis-Auto. Keep this file short and
   - Never import, copy, or build on `experiments/sample_eda/eda_helpers.py`. Read it only for reference; re-implement needed logic properly, with tests.
   - Don't shape contracts or data interfaces around sample quirks.
   - The full-dataset EDA lives separately from the sample EDA, which is preliminary.
+
+## Git
+- **Never run `git commit`, `git push`, or any command that rewrites git history** (e.g. `rebase`, `reset`, `commit --amend`, `push --force`, `filter-branch`). The user reviews and commits all changes.
+- At the end of each stage, list the changed files and suggest a commit message, but do not commit.
 
 ## How to work
 - Work stage by stage. At the end of each stage, give the 6-part report (changes, decisions, assumptions, questions, next stage, exit criteria). Update `progress.md` and then **stop** for review.

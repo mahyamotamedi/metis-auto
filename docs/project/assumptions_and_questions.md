@@ -1,6 +1,6 @@
 # Assumptions & Open-Questions Register
 
-Living register. Last updated 2026-10-14 (Stage 1). Context: [context.md](context.md). Decision records: [`docs/adr/`](../adr/).
+Living register. Last updated 2026-10-14 (Stage 2). Context: [context.md](context.md). Decision records: [`docs/adr/`](../adr/).
 
 Tags:
 - **Kind:** `current` (a current requirement), `future` (a likely future need), `spec` (speculative).
@@ -37,14 +37,17 @@ When an item is resolved, keep it in place, update its status, and say how it wa
 | A-22 | Pipeline overhead measured on a local dev machine is indicative only. Hardware is recorded with every measurement. | current | decided | Online-phase measurement. |
 | A-23 | Every sample-EDA number is a provisional signal, not a fact. Designs may be informed by it but not depend on its exact value. | current | decided | [ADR-0008](../adr/0008-sample-eda-is-exploratory.md). Re-verified by the full EDA. |
 | A-24 | The sample-EDA helpers are unreliable and reference-only. | current | decided | [ADR-0008](../adr/0008-sample-eda-is-exploratory.md). |
+| A-25 | The Stage 3 components will map onto the ten package layers of ADR-0009 without a new layer. | current | provisional | Stage 3. If a component fits no layer, amend ADR-0009 and the import-rule table together. |
+| A-26 | A static `ast` import check is enough to enforce the layer rules for now. It cannot see dynamic imports (`importlib`, `sys.path` changes). | current | provisional | Dynamic loading of experiment strategies (Stage 8) or rules too complex for the table → adopt `import-linter` once `pyproject.toml` exists. |
+| A-27 | The full dataset, intermediate derived data, recorded live responses, and run records are **not** committed to git (`data/full_data/`, `data/derived/`, `data/recorded/`, `runs/` are gitignored). Only feature-only reports are committed. | future | decided (full dataset: Q-18 answered 2026-10-14) | Q-18. The other paths follow the same privacy rule. |
 
 ## Open questions — project decisions
 
 | ID | Question | Status | Resolution / next step |
 |---|---|---|---|
 | Q-01 | Add the project brief to the repo? | **answered** | Yes. Committed at `docs/brief/project-draft.pdf` ([ADR-0004](../adr/0004-repository-hygiene.md)). |
-| Q-02 | Commit the master prompt, renamed without `_1`? | **answered** | Yes. Now `metis_claude_code_master_prompt.md` at the root (ADR-0004). Its final location is part of Stage 2. |
-| Q-03 | Tracked vs. ignored for `.idea/`, `.vscode/`, `AGENTS.md`, `docs/agents/`. | **answered** | IDE folders are untracked and stay ignored. `AGENTS.md` (root) and `docs/agents/` are tracked and their ignore lines removed (ADR-0004). Where `docs/agents/` should live is a Stage 2 proposal; not moved yet. |
+| Q-02 | Commit the master prompt, renamed without `_1`? | **answered** | Yes. Now `metis_claude_code_master_prompt.md` at the root (ADR-0004). Stage 2: **it stays at the root** ([ADR-0009](../adr/0009-repository-structure-and-dependency-rules.md)). |
+| Q-03 | Tracked vs. ignored for `.idea/`, `.vscode/`, `AGENTS.md`, `docs/agents/`. | **answered** | IDE folders are untracked and stay ignored. `AGENTS.md` (root) and `docs/agents/` are tracked and their ignore lines removed (ADR-0004). Where `docs/agents/` should live is a Stage 2 proposal; not moved yet. Stage 2: **it stays at `docs/agents/`** ([ADR-0009](../adr/0009-repository-structure-and-dependency-rules.md)). |
 | Q-05 | Which concrete model is the "single premium-model baseline"? | **open** | Deferred until the full data, provider access, and verified prices exist. Meanwhile it is a configurable placeholder ([ADR-0002](../adr/0002-configurable-baselines.md)). |
 | Q-07 | Dependency manager and linting. | **answered** | Python 3.13, venv + pip, `pyproject.toml`, locked versions (pip-tools with hashes, provisional), ruff for lint and format, pytest. The venv must come from a real Python 3.13, not conda base ([ADR-0001](../adr/0001-python-tooling.md)). |
 | Q-08 | Are live provider calls allowed? | **partly answered** | Eventually yes. For now none: mocks or recorded responses by default. A spending cap is planned, and live runs are refused until it is set. **Open:** provider choice, budget amount ([ADR-0003](../adr/0003-offline-by-default-model-calls.md)). |
@@ -56,6 +59,7 @@ When an item is resolved, keep it in place, update its status, and say how it wa
 | Q-15 | Online phase only: must the future gateway's wire API be compatible with an existing client API (e.g. whatever production Metis clients call today)? | **open** (question for the Metis team) | 2026-10-14: unknown, because there is no production access. **Provisional default:** a separate external-API adapter layer, assuming an **OpenAI-compatible chat-completions style**. Internal contracts stay independent of it (FR-API-03, [ADR-0005](../adr/0005-current-phase-scope.md)). |
 | Q-16 | May a cached answer be served across sessions or users at all, and if so, within what scope? This is a product/privacy decision. | **partly answered** | 2026-10-14:<ul><li>The default for anything serving users is reuse **within the same session only**.</li><li>Scope is configurable: `session` / `user` / `global`.</li><li>Offline experiments measure cross-session and cross-user reuse candidates **separately**, to quantify the opportunity.</li><li>**The final policy stays open** as a product/privacy decision.</li></ul>Note: the sample has no user ID, so cross-user candidates need a privacy-safe user ID in the full dataset. Recorded in [ADR-0007](../adr/0007-cache-sharing-scope.md) and FR-XCACHE-05. |
 | Q-17 | Do you confirm deferring brief Action 3 (pricing engine and dashboard UI), keeping only its data enablers in scope? | **answered** | 2026-10-14: confirmed. The pricing engine and dashboard UI are deferred. The observability/event design must still capture everything a dashboard would need (tokens, cost, savings, latency, routing decisions), so one can be added without redesign ([ADR-0005](../adr/0005-current-phase-scope.md), FR-OBS-05). |
+| Q-18 | Should the full dataset stay out of git when it arrives? The sample is committed, but the full dataset will be larger and possibly more sensitive. | **answered** | 2026-10-14: **yes, the full dataset stays out of git.** It lives under the gitignored `data/full_data/` and is distributed out of band. Its hash is recorded in run manifests (FR-EVAL-07) so runs stay reproducible. |
 
 ## Open questions — for the data owner
 These were all unanswered as of 2026-10-14: this is sample data and the full dataset hasn't arrived. The working assumptions are A-06, A-14, A-15, A-16, all unverified.

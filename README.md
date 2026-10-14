@@ -13,11 +13,15 @@ The project explores:
 
 ## Repository Structure
 
-- `data/` — project datasets
-- `experiments/` — exploratory analyses and experiments
-- `reports/` — generated analysis outputs, figures, and tables
-- `src/metis_auto/` — reusable project code
-- `tests/` — automated tests
+- `src/metis_auto/` — the package, in layers: contracts, ports, domain, application, adapters, data_access, settings, evaluation, analysis, wiring
+- `config/` — versioned configuration data (catalogue, prices, defaults); no secrets
+- `experiments/` — experiment definitions and notebooks, by area; `sample_eda/` is preliminary and frozen
+- `reports/` — committed, feature-only outputs, figures, and tables
+- `data/` — datasets (`sample_data/raw/` is read-only)
+- `tests/` — automated tests, all offline by default
+- `docs/` — documentation; start at [`docs/README.md`](docs/README.md)
+
+Where new files go and what each package may import: [`docs/architecture/repository_structure.md`](docs/architecture/repository_structure.md).
 
 ## Development Workflow
 

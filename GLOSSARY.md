@@ -1,6 +1,6 @@
 # Glossary
 
-Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-14 (Stage 1).
+Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-14 (Stage 2).
 
 | Term | Meaning | Avoid |
 |---|---|---|
@@ -30,3 +30,7 @@ Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid t
 | **Counterfactual source** | How a run obtains answers the logs don't contain: new calls, recorded/mocked responses, or proxy metrics. | — |
 | **Opaque category** | One of the four unnamed data strata. Never interpreted (A-02). | category names as meanings |
 | **Run mode** | Whether an event came from replay, simulation, or live traffic. | — |
+| **Port** | An interface (in `metis_auto.ports`) for a swappable boundary: provider client, cache store, embedder, tokenizer, event sink, judge, data source ([ADR-0009](docs/adr/0009-repository-structure-and-dependency-rules.md)). | "service", "driver" |
+| **Adapter** | A concrete implementation of a port: fake, recorded, or live provider client, store, sink, or backend. It contains no business rules. | "client" (when the abstraction is meant) |
+| **Composition root** | `metis_auto.wiring`: the only place that builds concrete objects from configuration and injects them. | "factory" (too generic) |
+| **Promotion** | Moving a candidate strategy from `experiments/` into `src/metis_auto/` after it passes the promotion criteria (evidence, tests, config entry, docs, decision record). | "merging the experiment" |

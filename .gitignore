@@ -7,3 +7,9 @@ venv/
 .env
 .idea/
 .vscode/
+
+# Data and run outputs that may hold sensitive or large content (ADR-0009)
+data/full_data/
+data/derived/
+data/recorded/
+runs/
