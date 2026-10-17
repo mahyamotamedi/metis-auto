@@ -1,6 +1,6 @@
 # Observability: Events, Correlation, Metrics (Stage 3)
 
-Status: event-stream approach **decided** ([ADR-0012](../adr/0012-event-stream-as-measurement-record.md)); event type list and envelope fields **provisional** (Stage 4 fixes names and fields). Last updated 2026-10-14.
+Status: event-stream approach **decided** ([ADR-0012](../adr/0012-event-stream-as-measurement-record.md)); event types and envelope **fixed in Stage 4** as contracts ([contracts.md §3.6](contracts.md#36-events)); individual fields provisional until the Stage 5 skeleton uses them. Last updated 2026-10-17.
 Index: [architecture README](README.md). Components: CMP-03 (event recorder), CMP-14 (sinks), CMP-23 (aggregates). Requirements: FR-OBS-01…06, QA-PRIV.
 
 ---
@@ -34,9 +34,9 @@ Durations recorded during replay with fake clients measure Metis's own code only
 
 ## 3. Event envelope and types
 
-**Envelope** (on every event; provisional): `event_id`, `event_type`, `schema_version`, `run_id`, `run_mode` (`replayed` / `simulated` / `live`), `request_id`, `session_ref`, `case_id`, `attempt_id`, `parent_attempt_id`, `timestamp` (UTC, aware), `logged_timestamp` (replay only; naive, timezone unknown), `span`, `duration_ms`, `versions` (config hash, policy name and version per policy, feature set, catalogue, price table, key schema, embedder, judge), `payload`.
+**Envelope** (on every event). Fixed in Stage 4 as `Event` with one typed payload per type below ([contracts.md §3.6](contracts.md#36-events); fields in [contracts_reference.md](contracts_reference.md#contractsevents)). The Stage 3 list was: `event_id`, `event_type`, `schema_version`, `run_id`, `run_mode` (`replayed` / `simulated` / `live`), `request_id`, `session_ref`, `case_id`, `attempt_id`, `parent_attempt_id`, `timestamp` (UTC, aware), `logged_timestamp` (replay only; naive, timezone unknown), `span`, `duration_ms`, `versions` (config hash, policy name and version per policy, feature set, catalogue, price table, key schema, embedder, judge), `payload`.
 
-**Payloads carry no raw content** (FR-OBS-02). Allowed: IDs, keyed fingerprints, sizes, counts, enumerations, scores, money, durations, versions. A Stage 4 test asserts that every payload field has an allowed privacy class.
+**Payloads carry no raw content** (FR-OBS-02). Allowed: IDs, keyed fingerprints, sizes, counts, enumerations, scores, money, durations, versions. Stage 4 tests assert that no event field, at any depth, has the `content` privacy class, and that serialised synthetic events contain no synthetic content ([contracts.md §2.2](contracts.md#22-privacy-classes)).
 
 | Event type | Payload highlights | Requirements |
 |---|---|---|
@@ -87,7 +87,7 @@ Every dashboard figure in the brief is derivable from the events above. This tab
 | Retries and failures | `retry_scheduled`, `failover_triggered`, `attempt_finished` error class |
 | Selected model and routing decision and reason | `routing_decided` |
 | Cache eligibility, lookup, hit, invalidation, outcome | `cache_lookup`, `cache_stored`; invalidation events when FR-XCACHE-09 operations exist |
-| Retrieval document IDs and scores; actual prompt composition | `context_built` composition record (fingerprints, sizes). Document IDs and scores only if the caller supplies them; noted as a Stage 4 contract field. |
+| Retrieval document IDs and scores; actual prompt composition | `context_built` composition record (fingerprints, sizes). Document IDs and scores only if the caller supplies them: `RetrievedItem.document_ref` and `.score` (Stage 4). |
 | Quality and evaluation labels | `evaluation_scored` |
 | Privacy-safe customer or workload grouping | `user_ref`, opaque category as a stratum |
 | Timezone and clock semantics; stable correlation IDs | aware UTC `timestamp`; §2 IDs |

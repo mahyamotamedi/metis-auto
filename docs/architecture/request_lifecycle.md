@@ -59,10 +59,10 @@ sequenceDiagram
     D-->>P: RoutingDecision
     P->>E: features_extracted, routing_decided
     P->>D: cache key(Request, RoutingDecision)
-    D-->>P: CacheKey or ineligible
+    D-->>P: CacheKey, or CacheLookupResult (ineligible)
     P->>S: get(CacheKey)
     S-->>P: CacheEntry or none
-    P->>D: validate(CacheEntry)
+    P->>D: validate(CacheEntry, IndexMatch)
     D-->>P: CacheLookupResult
     P->>E: cache_lookup
     alt valid cache hit
@@ -72,9 +72,9 @@ sequenceDiagram
         P-->>C: FinalResponse
     else miss or ineligible
         loop until the attempt policy returns or fails
-            P->>M: token counts for target
-            M-->>P: TokenUsage (input estimate)
-            P->>D: build context(Request, counts, limits)
+            P->>M: token counts(Request, target)
+            M-->>P: TargetTokenCounts
+            P->>D: build context(Request, TargetTokenCounts, CatalogueEntry)
             D-->>P: ContextPlan
             P->>E: context_built
             P->>D: next action(AttemptState)
@@ -86,7 +86,7 @@ sequenceDiagram
             P->>E: attempt_started, attempt_finished, and any escalation or failover
         end
         P->>D: storable?(final ModelResult)
-        D-->>P: store decision
+        D-->>P: CacheStoreDecision
         P->>S: put(CacheEntry)
         P->>E: cache_stored, response_returned
         P-->>C: FinalResponse

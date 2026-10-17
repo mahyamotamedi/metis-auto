@@ -13,7 +13,9 @@ One operation, provisionally `invoke(ModelInvocation) -> ModelResult`.
 - **Input** `ModelInvocation`: catalogue model ID, ordered input parts from the `ContextPlan`, attachment references, generation limits (maximum output tokens), request and attempt IDs, timeout.
 - **Output** `ModelResult`, which is one of:
   - a **response**: text, normalised finish reason (`complete`, `length`, `content_filter`, `other`), `TokenUsage` with fidelity `provider_reported` when the provider returns usage, provider latency, provider-reported model version if returned;
-  - a **normalised error**: an error class (§3), a retryable flag, and the provider's error code (a code, not a message, because messages can echo content).
+  - a **normalised error**: an error class (§3), a retryable flag, and the provider's error code (a code, not a message, because messages can echo content);
+  - **no answer** (added in Stage 4, `ModelNoAnswer`): a replay or proxy source has nothing for this target. It lowers coverage and is never retried or failed over ([ADR-0014](../adr/0014-counterfactual-answers-via-model-client.md)).
+- Contracts: `ModelInvocation`, `ModelResult` ([contracts.md §3.4](contracts.md#34-context-and-model-calls)).
 - **Never raises for provider failures.** Exceptions mean a programming or configuration error.
 - **Synchronous** for now ([ADR-0010](../adr/0010-request-pipeline-shape.md)).
 - Internal message roles are generic (for example `user`, `assistant`, `instructions`). Mapping the sample's `bot` role is the sample loader's job (ADR-0008). Mapping internal roles to each provider's format is the adapter's job.

@@ -1,6 +1,6 @@
 # Glossary
 
-Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-14 (Stage 3).
+Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-17 (Stage 4).
 
 | Term | Meaning | Avoid |
 |---|---|---|
@@ -44,3 +44,8 @@ Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid t
 | **Composition record** | Per-component sizes, fingerprints, and actions (kept, trimmed, summarised, dropped) for one model input. No content. | "prompt log" |
 | **Coverage** | In an evaluation run, the fraction of cases for which the counterfactual source produced an answer ([ADR-0014](docs/adr/0014-counterfactual-answers-via-model-client.md)). | — |
 | **Span** | A timed stage of a request (e.g. `route`, `cache_lookup.exact`, `model_call`). Overhead is the sum of pre-model spans. | — |
+| **Contract** | A typed data model passed between components, in `metis_auto.contracts` ([contracts.md](docs/architecture/contracts.md), [ADR-0017](docs/adr/0017-contract-modelling-with-pydantic.md)). | "DTO", "schema" (for the models) |
+| **Component state** | Whether an optional request component is `present`, `absent`, or `unknown` (P-6). Request components default to `unknown`. | "null", "empty" |
+| **Privacy class** | The sensitivity of a contract field: `content`, `fingerprint`, `reference`, `derived`, or `operational` ([contracts.md §2.2](docs/architecture/contracts.md#22-privacy-classes)). Only `content` must stay inside the content boundary. | "PII level" |
+| **No answer** | A model result meaning the counterfactual source has nothing for this target (`ModelNoAnswer`). It lowers coverage; it is not an error. | "miss", "error" |
+| **Key ID** | A short identifier of the fingerprint key (`kid1:…`), recorded so fingerprints made with different keys are never compared. | — |

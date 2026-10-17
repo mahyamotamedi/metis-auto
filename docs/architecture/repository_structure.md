@@ -146,7 +146,7 @@ What the rules buy:
 
 ### 3.3 Third-party dependencies (provisional)
 
-- `contracts`, `ports`, `domain`: standard library plus the contract-modelling library chosen in Stage 4. Nothing that does I/O or network.
+- `contracts`, `ports`, `domain`: standard library plus **pydantic v2**, the contract-modelling library chosen in Stage 4 ([ADR-0017](../adr/0017-contract-modelling-with-pydantic.md)). Nothing that does I/O or network.
 - Provider SDKs, tokenizer libraries, embedding libraries, and DB drivers are imported **only** in `adapters` (or `data_access` for DB drivers).
 - Heavy analysis libraries (pandas and similar) are allowed in `analysis`, `evaluation`, and `experiments/`, but not in `domain` or `application`, to protect the overhead budget (QA-LAT, ≤ 100 ms p95).
 
@@ -170,9 +170,10 @@ What the rules buy:
 |---|---|
 | `tests/test_sample_eda_helpers.py` | Existing EDA tests. Kept in place. |
 | `tests/architecture/` *(new)* | Structure checks (import rules). |
-| `tests/unit/` *(later, Stage 4+)* | One sub-tree mirroring `src/metis_auto/<package>/`. |
+| `tests/unit/` *(Stage 4)* | One sub-tree mirroring `src/metis_auto/<package>/`; `tests/unit/contracts/` exists. Test file names are unique across the tree (`test_<package>_<topic>.py`), because test directories have no `__init__.py`. |
 | `tests/integration/` *(later, Stage 5)* | Pipeline smoke test with fakes; replay over synthetic data. |
-| `tests/fixtures/synthetic/` *(later)* | Synthetic data and synthetic recorded responses. Files are named or marked `synthetic`. |
+| `tests/fixtures/synthetic/` *(Stage 4)* | Synthetic data and synthetic recorded responses. Files are named or marked `synthetic`; strings carry a `[SYNTHETIC]` marker. `contract_examples.py` holds one example per contract and the fingerprint reference implementation. |
+| `tests/conftest.py` *(Stage 4)* | Puts `src/` and `tests/` on `sys.path` until `pyproject.toml` exists (TODO, Stage 5). |
 
 Rules (QA-TEST, ADR-0003):
 - Every default test runs offline with no keys.

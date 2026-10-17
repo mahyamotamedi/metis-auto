@@ -20,6 +20,8 @@ Status legend: **decided** · **provisional** (working answer, may change with e
 | [providers.md](providers.md) | `ModelClient` port, adapters, error taxonomy, catalogue fields, other external ports | port decided |
 | [deployment_and_data.md](deployment_and_data.md) | Local-development assumptions, future deployment view, future database extension points | local decided, future provisional |
 | [repository_structure.md](repository_structure.md) | Where files go, import rules, promotion (Stage 2) | decided |
+| [contracts.md](contracts.md) | **Stage 4.** Internal contracts: conventions (privacy classes, tri-state components, IDs, fingerprints, time, money, versioning), catalogue with producers and consumers, sample tolerance, reserved `traffic_source`, arrow coverage | conventions decided, fields provisional |
+| [contracts_reference.md](contracts_reference.md) | **Generated** field reference for every contract (type, required, privacy class, description) and every enumeration | generated; a test fails if stale |
 
 ## Diagrams and the question each answers
 
@@ -40,12 +42,14 @@ Status legend: **decided** · **provisional** (working answer, may change with e
 
 Added beyond the master prompt's list: **context construction** (its overflow branches are easy to get wrong in prose) and **configuration** (precedence and the separate secrets path). No expected view was dropped.
 
-Every arrow is labelled with a provisional contract name ([overview §5](overview.md#5-provisional-contract-vocabulary)) or a call. Stage 4 fixes the contracts, and renames must be applied to the diagrams.
+Every data arrow is labelled with a Stage 4 contract name or a call whose arguments are contracts. The audit, with its two documented non-contract flows and the configuration diagram deferred to Stage 6, is in [contracts.md §7](contracts.md#7-every-arrow-is-labelled-with-a-contract-exit-criterion).
 
 ## Decision records from this stage
 
 [ADR-0010](../adr/0010-request-pipeline-shape.md) pipeline shape · [ADR-0011](../adr/0011-cache-key-and-lookup-design.md) cache key and lookup · [ADR-0012](../adr/0012-event-stream-as-measurement-record.md) event stream · [ADR-0013](../adr/0013-unified-attempt-model.md) attempt model · [ADR-0014](../adr/0014-counterfactual-answers-via-model-client.md) counterfactual answers · [ADR-0015](../adr/0015-keyed-content-fingerprints.md) keyed fingerprints.
 
+Stage 4: [ADR-0017](../adr/0017-contract-modelling-with-pydantic.md) contract modelling with pydantic; [ADR-0015 amendment 1](../adr/0015-keyed-content-fingerprints.md#amendment-1-2026-10-17-stage-4-the-algorithm) fingerprint algorithm.
+
 ## Checking diagrams
 
-All Mermaid blocks in `docs/architecture/` were parsed with Mermaid 11.4.1 on 2026-10-14 (see the Stage 3 entry in [progress.md](../project/progress.md)). Re-run the check after editing a diagram.
+All Mermaid blocks in `docs/architecture/` were parsed with Mermaid 11.4.1 on 2026-10-14, and again on 2026-10-17 after the Stage 4 label changes (see [progress.md](../project/progress.md)). Re-run the check after editing a diagram.

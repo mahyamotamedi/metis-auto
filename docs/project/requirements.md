@@ -60,7 +60,7 @@ Every goal must be *demonstrated with evidence*. None is assumed to be achievabl
 | ID | Requirement | Source | Kind | Status |
 |---|---|---|---|---|
 | FR-REQ-01 | A request consists of the current user message plus optional: conversation history, instructions (system-level text), retrieved context, attachments (type and reference), and structured-input configuration. Each component may be **present**, **absent**, or **unknown**. | B§4, data overview, C-03, C-04 | current | decided |
-| FR-REQ-02 | The system mints its own IDs: request, session, and one ID per *attempt* (cache lookup, model call, escalation, failover). All attempts link to their request. | A-05, EDA "full dataset" list | current | decided (names are Stage 4) |
+| FR-REQ-02 | The system mints its own IDs: request, session, and one ID per *attempt* (cache lookup, model call, escalation, failover). All attempts link to their request. | A-05, EDA "full dataset" list | current | decided (names fixed in Stage 4, [contracts.md §2.4](../architecture/contracts.md#24-identifiers-and-correlation-a-05)) |
 | FR-REQ-03 | Offline replay builds requests from logged sessions using a pairing heuristic (A-04), re-implemented and tested rather than taken from the EDA helpers (FR-DATA-08). It carries a **pairing-quality flag** per request (clean / multiple bots / no preceding user / skipped consecutive user) and never presents pairs as a clean 1:1 log. | A-04, context §4 | current | decided |
 | FR-REQ-04 | "Unknown" is distinct from "absent". For example, a missing `rag` field in logged data is *unknown retrieval state*, not *no retrieval*. Null model/instructions are unknown. | C-04, F-3 | current | decided |
 | FR-REQ-05 | Logged timestamps are carried as naive values with timezone marked unknown. The online phase records timezone-aware UTC. Analyses state which timestamp (`created_at` vs message) they use. | A-06, C-01 | current | provisional |
@@ -300,7 +300,7 @@ An element with no trace is either missing a requirement (add one, with a source
 
 **Requirement area → hypotheses → where it is designed or built.**
 
-| Area | Hypotheses | Stage 2 home ([structure](../architecture/repository_structure.md)) | Stage 3 view | Stage 4 contracts | Stage 5 skeleton | Implemented in |
+| Area | Hypotheses | Stage 2 home ([structure](../architecture/repository_structure.md)) | Stage 3 view | Stage 4 contracts ([contracts.md](../architecture/contracts.md)) | Stage 5 skeleton | Implemented in |
 |---|---|---|---|---|---|---|
 | FR-REQ | — | `contracts`, `data_access` | [lifecycle, data flow](../architecture/request_lifecycle.md) | yes | yes | Stage 5, Stage 9 (replay pairing) |
 | FR-FEAT | H-5 | `domain` | [routing flow](../architecture/routing.md) | yes | yes | Stage 8+ experiments |

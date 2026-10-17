@@ -36,7 +36,7 @@ flowchart LR
     secrets --> wiring
     wiring --> comps["Policies with typed configs"]
     wiring --> adapters["Adapters with credentials"]
-    frozen -- "config hash, versions" --> manifest[("RunManifest and events")]
+    frozen -- "Versions (config hash, reference versions)" --> manifest[("RunManifest and events")]
 ```
 
 ---

@@ -44,7 +44,7 @@ For **one target model**, it turns the request's components into the ordered inp
 ```mermaid
 %% Question: how do request components become one target's model input, and what happens on overflow?
 flowchart TD
-    comps(["Request components<br/>+ per-item token counts for target"]) --> strat["Apply configured strategy<br/>pass_through or promoted reducer"]
+    comps(["Request components<br/>+ TargetTokenCounts"]) --> strat["Apply configured strategy<br/>pass_through or promoted reducer"]
     strat --> order["Order parts<br/>instructions, history, retrieved, message"]
     order --> fit{"Input + reserved output<br/>+ margin within window?"}
     fit -- yes --> plan["ContextPlan<br/>parts + composition record"]

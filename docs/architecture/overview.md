@@ -73,25 +73,25 @@ flowchart LR
         files[("runs/ and data/<br/>gitignored files")]
     end
 
-    replay --> pipe
-    smoke --> pipe
-    gw -.-> pipe
-    pipe --> dom
-    pipe --> meas
-    pipe --> rec
-    pipe --> guard
-    meas --> p_tok
-    meas --> p_model
-    pipe --> p_model
-    pipe --> p_store
-    rec --> p_sink
-    guard --> p_misc
+    replay -- "Request" --> pipe
+    smoke -- "Request" --> pipe
+    gw -. "Request" .-> pipe
+    pipe -- "contracts in, decisions out (§4)" --> dom
+    pipe -- "Request" --> meas
+    pipe -- "event payloads" --> rec
+    pipe -- "CostEstimate" --> guard
+    meas -- "text, Embedding, TokenCount" --> p_tok
+    meas -- "ModelInvocation (model-based features)" --> p_model
+    pipe -- "ModelInvocation / ModelResult" --> p_model
+    pipe -- "CacheKey, CacheEntry, IndexMatch" --> p_store
+    rec -- "Event" --> p_sink
+    guard -- "Money" --> p_misc
     p_model -.implemented by.-> a_prov
     p_store -.implemented by.-> a_store
     p_tok -.implemented by.-> a_tok
     p_sink -.implemented by.-> a_sink
-    a_prov --> prov
-    a_sink --> files
+    a_prov -- "provider wire format (adapter-owned)" --> prov
+    a_sink -- "Event (JSON Lines)" --> files
 ```
 
 `wiring` (the composition root) builds every box in `application` and `adapters` from `settings` and injects the adapters through the ports. It is left out of the diagram because it acts only at start-up. The dependency view between packages is in [repository_structure.md §3.1](repository_structure.md#31-allowed-imports-inside-srcmetis_auto-decided).
@@ -172,11 +172,11 @@ flowchart TD
     route -- "RoutingDecision" --> pipe
     pipe -- "Request + RoutingDecision" --> cpol["CMP-06 Cache policy"]
     cpol -- "CacheKey" --> pipe
-    pipe -- "CacheKey" --> store["CacheStore / VectorIndex"]
+    pipe -- "CacheKey / Embedding" --> store["CacheStore / VectorIndex"]
     store -- "CacheEntry or none" --> pipe
-    pipe -- "CacheEntry + similarity" --> cpol
+    pipe -- "CacheEntry + IndexMatch" --> cpol
     cpol -- "CacheLookupResult" --> pipe
-    pipe -- "Request + token counts" --> ctx["CMP-07 Context policy"]
+    pipe -- "Request + TargetTokenCounts" --> ctx["CMP-07 Context policy"]
     ctx -- "ContextPlan" --> pipe
     pipe -- "AttemptState" --> att["CMP-08 Attempt policy"]
     att -- "AttemptAction" --> pipe
@@ -185,7 +185,7 @@ flowchart TD
     mc -- "ModelResult" --> pipe
     pipe -- "TokenUsage + PriceTable" --> acct["CMP-09 Accounting"]
     acct -- "Cost" --> pipe
-    pipe -- "stage outcomes" --> recd["CMP-03 Event recorder"]
+    pipe -- "EventPayload" --> recd["CMP-03 Event recorder"]
     recd -- "Event" --> sink["EventSink"]
     pipe -- "FinalResponse" --> caller
 ```
@@ -194,7 +194,9 @@ flowchart TD
 
 ## 5. Provisional contract vocabulary
 
-The flow documents label arrows with these names. **Stage 4 decides fields, types, privacy classes, and final names.** A rename in Stage 4 must update the diagrams too.
+**Fixed in Stage 4:** [contracts.md](contracts.md) defines every name below (except `Settings`, Stage 6), with fields in the generated [contracts_reference.md](contracts_reference.md). Its §6 lists the renames and additions (`ModelNoAnswer`, `TargetTokenCounts`, `IndexMatch`, `CacheStoreDecision`, `EventPayload`, `JudgeScore`); the diagrams use the Stage 4 names. The table is kept as the Stage 3 record.
+
+The flow documents label arrows with these names.
 
 | Name | What it carries | Produced by | Consumed by |
 |---|---|---|---|
@@ -216,7 +218,7 @@ The flow documents label arrows with these names. **Stage 4 decides fields, type
 | `Event` | Envelope (IDs, type, time, span, versions, run mode) plus a typed, content-free payload ([observability.md](observability.md)). | CMP-03 | EventSink, CMP-23 |
 | `Session`, `ReplayCase` | A logged session; one replayable request with its reference answer(s), pairing flag, and logged metadata. | CMP-18 | CMP-21, CMP-25 |
 | `EvaluationResult`, `RunManifest` | Metrics per stratum with sizes and states; run identity and versions. | CMP-23, CMP-24 | reports |
-| `Settings` | Validated, frozen configuration plus config hash; secrets held separately. | CMP-19 | CMP-20 |
+| `Settings` | Validated, frozen configuration plus config hash; secrets held separately. **Stage 6** (contracts.md O-1). | CMP-19 | CMP-20 |
 
 ---
 

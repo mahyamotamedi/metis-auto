@@ -54,12 +54,12 @@ flowchart LR
     prov[("LLM providers")]
 
     core -- "CacheEntry" --> db
-    core -- "vectors" --> vec
+    core -- "Embedding" --> vec
     core -- "Event" --> evs
     core -- "ModelInvocation" --> prov
     runner -- "Event" --> evs
     runner -- "recorded ModelResult" --> db
-    evs -- "aggregates" --> dash
+    evs -- "Event / MetricValue aggregates" --> dash
 ```
 
 What this view commits to now: the gateway is a **separate adapter layer** over the same library (FR-API-03); every shared store sits behind a port that already exists; the dashboard reads events only. Everything else in the view is open: which store, horizontal scaling, secrets management, and how the gateway is hosted.

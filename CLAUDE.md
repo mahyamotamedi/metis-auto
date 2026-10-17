@@ -9,6 +9,7 @@ Durable working rules for agent sessions on Metis-Auto. Keep this file short and
 - Assumptions & open questions: [`docs/project/assumptions_and_questions.md`](docs/project/assumptions_and_questions.md).
 - Decision records: `docs/adr/` (`NNNN-slug.md`: context, alternatives, decision, consequences). Docs index: [`docs/README.md`](docs/README.md).
 - Architecture (Stage 3): [`docs/architecture/README.md`](docs/architecture/README.md). Components are `CMP-nn`; principle P-1: port calls happen in `application`, decisions in pure `domain` code.
+- Contracts (Stage 4): [`docs/architecture/contracts.md`](docs/architecture/contracts.md) ([ADR-0017](docs/adr/0017-contract-modelling-with-pydantic.md)). Every contract field declares a privacy class; event and run records may hold no `content` field (tested). After changing a contract, regenerate the field reference: `python tests/architecture/contracts_docgen.py`.
 - **Where a new file goes and what it may import:** [`docs/architecture/repository_structure.md`](docs/architecture/repository_structure.md) ([ADR-0009](docs/adr/0009-repository-structure-and-dependency-rules.md)). Layer rules are enforced by `tests/architecture/test_import_rules.py`. Candidate strategies stay in `experiments/` until promoted.
 - Sample EDA: `experiments/sample_eda/`, `docs/sample_eda/`, `reports/sample_eda/`.
 - Project brief: [`docs/brief/project-draft.pdf`](docs/brief/project-draft.pdf). Master prompt: [`metis_claude_code_master_prompt.md`](metis_claude_code_master_prompt.md).

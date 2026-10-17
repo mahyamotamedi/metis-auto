@@ -32,17 +32,17 @@ flowchart TD
     wiring -- "RequestPipeline (candidate)" --> harness
     harness -- "Request" --> cand["Candidate pipeline<br/>same code as online"]
     cand -- "ModelInvocation" --> cf["ModelClient for the declared<br/>counterfactual source"]
-    cf -- "ModelResult or no-answer" --> cand
+    cf -- "ModelResult (incl. ModelNoAnswer)" --> cand
     cand -- "Event" --> sink[("runs/: events")]
     harness -- "ReplayCase" --> asl["As-logged baseline<br/>computed from the case"]
     wiring -- "RequestPipeline (premium)" --> prem["Premium baseline<br/>fixed_model pipeline"]
     harness -- "Request" --> prem
     prem -- "Event" --> sink
-    asl -- "baseline outcome" --> metrics
+    asl -- "Cost (baseline_estimate) per case" --> metrics
     sink -- "Event" --> metrics["Metrics and aggregates<br/>overall + per stratum"]
-    cases -- "references" --> metrics
-    metrics -- "answers on a stratified subset" --> judge["Judge (opt-in)"]
-    judge -- "scores" --> metrics
+    cases -- "Reference" --> metrics
+    metrics -- "Request + ModelResponse<br/>(stratified subset)" --> judge["Judge (opt-in)"]
+    judge -- "JudgeScore" --> metrics
     metrics -- "EvaluationResult" --> out[("runs/: results + RunManifest")]
     out --> rep[("reports/: feature-only summary")]
 ```
@@ -56,7 +56,7 @@ The candidate and premium baseline run through the real `RequestPipeline` (P-2).
 - **Cases** come from the `DataSource` via the replay-case builder (CMP-18, re-implemented, not taken from the EDA helpers, FR-DATA-08). A `ReplayCase` holds the request as it would have been seen at that turn, the reference answer(s), the pairing-quality flag, and logged metadata (model label, presence flags).
 - **No look-ahead** (FR-REQ-06): a case contains only what came before its turn. The reference is visible to metrics only, never to the pipeline.
 - **Order.** Within a session: array order. Across sessions, for cache experiments that measure cross-session reuse: by the logged message timestamp, which is naive with an unknown timezone (A-06). The ordering rule is recorded in the manifest.
-- **Pairing flags** (FR-REQ-03): `clean`, `multiple_bots`, `no_preceding_user`, `skipped_consecutive_user`. The run config says which flags are included. Excluded and flagged counts are reported (FR-EVAL-08).
+- **Pairing flags** (FR-REQ-03): `clean`, `multiple_answers` (renamed from `multiple_bots` in Stage 4, because `bot` is a sample role name), `skipped_consecutive_user`. An answer with `no_preceding_user` never becomes a case; it is counted as an exclusion. The run config says which flags are included. Excluded and flagged counts are reported (FR-EVAL-08). Contracts: `ReplayCase`, `PairingFlag`, `ExclusionCount` ([contracts.md §4](contracts.md#4-tolerating-the-sample-without-baking-it-in-fr-data-06-adr-0008)).
 - **Cache state** is reset at the start of each run, and evolves in replay order.
 
 ---
