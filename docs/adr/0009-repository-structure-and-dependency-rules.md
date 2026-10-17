@@ -1,6 +1,6 @@
 # ADR-0009: Repository structure — layered `src/metis_auto` package, enforced import rules, experiments outside the package
 
-- Status: **decided** (top-level layout and dependency rules). Sub-package names are **provisional** until Stage 3/5. The experiment-loading mechanism is **provisional** until Stage 8.
+- Status: **decided** (top-level layout and dependency rules), **amended 2026-10-17** (amendment 1 below). Sub-package names are **provisional** until Stage 5. The experiment-loading mechanism is **provisional** until Stage 8.
 - Date: 2026-10-14
 - Resolves: Stage 2 carry-overs from ADR-0004 (where `docs/agents/` and the master prompt live) and ADR-0008 point 4 (home of the full-dataset EDA)
 - Detail: [repository_structure.md](../architecture/repository_structure.md)
@@ -55,3 +55,14 @@ The requirements add further needs:
 - Experiment strategy loading needs a small mechanism in Stage 8 that is unavailable to production defaults.
 - The `ports` layer adds one hop of indirection, so each swap point is declared once and explicitly.
 - `src/metis_auto/.gitkeep` is now redundant next to `__init__.py`. It is left in place; the owner may remove it.
+
+## Amendment 1 (2026-10-17): `domain` imports only `contracts` (S3-2)
+
+- **Decided by:** the project owner, answering Q-19.
+- **Change:** the `domain → ports` edge is removed. `domain` may import only `contracts`.
+- **Why:** Stage 3 principle P-1 ([ADR-0010](0010-request-pipeline-shape.md) point 3) says domain code never calls a port. Measurements are taken in `application` and passed in as data. With the edge removed, the import test checks that rule mechanically, instead of leaving it to review.
+- **Where it is applied:**
+  - the `ALLOWED` table in `tests/architecture/test_import_rules.py`, plus a self-test that a `domain → ports` import is flagged;
+  - [repository_structure.md §3.1](../architecture/repository_structure.md#31-allowed-imports-inside-srcmetis_auto-decided) and §10;
+  - the `domain` package docstring.
+- **Consequence:** a candidate strategy being promoted into `domain` receives plain data (contracts), never a port object. A strategy that needs a port is split into a measurement (`application`) and a pure decision (`domain`). This is now a promotion condition under repository_structure.md §6.2 step 2 ("obeys §3").

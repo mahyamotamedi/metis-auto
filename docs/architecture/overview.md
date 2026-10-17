@@ -19,7 +19,7 @@ These principles apply everywhere. Each flow document refers back to them.
 | P-4 | **Configuration over code.** Strategy selection, thresholds, chains, the catalogue, prices, and baselines are configuration ([configuration.md](configuration.md)). | decided | MP§4, QA-REPL |
 | P-5 | **Conservative by default.** The serving defaults are the full cache key, `session` scope, verified-only capabilities, and no live calls. Anything looser exists for measurement until evidence justifies it. | decided | FR-XCACHE-02, FR-ROUTE-05, ADR-0003, ADR-0007 |
 | P-6 | **Unknown is not absent.** Every optional request component has three states: present, absent, or unknown. "Unknown" never matches a cache key and never counts as "no context". | decided | FR-REQ-01, FR-REQ-04 |
-| P-7 | **Content stays inside a small boundary.** Raw content exists only in memory on the request path, in the cache store, in the gitignored data folders, and, with opt-in only, in requests to live providers or judges. Events, logs, and reports carry keyed fingerprints and derived values ([ADR-0015](../adr/0015-keyed-content-fingerprints.md), [data flow](request_lifecycle.md#4-data-flow-and-privacy-boundary)). | decided (boundary); provisional (keyed fingerprints, Q-20) | QA-PRIV, A-09 |
+| P-7 | **Content stays inside a small boundary.** Raw content exists only in memory on the request path, in the cache store, in the gitignored data folders, and, with opt-in only, in requests to live providers or judges. Events, logs, and reports carry keyed fingerprints and derived values ([ADR-0015](../adr/0015-keyed-content-fingerprints.md), [data flow](request_lifecycle.md#4-data-flow-and-privacy-boundary)). | decided (boundary and keyed fingerprints, Q-20) | QA-PRIV, A-09 |
 | P-8 | **The pipeline is stateless about conversations.** The caller supplies the history with each request. The pipeline holds no session state, apart from what is in the cache store and the spend ledger. | provisional | FR-API-01, FR-API-03 (chat-completions style is also stateless) |
 
 ---
@@ -198,7 +198,7 @@ The flow documents label arrows with these names. **Stage 4 decides fields, type
 
 | Name | What it carries | Produced by | Consumed by |
 |---|---|---|---|
-| `Request` | Current message plus optional components (history, instructions, retrieved context, attachment references, structured-input config), each present/absent/unknown; session reference; optional privacy-safe user reference; optional requested model. | caller, CMP-18 | CMP-01 |
+| `Request` | Current message plus optional components (history, instructions, retrieved context, attachment references, structured-input config), each present/absent/unknown; session reference; optional privacy-safe user reference; optional requested model; optional `traffic_source` (present/absent/unknown, with provenance `declared`/`inferred`; reserved per Q-21, does not affect serving yet, [ADR-0016](../adr/0016-curated-cache-and-traffic-source-scope.md)). | caller, CMP-18 | CMP-01 |
 | `RequestMeasurements` | Content fingerprints, token counts per component (with fidelity), optional embedding reference, measured model-based features. | CMP-02 | CMP-04, CMP-06, CMP-07 |
 | `RequestFeatures` | Derived features with feature-set version. | CMP-04 | CMP-05, CMP-06, CMP-23 |
 | `ModelCatalogue`, `PriceTable` | Versioned reference data (models, capabilities with verification, limits, tiers, equivalence groups; prices with source and dates). | CMP-19 | CMP-05, CMP-08, CMP-09 |
@@ -238,12 +238,11 @@ Stage 3 proposes two adjustments. Neither has been applied to the import rules o
 
 The `ports` list also grows within its stated purpose: `IdSource`, `VectorIndex`, and `SpendLedger` join the ports named in Stage 2.
 
-**Proposal S3-2 (needs your approval; not applied): tighten `domain` to import only `contracts`.** Under P-1, domain code never calls a port, so it never needs to import `ports`. Removing the `domain → ports` edge would make "no I/O in domain" machine-checked instead of a review rule. Cost: a promoted strategy that wants a port type has to receive plain data instead, which is the intended design anyway. If approved, the change is one line in the `ALLOWED` table of `tests/architecture/test_import_rules.py`, one row in repository_structure.md §3.1, and an amendment note on ADR-0009. Tracked as Q-19.
+**Proposal S3-2 (approved 2026-10-17, Q-19; applied): `domain` imports only `contracts`.** Under P-1, domain code never calls a port, so it never needs to import `ports`. Removing the `domain → ports` edge makes "no port calls in domain" machine-checked instead of a review rule. Cost: a promoted strategy that wants a port type has to receive plain data instead, which is the intended design anyway. Applied in the import test, repository_structure.md §3.1, and [ADR-0009 amendment 1](../adr/0009-repository-structure-and-dependency-rules.md#amendment-1-2026-10-17-domain-imports-only-contracts-s3-2).
 
 ---
 
 ## 7. Open items from this document
 
-- Q-19: approve or reject proposal S3-2.
 - P-8 (stateless pipeline) is provisional until the gateway's wire format is chosen (Q-15).
 - Model-based features (semantic intent) are measured by CMP-02. Which method to use is open (FR-FEAT-02), and is a Stage 8 experiment.

@@ -28,6 +28,6 @@ Stage 3 has to fix how one request is processed, so that the replay harness now 
 
 ## Consequences
 - A routing decision is computed even for requests later served from cache. Its overhead is counted (FR-ROUTE-04).
-- Proposal S3-2 (domain imports only `contracts`) follows from point 3; it awaits approval (Q-19).
+- Proposal S3-2 (domain imports only `contracts`) follows from point 3. It was approved on 2026-10-17 (Q-19) and is enforced by the import test ([ADR-0009 amendment 1](0009-repository-structure-and-dependency-rules.md#amendment-1-2026-10-17-domain-imports-only-contracts-s3-2)).
 - The Stage 5 skeleton has one orchestrator class with one method per stage, and domain functions that take and return contracts.
 - If the gateway needs async or server-side history, this ADR is amended.

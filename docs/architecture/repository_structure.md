@@ -1,6 +1,6 @@
 # Repository Structure and Dependency Rules (Stage 2)
 
-Status: **decided** for the top-level layout and the dependency rules; **provisional** for sub-package names inside `src/metis_auto/` (refined by Stage 3, created in Stage 5) and for the experiment-loading mechanism (Stage 8). Last updated 2026-10-14 (Stage 3: sub-package names and ports list updated; proposal S3-2 pending, see below).
+Status: **decided** for the top-level layout and the dependency rules; **provisional** for sub-package names inside `src/metis_auto/` (refined by Stage 3, created in Stage 5) and for the experiment-loading mechanism (Stage 8). Last updated 2026-10-17 (S3-2 applied: `domain` imports only `contracts`; [ADR-0009 amendment](../adr/0009-repository-structure-and-dependency-rules.md#amendment-1-2026-10-17-domain-imports-only-contracts-s3-2)).
 Decision record: [ADR-0009](../adr/0009-repository-structure-and-dependency-rules.md). Related: [requirements](../project/requirements.md) · [progress](../project/progress.md) · [docs index](../README.md).
 
 **Use this document to answer two questions:** where does a new file go, and what may it import?
@@ -90,7 +90,7 @@ Each sub-package has an `__init__.py` whose docstring states its responsibility 
 
 **Sub-packages are provisional.** Stage 3 fixed the component boundaries; the sub-package list is in [overview.md §6](overview.md#6-fit-with-the-repository-structure-a-25) (proposal S3-1). Notable change: `domain/escalation/` became `domain/attempts/`, which covers retries, failover, and escalation together ([ADR-0013](../adr/0013-unified-attempt-model.md)). Sub-packages are created in Stage 5. The import rules apply to top-level packages, so sub-packages inherit them.
 
-**Pending proposal S3-2 (not applied):** restrict `domain` to import only `contracts`, because under principle P-1 domain code never calls a port ([overview.md §6](overview.md#6-fit-with-the-repository-structure-a-25), Q-19). Until it is approved, §3.1 and the import test are unchanged.
+**S3-2 (approved 2026-10-17, Q-19):** `domain` imports only `contracts`. Under principle P-1 domain code never calls a port, so it has no reason to import `ports`. §3.1 and the import test enforce this ([ADR-0009 amendment 1](../adr/0009-repository-structure-and-dependency-rules.md#amendment-1-2026-10-17-domain-imports-only-contracts-s3-2)).
 
 ---
 
@@ -109,7 +109,7 @@ flowchart TD
     application --> domain & ports & contracts
     adapters --> ports & contracts
     data_access --> ports & contracts
-    domain --> ports & contracts
+    domain --> contracts
     settings --> contracts
     ports --> contracts
 ```
@@ -118,7 +118,7 @@ flowchart TD
 |---|---|
 | `contracts` | — |
 | `ports` | `contracts` |
-| `domain` | `ports`, `contracts` |
+| `domain` | `contracts` (S3-2) |
 | `settings` | `contracts` |
 | `application` | `domain`, `ports`, `contracts` |
 | `adapters` | `ports`, `contracts` |
@@ -128,7 +128,7 @@ flowchart TD
 | `wiring` | everything above |
 
 What the rules buy:
-- **Policies are pure and portable.** `domain` sees only interfaces and data, so the same policy runs in replay and online (FR-ROUTE-07).
+- **Policies are pure and portable.** `domain` sees only data contracts, never a port. Anything that needs a port is measured by `application` and passed in (P-1). So the same policy runs in replay and online (FR-ROUTE-07).
 - **Swapping an implementation touches only `adapters`/`data_access` + `wiring` + config** (QA-REPL). Orchestration never names a concrete class.
 - **Storage independence.** Only `data_access` (and `wiring`, which constructs it) knows where data lives (FR-DATA-02). The full dataset and PostgreSQL slot in without changes elsewhere (FR-DATA-04).
 - **Evaluation can't fake the system.** It runs the real `application` pipeline with injected adapters, so offline results measure the same code path the online phase uses.
@@ -160,7 +160,7 @@ What the rules buy:
   A new top-level package without a rule fails the test. The test's rule table mirrors §3.1. **Change both together.** The test also includes self-tests on synthetic trees, so it shows that it catches violations, not only that the empty packages pass.
 - One §3.2 rule is **not** checked mechanically: experiments must not import each other. Experiments don't form an importable package, so the check is left to review.
 - `import-linter` is the fuller alternative, once `pyproject.toml` exists (Stage 5/6). Adopting it would be a tooling change recorded in the ADR. It is not needed while the stdlib check is enough.
-- Rules the test can't see are handled by stage review: no logic in `wiring`, no I/O in `domain`, third-party limits (§3.3), and no raw content in fixtures.
+- Rules the test can't see are handled by stage review: no logic in `wiring`, no I/O in `domain` through third-party or standard-library calls (port imports are caught by the test), third-party limits (§3.3), and no raw content in fixtures.
 
 ---
 
@@ -256,7 +256,7 @@ Only `data_access` (and `scripts` via `wiring`) reads these paths. All other cod
 
 | I am writing… | Put it in | It may import |
 |---|---|---|
-| a new routing / cache / context policy (promoted) | `src/metis_auto/domain/…` | `ports`, `contracts` |
+| a new routing / cache / context policy (promoted) | `src/metis_auto/domain/…` | `contracts` |
 | a candidate strategy under test | `experiments/<area>/<EXP-ID>/` | `metis_auto` (not `sample_eda`, not other experiments) |
 | a new provider client, store, embedder, tokenizer backend | `src/metis_auto/adapters/…` | `ports`, `contracts` |
 | a loader for a new dataset format | `src/metis_auto/data_access/…` | `ports`, `contracts` |

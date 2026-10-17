@@ -254,3 +254,53 @@ None of these blocks Stage 2.
 - **Stage 8:** strategy loading; detector experiments; counterfactual source per plan; multi-variant cache-key measurement.
 
 **Exit criteria:** "Every component has an owner responsibility, inputs, outputs, and dependencies; the diagrams and text agree." **Met, pending review.** See overview §3 for the catalogue. Diagram/text agreement was checked by hand for event names, stage order, eligibility rules, error classes, and the overflow rule. One drift was found and fixed: the re-route wording in the lifecycle doc.
+
+### Stage 3 follow-up — caching proposal recorded (2026-10-17)
+
+**Recorded:** a proposal, not a decision. [ADR-0016](../adr/0016-curated-cache-and-traffic-source-scope.md), status **proposed**:
+- Part 1: a curated shared cache, rebuilt periodically.
+- Part 2: cache scope chosen per request from the traffic source.
+
+**Serving defaults are unchanged:** `session` scope and the full key (ADR-0007, ADR-0011).
+
+**Register:**
+- A-34 and A-35: the proposal's premises, recorded as **unverified**. The repository's EDA documents don't state them.
+- Q-21: accept the proposal? With two sub-decisions: the scope representation (S-b recommended) and reserving the field in Stage 4.
+- Data-owner questions Q-22 (is the traffic source identifiable?) and Q-23 (do the categories correspond to traffic types?).
+- Hypothesis H-8 added to [context.md §5.2](context.md).
+
+**Carried into later stages:**
+- **Stage 8:** the caching plan lists the curated-cache candidate (also noted in `experiments/caching/README.md`): a replay simulation of daily rebuilds (build *d−1*, serve *d*), compared with the session-scoped dynamic cache and no cache, measuring hit rate with hit correctness, storage, and cost saved net of build cost, per traffic source.
+- **Stage 9:** the full-EDA checklist includes the popularity distribution per instruction group, within-session vs cross-session repeats, and Q-22/Q-23.
+- **Stage 4:** reserve `traffic_source` only if Q-21(b) is answered yes.
+
+**Tensions flagged in the ADR:**
+- A shared "instruction group" scope reverses an alternative that ADR-0007 rejected (option S-b avoids this).
+- There is no time-sensitivity detector yet (TODO-07).
+- The builder needs content for admitted groups, which no online source provides today.
+- Serving a selected logged answer to other sessions has privacy implications.
+
+### Stage 3 follow-up — answers to Q-19…Q-21 (2026-10-17)
+
+| Question | Status | Answer |
+|---|---|---|
+| Q-19 | answered | S3-2 approved: `domain` imports only `contracts`. |
+| Q-20 | answered | ADR-0015 confirmed (now decided). The algorithm is chosen in Stage 4; tests use a synthetic key. Still open: who holds and distributes the real key. |
+| Q-21 | answered | ADR-0016 is "proposed — to be tested". Scope S-b, only combined with the traffic-source rule; direct users never get `global`. Regenerated answers preferred. Four prerequisites before any serving. Mechanics only on the sample. Reserve `traffic_source` in Stage 4. |
+
+**Changes:**
+- `tests/architecture/test_import_rules.py`: `domain` allows only `contracts`, plus a new self-test that `domain → ports` is flagged.
+- `src/metis_auto/domain/__init__.py`: docstring.
+- [repository_structure.md](../architecture/repository_structure.md) §3.1 diagram and table, §2, §3.4, and §10.
+- [ADR-0009](../adr/0009-repository-structure-and-dependency-rules.md): amendment 1.
+- [ADR-0010](../adr/0010-request-pipeline-shape.md) consequence updated.
+- [ADR-0015](../adr/0015-keyed-content-fingerprints.md) is now decided.
+- [ADR-0016](../adr/0016-curated-cache-and-traffic-source-scope.md) records the owner's decisions.
+- [overview.md](../architecture/overview.md): S3-2 marked approved, P-7 status, `traffic_source` on `Request`.
+- [caching.md](../architecture/caching.md) §6, the register, the docs index, and `experiments/caching/README.md`.
+
+**Tests:** 9/9 pass offline (8 before, plus the new self-test). No `src` module imports `ports` from `domain`; the packages are still empty.
+
+**Carried into Stage 4:**
+- an optional `traffic_source` on the request (three states, plus provenance);
+- the fingerprint algorithm and the synthetic test key.

@@ -115,4 +115,5 @@ flowchart TD
 - Whether the producing-tier rule is needed.
 - Whether a semantic hit needs a verifier (FR-SCACHE-06, speculative).
 - Wider serving scopes (Q-16): they need measured false-hit rates and a new decision record.
+- **Proposed — to be tested, not part of the serving design:** a curated shared cache rebuilt periodically, and cache scope chosen per request from the traffic source ([ADR-0016](../adr/0016-curated-cache-and-traffic-source-scope.md), Q-21). Scope rule if it is ever served: `embedded_bot` with instructions → `global`; `direct_user` → `user` or `session`; unknown → `session`; direct users never get `global`. It is a Stage 8 caching-plan candidate (H-8). Nothing in §1–§5 changes unless it is accepted for serving and its prerequisites are met.
 - Provider-side prompt caching is a *context* lever, not this cache ([context_construction.md](context_construction.md)).

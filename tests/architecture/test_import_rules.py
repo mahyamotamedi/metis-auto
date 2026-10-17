@@ -24,7 +24,7 @@ SRC = REPO / "src" / PACKAGE
 ALLOWED: dict[str, set[str]] = {
     "contracts": set(),
     "ports": {"contracts"},
-    "domain": {"ports", "contracts"},
+    "domain": {"contracts"},  # S3-2 (Q-19): domain never calls a port (P-1)
     "settings": {"contracts"},
     "application": {"domain", "ports", "contracts"},
     "adapters": {"ports", "contracts"},
@@ -192,6 +192,17 @@ def test_checker_flags_forbidden_layer_imports(tmp_path):
     assert any("'mystery' has no rule" in v for v in found)
     assert not any("contracts" in v for v in found)  # domain -> contracts is allowed
     assert len(found) == 4
+
+
+
+def test_checker_flags_domain_importing_ports(tmp_path):
+    # S3-2 (Q-19, 2026-10-17): domain may import only contracts.
+    pkg = tmp_path / PACKAGE
+    _write(pkg, "__init__.py", "")
+    _write(pkg, "domain/routing.py", "from metis_auto.ports import ModelClient\n")
+    found = layer_violations(pkg)
+    assert len(found) == 1
+    assert "domain/routing.py" in found[0] and "'ports'" in found[0]
 
 
 def test_checker_flags_sample_eda_imports_in_scripts_and_notebooks(tmp_path):

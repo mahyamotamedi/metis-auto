@@ -31,7 +31,8 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 | [0012](adr/0012-event-stream-as-measurement-record.md) | The event stream is the single measurement record | decided (fields provisional) |
 | [0013](adr/0013-unified-attempt-model.md) | Unified attempt model: retry, failover, escalation in one policy-driven loop | decided (detectors open) |
 | [0014](adr/0014-counterfactual-answers-via-model-client.md) | Counterfactual answers via the `ModelClient` port; every run declares its source | decided |
-| [0015](adr/0015-keyed-content-fingerprints.md) | Keyed (HMAC) content fingerprints | provisional (Q-20) |
+| [0015](adr/0015-keyed-content-fingerprints.md) | Keyed (HMAC) content fingerprints | decided (algorithm in Stage 4) |
+| [0016](adr/0016-curated-cache-and-traffic-source-scope.md) | Curated shared cache and traffic-source-based cache scope | **proposed — to be tested** (Q-21); scope rule S-b chosen; serving defaults unchanged |
 
 ## Experiments
 - *Stage 8:* framework doc and the routing, cache, and context plans, in `docs/experiments/`.

@@ -95,6 +95,7 @@ The `F-n` IDs are kept for traceability. Each is an exploratory observation from
 - **H-5** Cheap observable features (length, language, code, attachments, depth, RAG presence) carry enough signal to route some traffic to cheaper models without quality loss.
 - **H-6** A cascade (cheap first, escalate on a weak signal) beats single-model routing on cost at equal quality. This depends on finding a usable "unsatisfactory" signal.
 - **H-7** Character/4 badly misestimates tokens for Persian text, so tokenizer-specific counting changes cost conclusions.
+- **H-8** (added 2026-10-17, from the [ADR-0016](../adr/0016-curated-cache-and-traffic-source-scope.md) proposal) For embedded-bot traffic, a periodically rebuilt curated cache of frequent first-turn requests per instruction group, with quality-checked answers, gives more *correct* hits and net savings than the session-scoped dynamic cache, at acceptable storage and build cost. It depends on the popularity distribution and on traffic-source labels (A-34, A-35, Q-22).
 
 ### 5.3 Unknowns (the sample cannot answer)
 Each unknown has an entry in the [register](assumptions_and_questions.md#missing-information-todos).
