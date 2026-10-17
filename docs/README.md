@@ -11,7 +11,8 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 
 ## Architecture
 - [repository_structure.md](architecture/repository_structure.md): where files go, what each package may import, and the promotion process (Stage 2).
-- *Stage 3:* architecture views and diagrams. *Stage 4:* contracts. *Stage 5:* module interaction reference.
+- [architecture/README.md](architecture/README.md): **Stage 3 architecture index**: overview and component catalogue, request lifecycle and data flow, routing, caching, context construction, attempts (escalation and failover), evaluation, configuration, observability, providers, deployment and data. Lists every diagram and the question it answers.
+- *Stage 4:* contracts. *Stage 5:* module interaction reference.
 
 ## Decision records (`adr/`)
 | ADR | Decision | Status |
@@ -25,6 +26,12 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 | [0007](adr/0007-cache-sharing-scope.md) | Cache sharing scope | decided (final policy open) |
 | [0008](adr/0008-sample-eda-is-exploratory.md) | The sample EDA is exploratory | decided |
 | [0009](adr/0009-repository-structure-and-dependency-rules.md) | Repository structure and dependency rules | decided (sub-packages provisional) |
+| [0010](adr/0010-request-pipeline-shape.md) | Request pipeline shape: fixed stage order, routing before cache, measure in application / decide in domain, synchronous | decided (sync and stateless provisional) |
+| [0011](adr/0011-cache-key-and-lookup-design.md) | Cache key and lookup: fingerprinted components, partition key plus similarity, unknown never matches | decided (rules provisional) |
+| [0012](adr/0012-event-stream-as-measurement-record.md) | The event stream is the single measurement record | decided (fields provisional) |
+| [0013](adr/0013-unified-attempt-model.md) | Unified attempt model: retry, failover, escalation in one policy-driven loop | decided (detectors open) |
+| [0014](adr/0014-counterfactual-answers-via-model-client.md) | Counterfactual answers via the `ModelClient` port; every run declares its source | decided |
+| [0015](adr/0015-keyed-content-fingerprints.md) | Keyed (HMAC) content fingerprints | provisional (Q-20) |
 
 ## Experiments
 - *Stage 8:* framework doc and the routing, cache, and context plans, in `docs/experiments/`.

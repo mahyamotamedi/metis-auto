@@ -1,6 +1,6 @@
 # Glossary
 
-Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-14 (Stage 2).
+Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-14 (Stage 3).
 
 | Term | Meaning | Avoid |
 |---|---|---|
@@ -34,3 +34,13 @@ Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid t
 | **Adapter** | A concrete implementation of a port: fake, recorded, or live provider client, store, sink, or backend. It contains no business rules. | "client" (when the abstraction is meant) |
 | **Composition root** | `metis_auto.wiring`: the only place that builds concrete objects from configuration and injects them. | "factory" (too generic) |
 | **Promotion** | Moving a candidate strategy from `experiments/` into `src/metis_auto/` after it passes the promotion criteria (evidence, tests, config entry, docs, decision record). | "merging the experiment" |
+| **Measurement** | Anything the pipeline obtains through a port (token counts, embeddings, model-based features, judge scores). Taken in `application` and passed to `domain` as data (principle P-1, [ADR-0010](docs/adr/0010-request-pipeline-shape.md)). | — |
+| **Attempt kind** | Why an attempt happened: `primary`, `retry`, `failover`, or `escalation` ([ADR-0013](docs/adr/0013-unified-attempt-model.md)). | — |
+| **Attempt policy** | The pure policy that chooses the next attempt, or returns or fails, from the state of all attempts so far. | "retry logic" |
+| **Detector** | A pluggable check that flags a successful answer as unsatisfactory. Its verdict records value and threshold. | "validator" |
+| **Equivalence group** | Catalogue models that are interchangeable for failover. Declared in config, never inferred. Also a cache-key component. | — |
+| **Partition key** | Every cache-key component except the current message. The semantic tier matches it exactly ([ADR-0011](docs/adr/0011-cache-key-and-lookup-design.md)). | — |
+| **Fingerprint** | A keyed hash of content, used in place of content in keys, events, and reports ([ADR-0015](docs/adr/0015-keyed-content-fingerprints.md)). | "hash" when content is meant |
+| **Composition record** | Per-component sizes, fingerprints, and actions (kept, trimmed, summarised, dropped) for one model input. No content. | "prompt log" |
+| **Coverage** | In an evaluation run, the fraction of cases for which the counterfactual source produced an answer ([ADR-0014](docs/adr/0014-counterfactual-answers-via-model-client.md)). | — |
+| **Span** | A timed stage of a request (e.g. `route`, `cache_lookup.exact`, `model_call`). Overhead is the sum of pre-model spans. | — |

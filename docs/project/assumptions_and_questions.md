@@ -1,6 +1,6 @@
 # Assumptions & Open-Questions Register
 
-Living register. Last updated 2026-10-14 (Stage 2). Context: [context.md](context.md). Decision records: [`docs/adr/`](../adr/).
+Living register. Last updated 2026-10-14 (Stage 3). Context: [context.md](context.md). Decision records: [`docs/adr/`](../adr/).
 
 Tags:
 - **Kind:** `current` (a current requirement), `future` (a likely future need), `spec` (speculative).
@@ -37,8 +37,14 @@ When an item is resolved, keep it in place, update its status, and say how it wa
 | A-22 | Pipeline overhead measured on a local dev machine is indicative only. Hardware is recorded with every measurement. | current | decided | Online-phase measurement. |
 | A-23 | Every sample-EDA number is a provisional signal, not a fact. Designs may be informed by it but not depend on its exact value. | current | decided | [ADR-0008](../adr/0008-sample-eda-is-exploratory.md). Re-verified by the full EDA. |
 | A-24 | The sample-EDA helpers are unreliable and reference-only. | current | decided | [ADR-0008](../adr/0008-sample-eda-is-exploratory.md). |
-| A-25 | The Stage 3 components will map onto the ten package layers of ADR-0009 without a new layer. | current | provisional | Stage 3. If a component fits no layer, amend ADR-0009 and the import-rule table together. |
+| A-25 | The Stage 3 components will map onto the ten package layers of ADR-0009 without a new layer. | current | **decided** (confirmed by Stage 3) | Every component maps onto an existing layer ([overview §6](../architecture/overview.md#6-fit-with-the-repository-structure-a-25)). Sub-package names were refined (S3-1). A tightening of the `domain` import rule is proposed, not applied (S3-2, Q-19). |
 | A-26 | A static `ast` import check is enough to enforce the layer rules for now. It cannot see dynamic imports (`importlib`, `sys.path` changes). | current | provisional | Dynamic loading of experiment strategies (Stage 8) or rules too complex for the table → adopt `import-linter` once `pyproject.toml` exists. |
+| A-28 | The caller supplies the conversation history with every request. The pipeline holds no conversation state (P-8). | current | provisional | The future gateway's wire format and production client behaviour (Q-15). [ADR-0010](../adr/0010-request-pipeline-shape.md). |
+| A-29 | Synchronous, in-process execution is enough for the current phase. | current | provisional | Concurrency needs of the online gateway. A switch to async touches only `application`, the I/O ports, and `adapters` ([ADR-0010](../adr/0010-request-pipeline-shape.md)). |
+| A-30 | Replay feeds the **logged** history into each turn. The effect of a different routing choice on later turns is not simulated. | current | decided (as a stated limitation) | Recorded or live answers for every turn would allow it; see [ADR-0014](../adr/0014-counterfactual-answers-via-model-client.md). |
+| A-31 | For cross-session cache measurement, ordering sessions by the naive message timestamp is good enough. | current | provisional | Timezone semantics (Q-06, A-06). The ordering rule is recorded in every run manifest. |
+| A-32 | Embedding vectors are treated as content: they stay in the cache store and are never exported. | current | decided | Embeddings can leak text. QA-PRIV. |
+| A-33 | Live provider adapters can switch off SDK-level automatic retries, so every attempt is visible and charged. | future | speculative (unverified) | Verify per SDK when a live adapter is written ([ADR-0013](../adr/0013-unified-attempt-model.md)). |
 | A-27 | The full dataset, intermediate derived data, recorded live responses, and run records are **not** committed to git (`data/full_data/`, `data/derived/`, `data/recorded/`, `runs/` are gitignored). Only feature-only reports are committed. | future | decided (full dataset: Q-18 answered 2026-10-14) | Q-18. The other paths follow the same privacy rule. |
 
 ## Open questions — project decisions
@@ -61,6 +67,9 @@ When an item is resolved, keep it in place, update its status, and say how it wa
 | Q-17 | Do you confirm deferring brief Action 3 (pricing engine and dashboard UI), keeping only its data enablers in scope? | **answered** | 2026-10-14: confirmed. The pricing engine and dashboard UI are deferred. The observability/event design must still capture everything a dashboard would need (tokens, cost, savings, latency, routing decisions), so one can be added without redesign ([ADR-0005](../adr/0005-current-phase-scope.md), FR-OBS-05). |
 | Q-18 | Should the full dataset stay out of git when it arrives? The sample is committed, but the full dataset will be larger and possibly more sensitive. | **answered** | 2026-10-14: **yes, the full dataset stays out of git.** It lives under the gitignored `data/full_data/` and is distributed out of band. Its hash is recorded in run manifests (FR-EVAL-07) so runs stay reproducible. |
 
+| Q-19 | Approve proposal S3-2: restrict `domain` to import only `contracts` (drop `domain → ports`), making "no port calls in domain" machine-checked? | **open** | Recommended: yes. It is a one-line change to the import test plus a row in repository_structure.md §3.1 and a note on ADR-0009. Not applied until approved ([overview §6](../architecture/overview.md#6-fit-with-the-repository-structure-a-25)). |
+| Q-20 | Confirm keyed (HMAC) content fingerprints instead of plain hashes, and say who holds and shares the fingerprint key. | **open** | Proposed in [ADR-0015](../adr/0015-keyed-content-fingerprints.md) (provisional). Reason: short, common messages are reversible from plain hashes. Default until answered: keyed, with a synthetic test key in tests. |
+
 ## Open questions — for the data owner
 These were all unanswered as of 2026-10-14: this is sample data and the full dataset hasn't arrived. The working assumptions are A-06, A-14, A-15, A-16, all unverified.
 
@@ -79,7 +88,7 @@ These were all unanswered as of 2026-10-14: this is sample data and the full dat
 | TODO-03 | Latency, TTFT, retries, and failures (U-03) | Latency metric, failover design | Instrumented live calls / full dataset |
 | TODO-04 | Actual prompt composition (U-04) | Context-reduction and cost estimates | Production payload logs / owner statement |
 | TODO-05 | Quality labels (U-05) | Quality metric, routing labels | Judge or human labelling plan (Stage 8) |
-| TODO-06 | A signal for "unsatisfactory response" (U-07) | Cascade design | Stage 3 design + experiments |
-| TODO-07 | Cache-safety factors such as time sensitivity and personalisation (U-08) | Cache validity rules | Full dataset + design |
+| TODO-06 | A signal for "unsatisfactory response" (U-07) | Cascade design | Stage 3 design done: detector catalogue and combination rule in [attempts.md §4](../architecture/attempts.md#4-detecting-an-unsatisfactory-response). Still open: which detectors work. Needs recorded or live answers plus labels (Stage 8 cascade experiment). |
+| TODO-07 | Cache-safety factors such as time sensitivity and personalisation (U-08) | Cache validity rules | Stage 3: personalisation handled by the `session` default scope; time sensitivity is an eligibility rule that is a configured no-op ("not evaluated") until a detector exists ([caching.md §2](../architecture/caching.md#2-lookup-and-store-rules)). Detector method still needs the full dataset. |
 | TODO-08 | A standalone (non-conda) Python 3.13 on the dev machine. Only Anaconda 3.13, python.org 3.14, and system 3.9 were found on 2026-10-14. | First venv (Stage 5/6) | Install 3.13 from python.org, Homebrew, or pyenv |
 | TODO-09 | Whether pip can install from a PEP 751 `pylock.toml` (`pip lock` is experimental in pip 25.1) | Locking choice (ADR-0001) | Re-verify against pip release notes before Stage 6 |

@@ -302,19 +302,19 @@ An element with no trace is either missing a requirement (add one, with a source
 
 | Area | Hypotheses | Stage 2 home ([structure](../architecture/repository_structure.md)) | Stage 3 view | Stage 4 contracts | Stage 5 skeleton | Implemented in |
 |---|---|---|---|---|---|---|
-| FR-REQ | — | `contracts`, `data_access` | lifecycle, data flow | yes | yes | Stage 5, Stage 9 (replay pairing) |
-| FR-FEAT | H-5 | `domain` | routing flow | yes | yes | Stage 8+ experiments |
-| FR-ROUTE | H-5, H-6 | `domain`; `experiments/routing/` | routing flow | yes | fixed-model reference | Stage 8+ experiments |
-| FR-XCACHE | H-3 | `domain`, `adapters`; `experiments/caching/` | caching flow | yes | no-op/in-memory | **Stage 8 baseline** |
-| FR-SCACHE | H-4 | `domain`, `adapters`; `experiments/caching/` | caching flow | yes | interface | later experiment |
-| FR-CTX | H-1, H-2 | `domain`; `experiments/context/` | context flow | yes | pass-through | later experiment |
-| FR-CASC | H-6 | `domain`, `application` | escalation flow | yes | interface | later experiment |
-| FR-FAIL | — | `application`, `adapters` | escalation/fallback flow | yes | fake adapter with faults | Stage 5 (fakes) |
-| FR-ACCT | H-7 | `domain`, `config/`; `experiments/cost/` | data flow | yes | interface | **Stage 7** |
-| FR-OBS | — | `contracts`, `adapters`, `evaluation` | observability | yes | event emitter | Stage 5 (file sink) |
-| FR-EVAL | all | `evaluation`; `experiments/evaluation/` | offline evaluation flow | yes | runner stub | **Stage 8** |
-| FR-DATA | — | `data_access`, `analysis`; `experiments/full_eda/` | data flow | yes | interface | **Stage 9** |
-| FR-API | — | `application`; future `gateway` | high-level, deployment | yes | in-process entry | Stage 5 |
+| FR-REQ | — | `contracts`, `data_access` | [lifecycle, data flow](../architecture/request_lifecycle.md) | yes | yes | Stage 5, Stage 9 (replay pairing) |
+| FR-FEAT | H-5 | `domain` | [routing flow](../architecture/routing.md) | yes | yes | Stage 8+ experiments |
+| FR-ROUTE | H-5, H-6 | `domain`; `experiments/routing/` | [routing flow](../architecture/routing.md) | yes | fixed-model reference | Stage 8+ experiments |
+| FR-XCACHE | H-3 | `domain`, `adapters`; `experiments/caching/` | [caching flow](../architecture/caching.md) | yes | no-op/in-memory | **Stage 8 baseline** |
+| FR-SCACHE | H-4 | `domain`, `adapters`; `experiments/caching/` | [caching flow](../architecture/caching.md) | yes | interface | later experiment |
+| FR-CTX | H-1, H-2 | `domain`; `experiments/context/` | [context flow](../architecture/context_construction.md) | yes | pass-through | later experiment |
+| FR-CASC | H-6 | `domain`, `application` | [attempts flow](../architecture/attempts.md) | yes | interface | later experiment |
+| FR-FAIL | — | `application`, `adapters` | [attempts flow](../architecture/attempts.md), [providers](../architecture/providers.md) | yes | fake adapter with faults | Stage 5 (fakes) |
+| FR-ACCT | H-7 | `domain`, `config/`; `experiments/cost/` | [overview CMP-09](../architecture/overview.md#3-component-catalogue), [data flow](../architecture/request_lifecycle.md#4-data-flow-and-privacy-boundary) | yes | interface | **Stage 7** |
+| FR-OBS | — | `contracts`, `adapters`, `evaluation` | [observability](../architecture/observability.md) | yes | event emitter | Stage 5 (file sink) |
+| FR-EVAL | all | `evaluation`; `experiments/evaluation/` | [offline evaluation flow](../architecture/evaluation.md) | yes | runner stub | **Stage 8** |
+| FR-DATA | — | `data_access`, `analysis`; `experiments/full_eda/` | [data flow](../architecture/request_lifecycle.md#4-data-flow-and-privacy-boundary), [future database](../architecture/deployment_and_data.md#4-future-database-integration-extension-point-not-a-schema) | yes | interface | **Stage 9** |
+| FR-API | — | `application`; future `gateway` | [high-level](../architecture/overview.md#2-high-level-architecture), [deployment](../architecture/deployment_and_data.md) | yes | in-process entry | Stage 5 |
 | FR-FIN | — | placeholder only | — | — | — | deferred (NG-05) |
 | QA-* | — | — | each view states which QAs it serves | — | — | measured in Stage 8 runs |
 
