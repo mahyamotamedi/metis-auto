@@ -29,6 +29,7 @@ from metis_auto.contracts import (
     AttemptState,
     CacheEntry,
     CacheKey,
+    CacheKeyDraft,
     CacheLookupResult,
     CacheScope,
     CacheStoreDecision,
@@ -417,6 +418,10 @@ def cache_key() -> CacheKey:
         key=fingerprint("cache_key", "synthetic-key-material"),
         partition_key=fingerprint("partition_key", "synthetic-partition-material"),
     )
+
+
+def cache_key_draft() -> CacheKeyDraft:
+    return CacheKeyDraft(**cache_key().model_dump(exclude={"key", "partition_key"}))
 
 
 def cache_entry() -> CacheEntry:
@@ -914,6 +919,7 @@ def all_examples() -> dict[str, object]:
         "price_table": price_table(),
         "routing_decision": routing_decision(),
         "cache_key": cache_key(),
+        "cache_key_draft": cache_key_draft(),
         "cache_entry": cache_entry(),
         "index_match": index_match(),
         "context_plan": context_plan(),

@@ -1,0 +1,132 @@
+# Module Interaction Reference (Stage 5)
+
+Status: **matches the code as of 2026-10-18**. The *Imports* column is checked mechanically by `tests/architecture/test_module_reference.py`: every module under `src/metis_auto/` (except `contracts/` and `__init__.py` re-export files) must have exactly one row, and its *Imports* cell must equal the `metis_auto` sub-packages it imports, outside its own sub-package. Other columns are hand-written; update them in the same change as the code.
+Index: [architecture README](README.md). Components: [overview §3](overview.md#3-component-catalogue). Layers and import rules: [repository_structure.md §3](repository_structure.md#3-dependency-rules).
+
+This document answers, for every module: **who calls it, what it calls, what data goes in and out, what configuration it needs, whether it is business or infrastructure logic, and whether it is meant to become stable.**
+
+## How to read it
+
+- **Imports (checked):** `metis_auto` sub-packages the module imports, e.g. `domain.accounting`. `contracts` and `ports` are listed as whole packages. Imports inside the module's own sub-package are listed under *Called by / calls* instead.
+- **Kind:** *business* (pure decisions, `domain`), *orchestration* (`application`: measures and coordinates), *infrastructure* (`adapters`, `data_access`), *evaluation*, *composition* (`wiring`), *interface* (`ports`).
+- **Status:** *stable* (meant to stay; changes are normal maintenance), *reference* (a decided reference implementation that alternatives are compared against), *provisional* (works; shape may change with evidence), *skeleton* (signature and docstring only; raises `NotImplementedError` with a TODO naming the stage), *test double* (fake for offline use). Nothing under `src/` is experimental: candidates live in `experiments/` until promoted (repository_structure §6.2).
+- **Contracts** (`contracts/*`, 16 modules) are documented in [contracts.md](contracts.md) and [contracts_reference.md](contracts_reference.md). They import nothing internal and are used by every module below.
+
+## Request flow at a glance
+
+`scripts/run_walking_skeleton.py` → `wiring.walking_skeleton` → `wiring.pipeline.build_pipeline` → `application.pipeline.RequestPipeline.handle`, which runs one method per stage ([ADR-0010](../adr/0010-request-pipeline-shape.md)):
+
+| Stage | Pipeline method | Measures with | Decides with |
+|---|---|---|---|
+| 0 receive | `_receive` | `IdSource`, `Clock` | — |
+| 1 measure | `_measure` | `application.measurement.MeasurementService.measure` | — |
+| 2 features | `_extract_features` | — | `domain.features.extract_features` |
+| 3 route | `_route` | — | `domain.routing.route` + injected `RoutingPolicy` |
+| 4 cache lookup | `_cache_lookup` | `MeasurementService.seal_key`, `CacheStore.get` | `domain.caching` (`select_scope`, `eligibility`, `compose_key`, `validate_entry`) |
+| 5 context | `_plan_for` | `MeasurementService.target_counts` | injected `ContextStrategy` |
+| 6 attempts | `_attempt_loop`, `_attempt` | `ModelClient.invoke`, `MeasurementService.counted_usage`, `SpendGuard` | `domain.attempts.next_action`, detectors, `domain.accounting.cost_of` |
+| 7 store | `_store_answer` | `CacheStore.put` | `domain.caching.store_decision` |
+| 8 respond | `_respond`, `_finish` | `Clock` | `domain.accounting.total_cost` |
+
+Every stage emits its event through `application.events.EventRecorder` → `EventSink`.
+
+---
+
+## `ports` — interfaces (CMP-10…16, CMP-26)
+
+| Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
+|---|---|---|---|---|---|---|---|---|
+| `ports/model_client.py` | 10 | `ModelClient`: `invoke`, `source` | called by `application.pipeline`; implemented by `adapters.providers` | `contracts` | `ModelInvocation` → `ModelResult` | — | interface | stable |
+| `ports/cache.py` | 11 | `CacheStore` (`get`, `put`), `VectorIndex` (`add`, `query`); no validity rules | called by `application.pipeline`; implemented by `adapters.stores` | `contracts` | `Fingerprint` → `CacheEntry`; `Embedding` → `IndexMatch` | — | interface | stable |
+| `ports/measurement.py` | 12, 13 | `Tokenizer` (`count`), `Embedder` (`embed`) | called by `application.measurement`; implemented by `adapters.tokenizers`, `adapters.embedders` | `contracts` | text → `TokenCount` / `Embedding` | — | interface | stable |
+| `ports/events.py` | 14 | `EventSink` (`emit`, `close`) | called by `application.events`; implemented by `adapters.sinks` | `contracts` | `Event` → — | — | interface | stable |
+| `ports/judge.py` | 15 | `Judge` (`score`); input contract open (O-6) | called by `evaluation.metrics` (Stage 8); implemented by `adapters.judges` | `contracts` | `Request` + `ModelResponse` → `JudgeScore` | — | interface | provisional |
+| `ports/data.py` | 18 | `DataSource` (`dataset`, `sessions`) | called by evaluation/analysis via wiring; implemented by `data_access` | `contracts` | — → `Session` stream | — | interface | stable |
+| `ports/system.py` | 16, 26 | `Clock`, `IdSource`, `SpendLedger` | called by `application`; implemented by `adapters.system` | `contracts` | — → UTC time, ms, IDs, `Money` | — | interface | stable |
+
+## `domain` — pure decisions (CMP-04…09)
+
+| Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
+|---|---|---|---|---|---|---|---|---|
+| `domain/features/extractor.py` | 04 | Derived features; unknown stays `None` | called by `application.pipeline` (stage 2) | `contracts`, `domain.accounting` | `Request` + `RequestMeasurements` → `RequestFeatures` | `FeatureConfig` | business | provisional (language, code detection TODO Stage 8) |
+| `domain/routing/base.py` | 05 | `RoutingPolicy` protocol, `PolicyChoice`, `RequestedModelMode` | used by `routing.policy`, `routing.fixed_model`, `wiring.pipeline` | `contracts` | — | — | business | stable |
+| `domain/routing/eligibility.py` | 05 | Shared eligibility filter: modality (verified only), context fit, enabled, minimum window | called by `routing.policy.route` | `contracts` | `RequestFeatures` + `ModelCatalogue` → eligible entries, `Exclusion`s | `EligibilityConfig` | business | reference |
+| `domain/routing/policy.py` | 05 | `route`: eligibility → policy → `RoutingDecision`; never routes to an ineligible model | called by `application.pipeline` (stage 3); calls `routing.eligibility`, the injected policy | `contracts` | `RequestFeatures` + `ModelCatalogue` → `RoutingDecision` | `RoutingConfig` | business | provisional (tier selection, requested-model modes TODO) |
+| `domain/routing/fixed_model.py` | 05 | `fixed_model` policy (also the premium baseline) | built by `wiring.pipeline`; called by `routing.policy.route` | `contracts` | eligible entries → `PolicyChoice` | `FixedModelConfig` | business | reference |
+| `domain/caching/policy.py` | 06 | Scope, eligibility, key draft, validity at lookup, store rules | called by `application.pipeline` (stages 4, 7) | `contracts` | `Request`, `RequestMeasurements`, `RoutingDecision`, `CacheEntry` → `CacheKeyDraft`, `CacheLookupResult`, `CacheStoreDecision` | `CachePolicyConfig`, `KeyVariant` | business | provisional (semantic tier, normalisation treatments, tier rule TODO Stage 8) |
+| `domain/context/policy.py` | 07 | `ContextStrategy` protocol, `ContextConfig`, overflow rule (`check_fit`) | used by `context.pass_through`, `wiring.pipeline` | `contracts` | input tokens + `CatalogueEntry` → `OverflowOutcome` | `ContextConfig` | business | provisional (trim TODO Stage 8) |
+| `domain/context/pass_through.py` | 07 | Reference strategy: keep everything, default order, composition record | built by `wiring.pipeline`; called by `application.pipeline` (stage 5); calls `context.policy` | `contracts`, `domain.accounting` | `Request` + `RequestMeasurements` + `TargetTokenCounts` → `ContextPlan` | `ContextConfig` | business | reference |
+| `domain/attempts/policy.py` | 08 | `next_action`: primary, retry, failover, escalation, return, fail | called by `application.pipeline` (stage 6) | `contracts` | `AttemptState` + `ModelCatalogue` → `AttemptAction` | `AttemptPolicyConfig` | business | reference (context-overflow rebuild TODO) |
+| `domain/attempts/detectors.py` | 08 | Truncation and empty-output detectors; "any fired" rule | built by `wiring.pipeline`; called by `application.pipeline` | `contracts` | `ModelResponse` → `DetectorVerdict`s | detector names in `AttemptPolicyConfig` | business | provisional (more detectors are Stage 8 experiments) |
+| `domain/accounting/tokens.py` | 09 | Token sums with worst-fidelity rule | called by features, context, `accounting.cost`, `application.measurement` | `contracts` | `TokenCount`s → `TokenCount` | — | business | stable |
+| `domain/accounting/cost.py` | 09 | Cost from usage and prices; totals; pre-call estimate; "not computed" never zero | called by `application.pipeline`; calls `accounting.tokens` | `contracts` | `TokenUsage` + `PriceTable` → `Cost`, `CostEstimate` | `AccountingConfig` | business | provisional (Stage 7 owns the full model) |
+
+## `application` — measurement and orchestration (CMP-01…03, CMP-17)
+
+| Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
+|---|---|---|---|---|---|---|---|---|
+| `application/measurement/fingerprints.py` | 02 | HMAC-SHA-256 fingerprints, key ID, sealing key drafts (ADR-0015 am. 1; reproduces the test vectors) | called by `measurement.service`; built by `wiring.pipeline` | `contracts` | purpose + payload → `Fingerprint`; `CacheKeyDraft` → `CacheKey` | fingerprint key (secret) | orchestration | stable |
+| `application/measurement/service.py` | 02 | Fingerprints, sizes, estimates (stage 1); target counts (5); counted usage (6); key sealing (4) | called by `application.pipeline`; calls `Tokenizer`, `Clock`, `fingerprints` | `contracts`, `domain.accounting`, `ports` | `Request`, `CatalogueEntry` → `RequestMeasurements`, `TargetTokenCounts`, `TokenUsage`, `CacheKey` | tokenizer registry | orchestration | provisional (embeddings, model-based features TODO Stage 8) |
+| `application/events/recorder.py` | 03 | Wraps payloads in `Event` envelopes; start-up privacy check | called by `application.pipeline`; calls `EventSink`, `Clock`, `IdSource` | `contracts`, `ports` | `EventPayload` → `Event` | run ID, run mode, `Versions` | orchestration | stable |
+| `application/pipeline/config.py` | 01 | `PipelineConfig`: reference data + each policy's config | built by `wiring`; read by the pipeline | `contracts`, `domain.accounting`, `domain.attempts`, `domain.caching`, `domain.context`, `domain.features`, `domain.routing` | — | — | orchestration | provisional (built from settings in Stage 6) |
+| `application/pipeline/spend_guard.py` | 17 | Allow a live attempt only within the cap; charge actual cost | called by `pipeline.pipeline`; calls `SpendLedger` | `contracts`, `ports` | `CostEstimate` → allow/block | — | orchestration | provisional |
+| `application/pipeline/pipeline.py` | 01 | `RequestPipeline.handle`: the fixed stage order, one method per stage | called by scripts, tests, `evaluation.replay`; calls everything in the table above | `application.events`, `application.measurement`, `contracts`, `domain.accounting`, `domain.attempts`, `domain.caching`, `domain.context`, `domain.features`, `domain.routing`, `ports` | `Request` → `FinalResponse` (+ events) | `PipelineConfig` | orchestration | provisional (semantic tier, re-route, savings TODO Stage 8) |
+
+## `adapters` — infrastructure (CMP-10…16, CMP-26)
+
+| Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
+|---|---|---|---|---|---|---|---|---|
+| `adapters/providers/fake.py` | 10 | Canned `[SYNTHETIC]` answers; reports no usage | built by wiring; called by the pipeline | `contracts` | `ModelInvocation` → `ModelResponse` | simulated latency | infrastructure | test double |
+| `adapters/providers/injecting.py` | 10 | Fault- and quality-injecting decorators (scripted per call) | built by tests/wiring; wraps a `ModelClient` | `contracts`, `ports` | `ModelInvocation` → scripted `ModelResult` | script | infrastructure | test double |
+| `adapters/providers/replay.py` | 10 | `ProxyModelClient` (no answers, complete); `ReplayModelClient` (skeleton) | built by wiring for evaluation | `contracts` | `ModelInvocation` → `ModelNoAnswer` / (TODO) `ModelResponse` | source kind | infrastructure | proxy stable; replay skeleton (Stage 8) |
+| `adapters/providers/recording.py` | 10 | Recording decorator to `data/recorded/` | built by wiring around a live client | `contracts`, `ports` | `ModelInvocation` → `ModelResult` | path (TODO) | infrastructure | skeleton (Stage 8) |
+| `adapters/stores/memory.py` | 11 | In-memory `CacheStore` and cosine `VectorIndex` | built by wiring per run; called by the pipeline | `contracts` | key → `CacheEntry`; `Embedding` → `IndexMatch` | — | infrastructure | stable (offline) |
+| `adapters/tokenizers/approx.py` | 12 | chars ÷ 4 approximation, labelled `approximation` | built by wiring; called by `application.measurement` | `contracts` | text → `TokenCount` | chars per token | infrastructure | stable as fallback; exact backends Stage 7 |
+| `adapters/embedders/fake.py` | 13 | Hash-derived vectors; no meaning | built by tests/wiring | `contracts` | text → `Embedding` | dimensions | infrastructure | test double |
+| `adapters/sinks/memory.py` | 14 | Events in a list | built by wiring/tests | `contracts` | `Event` → list | — | infrastructure | test double |
+| `adapters/sinks/jsonl.py` | 14 | Events as JSON Lines under `runs/` | built by wiring | `contracts` | `Event` → file | path | infrastructure | stable (offline) |
+| `adapters/judges/fake.py` | 15 | Fixed score or "unmeasured" | built by tests | `contracts` | `Request` + `ModelResponse` → `JudgeScore` | score | infrastructure | test double |
+| `adapters/system/clock.py` | 16 | `SystemClock`, `FakeClock` | built by wiring/tests | — | — → UTC time, ms | start, step | infrastructure | stable |
+| `adapters/system/ids.py` | 16 | UUID and sequential (seeded) ID sources | built by wiring/tests | — | prefix → ID | namespace | infrastructure | stable |
+| `adapters/system/ledger.py` | 26 | Per-run spend ledger | built by wiring for live runs | `contracts` | `Money` → remaining | cap | infrastructure | provisional |
+
+## `data_access` — the data layer (CMP-18)
+
+| Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
+|---|---|---|---|---|---|---|---|---|
+| `data_access/sample/loader.py` | 18 | Sample file → generic `Session`s; every sample quirk handled here (contracts.md §4) | built by wiring | `contracts` | file → `Session` | data path | infrastructure | skeleton (Stage 9) |
+| `data_access/synthetic/generator.py` | 18 | Seeded synthetic sessions | built by wiring | `contracts` | seed → `Session` | seed | infrastructure | skeleton (Stage 9) |
+| `data_access/replay_cases/builder.py` | 18 | Sessions → `ReplayCase`s with pairing flags and exclusions | called by evaluation via wiring | `contracts` | `Session` → `ReplayCase`, `ExclusionCount` | — | infrastructure | skeleton (Stage 9) |
+
+## `evaluation` — replay and results (CMP-21…24)
+
+| Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
+|---|---|---|---|---|---|---|---|---|
+| `evaluation/replay/harness.py` | 21 | Feed cases to a given pipeline; references never reach it | called by the runner, tests; calls `RequestPipeline.handle` | `application.pipeline`, `contracts` | `ReplayCase` → `ReplayOutcome` | — | evaluation | provisional (ordering, exclusions, coverage TODO Stage 8) |
+| `evaluation/baselines/as_logged.py` | 22 | As-logged cost from the case | called by metrics (Stage 8) | `contracts` | `ReplayCase` → `Cost` | label mapping | evaluation | skeleton (Stage 7/8) |
+| `evaluation/metrics/aggregate.py` | 23 | ADR-0006 metrics from events plus references | called by the runner | `contracts` | `Event`s + `ReplayCase`s → `EvaluationResult` | — | evaluation | skeleton (Stage 8) |
+| `evaluation/runner/runner.py` | 24 | Run an experiment; write manifest, events, results | called by scripts (Stage 8); gets a pipeline factory | `application.pipeline`, `contracts` | `ReplayCase`s → `EvaluationResult` | experiment config | evaluation | skeleton (Stage 8) |
+
+## `wiring` — composition root (CMP-20)
+
+| Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
+|---|---|---|---|---|---|---|---|---|
+| `wiring/pipeline.py` | 20 | `build_pipeline`; registries of **promoted** routing policies, context strategies, detectors; refuses live without a cap | called by `wiring.walking_skeleton`, tests, (Stage 8) the runner | `adapters.system`, `adapters.tokenizers`, `application.events`, `application.measurement`, `application.pipeline`, `contracts`, `domain.attempts`, `domain.context`, `domain.routing`, `ports` | `PipelineConfig` + adapters + key → `RequestPipeline` | all | composition | provisional (from `Settings` in Stage 6) |
+| `wiring/walking_skeleton.py` | 20 | Synthetic placeholder catalogue and prices (no amounts); fakes; demo requests | called by `scripts/run_walking_skeleton.py`, tests; calls `wiring.pipeline` | `adapters.providers`, `adapters.sinks`, `adapters.stores`, `application.pipeline`, `contracts`, `domain.routing`, `ports` | key → `RequestPipeline` | in code (TODO Stage 6: `config/`) | composition | provisional |
+
+## Not yet populated
+
+- `settings` (CMP-19): Stage 6. `wiring` builds `PipelineConfig` in code until then.
+- `analysis` (CMP-25): future, with the full-dataset EDA.
+- `scripts/run_walking_skeleton.py`: the walking-skeleton entry point. Outside the package; parses arguments, calls `wiring`, prints content-free metadata.
+
+## Swap points (QA-REPL: one interface + one config entry)
+
+| To add… | Implement | Register | Select with |
+|---|---|---|---|
+| a routing policy | `domain.routing.RoutingPolicy` | `wiring.pipeline.ROUTING_POLICIES` | `routing.policy` |
+| a context strategy | `domain.context.ContextStrategy` | `wiring.pipeline.CONTEXT_STRATEGIES` | `context.strategy` |
+| a detector | `domain.attempts.Detector` | `wiring.pipeline.DETECTORS` | `attempts.detectors` |
+| a model client, store, tokenizer, embedder, sink, judge | the `ports` protocol | passed to `build_pipeline` | runtime config (Stage 6) |
+
+Candidates under test load from `experiments/` through the Stage 8 mechanism; the registries above hold promoted components only.

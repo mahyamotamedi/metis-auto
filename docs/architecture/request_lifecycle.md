@@ -50,16 +50,18 @@ sequenceDiagram
     participant E as EventRecorder
 
     C->>P: Request
-    P->>E: request_received
     P->>M: Request
     M-->>P: RequestMeasurements
+    P->>E: request_received
     P->>D: features(Request, RequestMeasurements)
     D-->>P: RequestFeatures
     P->>D: route(RequestFeatures, ModelCatalogue)
     D-->>P: RoutingDecision
     P->>E: features_extracted, routing_decided
     P->>D: cache key(Request, RoutingDecision)
-    D-->>P: CacheKey, or CacheLookupResult (ineligible)
+    D-->>P: CacheKeyDraft, or CacheLookupResult (ineligible)
+    P->>M: seal(CacheKeyDraft)
+    M-->>P: CacheKey
     P->>S: get(CacheKey)
     S-->>P: CacheEntry or none
     P->>D: validate(CacheEntry, IndexMatch)
@@ -92,6 +94,8 @@ sequenceDiagram
         P-->>C: FinalResponse
     end
 ```
+
+Stage 5 refinements (the code is the reference, [module_reference.md](module_reference.md)): `request_received` is emitted once measurement has the component states it reports; the cache policy returns a `CacheKeyDraft`, which the measurement service seals into a `CacheKey`, because only CMP-02 holds the fingerprint key (ADR-0015).
 
 Simplifications in the diagram: the semantic-cache tier is drawn in [caching.md](caching.md); the spend guard, retries, and the deadline check are drawn in [attempts.md](attempts.md). The context build happens only for an attempt whose target differs from the previous build's target.
 

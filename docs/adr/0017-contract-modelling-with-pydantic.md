@@ -1,6 +1,6 @@
 # ADR-0017: Contracts are pydantic v2 models — frozen, strict about field names, with a privacy class on every field
 
-- Status: **decided** (library and conventions). The exact version is **provisional** until the lockfile exists (Stage 5/6).
+- Status: **decided** (library and conventions). Version locked in Stage 5: pydantic **2.14.1** (`requirements.lock`); all contract tests pass under it (2026-10-18).
 - Date: 2026-10-17
 - Relates to: MP§5 Stage 4, ADR-0001, ADR-0009 (§3.3: `contracts`, `ports`, `domain` may use "the contract-modelling library chosen in Stage 4"), ADR-0010, ADR-0012, ADR-0015, QA-PRIV, QA-LAT, QA-TEST, FR-OBS-02
 - Detail: [contracts.md](../architecture/contracts.md)
@@ -38,6 +38,7 @@ Stage 4 expresses the internal contracts as typed models. The models must:
 
 - `contracts`, `ports`, and `domain` depend on pydantic. It is the only third-party dependency allowed there (repository_structure.md §3.3). It does no I/O.
 - `pyproject.toml` (Stage 5/6) declares `pydantic>=2.10,<3`. The lockfile pins a version that the tests have run under.
-- Until `pyproject.toml` exists, `tests/conftest.py` puts `src/` on `sys.path` (TODO, Stage 5).
+- ~~Until `pyproject.toml` exists, `tests/conftest.py` puts `src/` on `sys.path`.~~ Removed in Stage 5 (editable install).
+- Point 7 checked in Stage 5: walking-skeleton overhead p95 ≈ 0.1 ms, so `model_construct` is not used (contracts.md O-7).
 - A pydantic major-version change would touch every contract. The `<3` bound makes that a deliberate upgrade.
 - Policy configs in `domain` (each policy owns its typed config, configuration.md §3 rule 5) use the same base class for consistency.

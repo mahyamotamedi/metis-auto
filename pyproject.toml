@@ -1,0 +1,50 @@
+# Packaging, dependencies, and tool configuration (ADR-0001).
+# Layout: src/metis_auto (ADR-0009). Locked versions: requirements-dev.lock (pip-tools).
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "metis-auto"
+version = "0.0.0"
+description = "Cost-reducing middleware between applications and LLM providers (offline foundation)."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    # The only third-party library allowed in contracts, ports, domain (ADR-0017).
+    "pydantic>=2.10,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "pip-tools>=7.4",
+]
+# Needed only by the frozen sample-EDA tests (tests/test_sample_eda_helpers.py).
+eda = [
+    "numpy>=2",
+    "pandas>=2.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# tests/ holds the synthetic fixtures package (tests/fixtures).
+pythonpath = ["tests"]
+filterwarnings = ["error"]
+markers = [
+    "network: needs network or API keys; skipped unless --run-network is given (ADR-0003)",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+# Frozen, preliminary sample EDA (ADR-0008): not reformatted or linted.
+extend-exclude = ["experiments/sample_eda", "tests/test_sample_eda_helpers.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

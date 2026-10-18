@@ -1,6 +1,6 @@
 # Internal Contracts (Stage 4)
 
-Status: conventions and contract set **decided**; individual fields **provisional** until the Stage 5 skeleton uses them; catalogue and price shapes **provisional** until Stage 7. Last updated 2026-10-18 (O-4 and Q-24 decided).
+Status: conventions and contract set **decided**; individual fields **provisional** (the Stage 5 skeleton now uses them; two additions, §6); catalogue and price shapes **provisional** until Stage 7. Last updated 2026-10-18 (Stage 5: `CacheKeyDraft`, `RequestFeatures.known_input_tokens`, schema 0.2; O-2, O-7, O-9 resolved).
 Index: [architecture README](README.md). Code: `src/metis_auto/contracts/`. **Field tables:** [contracts_reference.md](contracts_reference.md), generated from the code (a test fails if it is stale). Decisions: [ADR-0017](../adr/0017-contract-modelling-with-pydantic.md) (pydantic), [ADR-0015 amendment 1](../adr/0015-keyed-content-fingerprints.md#amendment-1-2026-10-17-stage-4-the-algorithm) (fingerprint algorithm).
 
 This document answers: **what data crosses each boundary, who produces and consumes it, how sensitive each part is, and how it changes over time?** It fixes the provisional vocabulary of [overview §5](overview.md#5-provisional-contract-vocabulary).
@@ -14,7 +14,7 @@ Field-level detail (type, required or optional, privacy class, description) is i
 **In scope:** every data structure passed between components on the request path, the replay path, and the evaluation path, plus the persisted records (events, cache entries, run manifests, evaluation results).
 
 **Not in scope here:**
-- **Port method signatures** (`ModelClient.invoke`, `CacheStore.get`, …): Stage 5. The contracts here are their arguments and return values.
+- **Port method signatures** (`ModelClient.invoke`, `CacheStore.get`, …): defined in Stage 5 in `src/metis_auto/ports/` ([module_reference.md](module_reference.md)). The contracts here are their arguments and return values.
 - **`Settings`**: Stage 6. Its shape depends on the config file format and loading library, which configuration.md §4 leaves to Stage 6.
 - **Final catalogue and price schema**: Stage 7. The shapes here are provisional but already enforce the no-fabrication rule (§3.3).
 - **Wire formats** of providers and of the future gateway (FR-API-03). Adapters translate them into these contracts.
@@ -50,7 +50,7 @@ Every field declares one class with `field(privacy, description)`. The class is 
 3. the serialised synthetic examples of those records contain no synthetic content marker (a value-level check that complements the type-level one);
 4. self-tests show the checker catches a content field hidden in a nested model, and an unclassified field.
 
-`contracts/privacy.py` provides the walker, so the Stage 5 event recorder (CMP-03) can use the same check at start-up.
+`contracts/privacy.py` provides the walker; the event recorder (CMP-03, `application/events/recorder.py`) runs the same check at start-up.
 
 **Free text can't hide in derived fields.** Feature maps (`RequestFeatures.extra`, `RequestMeasurements.model_features`) accept numbers, booleans, and lower-case codes only (`FeatureValue`). Error details are provider *codes*, never messages (providers.md §1).
 
@@ -95,7 +95,7 @@ Durations are milliseconds from the monotonic clock. Every latency figure names 
 
 | Thing | Version carried in | Rule |
 |---|---|---|
-| The contract schema as a whole | `SCHEMA_VERSION` (now `0.1`) on persisted contracts: `Event`, `CacheEntry`, `RunManifest`, `EvaluationResult`; plus `Versions.contracts` on every event | **While 0.x**, any change bumps the minor version, and data written under another 0.x minor is not guaranteed readable. That is acceptable because runs are self-contained and offline cache state is reset per run. **From 1.0** (proposed after the Stage 10 review, or when the first persisted data must outlive a code change): adding an optional field or an enum value is a minor bump; removing, renaming, retyping, or changing the meaning of a field is a major bump. Readers accept older minors of their own major. There is no forward compatibility: `extra="forbid"` rejects fields from a newer writer. |
+| The contract schema as a whole | `SCHEMA_VERSION` (now `0.2`; `0.1` → `0.2` in Stage 5 for the two additions in §6) on persisted contracts: `Event`, `CacheEntry`, `RunManifest`, `EvaluationResult`; plus `Versions.contracts` on every event | **While 0.x**, any change bumps the minor version, and data written under another 0.x minor is not guaranteed readable. That is acceptable because runs are self-contained and offline cache state is reset per run. **From 1.0** (proposed after the Stage 10 review, or when the first persisted data must outlive a code change): adding an optional field or an enum value is a minor bump; removing, renaming, retyping, or changing the meaning of a field is a major bump. Readers accept older minors of their own major. There is no forward compatibility: `extra="forbid"` rejects fields from a newer writer. |
 | Policies, feature set, key schema, catalogue, price table, embedder, judge | `Versions` (on events, entries, manifests) and `PolicyRef` | Owned by each component, independent of the schema version. A key-schema or embedder change makes old cache entries unreachable by construction (ADR-0011). |
 | Event types | the `EventPayload` union | Adding a type is a minor bump. Removing one is a major bump. |
 | Fingerprint algorithm | the `fp1` / `kid1` prefixes | A change replaces all three prefixes together (ADR-0015 amendment 1). |
@@ -136,6 +136,7 @@ Producers and consumers use the component IDs from [overview §3](overview.md#3-
 |---|---|---|---|---|---|---|---|
 | `CacheKey`, `KeyComponent`, `CacheScope` (`caching`) | Key schema version, variant, `serving_allowed`, per-component state and fingerprint with its treatment (normalisation or window), target group, scope, key and partition-key fingerprints | CMP-06; experiments (measurement variants) | `CacheStore`, `VectorIndex`; fingerprints into events | inside `CacheEntry` | fingerprints, refs | decided (structure); variants provisional | ADR-0011, ADR-0007, FR-XCACHE-02/03/05 |
 | `CacheEntry` (`caching`) | A stored answer with its key, producing model and tier, creation time, status, source request, optional embedding, versions | CMP-01 (after a positive `CacheStoreDecision`) | `CacheStore` → CMP-06 | **cache store only** | **content** (answer, embedding) | decided | FR-XCACHE-04/08/09 |
+| `CacheKeyDraft` (`caching`) | A composed key **before** fingerprinting: the same fields as `CacheKey` minus `key` and `partition_key`. The cache policy decides the composition but holds no fingerprint key (ADR-0015), so CMP-02 seals the draft into a `CacheKey`. `key_material()` / `partition_material()` define what is fingerprinted. | CMP-06 | CMP-02 (seal) | no | operational, fingerprints | decided (Stage 5) | ADR-0011, ADR-0015 |
 | `IndexMatch` (`caching`) | One vector-index result: entry and similarity, with the embedder | `VectorIndex` | CMP-06 | no | derived | decided | FR-SCACHE-02/03 |
 | `CacheLookupResult` (`caching`) | One tier's outcome: hit, miss, or ineligible with a reason; invalid reason; variant; scope; similarity and threshold; checks not evaluated (time sensitivity, TODO-07) | CMP-06 | CMP-01, `cache_lookup` | in events | operational, fingerprint | decided | FR-XCACHE-06, FR-SCACHE-04 |
 | `CacheStoreDecision` (`caching`) | Store or skip with a reason | CMP-06 | CMP-01; `cache_stored` / `cache_store_skipped` | in events | operational | decided | FR-XCACHE-04 |
@@ -229,6 +230,8 @@ Names kept: all of [overview §5](overview.md#5-provisional-contract-vocabulary)
 | pairing flag `multiple_bots` | **`multiple_answers`** | `bot` is the sample's role name; contracts are generic (ADR-0008). |
 | — | **`JudgeScore`** | The judge arrow in the evaluation flow needed a contract. |
 | — | `SpanTiming`, `Versions`, `PolicyRef`, `AttemptRecord`, `CompositionRecord`, `Component` | Previously described in prose; now named. |
+| `CacheKey` from the cache policy | **`CacheKeyDraft`** → sealed into `CacheKey` by CMP-02 (Stage 5) | Domain can't fingerprint: the key is a secret held by the measurement service (ADR-0015). |
+| — | **`RequestFeatures.known_input_tokens`** (Stage 5) | The routing context-fit check needs a whole-request estimate; a lower bound when components are unknown. |
 
 The renames are applied to the diagrams (§7).
 
@@ -257,11 +260,11 @@ All 12 Mermaid blocks in `docs/architecture/` were re-parsed with Mermaid 11.4.1
 | ID | Item | Resolved in |
 |---|---|---|
 | O-1 | `Settings` contract (and its secret holder) | Stage 6 |
-| O-2 | Port method signatures, using these contracts | Stage 5 |
+| O-2 | ~~Port method signatures~~ **Done in Stage 5:** `src/metis_auto/ports/`. | Stage 5 |
 | O-3 | Final catalogue, price, and label-mapping schema | Stage 7 |
 | O-4 | ~~Empty values: `present` or `absent`?~~ **Decided 2026-10-18:** empty means `absent`. Validator added (§2.3). Producers apply it. | Stage 5 request builder; Stage 9 sample loader |
 | O-5 | Core feature set beyond the provisional fields | Stage 8 experiments |
 | O-6 | Judge *input* contract (rubric, reference handling) beyond `Request` + `ModelResponse` | Stage 8 judge plan |
-| O-7 | Whether hot-path contracts need `model_construct` (no validation) | Stage 5 overhead measurement (ADR-0017 point 7) |
+| O-7 | ~~Whether hot-path contracts need `model_construct`~~ **Not needed (Stage 5):** walking-skeleton overhead p95 ≈ 0.1 ms vs the 100 ms budget (indicative, A-38, progress.md). Revisit with realistic request sizes. | Stage 5 |
 | O-8 | Curated-cache entry fields | only if ADR-0016 is accepted |
-| O-9 | Lock the pydantic version and re-run the contract tests under it | Stage 5/6 (ADR-0017) |
+| O-9 | ~~Lock the pydantic version~~ **Done (Stage 5):** pydantic 2.14.1 in `requirements.lock`; all contract tests pass under it. | Stage 5 |

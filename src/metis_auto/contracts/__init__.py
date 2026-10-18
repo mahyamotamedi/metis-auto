@@ -52,6 +52,7 @@ from .attempts import (
 from .caching import (
     CacheEntry,
     CacheKey,
+    CacheKeyDraft,
     CacheLookupResult,
     CacheScope,
     CacheStoreDecision,
@@ -168,6 +169,7 @@ __all__ = [
     "AttemptState",
     "CacheEntry",
     "CacheKey",
+    "CacheKeyDraft",
     "CacheLookupResult",
     "CacheScope",
     "CacheStoreDecision",

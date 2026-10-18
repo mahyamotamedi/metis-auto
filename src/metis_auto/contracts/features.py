@@ -43,6 +43,12 @@ class RequestFeatures(ContractModel):
     message_tokens: TokenCount | None = field(
         Privacy.DERIVED, "Message token estimate, with its method.", default=None
     )
+    known_input_tokens: TokenCount | None = field(
+        Privacy.DERIVED,
+        "Cheap estimate over present components; unknown ones add nothing, so it "
+        "is a lower bound. Used for the routing context-fit check.",
+        default=None,
+    )
     has_code: bool | None = field(Privacy.DERIVED, "Code detected.", default=None)
     attachment_count: NonNegInt | None = field(
         Privacy.DERIVED, "Attachments; None if unknown.", default=None

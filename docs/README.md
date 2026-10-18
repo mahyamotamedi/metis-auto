@@ -13,12 +13,12 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 - [repository_structure.md](architecture/repository_structure.md): where files go, what each package may import, and the promotion process (Stage 2).
 - [architecture/README.md](architecture/README.md): **Stage 3 architecture index**: overview and component catalogue, request lifecycle and data flow, routing, caching, context construction, attempts (escalation and failover), evaluation, configuration, observability, providers, deployment and data. Lists every diagram and the question it answers.
 - [contracts.md](architecture/contracts.md): **Stage 4 internal contracts**: conventions, catalogue (producers, consumers, privacy), versioning, sample tolerance, the reserved `traffic_source`, arrow coverage. Field tables: [contracts_reference.md](architecture/contracts_reference.md) (generated from code).
-- *Stage 5:* module interaction reference.
+- [module_reference.md](architecture/module_reference.md): **Stage 5 module interaction reference**: every module's callers, imports (checked by a test), data, config, kind, and status; the walking skeleton's stage-to-method map; swap points.
 
 ## Decision records (`adr/`)
 | ADR | Decision | Status |
 |---|---|---|
-| [0001](adr/0001-python-tooling.md) | Python tooling: 3.13, venv + pip, pyproject, locked deps, ruff, pytest | decided (locking provisional) |
+| [0001](adr/0001-python-tooling.md) | Python tooling: 3.13, venv + pip, pyproject, locked deps, ruff, pytest | decided (set up in Stage 5; locking provisional) |
 | [0002](adr/0002-configurable-baselines.md) | Baselines: configurable premium placeholder plus mandatory as-logged | decided |
 | [0003](adr/0003-offline-by-default-model-calls.md) | Model calls offline by default; live calls opt-in with a spending cap | decided |
 | [0004](adr/0004-repository-hygiene.md) | Repository hygiene | decided |
@@ -34,7 +34,7 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 | [0014](adr/0014-counterfactual-answers-via-model-client.md) | Counterfactual answers via the `ModelClient` port; every run declares its source | decided |
 | [0015](adr/0015-keyed-content-fingerprints.md) | Keyed (HMAC) content fingerprints; amendment 1: HMAC-SHA-256 algorithm, format, test vectors | decided |
 | [0016](adr/0016-curated-cache-and-traffic-source-scope.md) | Curated shared cache and traffic-source-based cache scope | **proposed — to be tested** (Q-21); scope rule S-b chosen; serving defaults unchanged; `traffic_source` reserved in Stage 4 |
-| [0017](adr/0017-contract-modelling-with-pydantic.md) | Contracts are pydantic v2 models: frozen, extra fields forbidden, a privacy class on every field | decided (version provisional until the lockfile) |
+| [0017](adr/0017-contract-modelling-with-pydantic.md) | Contracts are pydantic v2 models: frozen, extra fields forbidden, a privacy class on every field | decided (pydantic 2.14.1 locked, Stage 5) |
 
 ## Experiments
 - *Stage 8:* framework doc and the routing, cache, and context plans, in `docs/experiments/`.

@@ -49,7 +49,7 @@ flowchart LR
 4. **Serving key variants** must carry `serving_allowed` ([caching.md §1](caching.md#1-cache-key-composition)).
 5. **Settings know no policies.** `settings` validates shape and the cross-cutting rules above. Each policy's own config type lives with the policy in `domain`, and `wiring` maps the loaded settings onto it.
 6. **Frozen and hashed.** The merged settings are immutable during a run. A hash of the non-secret settings, plus the version ID of each reference-data file, goes into every event envelope and manifest (FR-OBS-02, FR-EVAL-07).
-7. **Secrets** are read only from the environment (with an optional untracked `.env` in local development), held in a wrapper that hides the value when printed, passed by `wiring` only to the adapters that need them, and never logged, put into events, or included in the config hash. Events and manifests may record *that* a secret was present, never its value.
+7. **Secrets** are read only from the environment (with an optional untracked `.env` in local development), held in a wrapper that hides the value when printed, passed by `wiring` only to the components that need them (provider adapters; the fingerprint key goes to the measurement service, CMP-02, Stage 5), and never logged, put into events, or included in the config hash. Events and manifests may record *that* a secret was present, never its value.
 8. **Unknown values stay unknown.** An unset premium baseline, an unverified capability, or a missing price is represented explicitly, and downstream results say "not computed" or "unsupported" rather than defaulting (ADR-0002, FR-ACCT-02, FR-ROUTE-05).
 
 ## 4. Open items (Stage 6 and 7)

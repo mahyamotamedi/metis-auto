@@ -19,6 +19,7 @@ from metis_auto.contracts import (
     PAYLOAD_TYPES,
     AttemptState,
     CacheEntry,
+    CacheKeyDraft,
     CacheLookupResult,
     CompositionRecord,
     ContractModel,
@@ -65,6 +66,7 @@ CONTENT_FREE = [
     CompositionRecord,
     AttemptState,
     RequestFeatures,
+    CacheKeyDraft,
 ]
 
 

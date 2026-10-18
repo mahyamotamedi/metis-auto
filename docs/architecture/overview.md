@@ -102,7 +102,7 @@ flowchart LR
 
 Every component has an owner responsibility, inputs, outputs, and dependencies. **Contract names** in the Inputs and Outputs columns are the provisional vocabulary in §5. Stage 4 fixes their fields.
 
-`CMP-nn` IDs are used in the flow documents and later in the module reference (Stage 5).
+`CMP-nn` IDs are used in the flow documents and in the [module reference](module_reference.md) (Stage 5).
 
 ### 3.1 Request path
 
@@ -171,7 +171,9 @@ flowchart TD
     pipe -- "RequestFeatures + ModelCatalogue" --> route["CMP-05 Routing"]
     route -- "RoutingDecision" --> pipe
     pipe -- "Request + RoutingDecision" --> cpol["CMP-06 Cache policy"]
-    cpol -- "CacheKey" --> pipe
+    cpol -- "CacheKeyDraft" --> pipe
+    pipe -- "CacheKeyDraft" --> meas
+    meas -- "CacheKey" --> pipe
     pipe -- "CacheKey / Embedding" --> store["CacheStore / VectorIndex"]
     store -- "CacheEntry or none" --> pipe
     pipe -- "CacheEntry + IndexMatch" --> cpol

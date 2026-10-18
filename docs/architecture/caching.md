@@ -26,6 +26,8 @@ A key is a keyed fingerprint ([ADR-0015](../adr/0015-keyed-content-fingerprints.
 - **Narrower variants** (for example request-only, or request + instructions) exist for **measurement only**. Each variant in configuration has a `serving_allowed` flag. `settings` rejects a serving configuration that uses a variant without that flag, and setting the flag needs a decision record citing measured false-hit rates (P-5, ADR-0007 consequence).
 - **`unknown` never matches.** A request with any `unknown` component in the serving key is ineligible. Offline, a measurement variant may treat unknown as a wildcard to bound the opportunity; it reports which treatment it used (P-6).
 
+The cache policy composes the key as a `CacheKeyDraft`; the measurement service (CMP-02) fingerprints it into the `CacheKey`, since only it holds the fingerprint key (Stage 5, [contracts.md §6](contracts.md#6-changes-from-the-stage-3-vocabulary)).
+
 The **partition key** is components 1 and 3–8, everything except the current message. The semantic tier matches the partition key exactly and compares only the message by similarity (FR-SCACHE-02).
 
 ---

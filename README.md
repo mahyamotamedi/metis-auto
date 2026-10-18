@@ -23,6 +23,18 @@ The project explores:
 
 Where new files go and what each package may import: [`docs/architecture/repository_structure.md`](docs/architecture/repository_structure.md).
 
+## Development Setup
+
+Python 3.13 from a non-conda interpreter ([ADR-0001](docs/adr/0001-python-tooling.md)):
+
+```sh
+python3.13 -m venv .venv
+.venv/bin/pip install --require-hashes -r requirements-dev.lock
+.venv/bin/pip install -e . --no-deps
+.venv/bin/python -m pytest                       # offline; network tests need --run-network
+.venv/bin/python scripts/run_walking_skeleton.py # the pipeline end to end with fakes
+```
+
 ## Development Workflow
 
 Experimental implementations are developed independently on feature branches.

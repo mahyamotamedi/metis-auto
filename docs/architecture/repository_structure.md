@@ -17,7 +17,7 @@ metis-auto/
 ├── GLOSSARY.md                   domain terms
 ├── README.md                     project overview → points here
 ├── metis_claude_code_master_prompt.md   engagement brief for agents (stays at root, ADR-0009)
-├── pyproject.toml, *.lock        (later, Stage 5/6) packaging, deps, ruff, pytest config (ADR-0001)
+├── pyproject.toml, *.lock        (Stage 5) packaging, deps, ruff, pytest config; pip-tools lockfiles (ADR-0001)
 ├── Dockerfile, compose.yaml      (later, Stage 6) local-dev containers
 ├── .env.example                  (later, Stage 6) placeholders only, no secrets
 │
@@ -56,7 +56,7 @@ No existing file or directory was moved, renamed, or deleted in this stage.
 - Future network gateway (FR-API-03, NG-03): `src/metis_auto/gateway/`, an external-API adapter layer over `application` that has the same import rights as `wiring` (§3).
 - Dashboard (FR-FIN-02, NG-05): a separate consumer of events. It reads event sinks and aggregates and never touches the request path. Its location is decided when Action 3 returns.
 - `infra/`: created only when infrastructure files exist beyond the root `Dockerfile` and `compose.yaml`, for example PostgreSQL init scripts in Stage 9.
-- `scripts/`: thin command-line wrappers, created when the first one is needed (Stage 7's optional size-estimate script). A script contains no logic. It parses arguments, calls `wiring`, and writes outputs.
+- `scripts/`: thin command-line wrappers. Created in Stage 5 for `run_walking_skeleton.py`. A script contains no logic. It parses arguments, calls `wiring`, and writes outputs.
 
 ---
 
@@ -88,7 +88,7 @@ Each sub-package has an `__init__.py` whose docstring states its responsibility 
 | `analysis` | ADR-0008 requires the full EDA to use tested analysis code, not notebook helpers. | Dataset profiling and descriptive statistics for the full EDA and onboarding checks: schema presence, distributions, repetition and near-duplicate analysis. Data comes in through `ports`. | Anything copied from `eda_helpers.py`. Shared logic that `domain` already provides (import it instead). | FR-DATA-07/08, ADR-0008 |
 | `wiring` | Exactly one place, the composition root, builds concrete objects from config. Every other module receives its collaborators. | Factories that assemble pipelines, runners, and data sources from `settings`. The only package that may import `adapters` and `data_access` together with `application`. | Logic. | QA-REPL (one interface + one config entry), FR-DATA-02 |
 
-**Sub-packages are provisional.** Stage 3 fixed the component boundaries; the sub-package list is in [overview.md §6](overview.md#6-fit-with-the-repository-structure-a-25) (proposal S3-1). Notable change: `domain/escalation/` became `domain/attempts/`, which covers retries, failover, and escalation together ([ADR-0013](../adr/0013-unified-attempt-model.md)). Sub-packages are created in Stage 5. The import rules apply to top-level packages, so sub-packages inherit them.
+**Sub-packages are provisional.** Stage 3 fixed the component boundaries; the sub-package list is in [overview.md §6](overview.md#6-fit-with-the-repository-structure-a-25) (proposal S3-1). Notable change: `domain/escalation/` became `domain/attempts/`, which covers retries, failover, and escalation together ([ADR-0013](../adr/0013-unified-attempt-model.md)). Sub-packages were created in Stage 5 as listed there; [module_reference.md](module_reference.md) describes every module. The import rules apply to top-level packages, so sub-packages inherit them.
 
 **S3-2 (approved 2026-10-17, Q-19):** `domain` imports only `contracts`. Under principle P-1 domain code never calls a port, so it has no reason to import `ports`. §3.1 and the import test enforce this ([ADR-0009 amendment 1](../adr/0009-repository-structure-and-dependency-rules.md#amendment-1-2026-10-17-domain-imports-only-contracts-s3-2)).
 
@@ -159,7 +159,8 @@ What the rules buy:
 
   A new top-level package without a rule fails the test. The test's rule table mirrors §3.1. **Change both together.** The test also includes self-tests on synthetic trees, so it shows that it catches violations, not only that the empty packages pass.
 - One §3.2 rule is **not** checked mechanically: experiments must not import each other. Experiments don't form an importable package, so the check is left to review.
-- `import-linter` is the fuller alternative, once `pyproject.toml` exists (Stage 5/6). Adopting it would be a tooling change recorded in the ADR. It is not needed while the stdlib check is enough.
+- `import-linter` is the fuller alternative. `pyproject.toml` exists since Stage 5, but the stdlib check still covers every rule, so it is not adopted (A-26). Adopting it would be a tooling change recorded in the ADR.
+- `tests/architecture/test_module_reference.py` checks that [module_reference.md](module_reference.md) lists every module and its cross-package imports (Stage 5).
 - Rules the test can't see are handled by stage review: no logic in `wiring`, no I/O in `domain` through third-party or standard-library calls (port imports are caught by the test), third-party limits (§3.3), and no raw content in fixtures.
 
 ---
@@ -171,13 +172,13 @@ What the rules buy:
 | `tests/test_sample_eda_helpers.py` | Existing EDA tests. Kept in place. |
 | `tests/architecture/` *(new)* | Structure checks (import rules). |
 | `tests/unit/` *(Stage 4)* | One sub-tree mirroring `src/metis_auto/<package>/`; `tests/unit/contracts/` exists. Test file names are unique across the tree (`test_<package>_<topic>.py`), because test directories have no `__init__.py`. |
-| `tests/integration/` *(later, Stage 5)* | Pipeline smoke test with fakes; replay over synthetic data. |
+| `tests/integration/` *(Stage 5)* | Walking-skeleton smoke tests with fakes, including replay of a synthetic case. |
 | `tests/fixtures/synthetic/` *(Stage 4)* | Synthetic data and synthetic recorded responses. Files are named or marked `synthetic`; strings carry a `[SYNTHETIC]` marker. `contract_examples.py` holds one example per contract and the fingerprint reference implementation. |
-| `tests/conftest.py` *(Stage 4)* | Puts `src/` and `tests/` on `sys.path` until `pyproject.toml` exists (TODO, Stage 5). |
+| `tests/conftest.py` | The opt-in `network` marker (`--run-network`). Since Stage 5 the package is installed editable and `tests/` is on the path via `pyproject.toml`; the Stage 4 `sys.path` lines are gone. |
 
 Rules (QA-TEST, ADR-0003):
 - Every default test runs offline with no keys.
-- Network tests carry a `network` marker and are skipped unless explicitly enabled (configured in Stage 5/6).
+- Network tests carry a `network` marker and are skipped unless `pytest --run-network` is given (Stage 5).
 - Fixtures never contain raw dataset content.
 
 ---

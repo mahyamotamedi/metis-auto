@@ -1,15 +1,28 @@
 """Test-session setup.
 
-TODO(Stage 5): remove the ``sys.path`` lines once ``pyproject.toml`` exists and
-the package is installed in editable mode (ADR-0001, repository_structure §1).
-Until then they make ``metis_auto`` (src layout) and the synthetic fixtures
-importable without installing anything.
+``metis_auto`` is installed in editable mode (``pip install -e . --no-deps``)
+and ``tests/`` is on the path through ``pythonpath`` in pyproject.toml.
+
+Tests that need the network or API keys carry ``@pytest.mark.network`` and are
+skipped unless ``--run-network`` is given (ADR-0003, QA-TEST).
 """
 
-import sys
-from pathlib import Path
+import pytest
 
-_TESTS = Path(__file__).resolve().parent
-for _path in (_TESTS.parent / "src", _TESTS):
-    if str(_path) not in sys.path:
-        sys.path.insert(0, str(_path))
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--run-network",
+        action="store_true",
+        default=False,
+        help="run tests marked 'network' (opt-in; may need keys and cost money)",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--run-network"):
+        return
+    skip = pytest.mark.skip(reason="network test: opt in with --run-network")
+    for item in items:
+        if "network" in item.keywords:
+            item.add_marker(skip)

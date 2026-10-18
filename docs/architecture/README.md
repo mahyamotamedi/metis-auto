@@ -21,6 +21,7 @@ Status legend: **decided** · **provisional** (working answer, may change with e
 | [deployment_and_data.md](deployment_and_data.md) | Local-development assumptions, future deployment view, future database extension points | local decided, future provisional |
 | [repository_structure.md](repository_structure.md) | Where files go, import rules, promotion (Stage 2) | decided |
 | [contracts.md](contracts.md) | **Stage 4.** Internal contracts: conventions (privacy classes, tri-state components, IDs, fingerprints, time, money, versioning), catalogue with producers and consumers, sample tolerance, reserved `traffic_source`, arrow coverage | conventions decided, fields provisional |
+| [module_reference.md](module_reference.md) | **Stage 5.** Every module: responsibility, callers, imports (checked by a test), data in and out, config, kind, status; swap points | matches the code (tested) |
 | [contracts_reference.md](contracts_reference.md) | **Generated** field reference for every contract (type, required, privacy class, description) and every enumeration | generated; a test fails if stale |
 
 ## Diagrams and the question each answers

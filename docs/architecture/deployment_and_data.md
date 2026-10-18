@@ -9,7 +9,7 @@ Index: [architecture README](README.md). Requirements: ADR-0005, NG-01…03, NG-
 
 | Assumption | Status | Consequence |
 |---|---|---|
-| One developer machine (macOS today), Python 3.13 venv from a non-conda interpreter (ADR-0001, TODO-08). | decided | Docker (Stage 6) gives the same runtime on other machines. |
+| One developer machine (macOS today), Python 3.13 venv from a non-conda interpreter (ADR-0001; Homebrew 3.13 since 2026-10-18, TODO-08 resolved). | decided | Docker (Stage 6) gives the same runtime on other machines. |
 | **No network and no keys** for the default test suite and the walking skeleton. | decided | Fakes for every port; tests marked `network` are skipped unless explicitly enabled (QA-TEST). |
 | One process. The pipeline is a library call; replay and tests call it directly. | decided | No server, queue, or database is needed now (NG-03). |
 | CPU only. | provisional | Local embedding models (Stage 8) must run acceptably on CPU, or their experiments are run elsewhere and recorded. |

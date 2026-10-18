@@ -72,6 +72,43 @@ class KeyComponent(ContractModel):
         return self
 
 
+class CacheKeyDraft(ContractModel):
+    """A composed key before fingerprinting (Stage 5).
+
+    The cache policy (domain) decides the composition but holds no fingerprint
+    key (ADR-0015), so it returns a draft. The measurement service seals it
+    into a ``CacheKey`` by fingerprinting ``key_material()`` and
+    ``partition_material()``.
+    """
+
+    key_schema_version: Version = field(
+        Privacy.OPERATIONAL, "Bumps invalidate entries."
+    )
+    variant: Name = field(Privacy.OPERATIONAL, "Key variant, e.g. full, request_only.")
+    serving_allowed: bool = field(
+        Privacy.OPERATIONAL, "False for measurement-only variants (P-5)."
+    )
+    components: tuple[KeyComponent, ...] = field(
+        Privacy.DERIVED, "Content components, in key order."
+    )
+    target_group: Name | None = field(
+        Privacy.OPERATIONAL, "Target equivalence group; None if excluded by variant."
+    )
+    scope: CacheScope = field(Privacy.REFERENCE, "Sharing scope.")
+
+    def key_material(self) -> dict[str, object]:
+        """Everything in the key, as JSON-ready data (fingerprints, not content)."""
+        return self.model_dump(mode="json")
+
+    def partition_material(self) -> dict[str, object]:
+        """The key without the message component (ADR-0011 point 3)."""
+        material = self.key_material()
+        material["components"] = [
+            c for c in material["components"] if c["component"] != ComponentName.MESSAGE
+        ]
+        return material
+
+
 class CacheKey(ContractModel):
     """A composed key (caching.md §1). Built by the cache policy for the
     serving variant, and by experiments for measurement variants."""

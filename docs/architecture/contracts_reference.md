@@ -315,6 +315,7 @@ Features of one request. None means unknown (the component's state was unknown),
 | `language` | `Language` | yes | derived | Language of the current message. |
 | `message_chars` | `NonNegInt` | yes | derived | Message length. |
 | `message_tokens` | `TokenCount \| None` |  | derived | Message token estimate, with its method. |
+| `known_input_tokens` | `TokenCount \| None` |  | derived | Cheap estimate over present components; unknown ones add nothing, so it is a lower bound. Used for the routing context-fit check. |
 | `has_code` | `bool \| None` |  | derived | Code detected. |
 | `attachment_count` | `NonNegInt \| None` |  | derived | Attachments; None if unknown. |
 | `attachment_modalities` | `tuple[Modality, ...]` |  | derived | Distinct modalities present. |
@@ -475,6 +476,19 @@ One content component of a key: its state and, if present, fingerprint.
 | `state` | `ComponentState` | yes | derived | Present, absent, or unknown. |
 | `fingerprint` | `Fingerprint \| None` |  | fingerprint | Set iff present. |
 | `treatment` | `Name` | yes | operational | e.g. nfkc_casefold_ws, last_4_turns, full. |
+
+### `CacheKeyDraft`
+
+A composed key before fingerprinting (Stage 5).
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `key_schema_version` | `Version` | yes | operational | Bumps invalidate entries. |
+| `variant` | `Name` | yes | operational | Key variant, e.g. full, request_only. |
+| `serving_allowed` | `bool` | yes | operational | False for measurement-only variants (P-5). |
+| `components` | `tuple[KeyComponent, ...]` | yes | derived | Content components, in key order. |
+| `target_group` | `Name \| None` | yes | operational | Target equivalence group; None if excluded by variant. |
+| `scope` | `CacheScope` | yes | reference | Sharing scope. |
 
 ### `CacheKey`
 

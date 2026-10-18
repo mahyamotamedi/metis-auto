@@ -1,6 +1,6 @@
 # Observability: Events, Correlation, Metrics (Stage 3)
 
-Status: event-stream approach **decided** ([ADR-0012](../adr/0012-event-stream-as-measurement-record.md)); event types and envelope **fixed in Stage 4** as contracts ([contracts.md §3.6](contracts.md#36-events)); individual fields provisional until the Stage 5 skeleton uses them. Last updated 2026-10-17.
+Status: event-stream approach **decided** ([ADR-0012](../adr/0012-event-stream-as-measurement-record.md)); event types and envelope **fixed in Stage 4** as contracts ([contracts.md §3.6](contracts.md#36-events)); individual fields provisional; the Stage 5 recorder (`application/events/recorder.py`) emits them. Last updated 2026-10-18.
 Index: [architecture README](README.md). Components: CMP-03 (event recorder), CMP-14 (sinks), CMP-23 (aggregates). Requirements: FR-OBS-01…06, QA-PRIV.
 
 ---

@@ -1,6 +1,6 @@
 # Glossary
 
-Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-17 (Stage 4).
+Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-18 (Stage 5).
 
 | Term | Meaning | Avoid |
 |---|---|---|
@@ -49,3 +49,6 @@ Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid t
 | **Privacy class** | The sensitivity of a contract field: `content`, `fingerprint`, `reference`, `derived`, or `operational` ([contracts.md §2.2](docs/architecture/contracts.md#22-privacy-classes)). Only `content` must stay inside the content boundary. | "PII level" |
 | **No answer** | A model result meaning the counterfactual source has nothing for this target (`ModelNoAnswer`). It lowers coverage; it is not an error. | "miss", "error" |
 | **Key ID** | A short identifier of the fingerprint key (`kid1:…`), recorded so fingerprints made with different keys are never compared. | — |
+| **Walking skeleton** | The whole request pipeline running end to end offline with fakes and synthetic data, before real strategies exist (`metis_auto.wiring.walking_skeleton`, Stage 5). | "prototype", "demo" |
+| **Cache key draft** | A composed cache key before fingerprinting (`CacheKeyDraft`). The cache policy builds it; the measurement service seals it into a `CacheKey` with the fingerprint key. | — |
+| **Swap point** | A place where an implementation is chosen by configuration: a `ports` protocol or a domain policy interface plus a `wiring` registry entry ([module_reference.md](docs/architecture/module_reference.md#swap-points-qa-repl-one-interface--one-config-entry)). | "plugin" |

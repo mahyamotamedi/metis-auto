@@ -194,7 +194,6 @@ def test_checker_flags_forbidden_layer_imports(tmp_path):
     assert len(found) == 4
 
 
-
 def test_checker_flags_domain_importing_ports(tmp_path):
     # S3-2 (Q-19, 2026-10-17): domain may import only contracts.
     pkg = tmp_path / PACKAGE
