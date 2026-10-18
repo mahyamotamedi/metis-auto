@@ -17,6 +17,7 @@ from metis_auto.contracts import (
     AccountedUsage,
     CatalogueEntry,
     CostBasis,
+    CostEstimate,
     FinalResponse,
     ModelCatalogue,
     Name,
@@ -80,6 +81,21 @@ class AccountingService:
             assert usage is not None
         cost = accounting.cost_of(usage, target, self._prices, basis)
         return AccountedUsage(model_id=model_id, usage=usage, cost=cost)
+
+    def pre_call_estimate(
+        self, request: Request, model_id: str, output_tokens: int
+    ) -> CostEstimate:
+        """What the spend guard checks before a live call (attempts.md §5):
+        the full request counted for ``model_id``, plus chat framing, plus
+        ``output_tokens`` assumed output (the generation limit)."""
+        target = self.entry(model_id)
+        return accounting.pre_call_estimate(
+            target,
+            self.content_tokens(request, model_id),
+            output_tokens,
+            self._prices,
+            self._measurement.overhead_for(target, request_roles(request)),
+        )
 
     def premium_estimate(
         self, request: Request, answer: str, model_id: str, baseline: Name = "premium"

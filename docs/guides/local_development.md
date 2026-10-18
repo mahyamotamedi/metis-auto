@@ -1,5 +1,7 @@
 # Local development guide
 
+> Just want to run the demo? The [demo quickstart](demo_quickstart.md) is the shorter, step-by-step version for teammates.
+
 How to set up Metis-Auto from a fresh clone and run the smoke test, natively and in a container, **with no secrets**. Last updated 2026-10-18 (Stage 7: tokenizer files).
 
 Background: [configuration.md](../architecture/configuration.md) (layers and rules), [ADR-0019](../adr/0019-configuration-format-layers-and-secrets.md) (format), [ADR-0018](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md) (live calls and the budget), [ADR-0001](../adr/0001-python-tooling.md) (tooling).
@@ -48,7 +50,7 @@ Precedence, lowest first: policy code defaults < `config/defaults.toml` < experi
 
 - `.env` is git-ignored. It holds `METIS_API_KEY=` (empty). **Paste the key there yourself**; no tool or agent should read, print, or commit it. `.env.example` (committed) lists every variable with placeholders.
 - Secrets are never logged, never written to events or run records, and never part of the config hash. A config file containing a secret-like key is rejected.
-- **Having the key does not enable live calls.** All of these are needed (ADR-0018): an experiment asking for `counterfactual_source = "live"`, `live.enabled = true` in your runtime config (or `METIS__LIVE__ENABLED=true`), both budget caps set, and the key. Stage 6 has no live client at all; it arrives in Stage 7.5.
+- **Having the key does not enable live calls.** All of these are needed (ADR-0018): an experiment asking for `counterfactual_source = "live"`, `live.enabled = true` in your runtime config (or `METIS__LIVE__ENABLED=true`), both budget caps set, and the key. The live client arrives with Stage 7.5 (§5.1); it needs the `live` extra (`openai`), which the dev lock includes.
 - Also set a spending limit in the **Metis dashboard**, if Metis offers one, as a second safety net (Q-29).
 
 ## 5. The live budget and the spend ledger
@@ -56,6 +58,31 @@ Precedence, lowest first: policy code defaults < `config/defaults.toml` < experi
 - Lifetime cap **20 USD** for the whole project (the ceiling; only `config/defaults.toml` can set it, and no layer can exceed it). Per-run cap **1 USD** by default. Warnings at 50 % and 80 %.
 - The ledger is `data/spend/ledger.jsonl` (git-ignored), one line per live charge: amount, currency, time, run ID. **Never delete or edit it**: that resets or corrupts the lifetime total, and a malformed ledger blocks all live calls.
 - Check the budget at any time (no calls are made): `.venv/bin/python scripts/show_budget.py`.
+
+### 5.1 Live calls (Stage 7.5, [ADR-0021](../adr/0021-live-openai-compatible-adapter.md))
+
+Only with your own or synthetic messages (ADR-0018). Every live call goes through the spend guard, the ledger, and the recording decorator (`data/recorded/live-<run>.jsonl`, git-ignored: it holds the messages and answers).
+
+1. Put the key in `.env` (`METIS_API_KEY=...`); never commit or print it.
+2. Enable live calls on this machine: create `config/local.toml` (git-ignored; copy `config/local.example.toml`) with
+
+   ```toml
+   [live]
+   enabled = true
+
+   [budget]
+   run_cap = "0.10"   # optional: lower per-run cap for this machine
+   ```
+
+   The scripts below supply the other key (`counterfactual_source = "live"`) themselves. Remove the `[live]` lines, or set `enabled = false`, to switch live calls off again.
+3. Check: `.venv/bin/python scripts/show_budget.py` should list nothing under `live_blocked_by` except `experiment.counterfactual_source is not 'live'`. The scripts set that key themselves.
+
+Scripts:
+- `scripts/live_wrapper_check.py`: without arguments it prints the pre-call estimate for one tiny synthetic message per test model and makes no call; `--run` asks before calling; results go to `docs/references/metis_wrapper_live_check_<date>.json`.
+- `scripts/live_probe.py`: the follow-up probe (provider cache, mimo-v2.5, DeepSeek with thinking off); same pattern: plan by default, `--run` asks.
+- Provider options per model (default: none): `[model_options."deepseek-v4-flash"] thinking = "disabled"` in `config/local.toml` or an experiment file (allowed for DeepSeek and MiMo only).
+- `scripts/chat.py`: a command-line chat over the real pipeline, with history and a fixed model (`--model`, `/model <id>`, `/models`, `/reset`, `/budget`). After each answer it prints served by, the model and the provider-reported model, tokens, cost, the premium estimate, the savings decomposition, overhead, and the budget. `--fake` runs offline with no key. `grok-4-1-fast` is disabled (Q-32); `--allow-unknown-window` is only for diagnostics on models with unknown limits.
+- If a live call's cost can't be computed (for example an error with no reported usage), the guard charges its pre-call estimate and stops live calls for that run; restart the chat to continue.
 
 ## 6. Container (Docker)
 

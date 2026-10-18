@@ -232,7 +232,9 @@ def test_template_overhead_counts_framing_per_role():
 
 def test_configured_templates_match_their_sources(ref):
     """OpenAI cookbook: 3 per message + 1 role token, 3 reply priming.
-    DeepSeek V4 chat mode: BOS, <User>, <Assistant></think> … <EOS>."""
+    DeepSeek V4.1 thinking mode (Stage 7.5): BOS, <System> + 25-token effort
+    prefix, <User>, <Assistant><think>. Both reproduced the wrapper's reported
+    prompt_tokens for this layout in the live check of 2026-10-18 (44, 65)."""
     templates: dict[str, ChatTemplate] = {
         t.ref: t.template for t in ref.tokenizers.tokenizers if t.template
     }
@@ -241,7 +243,7 @@ def test_configured_templates_match_their_sources(ref):
         accounting.template_overhead(templates["openai-o200k-base"], one_turn).tokens
         == 11
     )
-    assert accounting.template_overhead(templates["deepseek-v4"], one_turn).tokens == 4
+    assert accounting.template_overhead(templates["deepseek-v4"], one_turn).tokens == 30
 
 
 def test_pre_call_estimate_adds_overhead(ref):

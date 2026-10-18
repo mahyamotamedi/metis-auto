@@ -51,8 +51,8 @@ def test_default_metis_config_builds_a_valid_pipeline_config():
     config = pipeline_config(load())
     assert config.routing.policy == "fixed_model"
     assert config.routing.fixed_model.model_id == "gpt-4o-mini"
-    assert config.catalogue.version == "cat-metis-test-2026-10-18-s7"
-    assert config.prices.version == "prices-metis-2026-10-18-s7"
+    assert config.catalogue.version == "cat-metis-test-2026-10-18-s75"
+    assert config.prices.version == "prices-metis-2026-10-18-s75"
 
 
 def test_unknown_pipeline_keys_are_caught_by_the_policy_types():

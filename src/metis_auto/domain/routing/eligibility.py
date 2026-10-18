@@ -30,6 +30,11 @@ class EligibilityConfig(ContractModel):
     """Fraction of the estimated input added before the context-fit check."""
     reserved_output_tokens: int = 0
     """Output tokens reserved in the fit check (TODO(Stage 7): per model)."""
+    allow_unknown_context_window: bool = False
+    """Diagnostics only (the Stage 7.5 live wrapper check, ``chat.py
+    --allow-unknown-window``): treat a model whose context window is unknown
+    as eligible, skipping its fit check. Never set in ``defaults.toml``:
+    unknown limits stay unsupported for serving (FR-ROUTE-05)."""
 
 
 def capability_for(modality: Modality) -> str:
@@ -72,6 +77,8 @@ def _exclusion(
             return ExclusionReason.CAPABILITY_UNVERIFIED  # unverified = unsupported
     window = entry.context_window.value
     if window is None:
+        if config.allow_unknown_context_window:
+            return None
         return ExclusionReason.CONTEXT_LIMIT_UNKNOWN
     if min_window is not None and window < min_window:
         return ExclusionReason.BELOW_MIN_WINDOW

@@ -4,7 +4,7 @@ Summary of the saved Metis documentation pages, for the live adapter (Stage 7.5)
 
 - **Saved:** 2026-10-18, by the project owner, as HTML outside the repository (`../metis-docs/`). Summarised here on 2026-10-18. The pages are in Persian; the notes below are a paraphrase, not a translation.
 - **Pages read:** the OpenAI, DeepSeek, and Gemini wrapper pages, and the wrapper overview page (which holds the Grok section). The other saved pages (Anthropic, GLM, Kimi, MiMo, TypeSafe, bots, corpora) were not needed. The API-keys page was **not opened** (owner's instruction).
-- **Status:** documentation claims, **not verified by a call**. Every row below is re-checked by the tiny live wrapper check in Stage 7.5 ([brief §3](../project/live_testing_and_demo_brief.md)), and the result recorded with its date.
+- **Status:** documentation claims; endpoints, auth, model IDs, and the usage fields were **verified by the live check of 2026-10-18** (§4). Before that, not verified by a call. Every row below is re-checked by the tiny live wrapper check in Stage 7.5 ([brief §3](../project/live_testing_and_demo_brief.md)), and the result recorded with its date.
 
 | Page (canonical URL) | Saved file |
 |---|---|
@@ -47,3 +47,5 @@ All families use the same Metis API key. The model is chosen per request.
 | Base URLs, auth, model IDs accepted | live wrapper check (fractions of a cent) | Stage 7.5 |
 | Usage, finish reason, cached tokens, reported model returned | same check | Stage 7.5 |
 | Prices unchanged | re-read the pricing page; new dated CSV and price-table version if changed | before each live budget review, and Stage 7 |
+
+**Stage 7.5 (2026-10-18):** the adapter and the check script exist (`scripts/live_wrapper_check.py`, [ADR-0021](../adr/0021-live-openai-compatible-adapter.md)); the check ran with the owner's approval: results in [metis_wrapper_live_check.md](metis_wrapper_live_check.md). Rows 1–2 of the table above are **confirmed** for OpenAI, DeepSeek, and Grok, with two corrections: DeepSeek reports `deepseek-flash` (V4.1, thinking on), and Grok reports no cached or reasoning fields.

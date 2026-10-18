@@ -38,6 +38,8 @@ python3.13 -m venv .venv
 
 No secrets are needed for tests or the walking skeleton. Containers (`docker compose run --rm app`), configuration layers, the `.env` file (copy from `.env.example`), and the live-call budget (20 USD lifetime, [ADR-0018](docs/adr/0018-live-calls-for-development-under-a-lifetime-budget.md)) are explained in the [local development guide](docs/guides/local_development.md).
 
+**New to the project and want to try the demo?** Start with the [demo quickstart](docs/guides/demo_quickstart.md): setup, free fake mode, your own Metis key, the `config/local.toml` safety switch, the shared budget, and troubleshooting.
+
 ## Development Workflow
 
 Experimental implementations are developed independently on feature branches.

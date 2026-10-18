@@ -1,0 +1,569 @@
+{
+  "check": "metis-wrapper-live-probe",
+  "date": "2026-10-18",
+  "time_utc": "2026-10-18T12:46:59+00:00",
+  "run_id": "wrapper-probe-20261018T124659Z-6b2e40",
+  "synthetic_input": {
+    "cache_instructions": "long_instructions() in metis_auto.wiring.wrapper_check (30 synthetic rules)",
+    "cache_messages": [
+      "[SYNTHETIC] Using the rules above, reply with the word OK.",
+      "[SYNTHETIC] Using the rules above, reply with the word YES."
+    ],
+    "tiny_check": {
+      "instructions": "[SYNTHETIC] You are a test assistant. Reply in one short sentence.",
+      "message": "[SYNTHETIC] سلام! Please reply with the word OK."
+    }
+  },
+  "config": {
+    "catalogue": "cat-metis-test-2026-10-18-s75",
+    "prices": "prices-metis-2026-10-18-s75",
+    "endpoints": "endpoints-metis-2026-10-18-s75",
+    "baselines": "baselines-2026-10-18",
+    "tokenizers": "tokenizers-2026-10-18-s75"
+  },
+  "provider_cache": [
+    {
+      "model_id": "gpt-5-nano",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "gpt-5-nano-2025-08-07",
+      "finish_reason": "complete",
+      "answer_chars": 2,
+      "latency_ms": 1595.8,
+      "local": {
+        "content_input": 1263,
+        "content_fidelity": "exact_local",
+        "content_method": "tiktoken-o200k_base@0.14.0",
+        "template_overhead": 11,
+        "counted_input": 1274,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 1273,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 74,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 0,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 64,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000103 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": -1,
+        "input_reported_minus_content": 10,
+        "output_reported_minus_visible": 73,
+        "output_unexplained": 9
+      },
+      "call": 1,
+      "provider_cache_saving": "0.000000 USD"
+    },
+    {
+      "model_id": "gpt-5-nano",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "gpt-5-nano-2025-08-07",
+      "finish_reason": "complete",
+      "answer_chars": 3,
+      "latency_ms": 1924.5,
+      "local": {
+        "content_input": 1263,
+        "content_fidelity": "exact_local",
+        "content_method": "tiktoken-o200k_base@0.14.0",
+        "template_overhead": 11,
+        "counted_input": 1274,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 1273,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 138,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 0,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 128,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000131 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": -1,
+        "input_reported_minus_content": 10,
+        "output_reported_minus_visible": 137,
+        "output_unexplained": 9
+      },
+      "call": 2,
+      "provider_cache_saving": "0.000000 USD"
+    },
+    {
+      "model_id": "gpt-4.1-nano",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "gpt-4.1-nano-2025-04-14",
+      "finish_reason": "complete",
+      "answer_chars": 2,
+      "latency_ms": 717.4,
+      "local": {
+        "content_input": 1263,
+        "content_fidelity": "exact_local",
+        "content_method": "tiktoken-o200k_base@0.14.0",
+        "template_overhead": 11,
+        "counted_input": 1274,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 1274,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 1,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 0,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 0,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000141 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 11,
+        "output_reported_minus_visible": 0,
+        "output_unexplained": 0
+      },
+      "call": 1,
+      "provider_cache_saving": "0.000000 USD"
+    },
+    {
+      "model_id": "gpt-4.1-nano",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "gpt-4.1-nano-2025-04-14",
+      "finish_reason": "complete",
+      "answer_chars": 3,
+      "latency_ms": 788.5,
+      "local": {
+        "content_input": 1263,
+        "content_fidelity": "exact_local",
+        "content_method": "tiktoken-o200k_base@0.14.0",
+        "template_overhead": 11,
+        "counted_input": 1274,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 1274,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 1,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 1152,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 0,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000046 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 11,
+        "output_reported_minus_visible": 0,
+        "output_unexplained": 0
+      },
+      "call": 2,
+      "provider_cache_saving": "0.000095 USD"
+    },
+    {
+      "model_id": "gpt-4o-mini",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "gpt-4o-mini-2024-07-18",
+      "finish_reason": "complete",
+      "answer_chars": 2,
+      "latency_ms": 799.7,
+      "local": {
+        "content_input": 1263,
+        "content_fidelity": "exact_local",
+        "content_method": "tiktoken-o200k_base@0.14.0",
+        "template_overhead": 11,
+        "counted_input": 1274,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 1274,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 1,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 0,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 0,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000211 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 11,
+        "output_reported_minus_visible": 0,
+        "output_unexplained": 0
+      },
+      "call": 1,
+      "provider_cache_saving": "0.000000 USD"
+    },
+    {
+      "model_id": "gpt-4o-mini",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "gpt-4o-mini-2024-07-18",
+      "finish_reason": "complete",
+      "answer_chars": 3,
+      "latency_ms": 792.6,
+      "local": {
+        "content_input": 1263,
+        "content_fidelity": "exact_local",
+        "content_method": "tiktoken-o200k_base@0.14.0",
+        "template_overhead": 11,
+        "counted_input": 1274,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 1274,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 1,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 1152,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 0,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000116 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 11,
+        "output_reported_minus_visible": 0,
+        "output_unexplained": 0
+      },
+      "call": 2,
+      "provider_cache_saving": "0.000095 USD"
+    },
+    {
+      "model_id": "deepseek-v4-flash",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "deepseek-flash",
+      "finish_reason": "complete",
+      "answer_chars": 2,
+      "latency_ms": 1384.0,
+      "local": {
+        "content_input": 1505,
+        "content_fidelity": "exact_local",
+        "content_method": "hf-deepseek-v4-8f9f37ca37fd@0.23.2",
+        "template_overhead": 30,
+        "counted_input": 1535,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 1535,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 11,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 0,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 9,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000261 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 30,
+        "output_reported_minus_visible": 10,
+        "output_unexplained": 1
+      },
+      "call": 1,
+      "provider_cache_saving": "0.000000 USD"
+    },
+    {
+      "model_id": "deepseek-v4-flash",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "deepseek-flash",
+      "finish_reason": "complete",
+      "answer_chars": 3,
+      "latency_ms": 1185.7,
+      "local": {
+        "content_input": 1505,
+        "content_fidelity": "exact_local",
+        "content_method": "hf-deepseek-v4-8f9f37ca37fd@0.23.2",
+        "template_overhead": 30,
+        "counted_input": 1535,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 1535,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 11,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 1280,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 9,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000054 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 30,
+        "output_reported_minus_visible": 10,
+        "output_unexplained": 1
+      },
+      "call": 2,
+      "provider_cache_saving": "0.000207 USD"
+    },
+    {
+      "model_id": "mimo-v2.5",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "mimo-v2.5",
+      "finish_reason": "complete",
+      "answer_chars": 2,
+      "latency_ms": 10618.7,
+      "local": {
+        "content_input": 1796,
+        "content_fidelity": "exact_local",
+        "content_method": "hf-mimo-v2-633518aad78f@0.23.2",
+        "template_overhead": 11,
+        "counted_input": 1807,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 1807,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 13,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": null,
+        "reasoning": {
+          "tokens": 10,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000282 USD",
+      "cost_caveats": [
+        "cached_input_not_reported"
+      ],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 11,
+        "output_reported_minus_visible": 12,
+        "output_unexplained": 2
+      },
+      "call": 1,
+      "provider_cache_saving": "0.000000 USD"
+    },
+    {
+      "model_id": "mimo-v2.5",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "mimo-v2.5",
+      "finish_reason": "complete",
+      "answer_chars": 3,
+      "latency_ms": 5040.5,
+      "local": {
+        "content_input": 1796,
+        "content_fidelity": "exact_local",
+        "content_method": "hf-mimo-v2-633518aad78f@0.23.2",
+        "template_overhead": 11,
+        "counted_input": 1807,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 1807,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 16,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 1792,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 13,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000013 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 11,
+        "output_reported_minus_visible": 15,
+        "output_unexplained": 2
+      },
+      "call": 2,
+      "provider_cache_saving": "0.000270 USD"
+    }
+  ],
+  "mimo_tiny_check": [
+    {
+      "model_id": "mimo-v2.5",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "mimo-v2.5",
+      "finish_reason": "complete",
+      "answer_chars": 2,
+      "latency_ms": 2052.3,
+      "local": {
+        "content_input": 36,
+        "content_fidelity": "exact_local",
+        "content_method": "hf-mimo-v2-633518aad78f@0.23.2",
+        "template_overhead": 11,
+        "counted_input": 47,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 47,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 15,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": null,
+        "reasoning": {
+          "tokens": 12,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000012 USD",
+      "cost_caveats": [
+        "cached_input_not_reported"
+      ],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 11,
+        "output_reported_minus_visible": 14,
+        "output_unexplained": 2
+      }
+    }
+  ],
+  "deepseek_thinking_disabled": [
+    {
+      "model_id": "deepseek-v4-flash",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "deepseek-flash",
+      "finish_reason": "complete",
+      "answer_chars": 2,
+      "latency_ms": 1399.4,
+      "local": {
+        "content_input": 35,
+        "content_fidelity": "exact_local",
+        "content_method": "hf-deepseek-v4-8f9f37ca37fd@0.23.2",
+        "template_overhead": 30,
+        "counted_input": 65,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 40,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 1,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 0,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": null
+      },
+      "cost": "0.000007 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": -25,
+        "input_reported_minus_content": 5,
+        "output_reported_minus_visible": 0,
+        "output_unexplained": 0
+      }
+    }
+  ],
+  "budget_after": {
+    "lifetime_spent": "0.0015626272",
+    "lifetime_cap": "20",
+    "lifetime_used": "0.01%",
+    "run_spent": "0.0013744172",
+    "run_cap": "0.10",
+    "currency": "USD"
+  }
+}

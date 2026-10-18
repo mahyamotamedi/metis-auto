@@ -1,12 +1,20 @@
-# Model catalogue: the five Metis test models plus the premium baseline.
+# Model catalogue: the five Metis test models plus the premium baseline, and
+# grok-4-1-fast kept disabled (replaced by mimo-v2.5, Q-32, 2026-10-18).
 # Source of the model list: owner decisions, docs/project/live_testing_and_demo_brief.md §4
 # (2026-10-18). Model IDs as on the Metis pricing page (saved 2026-10-18).
 # Schema: provisional until Stage 7 (providers.md §4, contracts.md O-3).
 #
+# context_window / max_output_tokens (TODO-10, Stage 7.5): the PROVIDER's
+# limits, each with its source and check date. The Metis docs state no limits
+# (docs/references/metis_wrapper_api.md §2 note 7), so the wrapper's own limits
+# are assumed equal to the provider's (A-57). Where a page says "1M" or "384K",
+# the lower decimal reading is used (1,000,000; 384,000): an overflow check
+# against it is conservative. An omitted limit = unknown, and routing excludes
+# a model with an unknown window (FR-ROUTE-05): grok-4-1-fast (below).
+# The generation limit actually requested is lowered by
+# [pipeline.context] max_output_tokens_cap (defaults.toml).
+#
 # What is NOT here, on purpose (no fabrication, MP§3.8):
-# - context_window / max_output_tokens: omitted = unknown. Routing excludes a
-#   model with an unknown window (FR-ROUTE-05), so these must be filled with
-#   sourced values before live use (TODO-10, Stage 7.5).
 # - capabilities other than hidden_reasoning_billed_as_output: none verified
 #   yet; unverified = unsupported.
 #
@@ -22,13 +30,17 @@
 # Capability hidden_reasoning_billed_as_output: the model emits hidden
 # reasoning tokens billed as output, so a cost counted from the visible answer
 # is a lower bound (caveat reasoning_not_counted). Verified only where a source
-# says so; DeepSeek thinking mode and Grok reasoning through the wrapper are
-# unverified (token_accounting.md §5), so they carry no capability.
+# says so: gpt-5-nano and gpt-5.4 (OpenAI), deepseek-v4-flash (live check
+# 2026-10-18). Grok reported no reasoning field through the wrapper, so it
+# carries no capability (unverified, not absent).
 #
 # Version history: "cat-metis-test-2026-10-18" (Stage 6); "-s7" (Stage 7)
-# sets tokenizer refs and the reasoning capability.
+# sets tokenizer refs and the reasoning capability; "-s75" (Stage 7.5) adds
+# context windows and output limits (TODO-10) and, from the live wrapper check,
+# DeepSeek's verified reasoning capability; and (Q-32) mimo-v2.5 added as the
+# fifth test model, grok-4-1-fast disabled.
 
-version = "cat-metis-test-2026-10-18-s7"
+version = "cat-metis-test-2026-10-18-s75"
 
 [[models]]
 model_id = "gpt-5-nano"
@@ -36,6 +48,8 @@ provider = "openai"
 provider_model_name = "gpt-5-nano"
 # Reasoning model: hidden reasoning tokens are billed as output (brief §4).
 capabilities = [{ name = "hidden_reasoning_billed_as_output", verified = true, evidence = { source = "OpenAI reasoning guide https://developers.openai.com/api/docs/guides/reasoning (reasoning tokens 'are billed as output tokens', 'not visible via the API'); model page lists reasoning token support", checked_on = 2026-10-18 } }]
+context_window = { value = 400000, evidence = { source = "OpenAI model page https://developers.openai.com/api/docs/models/gpt-5-nano ('400,000 context window', '128,000 max output tokens')", checked_on = 2026-10-18 } }
+max_output_tokens = { value = 128000, evidence = { source = "OpenAI model page https://developers.openai.com/api/docs/models/gpt-5-nano ('400,000 context window', '128,000 max output tokens')", checked_on = 2026-10-18 } }
 tier = 0
 equivalence_group = "metis-nano"
 tokenizer_ref = "openai-o200k-base"
@@ -46,6 +60,8 @@ enabled = true
 model_id = "gpt-4.1-nano"
 provider = "openai"
 provider_model_name = "gpt-4.1-nano"
+context_window = { value = 1047576, evidence = { source = "OpenAI model page https://developers.openai.com/api/docs/models/gpt-4.1-nano ('1,047,576 context window', '32,768 max output tokens')", checked_on = 2026-10-18 } }
+max_output_tokens = { value = 32768, evidence = { source = "OpenAI model page https://developers.openai.com/api/docs/models/gpt-4.1-nano ('1,047,576 context window', '32,768 max output tokens')", checked_on = 2026-10-18 } }
 tier = 0
 equivalence_group = "metis-nano"
 tokenizer_ref = "openai-o200k-base"
@@ -56,6 +72,8 @@ enabled = true
 model_id = "gpt-4o-mini"
 provider = "openai"
 provider_model_name = "gpt-4o-mini"
+context_window = { value = 128000, evidence = { source = "OpenAI model page https://developers.openai.com/api/docs/models/gpt-4o-mini ('128,000 context window', '16,384 max output tokens')", checked_on = 2026-10-18 } }
+max_output_tokens = { value = 16384, evidence = { source = "OpenAI model page https://developers.openai.com/api/docs/models/gpt-4o-mini ('128,000 context window', '16,384 max output tokens')", checked_on = 2026-10-18 } }
 tier = 1
 equivalence_group = "metis-small"
 tokenizer_ref = "openai-o200k-base"
@@ -68,6 +86,13 @@ provider = "deepseek"
 # Always send this exact ID: legacy names are silently redirected
 # (docs/references/metis_wrapper_api.md §2).
 provider_model_name = "deepseek-v4-flash"
+# DeepSeek's own API now serves the legacy name deepseek-v4-flash with
+# DeepSeek-V4.1-Flash-1017 (released 2026-10-17). The live wrapper check of
+# 2026-10-18 confirmed it through Metis: reported model "deepseek-flash",
+# thinking mode on by default, prompt framing of V4.1 thinking mode (A-58).
+capabilities = [{ name = "hidden_reasoning_billed_as_output", verified = true, evidence = { source = "Metis live wrapper check 2026-10-18 (docs/references/metis_wrapper_live_check.md): usage reported reasoning_tokens 30 inside completion_tokens 33 for a 2- to 3-token visible answer; https://api-docs.deepseek.com/api/create-chat-completion: completion_tokens_details is the 'Breakdown of tokens used in a completion', reasoning_tokens 'Tokens generated by the model for reasoning'", checked_on = 2026-10-18 } }]
+context_window = { value = 1000000, evidence = { source = "DeepSeek pricing page https://api-docs.deepseek.com/quick_start/pricing (CONTEXT LENGTH '1M', MAX OUTPUT 'MAXIMUM: 384K'; read as 1,000,000 and 384,000). The page says the legacy name deepseek-v4-flash is 'still accepted' but served by DeepSeek-V4.1-Flash-1017 (released 2026-10-17); limits are those of the current Flash model. Through the Metis wrapper: unverified (A-57)", checked_on = 2026-10-18 } }
+max_output_tokens = { value = 384000, evidence = { source = "DeepSeek pricing page https://api-docs.deepseek.com/quick_start/pricing (CONTEXT LENGTH '1M', MAX OUTPUT 'MAXIMUM: 384K'; read as 1,000,000 and 384,000). The page says the legacy name deepseek-v4-flash is 'still accepted' but served by DeepSeek-V4.1-Flash-1017 (released 2026-10-17); limits are those of the current Flash model. Through the Metis wrapper: unverified (A-57)", checked_on = 2026-10-18 } }
 tier = 1
 equivalence_group = "metis-small"
 tokenizer_ref = "deepseek-v4"
@@ -77,12 +102,49 @@ enabled = true
 [[models]]
 model_id = "grok-4-1-fast"
 provider = "grok"
-# Accepted by the wrapper: unverified until the Stage 7.5 live check.
+# Accepted by the wrapper: verified by the live check of 2026-10-18 (reported
+# model "grok-4-1-fast", finish reason stop), although xAI no longer lists it.
 provider_model_name = "grok-4-1-fast"
+# context_window / max_output_tokens: UNKNOWN (TODO-10 partly open, Q-32).
+# On 2026-10-18 xAI's model list (https://docs.x.ai/docs/models) no longer
+# lists grok-4-1-fast (it lists grok-4.3 ... grok-4.7), its model pages return
+# 404, and OpenRouter's public model list has no grok-4.1-fast either.
+# Third-party price aggregators quote a 2M context and 30K or no output cap,
+# conflicting and second-hand: not used. Routing therefore excludes this
+# model unless a diagnostic run sets
+# pipeline.routing.eligibility.allow_unknown_context_window = true.
 tier = 1
 equivalence_group = "metis-small"
 tokenizer_ref = "grok-approx"
 price_ref = "metis-grok-4-1-fast"
+# DISABLED 2026-10-18 by the owner (Q-32): retired by xAI (no longer listed),
+# limits unsourceable, input undercounted by 70 % in the live check, no
+# cached or reasoning tokens reported. Replaced by mimo-v2.5 as the fifth test
+# model. Kept for its recorded check results and the as-logged baseline.
+enabled = false
+
+[[models]]
+# Xiaomi MiMo (Stage 7.5, Q-32: the fifth test model). IMPORTANT: Xiaomi
+# auto-routes mimo-v2.5 to mimo-v2.6-flash since 2026-10-14 18:00 UTC+8 and the
+# mimo-v2.5 ID becomes INVALID on Xiaomi's API on 2026-10-21 10:00 UTC+8
+# (https://mimo.mi.com/docs/en-US/updates/deprecate, checked 2026-10-18).
+# Metis lists only mimo-v2.5 (pricing page and wrapper page, saved
+# 2026-10-18); whether Metis maps the ID after the 21st is unknown (A-60).
+model_id = "mimo-v2.5"
+provider = "mimo"
+provider_model_name = "mimo-v2.5"
+context_window = { value = 1000000, evidence = { source = "Model cards https://huggingface.co/XiaomiMiMo/MiMo-V2.5 (revision 63651580, 'Context Length: Up to 1M tokens') and https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL (revision dcd3fd83, 'Context Length: 1M tokens'), read as 1,000,000; config.json max_position_embeddings 1,048,576. Xiaomi's API model page does not render without JavaScript.", checked_on = 2026-10-18 } }
+max_output_tokens = { value = 131072, evidence = { source = "Xiaomi MiMo API reference https://mimo.mi.com/docs/en-US/api/chat/openai-api: max_completion_tokens range [1, 131072]; default 32768 for mimo-v2.5, 131072 for mimo-v2.6-flash", checked_on = 2026-10-18 } }
+# Capabilities: the Metis page lists text, image, audio, and video input;
+# not verified, so unsupported here. Thinking is on by default (Xiaomi API
+# reference); hidden reasoning billed as output verified by the probe of
+# 2026-10-18. The wrapper reports the model as "mimo-v2.5" (the requested ID),
+# so the switch to mimo-v2.6-flash is not visible in responses (A-60).
+capabilities = [{ name = "hidden_reasoning_billed_as_output", verified = true, evidence = { source = "Metis live probe 2026-10-18 (docs/references/metis_wrapper_live_check.md §4): reasoning_tokens 10-13 reported inside completion_tokens 13-16 for a one-token visible answer, three calls; Xiaomi API reference https://mimo.mi.com/docs/en-US/api/chat/openai-api lists usage.completion_tokens_details.reasoning_tokens", checked_on = 2026-10-18 } }]
+tier = 0
+equivalence_group = "metis-nano"
+tokenizer_ref = "mimo-v2"
+price_ref = "metis-mimo-v2.5"
 enabled = true
 
 [[models]]
@@ -91,6 +153,8 @@ enabled = true
 model_id = "gpt-5.4"
 provider = "openai"
 provider_model_name = "gpt-5.4"
+context_window = { value = 1050000, evidence = { source = "OpenAI model page https://developers.openai.com/api/docs/models/gpt-5.4 ('1,050,000 context window', '128,000 max output tokens')", checked_on = 2026-10-18 } }
+max_output_tokens = { value = 128000, evidence = { source = "OpenAI model page https://developers.openai.com/api/docs/models/gpt-5.4 ('1,050,000 context window', '128,000 max output tokens')", checked_on = 2026-10-18 } }
 tier = 2
 equivalence_group = "metis-premium"
 tokenizer_ref = "openai-o200k-base"

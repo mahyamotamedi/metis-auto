@@ -1,7 +1,10 @@
-# Upper pins used when compiling requirements-dev.lock on 2026-10-18 (Stage 7),
+# Upper pins used when compiling requirements-dev.lock on 2026-10-18 (Stage 7;
+# openai added in Stage 7.5, same day and same cutoff),
 # so that every newly locked package is at least two weeks old (released before
 # 2026-10-04). Checked on PyPI 2026-10-18. Only shapes resolution; the lock holds
 # the actual pins. Relax or drop these at the next deliberate lock upgrade.
 tokenizers==0.23.2      # 0.23.3 released 2026-10-09
 filelock==4.0.10        # 4.2.2 released 2026-10-18
 hf-xet==1.6.0           # 1.7.0 released 2026-10-06
+openai==3.24.0          # 3.25.0 and later released 2026-10-05 or later
+truststore==0.10.4      # 0.10.5 released 2026-10-12 (pulled in by openai via httpx2)

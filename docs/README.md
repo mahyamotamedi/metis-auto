@@ -7,7 +7,7 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 - [context.md](project/context.md): the problem, the data's shape and limits, sample signals, hypotheses (`H-n`), unknowns.
 - [requirements.md](project/requirements.md): goals, `FR-`/`QA-`/`NG-` requirements, the brief→data map, traceability.
 - [assumptions_and_questions.md](project/assumptions_and_questions.md): the register (`A-n`, `Q-n`, `TODO-n`).
-- [live_testing_and_demo_brief.md](project/live_testing_and_demo_brief.md): **owner decisions of 2026-10-18** on live calls, the 20 USD budget, test models, the premium baseline, sticky routing, the demo; where each part lands (Stages 6, 7, 7.5, 8, Demo milestone). Byte-identical copy of the owner's brief.
+- [live_testing_and_demo_brief.md](project/live_testing_and_demo_brief.md): **owner decisions of 2026-10-18** (amended the same day: §10, §12 teammate quickstart) on live calls, the 20 USD budget, test models, the premium baseline, sticky routing, the demo; where each part lands (Stages 6, 7, 7.5, 8, Demo milestone). The owner's brief as received, plus that dated amendment.
 - [GLOSSARY.md](../GLOSSARY.md): domain terms.
 
 ## Architecture
@@ -40,12 +40,15 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 | [0018](adr/0018-live-calls-for-development-under-a-lifetime-budget.md) | Live calls for development and testing through the Metis wrapper, under a 20 USD lifetime budget (amends ADR-0003) | decided (per-run cap and tiers provisional) |
 | [0019](adr/0019-configuration-format-layers-and-secrets.md) | Configuration: TOML, six layers, `METIS__` overrides, secrets only from the environment | decided (`Settings` shape provisional) |
 | [0020](adr/0020-token-and-cost-accounting.md) | Token and cost accounting: tokenizers per family as configuration (exact where published, labelled approximation otherwise), strict fidelity, tiered prices ("270K" = 270,000), labelled premium estimate, exact savings decomposition | decided (templates and Grok approximation provisional; Q-31 answered) |
+| [0021](adr/0021-live-openai-compatible-adapter.md) | One live OpenAI-compatible adapter (OpenAI, DeepSeek, Grok via the Metis wrapper; openai SDK in extra `live`), SDK retries off, an uncomputable actual cost charges the estimate and stops the run, generation-limit cap | decided (usage mappings confirmed by the live check 2026-10-18; error mappings provisional) |
 
 ## Guides
-- [local_development.md](guides/local_development.md): **Stage 6** setup from a fresh clone, smoke test natively and in Docker, configuration in practice, secrets, the live budget and spend ledger.
+- [demo_quickstart.md](guides/demo_quickstart.md): **start here if you are new**: a step-by-step guide for teammates to run the demo: setup, fake and real-model modes, `.env` and the Metis key, `config/local.toml`, the shared budget, reading the cost panel, troubleshooting. Required deliverable of the Demo milestone (UI parts completed then).
+- [local_development.md](guides/local_development.md): **Stage 6** setup from a fresh clone, smoke test natively and in Docker, configuration in practice, secrets, the live budget and spend ledger; **Stage 7.5** enabling live calls, `chat.py`, and the live wrapper check (§5.1).
 
 ## References (external sources, dated)
-- [metis_wrapper_api.md](references/metis_wrapper_api.md): Metis wrapper endpoints and notes, summarised from the docs saved 2026-10-18.
+- [metis_wrapper_api.md](references/metis_wrapper_api.md): Metis wrapper endpoints and notes, summarised from the docs saved 2026-10-18; §4 links the Stage 7.5 live check results.
+- [metis_wrapper_live_check.md](references/metis_wrapper_live_check.md): **Stage 7.5** live wrapper check of 2026-10-18 (one tiny synthetic message per test model, 0.000188 USD): reported vs counted tokens, cached and reasoning reporting, reported models; raw content-free results in `metis_wrapper_live_check_2026-10-18.json`.
 - [metis_pricing_2026-10-18.csv](references/metis_pricing_2026-10-18.csv): extract of the Metis pricing page saved 2026-10-18 (public prices; structured columns defective for tiered models, see the wrapper summary §3).
 
 ## Reports

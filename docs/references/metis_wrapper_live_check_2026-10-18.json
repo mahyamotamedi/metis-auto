@@ -1,0 +1,239 @@
+{
+  "check": "metis-wrapper-live-check",
+  "date": "2026-10-18",
+  "time_utc": "2026-10-18T12:19:45+00:00",
+  "run_id": "wrapper-check-20261018T121945Z-a24138",
+  "synthetic_input": {
+    "instructions": "[SYNTHETIC] You are a test assistant. Reply in one short sentence.",
+    "message": "[SYNTHETIC] سلام! Please reply with the word OK."
+  },
+  "message_layout": "A-55: instructions as a system message, then the user message",
+  "config": {
+    "catalogue": "cat-metis-test-2026-10-18-s75",
+    "prices": "prices-metis-2026-10-18-s7",
+    "endpoints": "endpoints-metis-2026-10-18-s75",
+    "baselines": "baselines-2026-10-18",
+    "tokenizers": "tokenizers-2026-10-18"
+  },
+  "results": [
+    {
+      "model_id": "gpt-5-nano",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "gpt-5-nano-2025-08-07",
+      "finish_reason": "complete",
+      "answer_chars": 3,
+      "latency_ms": 3138.8,
+      "local": {
+        "content_input": 33,
+        "content_fidelity": "exact_local",
+        "content_method": "tiktoken-o200k_base@0.14.0",
+        "template_overhead": 11,
+        "counted_input": 44,
+        "visible_answer_tokens": 2
+      },
+      "reported": {
+        "input": {
+          "tokens": 43,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 267,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 0,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 256,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000120 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": -1,
+        "input_reported_minus_content": 10,
+        "output_reported_minus_visible": 265,
+        "output_unexplained": 9
+      }
+    },
+    {
+      "model_id": "gpt-4.1-nano",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "gpt-4.1-nano-2025-04-14",
+      "finish_reason": "complete",
+      "answer_chars": 2,
+      "latency_ms": 817.8,
+      "local": {
+        "content_input": 33,
+        "content_fidelity": "exact_local",
+        "content_method": "tiktoken-o200k_base@0.14.0",
+        "template_overhead": 11,
+        "counted_input": 44,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 44,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 1,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 0,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 0,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000005 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 11,
+        "output_reported_minus_visible": 0,
+        "output_unexplained": 0
+      }
+    },
+    {
+      "model_id": "gpt-4o-mini",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "gpt-4o-mini-2024-07-18",
+      "finish_reason": "complete",
+      "answer_chars": 2,
+      "latency_ms": 765.9,
+      "local": {
+        "content_input": 33,
+        "content_fidelity": "exact_local",
+        "content_method": "tiktoken-o200k_base@0.14.0",
+        "template_overhead": 11,
+        "counted_input": 44,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 44,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 1,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 0,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 0,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000008 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 11,
+        "output_reported_minus_visible": 0,
+        "output_unexplained": 0
+      }
+    },
+    {
+      "model_id": "deepseek-v4-flash",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "deepseek-flash",
+      "finish_reason": "complete",
+      "answer_chars": 3,
+      "latency_ms": 1958.0,
+      "local": {
+        "content_input": 35,
+        "content_fidelity": "exact_local",
+        "content_method": "hf-deepseek-v4-8f9f37ca37fd@0.23.2",
+        "template_overhead": 4,
+        "counted_input": 39,
+        "visible_answer_tokens": 2
+      },
+      "reported": {
+        "input": {
+          "tokens": 65,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 33,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 0,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 30,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000033 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": 26,
+        "input_reported_minus_content": 30,
+        "output_reported_minus_visible": 31,
+        "output_unexplained": 1
+      }
+    },
+    {
+      "model_id": "grok-4-1-fast",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "grok-4-1-fast",
+      "finish_reason": "complete",
+      "answer_chars": 3,
+      "latency_ms": 8163.0,
+      "local": {
+        "content_input": 29,
+        "content_fidelity": "approximation",
+        "content_method": "approx-chars-div-4@1",
+        "template_overhead": null,
+        "counted_input": 29,
+        "visible_answer_tokens": 1
+      },
+      "reported": {
+        "input": {
+          "tokens": 98,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 2,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": null,
+        "reasoning": null
+      },
+      "cost": "0.000023 USD",
+      "cost_caveats": [
+        "cached_input_not_reported"
+      ],
+      "comparison": {
+        "input_reported_minus_counted": 69,
+        "input_reported_minus_content": 69,
+        "output_reported_minus_visible": 1,
+        "output_unexplained": 1
+      }
+    }
+  ],
+  "budget_after": {
+    "lifetime_spent": "0.000188210",
+    "lifetime_cap": "20",
+    "lifetime_used": "0.00%",
+    "run_spent": "0.000188210",
+    "run_cap": "0.10",
+    "currency": "USD"
+  }
+}

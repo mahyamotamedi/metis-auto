@@ -142,6 +142,24 @@ class DatabaseSettings(ContractModel):
     user: str = "metis"
 
 
+class ThinkingMode(StrEnum):
+    ENABLED = "enabled"
+    DISABLED = "disabled"
+
+
+class ModelRequestOptions(ContractModel):
+    """Provider request options for one catalogue model (Stage 7.5, Q-34).
+    Unset = the provider's default: nothing is sent. Part of the config hash,
+    since an option can change answers and costs. An experiment file may set
+    them (Stage 8 compares them); the endpoint must allow each option."""
+
+    thinking: ThinkingMode | None = None
+    """``thinking: {"type": ...}`` as documented by DeepSeek and Xiaomi MiMo
+    (both default to enabled). The chat templates in ``tokenizers.toml`` are
+    for each provider's default; with the other mode the counted framing is
+    off by a few tokens (DeepSeek: over, MiMo: under; ADR-0021)."""
+
+
 class DevSettings(ContractModel):
     """Local-development conveniences."""
 
@@ -162,6 +180,8 @@ class Settings(ContractModel):
     embedding: EmbeddingSettings = EmbeddingSettings()
     database: DatabaseSettings = DatabaseSettings()
     dev: DevSettings = DevSettings()
+    model_options: dict[str, ModelRequestOptions] = {}
+    """Per catalogue model ID, e.g. ``[model_options."deepseek-v4-flash"]``."""
     pipeline: dict[str, dict[str, Any]] = {}
     """Policy sections (``routing``, ``cache``, ``context``, ``attempts``,
     ``features``, ``accounting``), opaque here; wiring validates them."""
@@ -199,6 +219,15 @@ class EndpointStatus(StrEnum):
     DEFERRED = "deferred"
 
 
+class MaxTokensParam(StrEnum):
+    """Request field that carries the generation limit (Stage 7.5)."""
+
+    MAX_COMPLETION_TOKENS = "max_completion_tokens"
+    """OpenAI: includes reasoning tokens; ``max_tokens`` is deprecated and not
+    compatible with reasoning models (openai SDK 3.24.0 docstrings)."""
+    MAX_TOKENS = "max_tokens"
+
+
 class ProviderEndpoint(ContractModel):
     """How to reach one model family through the Metis wrapper. Config, not
     a secret: the credential is named by ``secret``, never stored here."""
@@ -210,6 +239,22 @@ class ProviderEndpoint(ContractModel):
     secret: str = "metis_api_key"
     status: EndpointStatus
     evidence: Sourced
+    max_tokens_param: MaxTokensParam | None = None
+    """Required for an enabled ``openai_chat_completions`` endpoint: the live
+    adapter always sends a generation limit (cost control)."""
+    request_options: tuple[str, ...] = ()
+    """``ModelRequestOptions`` fields this family documents (e.g. thinking);
+    an option for a model of another family is a configuration error."""
+
+    @model_validator(mode="after")
+    def _check(self) -> ProviderEndpoint:
+        live_ready = (
+            self.status == EndpointStatus.ENABLED
+            and self.api_format == ApiFormat.OPENAI_CHAT_COMPLETIONS
+        )
+        if live_ready and self.max_tokens_param is None:
+            raise ValueError(f"endpoint {self.family}: set max_tokens_param")
+        return self
 
 
 class EndpointTable(ContractModel):

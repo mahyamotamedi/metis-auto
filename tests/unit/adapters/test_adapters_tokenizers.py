@@ -177,7 +177,7 @@ def test_fallback_is_labelled_approximation(tmp_path):
         assert count.fidelity == Fidelity.APPROXIMATION
         assert count.method == "approx-chars-div-4@1"
     # Templates stay attached: framing is counted even with the fallback.
-    assert set(built.templates) == {OPENAI, DEEPSEEK}
+    assert set(built.templates) == {OPENAI, DEEPSEEK, "mimo-v2"}
 
 
 def test_approx_tokenizer_rounds_up():

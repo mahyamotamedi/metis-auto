@@ -23,7 +23,9 @@ level = "INFO"
 [live]
 # Live model calls are off by default (ADR-0003). Turn on only in a runtime
 # layer (config/local.toml or METIS__LIVE__ENABLED=true), never in an
-# experiment file. Stage 6 builds no live client; the adapter is Stage 7.5.
+# experiment file. The live client (Stage 7.5, extra `live`) is built only
+# when the run also asks for counterfactual_source = "live" and both caps and
+# METIS_API_KEY are set (wiring.from_settings.live_permission).
 enabled = false
 
 [budget]
@@ -71,6 +73,13 @@ user = "metis"
 # Without METIS_FINGERPRINT_KEY, use a random key per process (A-44).
 ephemeral_fingerprint_key = true
 
+# --- Provider request options per model (Stage 7.5, Q-34; ADR-0021). None
+# are set: every model runs with its provider's default (DeepSeek and MiMo:
+# thinking enabled). Allowed per family by `request_options` in
+# endpoints-metis.toml. Example, for an experiment or config/local.toml:
+#   [model_options."deepseek-v4-flash"]
+#   thinking = "disabled"
+
 # --- Policy selection (promoted components only; repository_structure §6.2).
 # Thresholds not listed here keep their typed code defaults (A-43:
 # placeholders, not evidence). Any of them can be overridden by a higher layer.
@@ -83,3 +92,8 @@ model_id = "gpt-4o-mini"
 
 [pipeline.context]
 strategy = "pass_through"
+# Generation limit actually requested (reasoning included) and reserved in the
+# spend guard's pre-call estimate, below each model's own output limit
+# (Stage 7.5; provisional, A-43-style placeholder). 4,096 output tokens cost
+# at most 0.0027 USD on the dearest test model (0.66 USD / 1M).
+max_output_tokens_cap = 4096

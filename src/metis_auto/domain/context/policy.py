@@ -12,6 +12,8 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Protocol
 
+from pydantic import Field
+
 from metis_auto.contracts import (
     CatalogueEntry,
     ContextPlan,
@@ -40,6 +42,12 @@ class ContextConfig(ContractModel):
     """Fraction of input tokens added before the window check (provisional)."""
     default_reserved_output_tokens: int = 1024
     """Used when the catalogue's output limit is unknown (provisional)."""
+    max_output_tokens_cap: int | None = Field(default=None, gt=0)
+    """Generation limit actually requested: at most this many output tokens
+    (reasoning included), even when the model allows more. It is also the
+    output reserved in the fit check and in the spend guard's pre-call
+    estimate, so a model's full output limit (e.g. 128,000) does not inflate
+    every estimate. None = the model's limit (Stage 7.5; provisional)."""
 
 
 class ContextStrategy(Protocol):
@@ -61,8 +69,12 @@ class ContextStrategy(Protocol):
 
 
 def reserved_output(target: CatalogueEntry, config: ContextConfig) -> int:
+    """Output tokens to request and reserve: the model's limit (or the
+    default when unknown), lowered to ``max_output_tokens_cap`` if set."""
     known = target.max_output_tokens.value
-    return known if known is not None else config.default_reserved_output_tokens
+    limit = known if known is not None else config.default_reserved_output_tokens
+    cap = config.max_output_tokens_cap
+    return min(limit, cap) if cap is not None else limit
 
 
 def check_fit(

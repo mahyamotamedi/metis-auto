@@ -1,4 +1,4 @@
-# Price table: Metis user prices for the catalogue's six models.
+# Price table: Metis user prices for the catalogue's seven models.
 # Source: Metis pricing page, https://metisai.ir/pricing (cited in the brief as
 # https://docs.metisai.ir/pricing), saved by the owner on 2026-10-18; extract
 # committed as docs/references/metis_pricing_2026-10-18.csv.
@@ -21,9 +21,10 @@
 # effective_from: unknown (the page states none).
 #
 # Version history: "prices-metis-2026-10-18" (Stage 6) kept gpt-5.4 aside as
-# pending; "-s7" (Stage 7) adds its tiers. No amount changed.
+# pending; "-s7" (Stage 7) adds its tiers; "-s75" (Stage 7.5) adds mimo-v2.5
+# (Q-32), from the same saved page. No existing amount changed.
 
-version = "prices-metis-2026-10-18-s7"
+version = "prices-metis-2026-10-18-s75"
 currency = "USD"
 per_tokens = 1000000
 
@@ -60,6 +61,18 @@ price_ref = "metis-grok-4-1-fast"
 input = "0.22"
 output = "0.55"
 cached_input = "0.11"
+
+[[prices]]
+# mimo-v2.5 (Stage 7.5, Q-32): pricing page row "xiaomi,mimo-v2.5". The Metis
+# MiMo wrapper page (saved the same day) shows lower figures (0.14 / 0.0028 /
+# 0.28), about 10 % below: probably Xiaomi's list price. The pricing page is
+# the price source for every model here. Xiaomi bills requests to mimo-v2.5
+# at mimo-v2.6-flash prices since 2026-10-14 (mimo.mi.com/docs/en-US/updates/
+# deprecate); what Metis charges after that switch is unverified (A-60).
+price_ref = "metis-mimo-v2.5"
+input = "0.154"
+output = "0.308"
+cached_input = "0.0031"
 
 # gpt-5.4 has context-length tiers. The Metis page labels the first tier
 # "≤ 270K context". Whether K means 1,000 or 1,024 (270,000 or 276,480 tokens)

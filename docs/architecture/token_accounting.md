@@ -1,6 +1,6 @@
 # Token and Cost Accounting (Stage 7)
 
-Status: **decided** (methods, fidelity rules, price schema, inclusion rules, baseline method, decomposition) in [ADR-0020](../adr/0020-token-and-cost-accounting.md); chat templates and the Grok approximation **provisional** until the Stage 7.5 live check compares them with provider-reported usage. Last updated 2026-10-18.
+Status: **decided** (methods, fidelity rules, price schema, inclusion rules, baseline method, decomposition) in [ADR-0020](../adr/0020-token-and-cost-accounting.md); chat templates **checked** against provider-reported usage by the Stage 7.5 [live check](../references/metis_wrapper_live_check.md) (OpenAI exact for gpt-4.1-nano and gpt-4o-mini, DeepSeek fixed to V4.1 thinking mode and exact for the checked layout) but still labelled approximations; the Grok approximation **provisional** (it undercounted the check's request by 70 %, Q-33). Last updated 2026-10-18 (Stage 7.5).
 Index: [architecture README](README.md). Components: CMP-09 (accounting), CMP-12 (tokenizers). Requirements: FR-ACCT-01…06, H-7, ADR-0002, ADR-0006 pt 3, [owner brief](../project/live_testing_and_demo_brief.md) §4–§6, §11.
 
 This document answers: **for a request and an answer on a given model, how many tokens are billed, what do they cost, how sure are we, and how does the cost compare with the premium baseline?**
@@ -40,7 +40,7 @@ Research checked on **2026-10-18**; re-verify at the next library upgrade or cat
 | `gpt-4.1-nano` | `openai-o200k-base` | same | **exact_local** | same file: prefix `"gpt-4.1-"` → `o200k_base`. |
 | `gpt-4o-mini` | `openai-o200k-base` | same | **exact_local** | same file: prefix `"gpt-4o-"` → `o200k_base`; also the OpenAI cookbook's example model. |
 | `gpt-5.4` (premium, never called) | `openai-o200k-base` | same | **exact_local** (by family mapping, A-53; accepted by the owner, Q-31, 2026-10-18) | tiktoken's `"gpt-5"` prefix covers `gpt-5.4`. OpenAI's gpt-5.4 model page names no tokenizer, and the claim can't be checked with a call (the model is never called). The premium cost is still labelled an estimate (§6). |
-| `deepseek-v4-flash` | `deepseek-v4` | Hugging Face `tokenizers` 0.23.2, the model's `tokenizer.json` | **exact_local** (A-54) | `deepseek-ai/DeepSeek-V4-Flash` on Hugging Face, MIT licence, revision `60d8d707…`, last modified 2026-06-22. Assumes Metis's `deepseek-v4-flash` is this open-weight model. |
+| `deepseek-v4-flash` | `deepseek-v4` | Hugging Face `tokenizers` 0.23.2, the model's `tokenizer.json` | **exact_local** (A-54) | `deepseek-ai/DeepSeek-V4-Flash` on Hugging Face, MIT licence, revision `60d8d707…`, last modified 2026-06-22. The wrapper actually serves `deepseek-flash` (DeepSeek-V4.1-Flash-1017, A-58, [live check](../references/metis_wrapper_live_check.md)); its `tokenizer.json` (revision `1bae0e10…`) has the same vocabulary and merges, so content counts are unchanged. |
 | `grok-4-1-fast` | `grok-approx` | characters ÷ 4 | **approximation** | No public Grok 4 tokenizer found (Hugging Face `xai-org` has Grok-1 and Grok-2 only; docs.x.ai names none). Grok-2's `tokenizer.tok.json` exists but belongs to another model generation in a custom format: not used. A `tokenize-text` API endpoint is described by third-party mirrors but was not found on docs.x.ai or in the Metis wrapper docs: not used. |
 | walking-skeleton models, unknown models | `approx-chars-div-4` | characters ÷ 4 | **approximation** | The sample EDA's heuristic. |
 
@@ -70,9 +70,9 @@ Providers frame each message with special tokens. For counted usage, framing com
 
 | Family | Framing used | Source | Fidelity |
 |---|---|---|---|
-| OpenAI (`o200k_base`) | 3 per message + 1 role token (system, developer, user, and assistant are one token each in `o200k_base`, checked 2026-10-18) → 4 per part; 3 to prime the reply | OpenAI cookbook, "How to count tokens with tiktoken" (`num_tokens_from_messages`), stated for gpt-4o-mini-2024-07-18 and gpt-4o-2024-08-06 only | approximation |
-| DeepSeek V4 | BOS 1; user `<｜User｜>` 1; earlier assistant turns `<｜Assistant｜></think>` 2 + `<｜end▁of▁sentence｜>` 1; reply primed with `<｜Assistant｜></think>` 2; system 0. Each marker is one token (checked with the tokenizer). | `encoding/README.md` of the same repository and revision, "Basic Chat", chat mode | approximation (thinking mode and the wrapper's request unverified) |
-| Grok | not modelled (no source); overhead not added | — | — |
+| OpenAI (`o200k_base`) | 3 per message + 1 role token (system, developer, user, and assistant are one token each in `o200k_base`, checked 2026-10-18) → 4 per part; 3 to prime the reply | OpenAI cookbook, "How to count tokens with tiktoken" (`num_tokens_from_messages`), stated for gpt-4o-mini-2024-07-18 and gpt-4o-2024-08-06 only. [live check](../references/metis_wrapper_live_check.md) (system + user): exact for gpt-4.1-nano and gpt-4o-mini; gpt-5-nano reported 1 fewer | approximation |
+| DeepSeek V4.1, **thinking mode** (Stage 7.5) | BOS 1 + `<｜System｜>` 1 + reasoning-effort prefix 25 = 27 once; user `<｜User｜>` 1; reply primed with `<｜Assistant｜><think>` 2; first system 0; later system (retrieved) `<｜System｜>` 1; earlier assistant turns `<｜Assistant｜></think>` 2 + `<｜end▁of▁sentence｜>` 1. Each marker is one token (checked with the tokenizer). | `encoding/README.md` of DeepSeek-V4.1-Flash-1017 (revision `1bae0e10…`), "Thinking mode"; [live check](../references/metis_wrapper_live_check.md): reproduced the reported 65 prompt tokens exactly | approximation (history and retrieved layouts unverified). Replaces the V4 chat-mode template (framing 4 vs 30 reported). |
+| Grok | not modelled (no source); overhead not added. [live check](../references/metis_wrapper_live_check.md): 98 prompt tokens reported vs 29 counted by chars/4 for the system + user request (Q-33) | — | — |
 
 Assumption **A-55**: the Stage 7.5 adapter sends each input part as one message, with retrieved context as its own system-role message. If it merges parts, the template overcounts slightly.
 
@@ -87,7 +87,7 @@ Assumption **A-55**: the Stage 7.5 adapter sends each input part as one message,
 | Chat-template framing | **yes**, approximation (OpenAI, DeepSeek); **no** for Grok |
 | Provider-cached input (discounted) | **yes**, from provider-reported cached tokens; never predicted locally |
 | Provider cache writes | **yes** in the schema (variant by TTL); none of the six models lists a cache-write price on the Metis page (2026-10-18) |
-| Hidden reasoning (billed as output) | **yes** when reported; when counted from the visible answer of a model with a verified `hidden_reasoning_billed_as_output` capability, the cost is a **lower bound** (caveat `reasoning_not_counted`). Verified for `gpt-5-nano` and `gpt-5.4`. **Not verified:** DeepSeek V4 thinking mode and Grok 4.1 Fast reasoning through the wrapper (TODO-12). |
+| Hidden reasoning (billed as output) | **yes** when reported; when counted from the visible answer of a model with a verified `hidden_reasoning_billed_as_output` capability, the cost is a **lower bound** (caveat `reasoning_not_counted`). Verified for `gpt-5-nano`, `gpt-5.4`, and `deepseek-v4-flash` (thinking on by default through the wrapper: 30 reasoning tokens inside the output, [live check](../references/metis_wrapper_live_check.md)). **Not verified:** Grok 4.1 Fast, whose usage through the wrapper has no reasoning field (Q-33). |
 | Context-length price tiers | **yes** (§4) |
 | Attachments (images) | **no**: content is never inspected (NG-07), so image tokens are missing from counted input; reported usage includes them |
 | Structured input, tool and function definitions | **no** (A-16; wrapper mode disables function calling) |
@@ -167,8 +167,8 @@ Every computed `Cost` carries `caveats` (`CostCaveat`), shown with the figure:
 
 | Item | Resolved by |
 |---|---|
-| Templates and the Grok approximation vs provider-reported usage; whether the wrapper reports cached and reasoning tokens | Stage 7.5 live check |
-| DeepSeek thinking mode and Grok reasoning through the wrapper (TODO-12) | Stage 7.5 |
+| ~~Templates vs provider-reported usage; whether the wrapper reports cached and reasoning tokens~~ checked 2026-10-18 (live check); Grok overhead and a real provider-cache hit remain (Q-33) | Stage 7.5 live check |
+| ~~DeepSeek thinking mode~~ verified (on by default; keep or disable: Q-34); Grok reasoning (no field reported) | Q-33, Q-34 |
 | gpt-5.4 tokenizer by family mapping (A-53): **accepted** (Q-31, 2026-10-18); re-check at each tiktoken upgrade | an OpenAI statement if one appears |
 | Label mapping (logged label → catalogue model) for the as-logged baseline (contracts.md O-3) | Stage 8, with the as-logged baseline |
 | Structured input and attachment tokens | Stage 8 (A-16), and live reported usage |

@@ -40,6 +40,7 @@ from metis_auto.contracts import (
     ContextPlan,
     Cost,
     CostBasis,
+    CostEstimate,
     EntryStatus,
     ErrorClass,
     FailureReason,
@@ -146,6 +147,11 @@ class RequestPipeline:
         self._ids = ids
         self._guard = spend_guard
         self._entries = {e.model_id: e for e in config.catalogue.entries}
+
+    @property
+    def live_stopped(self) -> str | None:
+        """Why the spend guard stopped live calls for this run, if it did."""
+        return self._guard.stopped if self._guard is not None else None
 
     # --- the in-process API (FR-API-01) ---
 
@@ -434,6 +440,7 @@ class RequestPipeline:
             return self._finish_attempt(run, record, None, None)
 
         reserved = plan.record.reserved_output_tokens
+        estimate: CostEstimate | None = None
         if self._client.source == AnswerSource.LIVE:
             input_tokens = plan.record.input_tokens
             assert input_tokens is not None  # the message is always counted
@@ -473,8 +480,10 @@ class RequestPipeline:
         record = self._record(base, target, plan, result, duration)
         if isinstance(result, ModelResponse):
             run.responses[attempt_id] = result
-        if self._client.source == AnswerSource.LIVE and self._guard is not None:
-            self._guard.charge(record.cost)
+        if estimate is not None and self._guard is not None:
+            # Live only. An uncomputable actual cost charges the estimate and
+            # stops live calls for the run (ADR-0021).
+            self._guard.charge(record.cost, estimate)
         return self._finish_attempt(run, record, result, duration)
 
     def _record(

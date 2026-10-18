@@ -1,6 +1,6 @@
 # External Model and Provider Interfaces (Stage 3)
 
-Status: `ModelClient` port semantics and the error taxonomy **decided**; catalogue fields **provisional** (limits wait for TODO-10); the provider is the Metis wrapper ([ADR-0018](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md)); tokenizers and prices **decided** in Stage 7 ([ADR-0020](../adr/0020-token-and-cost-accounting.md), [token_accounting.md](token_accounting.md)). Last updated 2026-10-18.
+Status: `ModelClient` port semantics and the error taxonomy **decided**; the live OpenAI-compatible adapter **built** in Stage 7.5 ([ADR-0021](../adr/0021-live-openai-compatible-adapter.md); mappings provisional until the live wrapper check); catalogue limits **sourced** (TODO-10, except Grok); the provider is the Metis wrapper ([ADR-0018](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md)); tokenizers and prices **decided** in Stage 7 ([ADR-0020](../adr/0020-token-and-cost-accounting.md), [token_accounting.md](token_accounting.md)). Last updated 2026-10-18.
 Index: [architecture README](README.md). Components: CMP-10 (model clients), CMP-12 (tokenizers), CMP-13 (embedders), CMP-15 (judges). Requirements: FR-API-02, FR-FAIL-*, FR-ACCT-01, FR-ROUTE-05, FR-CTX-05.
 
 No provider API, SDK method, price, or capability is stated in this document. Each one is researched, with source and check date, when an adapter or a catalogue entry is written (MP§3.8).
@@ -31,7 +31,7 @@ One operation, provisionally `invoke(ModelInvocation) -> ModelResult`.
 | Quality-injecting client | decorator | Scripted empty, truncated, wrong-language, or refusal answers, for detector and cascade tests. | no |
 | Replay client | base | Answers from recorded responses or logged references ([evaluation.md §4](evaluation.md#4-counterfactual-sources-and-their-limits)). "No answer" when none exists. | no |
 | Recording decorator | decorator | Writes live results to `data/recorded/` for reuse. | no (wraps a live client) |
-| Live client, one per provider family | base | Real calls. Opt-in only, built only when a cap is set, tests marked `network` (ADR-0003). | **yes** |
+| Live client: **one** OpenAI-compatible adapter for OpenAI, DeepSeek, and Grok (`openai_compat.py`, Stage 7.5); Gemini needs a second adapter (Stage 10) | base | Real calls. Opt-in only, built only with both keys and caps (`wiring.live`), always wrapped in the recording decorator; tests use mocked HTTP; the one real-network test is marked `network` (ADR-0003, ADR-0021). | **yes** |
 
 The decorators compose, for example *recording(live)* or *fault(fake)*. Wiring builds the stack from configuration. Pipeline code sees only `ModelClient`.
 
@@ -53,11 +53,30 @@ The decorators compose, for example *recording(live)* or *fault(fake)*. Wiring b
 
 Each live adapter documents how its provider's responses map onto these classes, with sources. [attempts.md §3](attempts.md#3-errors-and-failover) gives the default action per class.
 
+### 3.1 The OpenAI-compatible adapter (ADR-0021)
+
+Sources (checked 2026-10-18): openai SDK 3.24.0 (`_exceptions.py`, `types/completion_usage.py`, `completion_create_params.py`); DeepSeek [create-chat-completion](https://api-docs.deepseek.com/api/create-chat-completion) (usage fields, `finish_reason` values, `max_tokens`, 402 insufficient balance). xAI's site now documents only its Responses API, so Grok's chat-completions behaviour rests on OpenAI compatibility. The [live check](../references/metis_wrapper_live_check.md) of 2026-10-18 confirmed the success path for all three families (Grok reports no cached or reasoning fields); no error occurred, so the error rows are tested on mocked HTTP only.
+
+| Provider outcome | Normalised | Retryable |
+|---|---|---|
+| SDK `APITimeoutError` | `timeout` | yes |
+| SDK `APIConnectionError` (no response) | `connection` | yes |
+| HTTP 429, except code `insufficient_quota` | `rate_limited` | yes |
+| HTTP 401, 402 (DeepSeek: insufficient balance), 403; code `insufficient_quota` | `auth` | no |
+| HTTP 408 | `timeout` | yes |
+| code or type containing `context_length` / `context_window` | `context_overflow` | no |
+| code or type containing `content_filter` / `content_policy` | `content_filtered` | no |
+| other HTTP 4xx (400, 404 unknown model, 409, 422, …) | `invalid_request` | no |
+| HTTP 5xx | `unavailable` | yes |
+| 200 with no choice; any other SDK error | `unknown` | yes (bounded) |
+
+`provider_error_code` = `http_<status>[:<code or type>]`, never the message. Finish reasons: `stop` → `complete`; `length`; `content_filter`; anything else (`tool_calls`, DeepSeek's `insufficient_system_resource`, `aborted`, missing) → `other`. Usage: `prompt_tokens` → input; `completion_tokens` → output, plus `reasoning_tokens` when the provider reports them outside the completion count (`total = prompt + completion + reasoning`); `prompt_tokens_details.cached_tokens`, else `prompt_cache_hit_tokens` → cached input (0 means reported and zero, absent means not reported); the response `model` → `provider_model_version`. SDK retries are off (`max_retries=0`). The SDK's and `httpx2`'s loggers are held at WARNING because their DEBUG output contains request bodies.
+
 ---
 
 ## 4. Model catalogue (reference data)
 
-Fields of each catalogue entry (`config/reference/catalogue-*.toml`). Provisional until the limits are sourced (TODO-10).
+Fields of each catalogue entry (`config/reference/catalogue-*.toml`). Limits sourced in Stage 7.5 (TODO-10): provider pages, checked 2026-10-18; Grok's unknown (Q-32).
 - `model_id` (internal, stable), `provider`, `provider_model_name`, `family`;
 - `tier` (an ordinal for routing and cascades) and `equivalence_group` (for failover; FR-FAIL-03);
 - `context_window` and `max_output_tokens`, each with source and check date;

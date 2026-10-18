@@ -21,8 +21,10 @@ TEST_MODELS = {
     "gpt-4.1-nano",
     "gpt-4o-mini",
     "deepseek-v4-flash",
-    "grok-4-1-fast",
+    "mimo-v2.5",
 }
+# Replaced as a test model by mimo-v2.5 (Q-32, 2026-10-18); kept disabled.
+RETIRED = {"grok-4-1-fast"}
 RAW_PATTERNS = {
     "input": r"(?<!Cached )Input Token: \$([0-9.]+) / 1M tokens",
     "output": r"Output Token: \$([0-9.]+) / 1M tokens",
@@ -53,13 +55,19 @@ def raw_prices(model: str) -> list[dict[str, Decimal]]:
 
 def test_catalogue_has_the_five_test_models_and_the_disabled_premium(reference):
     entries = {e.model_id: e for e in reference.catalogue.entries}
-    assert set(entries) == TEST_MODELS | {"gpt-5.4"}
+    assert set(entries) == TEST_MODELS | RETIRED | {"gpt-5.4"}
     assert all(entries[m].enabled for m in TEST_MODELS)
+    assert not any(entries[m].enabled for m in RETIRED)
     assert entries["gpt-5.4"].enabled is False  # never called
-    reasoning = {"gpt-5-nano", "gpt-5.4"}
+    # deepseek-v4-flash: verified by the live wrapper check (Stage 7.5).
+    reasoning = {"gpt-5-nano", "gpt-5.4", "deepseek-v4-flash", "mimo-v2.5"}
     for entry in entries.values():
-        # Not verified yet: unknown, never invented (TODO-10).
-        assert entry.context_window.value is None
+        # Sourced in Stage 7.5 (TODO-10), except Grok's: unknown, never invented
+        # (test_settings_live_reference.py checks the values).
+        if entry.model_id == "grok-4-1-fast":
+            assert entry.context_window.value is None
+        else:
+            assert entry.context_window.evidence is not None
         names = {c.name for c in entry.capabilities if c.verified}
         billed = {"hidden_reasoning_billed_as_output"}
         expected = billed if entry.model_id in reasoning else set()
@@ -69,7 +77,7 @@ def test_catalogue_has_the_five_test_models_and_the_disabled_premium(reference):
 
 def test_every_family_has_an_endpoint_and_gemini_is_deferred(reference):
     families = {e.provider for e in reference.catalogue.entries}
-    assert families == {"openai", "deepseek", "grok"}
+    assert families == {"openai", "deepseek", "grok", "mimo"}
     for family in families:
         assert reference.endpoints.get(family).status == "enabled"
     assert reference.endpoints.get("gemini").status == "deferred"
@@ -81,7 +89,7 @@ def test_premium_baseline_is_gpt_5_4(reference):
     assert premium.method == "estimate_only"
 
 
-@pytest.mark.parametrize("model", sorted(TEST_MODELS))
+@pytest.mark.parametrize("model", sorted(TEST_MODELS | RETIRED))
 def test_test_model_prices_match_the_source(reference, model):
     entry = next(e for e in reference.catalogue.entries if e.model_id == model)
     configured = {
@@ -153,7 +161,7 @@ def test_tokenizer_table_covers_the_catalogue(reference):
         assert spec is not None, entry.model_id
         assert spec.evidence.checked_on.isoformat() == "2026-10-18"
     exact = {t.ref for t in table.tokenizers if t.fidelity == "exact_local"}
-    assert exact == {"openai-o200k-base", "deepseek-v4"}
+    assert exact == {"openai-o200k-base", "deepseek-v4", "mimo-v2"}
     # Templates are never claimed exact before a provider-reported check.
     assert all(
         t.template.fidelity == "approximation" for t in table.tokenizers if t.template

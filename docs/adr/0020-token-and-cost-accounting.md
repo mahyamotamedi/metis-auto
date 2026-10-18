@@ -1,6 +1,6 @@
 # ADR-0020: Token and cost accounting — tokenizers per family as configuration, strict fidelity, tiered prices, a labelled premium estimate, an exact savings decomposition
 
-- Status: **decided** (methods, rules, schema). Chat templates and the Grok approximation are **provisional** until the Stage 7.5 live check compares them with provider-reported usage. The gpt-5.4 tokenizer mapping was accepted by the owner on 2026-10-18 (Q-31).
+- Status: **decided** (methods, rules, schema). Chat templates and the Grok approximation are **provisional** until the Stage 7.5 live check compares them with provider-reported usage. The gpt-5.4 tokenizer mapping was accepted by the owner on 2026-10-18 (Q-31). **Stage 7.5 update (2026-10-18):** the [live wrapper check](../references/metis_wrapper_live_check.md) confirmed the OpenAI template for gpt-4.1-nano and gpt-4o-mini and replaced the DeepSeek template with V4.1 thinking mode (exact for the checked layout); both stay labelled approximations. Grok stays chars/4 without framing (Q-33).
 - Date: 2026-10-18
 - Resolves: A-52 (gpt-5.4 price tiers, the "270K" reading); contracts.md O-3 except the label mapping (moved to Stage 8); the Stage 7 items of the [owner brief](../project/live_testing_and_demo_brief.md) §12.
 - Relates to: FR-ACCT-01…06, H-7, ADR-0002, ADR-0006 pt 3, ADR-0008, ADR-0017, ADR-0018, ADR-0019, MP§3.8

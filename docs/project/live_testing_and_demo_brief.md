@@ -6,6 +6,8 @@ Sources live next to this file: `metis-docs/` (saved Metis docs pages) and
 `metis_pricing_extracted.csv` (+ `metis-pricing-rendered.html`), saved 2026-10-18 from https://docs.metisai.ir/pricing.
 Do NOT read or copy `metis-docs/metis-docs-api-keys.html` (a dashboard page, not needed).
 
+**Amendment (owner, 2026-10-18):** §10 and §12 gained the required teammate quickstart (`docs/guides/demo_quickstart.md`). Otherwise this is the brief as received (sha256 `8e7293a4…` before the amendment).
+
 ---
 
 ## 1. Purpose and budget (answers Q-08)
@@ -95,6 +97,7 @@ Per message and per session.
 - **Bot setup sidebar:** instructions box, retrieval-context box (one document per block), and **synthetic presets** (e.g. a Persian e-commerce support bot, an English FAQ bot) with long instructions and documents. Never copied from the sample.
 - Toggles: routing mode (sticky v1 / per request), compression on/off, demo cache seed on/off, bot-level cache scope on/off.
 - **Cost panel**, per message and session: actually paid; premium-baseline estimate; savings by routing, compression, cache and provider cache (§6); tokens; served by (cache / model); model; overhead; budget used vs 20 USD.
+- **Teammate quickstart (required deliverable; owner amendment 2026-10-18):** `docs/guides/demo_quickstart.md`, a step-by-step guide for someone new to the project: (1) what the demo is and shows (routing, caching, compression, cost panel); (2) setup from a fresh clone (venv, lockfiles, tokenizer files); (3) the two ways to run it, free fake mode and real-model mode; (4) `.env`, getting their own Metis key, where to paste it, never committed; (5) `config/local.toml` as the "second key" safety switch: creating it from `config/local.example.toml` without duplicating sections, what each section means, how to turn live calls off; (6) the budget: the 20 USD lifetime cap, the per-run cap, the ledger (never delete it), `show_budget.py`, and that the ledger is per computer, so teammates sharing one Metis account must coordinate (dashboard spending limit, or split caps in their `local.toml`); (7) starting the demo UI and the chat, with example commands, and reading the cost panel; (8) troubleshooting (missing key, `live.enabled` false, duplicate TOML sections, budget blocked). Linked from `README.md` and `docs/README.md`; `config/local.example.toml`'s comments stay the in-file reference.
 
 ## 11. Overhead benchmark
 A-38 was measured ad hoc. Add `scripts/measure_overhead.py`: N walking-skeleton requests, p50/p95/max per span, hit/miss mix, hardware. Re-run in Stage 7 (real tokenizers), Stage 8 (realistic sizes), and the Demo milestone (LLMLingua, live calls).
@@ -106,5 +109,5 @@ A-38 was measured ad hoc. Add `scripts/measure_overhead.py`: N walking-skeleton 
 | 7 | Tokenizers for the 6 models (verify local tokenizer availability); price schema with cached input, cache writes, context tiers; premium-baseline estimate (§5); overhead benchmark script (§11) |
 | 7.5 (new, small) | Live OpenAI-compatible adapter (one adapter, base URL per family; SDK auto-retries off; normalised errors; provider-reported usage, finish reason, cached tokens, model); the live wrapper check (§3); `scripts/chat.py` CLI |
 | 8 | As planned + sample loader, pairing heuristic, replay-case builder pulled forward from Stage 9; sticky routing experiment plan (§7) |
-| Demo milestone (after 8) | Rule-based + sticky routing v1; LLMLingua-2 strategy; demo cache scope + seed; savings decomposition (§6); Streamlit UI (§10) |
+| Demo milestone (after 8) | Rule-based + sticky routing v1; LLMLingua-2 strategy; demo cache scope + seed; savings decomposition (§6); Streamlit UI (§10); **teammate quickstart `docs/guides/demo_quickstart.md` (§10; required; amendment 2026-10-18)** |
 | 9–10 | As planned; Gemini adapter goes on the Stage 10 roadmap |

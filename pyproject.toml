@@ -30,6 +30,13 @@ tokenizers = [
     "tiktoken>=0.14,<0.15",
     "tokenizers>=0.23,<0.24",
 ]
+# Live model calls through the Metis wrapper (Stage 7.5, ADR-0018): the
+# OpenAI-compatible adapter in adapters/providers/openai_compat.py, the only
+# module that imports it. Without this extra, no live client can be built;
+# every test runs offline (HTTP is mocked).
+live = [
+    "openai>=3.24,<4",
+]
 # Needed only by the frozen sample-EDA tests (tests/test_sample_eda_helpers.py).
 eda = [
     "numpy>=2",
