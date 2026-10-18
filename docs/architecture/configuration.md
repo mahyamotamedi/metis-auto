@@ -1,6 +1,6 @@
 # Configuration Flow (Stage 3)
 
-Status: the layers, their separation, the flow, the precedence, the file format (TOML), variable naming, and the loader **decided** in Stage 6 ([ADR-0019](../adr/0019-configuration-format-layers-and-secrets.md)); the `Settings` shape **provisional**; the catalogue and price **schema** provisional until Stage 7. Last updated 2026-10-18 (Stage 6).
+Status: the layers, their separation, the flow, the precedence, the file format (TOML), variable naming, and the loader **decided** in Stage 6 ([ADR-0019](../adr/0019-configuration-format-layers-and-secrets.md)); the `Settings` shape **provisional**; the price schema and the tokenizer table **decided** in Stage 7 ([ADR-0020](../adr/0020-token-and-cost-accounting.md)). Last updated 2026-10-18 (Stage 7).
 Index: [architecture README](README.md). Components: CMP-19 (settings), CMP-20 (wiring). Requirements: MP§4 (configuration over code), QA-REPL, ADR-0002, ADR-0003, ADR-0018, ADR-0019. How-to: [local development guide](../guides/local_development.md).
 
 ---
@@ -10,7 +10,7 @@ Index: [architecture README](README.md). Components: CMP-19 (settings), CMP-20 (
 | Kind | What it holds | Where it lives | Versioned in git? | Who reads it |
 |---|---|---|---|---|
 | **Application defaults** | Strategy selection (promoted components only), thresholds, cache key variant, scope, overflow rule, retry and cascade limits, event sink choice, budget caps and the 20 USD ceiling. | `config/defaults.toml` (thresholds not listed there keep each policy's typed code default) | yes | settings |
-| **Reference data** (a kind of default, versioned on its own) | Model catalogue (capabilities with verification, limits, tiers, equivalence groups), price tables (source, effective date, check date), provider endpoints (base URL per family), baseline definitions; later the label → model mapping. Each file has its own version ID that events and manifests record. | `config/reference/*.toml` | yes | settings |
+| **Reference data** (a kind of default, versioned on its own) | Model catalogue (capabilities with verification, limits, tiers, equivalence groups), price tables (source, effective date, check date, context tiers, cache writes), provider endpoints (base URL per family), baseline definitions, the tokenizer table (backend, pinned files, fidelity, chat templates); later the label → model mapping. Each file has its own version ID that events and manifests record. | `config/reference/*.toml` | yes | settings |
 | **Runtime configuration** | Machine- or deployment-specific values: data paths, run directory, ledger location, whether live calls are allowed here, lower caps, log level. | `config/local.toml` (untracked; example `config/local.example.toml`) or `METIS_RUNTIME_CONFIG` | no | settings |
 | **Experiment configuration** | Candidate strategy and parameters, dataset slice, seed, baselines, counterfactual source, metrics. May not set `live`, `budget`, `paths`, `dev`. | `experiments/<area>/<EXP-ID>/config.toml`; run profiles in `config/profiles/` | yes | runner → settings |
 | **Explicit overrides** | One-off overrides for a single invocation. | `METIS__<SECTION>__<KEY>` environment variables (process, then `.env`); caller-supplied dotted keys | no | settings |
@@ -63,7 +63,7 @@ flowchart LR
 | Config directory | `METIS_CONFIG_DIR`, else `<checkout>/config`. Relative paths resolve against its parent. |
 | Variable naming | Secrets: `METIS_API_KEY`, `METIS_FINGERPRINT_KEY`, `METIS_DB_PASSWORD`. Overrides: `METIS__<SECTION>__<KEY>`. Locations: `METIS_CONFIG_DIR`, `METIS_RUNTIME_CONFIG`. All listed in `.env.example`. |
 | Layer rules | Ceiling only in defaults; no runtime sections in experiments; no secret-like keys anywhere; unknown keys rejected. |
-| Reference files | `config/reference/`: `catalogue-metis-test.toml`, `prices-metis-2026-10-18.toml`, `endpoints-metis.toml`, `baselines.toml`; synthetic skeleton files. |
+| Reference files | `config/reference/`: `catalogue-metis-test.toml`, `prices-metis-2026-10-18.toml`, `endpoints-metis.toml`, `baselines.toml`, `tokenizers.toml` (Stage 7); synthetic skeleton files. |
 | Settings → components | `metis_auto.wiring.from_settings`: `pipeline_config`, `fingerprint_key`, `spend_ledger`, `live_permission`, `build_pipeline_from_settings`. |
 
-**Still open (Stage 7):** the final catalogue and price schema (context-length tiers, cache writes, effective dates, the label mapping). Until then, a model whose prices need tiers keeps all its rows in `ReferenceData.pending_prices` and its costs are "not computed".
+**Stage 7** ([ADR-0020](../adr/0020-token-and-cost-accounting.md)): the price schema has context tiers (by input tokens), cache writes with TTL variants, and an optional `effective_from`; the Stage 6 "pending" rows are gone. A new reference file, `tokenizers.toml` (`[reference] tokenizers`), says how each `tokenizer_ref` is counted; its files live in `paths.tokenizer_assets` (git-ignored, fetched once by `scripts/fetch_tokenizer_assets.py`). **Still open:** the label mapping (Stage 8).

@@ -1,6 +1,6 @@
 # External Model and Provider Interfaces (Stage 3)
 
-Status: `ModelClient` port semantics and the error taxonomy **decided**; catalogue fields **provisional** (Stage 7 fixes the schema); which providers and SDKs to use is **open** (Q-08, ADR-0003). Last updated 2026-10-14.
+Status: `ModelClient` port semantics and the error taxonomy **decided**; catalogue fields **provisional** (limits wait for TODO-10); the provider is the Metis wrapper ([ADR-0018](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md)); tokenizers and prices **decided** in Stage 7 ([ADR-0020](../adr/0020-token-and-cost-accounting.md), [token_accounting.md](token_accounting.md)). Last updated 2026-10-18.
 Index: [architecture README](README.md). Components: CMP-10 (model clients), CMP-12 (tokenizers), CMP-13 (embedders), CMP-15 (judges). Requirements: FR-API-02, FR-FAIL-*, FR-ACCT-01, FR-ROUTE-05, FR-CTX-05.
 
 No provider API, SDK method, price, or capability is stated in this document. Each one is researched, with source and check date, when an adapter or a catalogue entry is written (MP§3.8).
@@ -57,12 +57,13 @@ Each live adapter documents how its provider's responses map onto these classes,
 
 ## 4. Model catalogue (reference data)
 
-Provisional fields for each catalogue entry. Stage 7 fixes the schema.
+Fields of each catalogue entry (`config/reference/catalogue-*.toml`). Provisional until the limits are sourced (TODO-10).
 - `model_id` (internal, stable), `provider`, `provider_model_name`, `family`;
 - `tier` (an ordinal for routing and cascades) and `equivalence_group` (for failover; FR-FAIL-03);
 - `context_window` and `max_output_tokens`, each with source and check date;
 - capabilities (modalities, for example image input), **each with `verified: true|false`, source, and check date**. Unverified means unsupported for eligibility (FR-ROUTE-05);
-- `tokenizer_ref` (which `Tokenizer` backend counts for this model, and its fidelity) and `price_ref` (price-table entry);
+- `tokenizer_ref` (a row of `config/reference/tokenizers.toml`: backend, fidelity, evidence, chat template; Stage 7) and `price_ref` (price-table rows, possibly tiered);
+- capability `hidden_reasoning_billed_as_output` (verified only with a source) marks models whose counted output is a lower bound (token_accounting.md §3.4);
 - provider prompt caching: whether supported, minimum prefix, discount. Verified-only, otherwise unknown (FR-CTX-05);
 - `enabled`.
 
@@ -74,7 +75,7 @@ The **label mapping** (logged label → catalogue model, with fidelity) is a sep
 
 | Port | Network backends (future, opt-in) | Offline backends | Rule |
 |---|---|---|---|
-| `Tokenizer` | provider token-counting endpoints | approximation; exact local tokenizers (Stage 7) | Every count carries its fidelity. Network counting is off in tests. |
+| `Tokenizer` | provider token-counting endpoints (none documented for the Metis wrapper; not implemented) | chars/N approximation; tiktoken (`o200k_base`); Hugging Face `tokenizer.json` (DeepSeek V4), from pre-fetched, sha256-pinned files (Stage 7) | Every count carries its fidelity. Nothing downloads at run time; network counting would be opt-in and off in tests. |
 | `Embedder` | hosted embedding APIs | fake; local models (Stage 8). Downloading weights needs network once, at setup. | Persian-capable; ID and version recorded. |
 | `Judge` | LLM judge built on a `ModelClient` | fake; imported human labels | Opt-in; cost reported as evaluation cost or overhead. |
 

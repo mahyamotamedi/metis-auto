@@ -22,6 +22,14 @@ dev = [
     "ruff>=0.6",
     "pip-tools>=7.4",
 ]
+# Exact local tokenizers (Stage 7, docs/architecture/token_accounting.md).
+# Imported only in adapters/tokenizers. Without this extra, every model is
+# counted with the labelled chars/4 approximation. Tokenizer files are fetched
+# once by scripts/fetch_tokenizer_assets.py (sha256-pinned), never at run time.
+tokenizers = [
+    "tiktoken>=0.14,<0.15",
+    "tokenizers>=0.23,<0.24",
+]
 # Needed only by the frozen sample-EDA tests (tests/test_sample_eda_helpers.py).
 eda = [
     "numpy>=2",

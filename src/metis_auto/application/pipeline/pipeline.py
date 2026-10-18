@@ -87,7 +87,7 @@ from metis_auto.domain.routing import RoutingPolicy
 from metis_auto.ports import CacheStore, Clock, IdSource, ModelClient
 
 from ..events import EventRecorder
-from ..measurement import MeasurementService
+from ..measurement import MeasurementService, request_roles
 from .config import PipelineConfig
 from .spend_guard import SpendGuard
 
@@ -279,7 +279,9 @@ class RequestPipeline:
         target = self._entries[decision.target_model_id]
         counts = self._measurement.target_counts(run.request, target)
         input_tokens = accounting.sum_counts(c.total for c in counts.components)
-        usage = self._measurement.counted_usage(target, input_tokens, entry.answer)
+        usage = self._measurement.counted_usage(
+            target, input_tokens, entry.answer, request_roles(run.request)
+        )
         avoided = accounting.cost_of(
             usage, target, self._config.prices, CostBasis.AVOIDED_ESTIMATE
         )
@@ -436,7 +438,11 @@ class RequestPipeline:
             input_tokens = plan.record.input_tokens
             assert input_tokens is not None  # the message is always counted
             estimate = accounting.pre_call_estimate(
-                target, input_tokens, reserved or 0, self._config.prices
+                target,
+                input_tokens,
+                reserved or 0,
+                self._config.prices,
+                self._measurement.overhead_for(target, [p.role for p in plan.parts]),
             )
             assert self._guard is not None  # enforced in __init__
             if not self._guard.allows(estimate):
@@ -495,7 +501,10 @@ class RequestPipeline:
                 duration_ms=duration,
             )
         usage = result.usage or self._measurement.counted_usage(
-            target, plan.record.input_tokens, result.text
+            target,
+            plan.record.input_tokens,
+            result.text,
+            [p.role for p in plan.parts],
         )
         verdicts = attempts.run_detectors(result, self._detectors)
         return AttemptRecord(

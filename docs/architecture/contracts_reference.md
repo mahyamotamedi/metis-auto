@@ -152,11 +152,14 @@ Token usage of one model call, or an estimate of it.
 | Field | Type | Req. | Privacy | Description |
 |---|---|---|---|---|
 | `model_id` | `Name` | yes | operational | Catalogue model the counts are for. |
-| `input` | `TokenCount` | yes | derived | Input tokens. |
-| `output` | `TokenCount \| None` |  | derived | Output tokens. |
+| `input` | `TokenCount` | yes | derived | Input tokens (all billed input). |
+| `output` | `TokenCount \| None` |  | derived | Output tokens, including reasoning. |
 | `total` | `TokenCount \| None` |  | derived | Total, as reported or summed by accounting. |
-| `cached_input` | `TokenCount \| None` |  | derived | Input tokens billed as cached, if reported. |
-| `reasoning` | `TokenCount \| None` |  | derived | Reasoning tokens, if reported. |
+| `cached_input` | `TokenCount \| None` |  | derived | Part of input billed as cached (provider cache hit), if reported. |
+| `reasoning` | `TokenCount \| None` |  | derived | Part of output that is hidden reasoning, if reported. |
+| `cache_write` | `TokenCount \| None` |  | derived | Part of input billed as a provider cache write, if reported. |
+| `cache_write_ttl` | `Name \| None` |  | operational | Cache-write variant when the price depends on it, e.g. ttl-5m. |
+| `template_overhead` | `TokenCount \| None` |  | derived | Part of a counted input added by the chat template (message framing). |
 
 **Enumerations**
 
@@ -164,7 +167,7 @@ Token usage of one model call, or an estimate of it.
 
 ## `contracts.accounting`
 
-Money, cost, pre-call estimates, and savings (FR-ACCT-02…06, ADR-0002).
+Money, cost, pre-call estimates, baseline estimates, and savings (FR-ACCT-02…06, ADR-0002, ADR-0020).
 
 ### `Money`
 
@@ -188,6 +191,8 @@ A cost figure with its provenance (ADR-0006 point 3).
 | `price_table_version` | `Version \| None` |  | operational | Price table used; required when computed. |
 | `price_refs` | `tuple[Name, ...]` |  | operational | Price entries used. |
 | `token_fidelity` | `Fidelity \| None` |  | operational | Worst fidelity among the counts used. |
+| `price_tier` | `Name \| None` |  | operational | Context tier used, when prices are tiered. |
+| `caveats` | `tuple[CostCaveat, ...]` |  | operational | Known ways the figure may differ from the bill. |
 
 ### `CostEstimate`
 
@@ -212,11 +217,48 @@ Baseline cost minus actual cost, for one baseline (FR-ACCT-05).
 | `baseline_cost` | `Cost` | yes | operational | The baseline's cost. |
 | `actual_cost` | `Cost` | yes | operational | The candidate's cost. |
 
+### `AccountedUsage`
+
+Tokens and cost of one call, actual or estimated: what the accounting service reports for "this request and answer on this model" (MP Stage 7). A baseline estimate names its baseline (brief §5).
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `model_id` | `Name` | yes | operational | Catalogue model. |
+| `usage` | `TokenUsage` | yes | derived | Input, output, total, with fidelity. |
+| `cost` | `Cost` | yes | operational | Cost with provenance and caveats. |
+| `baseline` | `Name \| None` |  | operational | Baseline ID when this is a baseline estimate. |
+
+### `TermValue`
+
+One term: an amount, or not computed with a reason.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `term` | `DecompositionTerm` | yes | operational | Which term. |
+| `status` | `CostStatus` | yes | operational | Computed or not. |
+| `amount` | `Money \| None` |  | operational | Set iff computed. |
+| `reason` | `NotComputedReason \| None` |  | operational | Set iff not computed. |
+
+### `SavingsDecomposition`
+
+Where the money went, per message or per session (brief §6, ADR-0020).
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `scope` | `Name` | yes | operational | message or session. |
+| `messages` | `NonNegInt` | yes | operational | Messages summed (1 or more). |
+| `cache_hits` | `NonNegInt` | yes | operational | Messages served from cache. |
+| `terms` | `tuple[TermValue, ...]` | yes | operational | One per DecompositionTerm, in DECOMPOSITION_ORDER. |
+| `baseline_caveats` | `tuple[CostCaveat, ...]` |  | operational | Caveats of the premium estimate. |
+| `price_table_version` | `Version \| None` |  | operational | Price table used. |
+
 **Enumerations**
 
 - **`CostStatus`**: `computed`, `not_computed`
 - **`NotComputedReason`**: `price_unknown`, `model_unmapped`, `usage_unknown`, `baseline_unset`, `currency_mismatch`, `component_not_computed`
 - **`CostBasis`**: `actual`, `pre_call_estimate`, `avoided_estimate`, `baseline_estimate`. What the cost describes.
+- **`CostCaveat`**: `reasoning_not_counted`, `answer_length_assumed`, `template_overhead_approximated`, `context_tier_boundary_uncertain`, `cached_input_not_reported`. Why a computed cost may differ from the bill (token_accounting.md §5). Shown with the figure; never silently dropped.
+- **`DecompositionTerm`**: `premium_baseline`, `routing_saving`, `compression_saving`, `cache_saving`, `provider_cache_saving`, `extra_cost`, `actually_paid`. Terms of the savings decomposition, in their fixed order (brief §6).
 
 ## `contracts.measurement`
 
@@ -339,7 +381,7 @@ Features of one request. None means unknown (the component's state was unknown),
 
 ## `contracts.reference_data`
 
-Versioned reference data: model catalogue and price table.
+Versioned reference data: model catalogue, price table, chat templates.
 
 ### `Sourced`
 
@@ -396,7 +438,7 @@ One model Metis may route to.
 
 ### `PriceEntry`
 
-Price of one token type for one model. ``amount`` None = unknown, which makes dependent costs "not computed" (FR-ACCT-02).
+Price of one token type for one model, optionally for one context tier.
 
 | Field | Type | Req. | Privacy | Description |
 |---|---|---|---|---|
@@ -407,6 +449,11 @@ Price of one token type for one model. ``amount`` None = unknown, which makes de
 | `currency` | `Currency` | yes | operational | ISO 4217. |
 | `effective_from` | `date \| None` |  | operational | First day the price applies. |
 | `evidence` | `Sourced \| None` |  | operational | Required when amount is set. |
+| `tier` | `Name \| None` |  | operational | Context tier name, e.g. standard, long. |
+| `min_input_tokens` | `NonNegInt \| None` |  | operational | Tier applies from this many input tokens. |
+| `max_input_tokens` | `PosInt \| None` |  | operational | Tier applies up to this many input tokens. |
+| `max_input_tokens_uncertain_up_to` | `PosInt \| None` |  | operational | The source's bound may really be this high (e.g. 270K read as 1,024s); inputs between the two bounds get a cost caveat. |
+| `cache_ttl` | `Name \| None` |  | operational | Cache-write variant, e.g. ttl-5m; cache_write prices only. |
 
 ### `PriceTable`
 
@@ -415,9 +462,24 @@ Price of one token type for one model. ``amount`` None = unknown, which makes de
 | `version` | `Version` | yes | operational | Price-table version ID. |
 | `entries` | `tuple[PriceEntry, ...]` | yes | operational | Prices. |
 
+### `ChatTemplate`
+
+Message-framing tokens a provider adds around the content (the chat template), for counting input that the provider reports none for.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `tokenizer_ref` | `Name` | yes | operational | Tokenizer family it frames. |
+| `version` | `Version` | yes | operational | Template version ID. |
+| `sequence_start` | `NonNegInt` |  | operational | Tokens once per request (e.g. BOS). |
+| `reply_priming` | `NonNegInt` |  | operational | Tokens that open the model's reply. |
+| `role_prefix` | `dict[Name, NonNegInt]` |  | operational | Tokens before each part, by role. |
+| `role_suffix` | `dict[Name, NonNegInt]` |  | operational | Tokens after each part, by role. |
+| `fidelity` | `Fidelity` | yes | operational | How faithful the template is. |
+| `evidence` | `Sourced` | yes | operational | Where the framing comes from. |
+
 **Enumerations**
 
-- **`TokenType`**: `input`, `output`, `cached_input`, `reasoning`
+- **`TokenType`**: `input`, `output`, `cached_input`, `cache_write`, `reasoning`
 
 ## `contracts.routing`
 

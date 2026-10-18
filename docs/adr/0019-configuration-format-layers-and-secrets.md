@@ -46,5 +46,5 @@ Stage 3 fixed the kinds of configuration (defaults, reference data, runtime, exp
 - The walking skeleton's synthetic catalogue and empty price table moved from code to `config/reference/*-synthetic-skeleton.toml`, selected by `config/profiles/walking_skeleton.toml` (Q-27, A-42 closed).
 - The configuration diagram's arrows are now labelled (contracts.md §7).
 - `METIS_FINGERPRINT_KEY` replaces the per-run random key when set (A-44 narrowed).
-- The catalogue and price **schema** stay provisional until Stage 7. Rows the current `PriceTable` cannot represent (context-length tiers) are parsed and kept aside, and that model's cost is "not computed" until then.
+- The catalogue and price **schema** stay provisional until Stage 7. Rows the current `PriceTable` cannot represent (context-length tiers) are parsed and kept aside, and that model's cost is "not computed" until then. **Superseded in Stage 7** by [ADR-0020](0020-token-and-cost-accounting.md): tiers are part of the schema, the pending rows are gone, and `tokenizers.toml` is a fifth reference file.
 - Experiment configuration files (Stage 8) are TOML at layer 3 and get the same rules.

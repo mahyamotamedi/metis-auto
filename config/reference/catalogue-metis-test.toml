@@ -7,26 +7,38 @@
 # - context_window / max_output_tokens: omitted = unknown. Routing excludes a
 #   model with an unknown window (FR-ROUTE-05), so these must be filled with
 #   sourced values before live use (TODO-10, Stage 7.5).
-# - capabilities: none verified yet; unverified = unsupported.
+# - capabilities other than hidden_reasoning_billed_as_output: none verified
+#   yet; unverified = unsupported.
 #
 # tier and equivalence_group are PLACEHOLDERS chosen in Stage 6 by price, not
 # by measured quality (A-48). Groups are failover sets (FR-FAIL-03): all
 # families sit behind one Metis gateway, so cross-family failover does not
 # protect against a Metis outage.
 #
-# tokenizer_ref: the labelled chars/4 approximation until Stage 7 adds exact
-# tokenizers. price_ref: a row in prices-metis-2026-10-18.toml.
+# tokenizer_ref: a row in tokenizers.toml (Stage 7): openai-o200k-base (exact,
+# tiktoken), deepseek-v4 (exact, the model's published tokenizer.json),
+# grok-approx (approximation: no public Grok 4 tokenizer).
+# price_ref: a row in prices-metis-2026-10-18.toml.
+# Capability hidden_reasoning_billed_as_output: the model emits hidden
+# reasoning tokens billed as output, so a cost counted from the visible answer
+# is a lower bound (caveat reasoning_not_counted). Verified only where a source
+# says so; DeepSeek thinking mode and Grok reasoning through the wrapper are
+# unverified (token_accounting.md §5), so they carry no capability.
+#
+# Version history: "cat-metis-test-2026-10-18" (Stage 6); "-s7" (Stage 7)
+# sets tokenizer refs and the reasoning capability.
 
-version = "cat-metis-test-2026-10-18"
+version = "cat-metis-test-2026-10-18-s7"
 
 [[models]]
 model_id = "gpt-5-nano"
 provider = "openai"
 provider_model_name = "gpt-5-nano"
 # Reasoning model: hidden reasoning tokens are billed as output (brief §4).
+capabilities = [{ name = "hidden_reasoning_billed_as_output", verified = true, evidence = { source = "OpenAI reasoning guide https://developers.openai.com/api/docs/guides/reasoning (reasoning tokens 'are billed as output tokens', 'not visible via the API'); model page lists reasoning token support", checked_on = 2026-10-18 } }]
 tier = 0
 equivalence_group = "metis-nano"
-tokenizer_ref = "approx-chars-div-4"
+tokenizer_ref = "openai-o200k-base"
 price_ref = "metis-gpt-5-nano"
 enabled = true
 
@@ -36,7 +48,7 @@ provider = "openai"
 provider_model_name = "gpt-4.1-nano"
 tier = 0
 equivalence_group = "metis-nano"
-tokenizer_ref = "approx-chars-div-4"
+tokenizer_ref = "openai-o200k-base"
 price_ref = "metis-gpt-4.1-nano"
 enabled = true
 
@@ -46,7 +58,7 @@ provider = "openai"
 provider_model_name = "gpt-4o-mini"
 tier = 1
 equivalence_group = "metis-small"
-tokenizer_ref = "approx-chars-div-4"
+tokenizer_ref = "openai-o200k-base"
 price_ref = "metis-gpt-4o-mini"
 enabled = true
 
@@ -58,7 +70,7 @@ provider = "deepseek"
 provider_model_name = "deepseek-v4-flash"
 tier = 1
 equivalence_group = "metis-small"
-tokenizer_ref = "approx-chars-div-4"
+tokenizer_ref = "deepseek-v4"
 price_ref = "metis-deepseek-v4-flash"
 enabled = true
 
@@ -69,7 +81,7 @@ provider = "grok"
 provider_model_name = "grok-4-1-fast"
 tier = 1
 equivalence_group = "metis-small"
-tokenizer_ref = "approx-chars-div-4"
+tokenizer_ref = "grok-approx"
 price_ref = "metis-grok-4-1-fast"
 enabled = true
 
@@ -81,6 +93,8 @@ provider = "openai"
 provider_model_name = "gpt-5.4"
 tier = 2
 equivalence_group = "metis-premium"
-tokenizer_ref = "approx-chars-div-4"
+tokenizer_ref = "openai-o200k-base"
 price_ref = "metis-gpt-5.4"
+# Supports reasoning (model page, checked 2026-10-18; default effort "none").
+capabilities = [{ name = "hidden_reasoning_billed_as_output", verified = true, evidence = { source = "OpenAI reasoning guide https://developers.openai.com/api/docs/guides/reasoning (reasoning tokens 'are billed as output tokens', 'not visible via the API'); model page lists reasoning token support", checked_on = 2026-10-18 } }]
 enabled = false

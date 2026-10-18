@@ -22,7 +22,9 @@ from typing import Any
 from pydantic import Field, SecretBytes, SecretStr, model_validator
 
 from metis_auto.contracts import (
+    ChatTemplate,
     ContractModel,
+    Fidelity,
     ModelCatalogue,
     Name,
     PriceTable,
@@ -39,6 +41,9 @@ class PathSettings(ContractModel):
     run_dir: str = "runs"
     spend_ledger: str = "data/spend/ledger.jsonl"
     recorded_dir: str = "data/recorded"
+    tokenizer_assets: str = "data/tokenizers"
+    """Tokenizer files fetched once by scripts/fetch_tokenizer_assets.py
+    (git-ignored; token_accounting.md §2)."""
 
 
 class LoggingSettings(ContractModel):
@@ -96,6 +101,7 @@ class ReferenceSettings(ContractModel):
     prices: str = "reference/prices-metis-2026-10-18.toml"
     endpoints: str | None = "reference/endpoints-metis.toml"
     baselines: str | None = "reference/baselines.toml"
+    tokenizers: str | None = "reference/tokenizers.toml"
 
 
 class CounterfactualSource(StrEnum):
@@ -235,16 +241,69 @@ class BaselineTable(ContractModel):
     baselines: tuple[BaselineDefinition, ...]
 
 
-class PendingPriceRow(ContractModel):
-    """A price row the current ``PriceTable`` schema cannot represent yet
-    (context-length tiers, cache writes). Parsed and validated, kept aside,
-    never used for costs until Stage 7 extends the schema."""
+class TokenizerBackend(StrEnum):
+    TIKTOKEN = "tiktoken"
+    """OpenAI's tiktoken with a named encoding (adapters.tokenizers)."""
+    HF_TOKENIZERS = "hf_tokenizers"
+    """A Hugging Face ``tokenizer.json`` read with the ``tokenizers`` library."""
+    APPROX_CHARS = "approx_chars"
+    """Characters ÷ ``chars_per_token``: a labelled approximation."""
 
-    price_ref: Name
-    context_tier: Name
-    min_context_tokens: int | None = None
-    max_context_tokens: int | None = None
-    amounts: dict[str, Decimal]
+
+class TokenizerAsset(ContractModel):
+    """A tokenizer file fetched once (scripts/fetch_tokenizer_assets.py) and
+    checked by sha256 before every load. Never downloaded at run time."""
+
+    path: str
+    """Relative to ``paths.tokenizer_assets``."""
+    url: str = Field(pattern=r"^https://")
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    size_bytes: int | None = Field(default=None, gt=0)
+
+
+class TokenizerSpec(ContractModel):
+    """How to count tokens for one tokenizer family (catalogue
+    ``tokenizer_ref``), with its fidelity and evidence (MP§3.8)."""
+
+    ref: Name
+    backend: TokenizerBackend
+    fidelity: Fidelity
+    """``exact_local`` only with an official or vendor-published tokenizer."""
+    evidence: Sourced
+    encoding: str | None = None
+    """tiktoken encoding name (backend ``tiktoken``)."""
+    asset: TokenizerAsset | None = None
+    library: str | None = None
+    """Library and version the asset was checked with, e.g. tiktoken==0.14.0."""
+    chars_per_token: int | None = Field(default=None, gt=0)
+    """Backend ``approx_chars`` only."""
+    template: ChatTemplate | None = None
+    """Chat-template overhead; None = not modelled (not added)."""
+
+    @model_validator(mode="after")
+    def _check(self) -> TokenizerSpec:
+        exact = self.backend != TokenizerBackend.APPROX_CHARS
+        if exact and self.asset is None:
+            raise ValueError(f"tokenizer {self.ref}: backend needs an asset")
+        if self.backend == TokenizerBackend.TIKTOKEN and not self.encoding:
+            raise ValueError(f"tokenizer {self.ref}: tiktoken needs an encoding")
+        if not exact and self.fidelity != Fidelity.APPROXIMATION:
+            raise ValueError(f"tokenizer {self.ref}: approx_chars is an approximation")
+        if not exact and self.chars_per_token is None:
+            raise ValueError(
+                f"tokenizer {self.ref}: approx_chars needs chars_per_token"
+            )
+        if self.template is not None and self.template.tokenizer_ref != self.ref:
+            raise ValueError(f"tokenizer {self.ref}: template is for another ref")
+        return self
+
+
+class TokenizerTable(ContractModel):
+    version: Version
+    tokenizers: tuple[TokenizerSpec, ...]
+
+    def get(self, ref: str) -> TokenizerSpec | None:
+        return next((t for t in self.tokenizers if t.ref == ref), None)
 
 
 @dataclass(frozen=True)
@@ -255,7 +314,7 @@ class ReferenceData:
     prices: PriceTable
     endpoints: EndpointTable | None = None
     baselines: BaselineTable | None = None
-    pending_prices: tuple[PendingPriceRow, ...] = ()
+    tokenizers: TokenizerTable | None = None
 
     def versions(self) -> dict[str, str]:
         found = {"catalogue": self.catalogue.version, "prices": self.prices.version}
@@ -263,6 +322,8 @@ class ReferenceData:
             found["endpoints"] = self.endpoints.version
         if self.baselines is not None:
             found["baselines"] = self.baselines.version
+        if self.tokenizers is not None:
+            found["tokenizers"] = self.tokenizers.version
         return found
 
 

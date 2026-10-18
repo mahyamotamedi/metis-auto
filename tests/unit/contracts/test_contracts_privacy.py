@@ -17,10 +17,12 @@ from pydantic import BaseModel
 import metis_auto.contracts as contracts
 from metis_auto.contracts import (
     PAYLOAD_TYPES,
+    AccountedUsage,
     AttemptState,
     CacheEntry,
     CacheKeyDraft,
     CacheLookupResult,
+    ChatTemplate,
     CompositionRecord,
     ContractModel,
     EvaluationResult,
@@ -31,6 +33,7 @@ from metis_auto.contracts import (
     ResponseMetadata,
     RoutingDecision,
     RunManifest,
+    SavingsDecomposition,
 )
 from metis_auto.contracts._base import field
 from metis_auto.contracts.privacy import content_paths, unclassified_fields
@@ -67,6 +70,9 @@ CONTENT_FREE = [
     AttemptState,
     RequestFeatures,
     CacheKeyDraft,
+    AccountedUsage,
+    SavingsDecomposition,
+    ChatTemplate,
 ]
 
 

@@ -7,6 +7,7 @@ data/full_data/
 data/derived/
 data/recorded/
 data/spend/
+data/tokenizers/
 runs/
 .git/
 .venv/

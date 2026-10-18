@@ -1,6 +1,6 @@
 # Internal Contracts (Stage 4)
 
-Status: conventions and contract set **decided**; individual fields **provisional** (the Stage 5 skeleton now uses them; two additions, §6); catalogue and price shapes **provisional** until Stage 7. Last updated 2026-10-18 (Stage 5: `CacheKeyDraft`, `RequestFeatures.known_input_tokens`, schema 0.2; O-2, O-7, O-9 resolved. Stage 6: O-1 resolved, configuration diagram labelled; no contract changed).
+Status: conventions and contract set **decided**; individual fields **provisional** (the Stage 5 skeleton now uses them; two additions, §6); price schema **decided** in Stage 7 ([ADR-0020](../adr/0020-token-and-cost-accounting.md)); catalogue shape provisional (limits wait for TODO-10). Last updated 2026-10-18 (Stage 5: `CacheKeyDraft`, `RequestFeatures.known_input_tokens`, schema 0.2; O-2, O-7, O-9 resolved. Stage 6: O-1 resolved, configuration diagram labelled; no contract changed. Stage 7: accounting additions, schema 0.3, §6; O-3 resolved except the label mapping).
 Index: [architecture README](README.md). Code: `src/metis_auto/contracts/`. **Field tables:** [contracts_reference.md](contracts_reference.md), generated from the code (a test fails if it is stale). Decisions: [ADR-0017](../adr/0017-contract-modelling-with-pydantic.md) (pydantic), [ADR-0015 amendment 1](../adr/0015-keyed-content-fingerprints.md#amendment-1-2026-10-17-stage-4-the-algorithm) (fingerprint algorithm).
 
 This document answers: **what data crosses each boundary, who produces and consumes it, how sensitive each part is, and how it changes over time?** It fixes the provisional vocabulary of [overview §5](overview.md#5-provisional-contract-vocabulary).
@@ -16,7 +16,7 @@ Field-level detail (type, required or optional, privacy class, description) is i
 **Not in scope here:**
 - **Port method signatures** (`ModelClient.invoke`, `CacheStore.get`, …): defined in Stage 5 in `src/metis_auto/ports/` ([module_reference.md](module_reference.md)). The contracts here are their arguments and return values.
 - **`Settings`**: defined in Stage 6 in `src/metis_auto/settings/model.py`, not here: it is configuration read by wiring, not data passed between components ([ADR-0019](../adr/0019-configuration-format-layers-and-secrets.md) point 6).
-- **Final catalogue and price schema**: Stage 7. The shapes here are provisional but already enforce the no-fabrication rule (§3.3).
+- **How accounting uses these contracts** (tokenizers, inclusion rules, pricing, caveats, the premium estimate, the savings decomposition): [token_accounting.md](token_accounting.md) (Stage 7).
 - **Wire formats** of providers and of the future gateway (FR-API-03). Adapters translate them into these contracts.
 - **Persistent database schema** (NG-02).
 
@@ -95,7 +95,7 @@ Durations are milliseconds from the monotonic clock. Every latency figure names 
 
 | Thing | Version carried in | Rule |
 |---|---|---|
-| The contract schema as a whole | `SCHEMA_VERSION` (now `0.2`; `0.1` → `0.2` in Stage 5 for the two additions in §6) on persisted contracts: `Event`, `CacheEntry`, `RunManifest`, `EvaluationResult`; plus `Versions.contracts` on every event | **While 0.x**, any change bumps the minor version, and data written under another 0.x minor is not guaranteed readable. That is acceptable because runs are self-contained and offline cache state is reset per run. **From 1.0** (proposed after the Stage 10 review, or when the first persisted data must outlive a code change): adding an optional field or an enum value is a minor bump; removing, renaming, retyping, or changing the meaning of a field is a major bump. Readers accept older minors of their own major. There is no forward compatibility: `extra="forbid"` rejects fields from a newer writer. |
+| The contract schema as a whole | `SCHEMA_VERSION` (now `0.3`; `0.1` → `0.2` in Stage 5 and `0.2` → `0.3` in Stage 7, for the additions in §6) on persisted contracts: `Event`, `CacheEntry`, `RunManifest`, `EvaluationResult`; plus `Versions.contracts` on every event | **While 0.x**, any change bumps the minor version, and data written under another 0.x minor is not guaranteed readable. That is acceptable because runs are self-contained and offline cache state is reset per run. **From 1.0** (proposed after the Stage 10 review, or when the first persisted data must outlive a code change): adding an optional field or an enum value is a minor bump; removing, renaming, retyping, or changing the meaning of a field is a major bump. Readers accept older minors of their own major. There is no forward compatibility: `extra="forbid"` rejects fields from a newer writer. |
 | Policies, feature set, key schema, catalogue, price table, embedder, judge | `Versions` (on events, entries, manifests) and `PolicyRef` | Owned by each component, independent of the schema version. A key-schema or embedder change makes old cache entries unreachable by construction (ADR-0011). |
 | Event types | the `EventPayload` union | Adding a type is a minor bump. Removing one is a major bump. |
 | Fingerprint algorithm | the `fp1` / `kid1` prefixes | A change replaces all three prefixes together (ADR-0015 amendment 1). |
@@ -119,15 +119,15 @@ Producers and consumers use the component IDs from [overview §3](overview.md#3-
 | `Request` (`request`) with `Turn`, `RetrievedContext`, `RetrievedItem`, `AttachmentRef`, `TrafficSource`, `Component[T]` | The current message plus optional tri-state components, caller refs, requested model, deadline. **Generic**: no dataset field or role names. | caller; replay-case builder (CMP-18) | CMP-01, then CMP-02, 04, 06, 07 | no | content (message and components); refs; `traffic_source` derived | decided; `traffic_source` **reserved** (§5) | FR-REQ-01…05, P-6, P-8, FR-OBS-04 (document refs and scores) |
 | `RequestMeasurements` (`measurement`) with `ComponentMeasurement`, `MeasurementRecord`, `Embedding`, `EmbedderRef` | Fingerprints, sizes, cheap token estimates, an optional embedding, measured model-based features, and the overhead of each measurement | CMP-02 | CMP-04, CMP-06; records go into `features_extracted` | no | derived and fingerprints; the embedding vector is content | provisional | P-1, FR-FEAT-02, FR-ROUTE-04, FR-SCACHE-05 |
 | `TargetTokenCounts` (`measurement`) | Per-component and per-item token counts with the **target's** tokenizer | CMP-02 | CMP-07; CMP-09 (pre-call estimate) | no | derived | provisional | FR-CTX-01, FR-ACCT-06 |
-| `TokenCount`, `TokenUsage` (`tokens`) | Counts, each with its fidelity and method; usage of one call or an estimate | CMP-02; `ModelClient` (reported) | CMP-09, CMP-07, events | in events | derived | decided | FR-ACCT-01, H-7 |
+| `TokenCount`, `TokenUsage` (`tokens`) | Counts, each with its fidelity and method; usage of one call or an estimate. Inclusion rules: `input` includes cached input, cache writes, and template overhead; `output` includes reasoning ([token_accounting.md §3](token_accounting.md#3-what-is-billed-and-what-is-modelled)) | CMP-02; `ModelClient` (reported) | CMP-09, CMP-07, events | in events | derived | decided | FR-ACCT-01, H-7 |
 | `RequestFeatures` (`features`) | Derived features with the feature-set version; experimental ones in `extra` | CMP-04 | CMP-05, CMP-06, CMP-23 (strata), `features_extracted` | in events | derived, fingerprint (instruction group) | shape decided; feature set provisional | FR-FEAT-01…05 |
 
 ### 3.2 Routing and reference data
 
 | Contract | Purpose | Producer | Consumers | Persisted | Privacy | Status | Traces |
 |---|---|---|---|---|---|---|---|
-| `ModelCatalogue`, `CatalogueEntry`, `Capability`, `Limit`, `Sourced` (`reference_data`) | Models with tier, equivalence group, limits, and capabilities. A capability or limit counts only with evidence (source and check date). | CMP-19 from `config/reference/` (Stage 6) | CMP-05, CMP-07, CMP-08, CMP-09 | config files (versioned) | operational | **provisional (Stage 7)** | FR-ROUTE-05, FR-FAIL-03, FR-CTX-05, MP§3.8 |
-| `PriceTable`, `PriceEntry` (`reference_data`) | Price per token type, unit, currency, effective date, evidence. A missing amount means unknown, so costs come out "not computed". | CMP-19 | CMP-09 | config files | operational | **provisional (Stage 7)** | FR-ACCT-02, ADR-0002 |
+| `ModelCatalogue`, `CatalogueEntry`, `Capability`, `Limit`, `Sourced` (`reference_data`) | Models with tier, equivalence group, limits, and capabilities. A capability or limit counts only with evidence (source and check date). | CMP-19 from `config/reference/` (Stage 6) | CMP-05, CMP-07, CMP-08, CMP-09 | config files (versioned) | operational | provisional (limits: TODO-10; tokenizer table and the reasoning capability: Stage 7) | FR-ROUTE-05, FR-FAIL-03, FR-CTX-05, MP§3.8 |
+| `PriceTable`, `PriceEntry` (`reference_data`) | Price per token type (input, output, cached input, cache write with a TTL variant), unit, currency, effective date, evidence; optional context tier chosen by the call's input tokens (non-overlapping; an uncertain bound can be marked). A missing amount means unknown, so costs come out "not computed". | CMP-19 | CMP-09 | config files | operational | decided (Stage 7, ADR-0020) | FR-ACCT-02, ADR-0002 |
 | `RoutingDecision` (`routing`) with `Exclusion` | Target, group, tier, eligible models, exclusions with reasons, escalation chain, policy version, reason code, features read, re-route constraint, flags | CMP-05 | CMP-01, CMP-06 (group in the key), CMP-08, `routing_decided` | in events | operational | decided | FR-ROUTE-01…06 |
 
 ### 3.3 Caching
@@ -157,7 +157,10 @@ Producers and consumers use the component IDs from [overview §3](overview.md#3-
 | `AttemptState`, `AttemptRecord` (`attempts`) | All the attempt policy may read: decision, finished attempts (content-free records with outcome, usage, cost, verdicts), deadline and budget left, re-route flag | CMP-01 | CMP-08; records go into `attempt_finished` | in events | operational, derived | decided | ADR-0013, FR-CASC-04, FR-FAIL-04 |
 | `AttemptAction` (`attempts`) | Invoke (target and kind, optional backoff), return (which attempt; whether flagged), or fail (`FailureReason`) | CMP-08 | CMP-01 | no | operational | decided | ADR-0013 |
 | `DetectorVerdict` (`attempts`) | Detector, version, evaluated or not, value, threshold, fired | CMP-08 detectors | CMP-01, `escalation_triggered` | in events | derived | decided (shape); detectors open | FR-CASC-02/05 |
-| `Money`, `Cost`, `CostEstimate`, `Savings` (`accounting`) | §2.7 | CMP-09 | CMP-01, CMP-17, events, CMP-23 | in events | operational | decided | FR-ACCT-02…06 |
+| `Money`, `Cost` (with `price_tier`, `caveats`: `CostCaveat`), `CostEstimate`, `Savings` (`accounting`) | §2.7 | CMP-09 | CMP-01, CMP-17, events, CMP-23 | in events | operational | decided | FR-ACCT-02…06 |
+| `AccountedUsage` (`accounting`) | Tokens and cost of one call, actual or estimated; a baseline estimate names its baseline (brief §5) | CMP-09 (`application.accounting`) | scripts, Demo UI, CMP-23 | no | operational, derived | decided (Stage 7) | FR-ACCT-01/02/05 |
+| `SavingsDecomposition`, `TermValue`, `DecompositionTerm` (`accounting`) | The brief §6 terms in a fixed order, plus the `extra_cost` remainder; the validator checks they sum exactly | CMP-09 | Demo UI, CMP-23 | no | operational | decided (Stage 7) | FR-ACCT-04/05, brief §6 |
+| `ChatTemplate` (`reference_data`) | Per-role framing tokens of a tokenizer family, with fidelity and evidence | CMP-19 from `config/reference/tokenizers.toml` | CMP-02, CMP-09 | config files | operational | provisional (A-55, A-56) | FR-ACCT-01 |
 | `SpanTiming` (`response`) with `SPAN_CATEGORY` | Duration of a named span with its source (`measured_local`, `provider_reported`, `recorded`, `simulated`). The span-to-category table says what counts as overhead, model, or end-to-end latency. | CMP-01, CMP-03 | events, `ResponseMetadata`, CMP-23 | in events | operational | decided | ADR-0006 §4, observability §2 |
 | `FinalResponse`, `ResponseMetadata` (`response`) | Status, answer (content), and content-free metadata: served by, model, cache tier and entry, attempts, usage, total, overhead and avoided cost, savings per baseline, spans, counts, flags, failure, versions | CMP-01 | caller; metadata goes into `response_returned` | metadata in events | answer is **content** | decided | FR-API-01, FR-ACCT-03…05, ADR-0010 §6 |
 
@@ -232,6 +235,7 @@ Names kept: all of [overview §5](overview.md#5-provisional-contract-vocabulary)
 | — | `SpanTiming`, `Versions`, `PolicyRef`, `AttemptRecord`, `CompositionRecord`, `Component` | Previously described in prose; now named. |
 | `CacheKey` from the cache policy | **`CacheKeyDraft`** → sealed into `CacheKey` by CMP-02 (Stage 5) | Domain can't fingerprint: the key is a secret held by the measurement service (ADR-0015). |
 | — | **`RequestFeatures.known_input_tokens`** (Stage 5) | The routing context-fit check needs a whole-request estimate; a lower bound when components are unknown. |
+| — | **Stage 7 (schema 0.3):** `TokenUsage.cache_write`, `.cache_write_ttl`, `.template_overhead`; `Cost.price_tier`, `.caveats`; `PriceEntry` tier fields and `cache_ttl`; `TokenType.CACHE_WRITE`; new `ChatTemplate`, `AccountedUsage`, `SavingsDecomposition`, `TermValue`, `DecompositionTerm`, `CostCaveat` | Cached input, cache writes, context tiers, framing overhead, labelled estimates, and the savings decomposition ([ADR-0020](../adr/0020-token-and-cost-accounting.md)). |
 
 The renames are applied to the diagrams (§7).
 
@@ -261,7 +265,7 @@ All 12 Mermaid blocks in `docs/architecture/` were re-parsed with Mermaid 11.4.1
 |---|---|---|
 | O-1 | ~~`Settings` contract (and its secret holder)~~ **Done in Stage 6:** `settings/model.py` (`Settings`, `Secrets`, `LoadedSettings`), [ADR-0019](../adr/0019-configuration-format-layers-and-secrets.md). | Stage 6 |
 | O-2 | ~~Port method signatures~~ **Done in Stage 5:** `src/metis_auto/ports/`. | Stage 5 |
-| O-3 | Final catalogue, price, and label-mapping schema | Stage 7 |
+| O-3 | ~~Final price schema~~ **Done in Stage 7** ([ADR-0020](../adr/0020-token-and-cost-accounting.md)). Still open: the label mapping (logged label → catalogue model) for the as-logged baseline; catalogue limits (TODO-10). | label mapping: Stage 8 |
 | O-4 | ~~Empty values: `present` or `absent`?~~ **Decided 2026-10-18:** empty means `absent`. Validator added (§2.3). Producers apply it. | Stage 5 request builder; Stage 9 sample loader |
 | O-5 | Core feature set beyond the provisional fields | Stage 8 experiments |
 | O-6 | Judge *input* contract (rubric, reference handling) beyond `Request` + `ModelResponse` | Stage 8 judge plan |

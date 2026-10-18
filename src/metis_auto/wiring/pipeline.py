@@ -19,7 +19,13 @@ from metis_auto.adapters.tokenizers import ApproxCharsTokenizer
 from metis_auto.application.events import EventRecorder
 from metis_auto.application.measurement import Fingerprinter, MeasurementService
 from metis_auto.application.pipeline import PipelineConfig, RequestPipeline, SpendGuard
-from metis_auto.contracts import AnswerSource, Identifier, RunMode, Versions
+from metis_auto.contracts import (
+    AnswerSource,
+    ChatTemplate,
+    Identifier,
+    RunMode,
+    Versions,
+)
 from metis_auto.domain.attempts import Detector, EmptyOutputDetector, TruncationDetector
 from metis_auto.domain.context import ContextStrategy, PassThroughStrategy
 from metis_auto.domain.routing import FixedModelPolicy, RoutingConfig, RoutingPolicy
@@ -96,6 +102,7 @@ def build_pipeline(
     ids: IdSource | None = None,
     spend_ledger: SpendLedger | None = None,
     tokenizers: Mapping[str, Tokenizer] | None = None,
+    templates: Mapping[str, ChatTemplate] | None = None,
     config_hash: str | None = None,
 ) -> RequestPipeline:
     """Assemble a pipeline. ``fingerprint_key`` is a secret (ADR-0015): it goes
@@ -109,7 +116,11 @@ def build_pipeline(
         guard = SpendGuard(spend_ledger)
     fingerprinter = Fingerprinter(fingerprint_key)
     measurement = MeasurementService(
-        fingerprinter, clock, ApproxCharsTokenizer(), tokenizers=tokenizers
+        fingerprinter,
+        clock,
+        ApproxCharsTokenizer(),
+        tokenizers=tokenizers,
+        templates=templates,
     )
     routing_policy = _lookup(ROUTING_POLICIES, config.routing.policy, "routing policy")(
         config.routing

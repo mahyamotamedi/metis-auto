@@ -11,13 +11,19 @@
 # = a new file with a new version, never an edit of this one.
 #
 # Amounts are decimal STRINGS (exact), USD per 1,000,000 tokens.
-# Token types: input, output, cached_input. Rows with a context_tier (or a
-# token type the schema lacks, e.g. cache writes) are kept aside as pending
-# until Stage 7 extends the price schema; that model's cost is then
-# "not computed" rather than priced at the wrong tier.
+# Schema (Stage 7, docs/architecture/token_accounting.md §4): token types
+# input, output, cached_input, cache_write (none of these six models lists a
+# cache-write price on the page: OpenAI, DeepSeek, and xAI caching is
+# automatic). A row may carry a context tier (tier, min_input_tokens,
+# max_input_tokens): the tier is chosen by the call's INPUT tokens and then
+# prices every token type of that call.
+# Hidden reasoning tokens are billed as output (no separate price).
 # effective_from: unknown (the page states none).
+#
+# Version history: "prices-metis-2026-10-18" (Stage 6) kept gpt-5.4 aside as
+# pending; "-s7" (Stage 7) adds its tiers. No amount changed.
 
-version = "prices-metis-2026-10-18"
+version = "prices-metis-2026-10-18-s7"
 currency = "USD"
 per_tokens = 1000000
 
@@ -55,19 +61,28 @@ input = "0.22"
 output = "0.55"
 cached_input = "0.11"
 
-# gpt-5.4 has context-length tiers. The page labels the first tier
-# "≤ 270K context"; whether K means 1,000 or 1,024 is unverified (Stage 7).
+# gpt-5.4 has context-length tiers. The Metis page labels the first tier
+# "≤ 270K context". Whether K means 1,000 or 1,024 (270,000 or 276,480 tokens)
+# is not stated, and OpenAI's own model page (checked 2026-10-18) uses a
+# different figure (">272K input tokens ... for the full session"). Chosen
+# reading (conservative, ADR-0020): the cheaper tier ends at 270,000 input
+# tokens, so a call is never priced below the bill; inputs of 270,001-276,480
+# get the caveat context_tier_boundary_uncertain. "Context" is read as the
+# call's input tokens, and the tier prices the whole call (OpenAI's "full
+# session" rule). Re-verify on the next pricing-page check.
 [[prices]]
 price_ref = "metis-gpt-5.4"
-context_tier = "standard"
-max_context_tokens = 270000
+tier = "standard"
+max_input_tokens = 270000
+max_input_tokens_uncertain_up_to = 276480
 input = "2.875"
 output = "17.25"
 cached_input = "0.2875"
 
 [[prices]]
 price_ref = "metis-gpt-5.4"
-context_tier = "long"
+tier = "long"
+min_input_tokens = 270001
 input = "5.75"
 output = "25.875"
 cached_input = "0.575"

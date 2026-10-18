@@ -15,6 +15,7 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 - [architecture/README.md](architecture/README.md): **Stage 3 architecture index**: overview and component catalogue, request lifecycle and data flow, routing, caching, context construction, attempts (escalation and failover), evaluation, configuration, observability, providers, deployment and data. Lists every diagram and the question it answers.
 - [contracts.md](architecture/contracts.md): **Stage 4 internal contracts**: conventions, catalogue (producers, consumers, privacy), versioning, sample tolerance, the reserved `traffic_source`, arrow coverage. Field tables: [contracts_reference.md](architecture/contracts_reference.md) (generated from code).
 - [module_reference.md](architecture/module_reference.md): **Stage 5 module interaction reference** (updated in Stage 6): every module's callers, imports (checked by a test), data, config, kind, and status; the walking skeleton's stage-to-method map; swap points.
+- [token_accounting.md](architecture/token_accounting.md): **Stage 7** token and cost accounting: supported models, methods and fidelity, what is billed and modelled, price schema, caveats, premium-baseline estimate, savings decomposition, measurements.
 
 ## Decision records (`adr/`)
 | ADR | Decision | Status |
@@ -38,6 +39,7 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 | [0017](adr/0017-contract-modelling-with-pydantic.md) | Contracts are pydantic v2 models: frozen, extra fields forbidden, a privacy class on every field | decided (pydantic 2.14.1 locked, Stage 5) |
 | [0018](adr/0018-live-calls-for-development-under-a-lifetime-budget.md) | Live calls for development and testing through the Metis wrapper, under a 20 USD lifetime budget (amends ADR-0003) | decided (per-run cap and tiers provisional) |
 | [0019](adr/0019-configuration-format-layers-and-secrets.md) | Configuration: TOML, six layers, `METIS__` overrides, secrets only from the environment | decided (`Settings` shape provisional) |
+| [0020](adr/0020-token-and-cost-accounting.md) | Token and cost accounting: tokenizers per family as configuration (exact where published, labelled approximation otherwise), strict fidelity, tiered prices ("270K" = 270,000), labelled premium estimate, exact savings decomposition | decided (templates and Grok approximation provisional; Q-31 answered) |
 
 ## Guides
 - [local_development.md](guides/local_development.md): **Stage 6** setup from a fresh clone, smoke test natively and in Docker, configuration in practice, secrets, the live budget and spend ledger.
@@ -45,6 +47,9 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 ## References (external sources, dated)
 - [metis_wrapper_api.md](references/metis_wrapper_api.md): Metis wrapper endpoints and notes, summarised from the docs saved 2026-10-18.
 - [metis_pricing_2026-10-18.csv](references/metis_pricing_2026-10-18.csv): extract of the Metis pricing page saved 2026-10-18 (public prices; structured columns defective for tiered models, see the wrapper summary §3).
+
+## Reports
+- [reports/cost/README.md](../reports/cost/README.md): **Stage 7** overhead with real tokenizers (A-38) and tokenizer-specific size estimates of the sample (estimates, not billed tokens).
 
 ## Experiments
 - *Stage 8:* framework doc and the routing, cache, and context plans, in `docs/experiments/`.

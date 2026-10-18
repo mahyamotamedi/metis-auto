@@ -23,6 +23,7 @@ Status legend: **decided** · **provisional** (working answer, may change with e
 | [contracts.md](contracts.md) | **Stage 4.** Internal contracts: conventions (privacy classes, tri-state components, IDs, fingerprints, time, money, versioning), catalogue with producers and consumers, sample tolerance, reserved `traffic_source`, arrow coverage | conventions decided, fields provisional |
 | [module_reference.md](module_reference.md) | **Stage 5.** Every module: responsibility, callers, imports (checked by a test), data in and out, config, kind, status; swap points | matches the code (tested) |
 | [contracts_reference.md](contracts_reference.md) | **Generated** field reference for every contract (type, required, privacy class, description) and every enumeration | generated; a test fails if stale |
+| [token_accounting.md](token_accounting.md) | **Stage 7.** Token and cost accounting: tokenizers per model with sources and fidelity, what is billed and modelled, price schema (tiers, cache writes), cost caveats, premium-baseline estimate, savings decomposition, measurements | decided (ADR-0020); templates provisional |
 
 ## Diagrams and the question each answers
 

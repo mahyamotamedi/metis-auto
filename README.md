@@ -31,6 +31,7 @@ Python 3.13 from a non-conda interpreter ([ADR-0001](docs/adr/0001-python-toolin
 python3.13 -m venv .venv
 .venv/bin/pip install --require-hashes -r requirements-dev.lock
 .venv/bin/pip install -e . --no-deps
+.venv/bin/python scripts/fetch_tokenizer_assets.py # once: tokenizer files (network, no key)
 .venv/bin/python -m pytest                       # offline; network tests need --run-network
 .venv/bin/python scripts/run_walking_skeleton.py # the pipeline end to end with fakes
 ```

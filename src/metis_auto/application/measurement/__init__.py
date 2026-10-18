@@ -2,6 +2,6 @@
 fingerprint key, taken here and passed to domain as data (P-1)."""
 
 from .fingerprints import Fingerprinter, canonical
-from .service import MeasurementService
+from .service import MeasurementService, request_roles
 
-__all__ = ["Fingerprinter", "MeasurementService", "canonical"]
+__all__ = ["Fingerprinter", "MeasurementService", "canonical", "request_roles"]

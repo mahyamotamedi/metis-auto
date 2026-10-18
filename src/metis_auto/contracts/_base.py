@@ -22,7 +22,7 @@ from pydantic import (
     model_validator,
 )
 
-SCHEMA_VERSION = "0.2"
+SCHEMA_VERSION = "0.3"
 """Version of the contract package. Persisted contracts carry it.
 
 While 0.x, any change bumps the minor version and data written under another

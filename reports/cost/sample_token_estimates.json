@@ -1,0 +1,749 @@
+{
+  "kind": "ESTIMATE: tokenizer-specific sizes of sample text fields, not billed tokens",
+  "generated_on": "2026-10-18",
+  "sample_sha256": "e0f56a2f2340b2ac70bf273e05ee2e9b56126cd3874c0c58659f46b4983549e1",
+  "tokenizers": [
+    {
+      "ref": "openai-o200k-base",
+      "counted_with": "tiktoken-o200k_base@0.14.0",
+      "fidelity": "exact_local"
+    },
+    {
+      "ref": "deepseek-v4",
+      "counted_with": "hf-deepseek-v4-8f9f37ca37fd@0.23.2",
+      "fidelity": "exact_local"
+    },
+    {
+      "ref": "grok-approx",
+      "counted_with": "approx-chars-div-4@1",
+      "fidelity": "approximation"
+    },
+    {
+      "ref": "approx-chars-div-4",
+      "counted_with": "approx-chars-div-4@1",
+      "fidelity": "approximation"
+    }
+  ],
+  "rows": [
+    {
+      "field": "user_message",
+      "script_bucket": "all",
+      "texts": 465,
+      "chars_total": 65922,
+      "chars_median": 29,
+      "openai-o200k-base": {
+        "tokens_total": 20326,
+        "tokens_median": 11,
+        "tokens_p95": 108,
+        "tokens_max": 1505,
+        "tokens_per_1000_chars": 308.3,
+        "chars_div_4_error_pct": -18.1
+      },
+      "deepseek-v4": {
+        "tokens_total": 22570,
+        "tokens_median": 12,
+        "tokens_p95": 120,
+        "tokens_max": 1802,
+        "tokens_per_1000_chars": 342.4,
+        "chars_div_4_error_pct": -26.3
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 16639,
+        "tokens_median": 8,
+        "tokens_p95": 106,
+        "tokens_max": 1167,
+        "tokens_per_1000_chars": 252.4
+      }
+    },
+    {
+      "field": "user_message",
+      "script_bucket": "arabic_script",
+      "texts": 423,
+      "chars_total": 33053,
+      "chars_median": 27,
+      "openai-o200k-base": {
+        "tokens_total": 11799,
+        "tokens_median": 10,
+        "tokens_p95": 70,
+        "tokens_max": 1505,
+        "tokens_per_1000_chars": 357.0,
+        "chars_div_4_error_pct": -28.8
+      },
+      "deepseek-v4": {
+        "tokens_total": 13392,
+        "tokens_median": 12,
+        "tokens_p95": 77,
+        "tokens_max": 1802,
+        "tokens_per_1000_chars": 405.2,
+        "chars_div_4_error_pct": -37.2
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 8405,
+        "tokens_median": 7,
+        "tokens_p95": 48,
+        "tokens_max": 1167,
+        "tokens_per_1000_chars": 254.3
+      }
+    },
+    {
+      "field": "user_message",
+      "script_bucket": "latin_script",
+      "texts": 23,
+      "chars_total": 18074,
+      "chars_median": 278,
+      "openai-o200k-base": {
+        "tokens_total": 4026,
+        "tokens_median": 48,
+        "tokens_p95": 945,
+        "tokens_max": 1112,
+        "tokens_per_1000_chars": 222.8,
+        "chars_div_4_error_pct": 12.4
+      },
+      "deepseek-v4": {
+        "tokens_total": 4300,
+        "tokens_median": 48,
+        "tokens_p95": 1003,
+        "tokens_max": 1225,
+        "tokens_per_1000_chars": 237.9,
+        "chars_div_4_error_pct": 5.3
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 4527,
+        "tokens_median": 70,
+        "tokens_p95": 1043,
+        "tokens_max": 1137,
+        "tokens_per_1000_chars": 250.5
+      }
+    },
+    {
+      "field": "user_message",
+      "script_bucket": "mixed_script",
+      "texts": 17,
+      "chars_total": 14791,
+      "chars_median": 1126,
+      "openai-o200k-base": {
+        "tokens_total": 4493,
+        "tokens_median": 348,
+        "tokens_p95": 568,
+        "tokens_max": 568,
+        "tokens_per_1000_chars": 303.8,
+        "chars_div_4_error_pct": -17.5
+      },
+      "deepseek-v4": {
+        "tokens_total": 4870,
+        "tokens_median": 359,
+        "tokens_p95": 619,
+        "tokens_max": 619,
+        "tokens_per_1000_chars": 329.3,
+        "chars_div_4_error_pct": -23.9
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 3705,
+        "tokens_median": 282,
+        "tokens_p95": 450,
+        "tokens_max": 481,
+        "tokens_per_1000_chars": 250.5
+      }
+    },
+    {
+      "field": "user_message",
+      "script_bucket": "no_letters",
+      "texts": 2,
+      "chars_total": 4,
+      "chars_median": 2.0,
+      "openai-o200k-base": {
+        "tokens_total": 8,
+        "tokens_median": 4.0,
+        "tokens_p95": 4,
+        "tokens_max": 4,
+        "tokens_per_1000_chars": 2000.0,
+        "chars_div_4_error_pct": -75.0
+      },
+      "deepseek-v4": {
+        "tokens_total": 8,
+        "tokens_median": 4.0,
+        "tokens_p95": 4,
+        "tokens_max": 4,
+        "tokens_per_1000_chars": 2000.0,
+        "chars_div_4_error_pct": -75.0
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 2,
+        "tokens_median": 1.0,
+        "tokens_p95": 1,
+        "tokens_max": 1,
+        "tokens_per_1000_chars": 500.0
+      }
+    },
+    {
+      "field": "answer",
+      "script_bucket": "all",
+      "texts": 442,
+      "chars_total": 217271,
+      "chars_median": 210.0,
+      "openai-o200k-base": {
+        "tokens_total": 70333,
+        "tokens_median": 80.0,
+        "tokens_p95": 570,
+        "tokens_max": 3257,
+        "tokens_per_1000_chars": 323.7,
+        "chars_div_4_error_pct": -22.5
+      },
+      "deepseek-v4": {
+        "tokens_total": 81163,
+        "tokens_median": 93.0,
+        "tokens_p95": 687,
+        "tokens_max": 3739,
+        "tokens_per_1000_chars": 373.6,
+        "chars_div_4_error_pct": -32.9
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 54494,
+        "tokens_median": 53.0,
+        "tokens_p95": 442,
+        "tokens_max": 3449,
+        "tokens_per_1000_chars": 250.8
+      }
+    },
+    {
+      "field": "answer",
+      "script_bucket": "arabic_script",
+      "texts": 385,
+      "chars_total": 147281,
+      "chars_median": 207,
+      "openai-o200k-base": {
+        "tokens_total": 51950,
+        "tokens_median": 80,
+        "tokens_p95": 478,
+        "tokens_max": 1493,
+        "tokens_per_1000_chars": 352.7,
+        "chars_div_4_error_pct": -28.8
+      },
+      "deepseek-v4": {
+        "tokens_total": 61090,
+        "tokens_median": 93,
+        "tokens_p95": 572,
+        "tokens_max": 1719,
+        "tokens_per_1000_chars": 414.8,
+        "chars_div_4_error_pct": -39.5
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 36976,
+        "tokens_median": 52,
+        "tokens_p95": 352,
+        "tokens_max": 1096,
+        "tokens_per_1000_chars": 251.1
+      }
+    },
+    {
+      "field": "answer",
+      "script_bucket": "latin_script",
+      "texts": 13,
+      "chars_total": 34713,
+      "chars_median": 225,
+      "openai-o200k-base": {
+        "tokens_total": 7994,
+        "tokens_median": 65,
+        "tokens_p95": 2636,
+        "tokens_max": 2712,
+        "tokens_per_1000_chars": 230.3,
+        "chars_div_4_error_pct": 8.6
+      },
+      "deepseek-v4": {
+        "tokens_total": 8465,
+        "tokens_median": 67,
+        "tokens_p95": 2745,
+        "tokens_max": 2979,
+        "tokens_per_1000_chars": 243.9,
+        "chars_div_4_error_pct": 2.6
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 8684,
+        "tokens_median": 57,
+        "tokens_p95": 2667,
+        "tokens_max": 3449,
+        "tokens_per_1000_chars": 250.2
+      }
+    },
+    {
+      "field": "answer",
+      "script_bucket": "mixed_script",
+      "texts": 41,
+      "chars_total": 35247,
+      "chars_median": 279,
+      "openai-o200k-base": {
+        "tokens_total": 10371,
+        "tokens_median": 88,
+        "tokens_p95": 782,
+        "tokens_max": 3257,
+        "tokens_per_1000_chars": 294.2,
+        "chars_div_4_error_pct": -14.9
+      },
+      "deepseek-v4": {
+        "tokens_total": 11590,
+        "tokens_median": 96,
+        "tokens_p95": 858,
+        "tokens_max": 3739,
+        "tokens_per_1000_chars": 328.8,
+        "chars_div_4_error_pct": -23.9
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 8825,
+        "tokens_median": 70,
+        "tokens_p95": 705,
+        "tokens_max": 2511,
+        "tokens_per_1000_chars": 250.4
+      }
+    },
+    {
+      "field": "answer",
+      "script_bucket": "no_letters",
+      "texts": 3,
+      "chars_total": 30,
+      "chars_median": 10,
+      "openai-o200k-base": {
+        "tokens_total": 18,
+        "tokens_median": 6,
+        "tokens_p95": 6,
+        "tokens_max": 6,
+        "tokens_per_1000_chars": 600.0,
+        "chars_div_4_error_pct": -50.0
+      },
+      "deepseek-v4": {
+        "tokens_total": 18,
+        "tokens_median": 6,
+        "tokens_p95": 6,
+        "tokens_max": 6,
+        "tokens_per_1000_chars": 600.0,
+        "chars_div_4_error_pct": -50.0
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 9,
+        "tokens_median": 3,
+        "tokens_p95": 3,
+        "tokens_max": 3,
+        "tokens_per_1000_chars": 300.0
+      }
+    },
+    {
+      "field": "instructions_all",
+      "script_bucket": "all",
+      "texts": 408,
+      "chars_total": 4813453,
+      "chars_median": 3578.0,
+      "openai-o200k-base": {
+        "tokens_total": 1594963,
+        "tokens_median": 805.0,
+        "tokens_p95": 29480,
+        "tokens_max": 84834,
+        "tokens_per_1000_chars": 331.4,
+        "chars_div_4_error_pct": -24.5
+      },
+      "deepseek-v4": {
+        "tokens_total": 1738011,
+        "tokens_median": 840.0,
+        "tokens_p95": 31797,
+        "tokens_max": 92342,
+        "tokens_per_1000_chars": 361.1,
+        "chars_div_4_error_pct": -30.8
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 1203518,
+        "tokens_median": 895.0,
+        "tokens_p95": 19763,
+        "tokens_max": 67789,
+        "tokens_per_1000_chars": 250.0
+      }
+    },
+    {
+      "field": "instructions_all",
+      "script_bucket": "arabic_script",
+      "texts": 129,
+      "chars_total": 543297,
+      "chars_median": 4481,
+      "openai-o200k-base": {
+        "tokens_total": 177115,
+        "tokens_median": 1435,
+        "tokens_p95": 2691,
+        "tokens_max": 2863,
+        "tokens_per_1000_chars": 326.0,
+        "chars_div_4_error_pct": -23.3
+      },
+      "deepseek-v4": {
+        "tokens_total": 204097,
+        "tokens_median": 1650,
+        "tokens_p95": 3090,
+        "tokens_max": 3308,
+        "tokens_per_1000_chars": 375.7,
+        "chars_div_4_error_pct": -33.4
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 135861,
+        "tokens_median": 1121,
+        "tokens_p95": 1953,
+        "tokens_max": 2034,
+        "tokens_per_1000_chars": 250.1
+      }
+    },
+    {
+      "field": "instructions_all",
+      "script_bucket": "latin_script",
+      "texts": 240,
+      "chars_total": 692876,
+      "chars_median": 3361.0,
+      "openai-o200k-base": {
+        "tokens_total": 159066,
+        "tokens_median": 752.0,
+        "tokens_p95": 1246,
+        "tokens_max": 7998,
+        "tokens_per_1000_chars": 229.6,
+        "chars_div_4_error_pct": 9.0
+      },
+      "deepseek-v4": {
+        "tokens_total": 164339,
+        "tokens_median": 769.0,
+        "tokens_p95": 1285,
+        "tokens_max": 8582,
+        "tokens_per_1000_chars": 237.2,
+        "chars_div_4_error_pct": 5.5
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 173319,
+        "tokens_median": 841.0,
+        "tokens_p95": 1349,
+        "tokens_max": 5963,
+        "tokens_per_1000_chars": 250.1
+      }
+    },
+    {
+      "field": "instructions_all",
+      "script_bucket": "mixed_script",
+      "texts": 39,
+      "chars_total": 3577280,
+      "chars_median": 93998,
+      "openai-o200k-base": {
+        "tokens_total": 1258782,
+        "tokens_median": 33060,
+        "tokens_p95": 84834,
+        "tokens_max": 84834,
+        "tokens_per_1000_chars": 351.9,
+        "chars_div_4_error_pct": -29.0
+      },
+      "deepseek-v4": {
+        "tokens_total": 1369575,
+        "tokens_median": 36300,
+        "tokens_p95": 92342,
+        "tokens_max": 92342,
+        "tokens_per_1000_chars": 382.9,
+        "chars_div_4_error_pct": -34.7
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 894338,
+        "tokens_median": 23500,
+        "tokens_p95": 67789,
+        "tokens_max": 67789,
+        "tokens_per_1000_chars": 250.0
+      }
+    },
+    {
+      "field": "instructions_distinct",
+      "script_bucket": "all",
+      "texts": 78,
+      "chars_total": 1167348,
+      "chars_median": 3472.0,
+      "openai-o200k-base": {
+        "tokens_total": 388346,
+        "tokens_median": 806.0,
+        "tokens_p95": 29480,
+        "tokens_max": 84834,
+        "tokens_per_1000_chars": 332.7,
+        "chars_div_4_error_pct": -24.8
+      },
+      "deepseek-v4": {
+        "tokens_total": 423463,
+        "tokens_median": 873.5,
+        "tokens_p95": 31797,
+        "tokens_max": 92342,
+        "tokens_per_1000_chars": 362.8,
+        "chars_div_4_error_pct": -31.1
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 291868,
+        "tokens_median": 868.5,
+        "tokens_p95": 19763,
+        "tokens_max": 67789,
+        "tokens_per_1000_chars": 250.0
+      }
+    },
+    {
+      "field": "instructions_distinct",
+      "script_bucket": "arabic_script",
+      "texts": 26,
+      "chars_total": 100629,
+      "chars_median": 3422.5,
+      "openai-o200k-base": {
+        "tokens_total": 32526,
+        "tokens_median": 1103.5,
+        "tokens_p95": 2691,
+        "tokens_max": 2863,
+        "tokens_per_1000_chars": 323.2,
+        "chars_div_4_error_pct": -22.6
+      },
+      "deepseek-v4": {
+        "tokens_total": 37640,
+        "tokens_median": 1302.0,
+        "tokens_p95": 3090,
+        "tokens_max": 3308,
+        "tokens_per_1000_chars": 374.0,
+        "chars_div_4_error_pct": -33.1
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 25167,
+        "tokens_median": 856.0,
+        "tokens_p95": 1953,
+        "tokens_max": 2034,
+        "tokens_per_1000_chars": 250.1
+      }
+    },
+    {
+      "field": "instructions_distinct",
+      "script_bucket": "latin_script",
+      "texts": 42,
+      "chars_total": 131830,
+      "chars_median": 3301.0,
+      "openai-o200k-base": {
+        "tokens_total": 32020,
+        "tokens_median": 741.5,
+        "tokens_p95": 1991,
+        "tokens_max": 7998,
+        "tokens_per_1000_chars": 242.9,
+        "chars_div_4_error_pct": 3.0
+      },
+      "deepseek-v4": {
+        "tokens_total": 33309,
+        "tokens_median": 758.5,
+        "tokens_p95": 2070,
+        "tokens_max": 8582,
+        "tokens_per_1000_chars": 252.7,
+        "chars_div_4_error_pct": -1.0
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 32974,
+        "tokens_median": 826.0,
+        "tokens_p95": 2138,
+        "tokens_max": 5963,
+        "tokens_per_1000_chars": 250.1
+      }
+    },
+    {
+      "field": "instructions_distinct",
+      "script_bucket": "mixed_script",
+      "texts": 10,
+      "chars_total": 934889,
+      "chars_median": 71933.5,
+      "openai-o200k-base": {
+        "tokens_total": 323800,
+        "tokens_median": 25279.5,
+        "tokens_p95": 84834,
+        "tokens_max": 84834,
+        "tokens_per_1000_chars": 346.4,
+        "chars_div_4_error_pct": -27.8
+      },
+      "deepseek-v4": {
+        "tokens_total": 352514,
+        "tokens_median": 27617.0,
+        "tokens_p95": 92342,
+        "tokens_max": 92342,
+        "tokens_per_1000_chars": 377.1,
+        "chars_div_4_error_pct": -33.7
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 233727,
+        "tokens_median": 17984.0,
+        "tokens_p95": 67789,
+        "tokens_max": 67789,
+        "tokens_per_1000_chars": 250.0
+      }
+    },
+    {
+      "field": "retrieval_query",
+      "script_bucket": "all",
+      "texts": 71,
+      "chars_total": 2215,
+      "chars_median": 30,
+      "openai-o200k-base": {
+        "tokens_total": 721,
+        "tokens_median": 10,
+        "tokens_p95": 17,
+        "tokens_max": 19,
+        "tokens_per_1000_chars": 325.5,
+        "chars_div_4_error_pct": -19.8
+      },
+      "deepseek-v4": {
+        "tokens_total": 871,
+        "tokens_median": 12,
+        "tokens_p95": 20,
+        "tokens_max": 22,
+        "tokens_per_1000_chars": 393.2,
+        "chars_div_4_error_pct": -33.6
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 578,
+        "tokens_median": 8,
+        "tokens_p95": 13,
+        "tokens_max": 14,
+        "tokens_per_1000_chars": 260.9
+      }
+    },
+    {
+      "field": "retrieval_query",
+      "script_bucket": "arabic_script",
+      "texts": 68,
+      "chars_total": 2103,
+      "chars_median": 30.0,
+      "openai-o200k-base": {
+        "tokens_total": 683,
+        "tokens_median": 9.5,
+        "tokens_p95": 17,
+        "tokens_max": 17,
+        "tokens_per_1000_chars": 324.8,
+        "chars_div_4_error_pct": -19.6
+      },
+      "deepseek-v4": {
+        "tokens_total": 828,
+        "tokens_median": 11.5,
+        "tokens_p95": 20,
+        "tokens_max": 22,
+        "tokens_per_1000_chars": 393.7,
+        "chars_div_4_error_pct": -33.7
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 549,
+        "tokens_median": 8.0,
+        "tokens_p95": 12,
+        "tokens_max": 14,
+        "tokens_per_1000_chars": 261.1
+      }
+    },
+    {
+      "field": "retrieval_query",
+      "script_bucket": "mixed_script",
+      "texts": 3,
+      "chars_total": 112,
+      "chars_median": 50,
+      "openai-o200k-base": {
+        "tokens_total": 38,
+        "tokens_median": 14,
+        "tokens_p95": 19,
+        "tokens_max": 19,
+        "tokens_per_1000_chars": 339.3,
+        "chars_div_4_error_pct": -23.7
+      },
+      "deepseek-v4": {
+        "tokens_total": 43,
+        "tokens_median": 17,
+        "tokens_p95": 20,
+        "tokens_max": 20,
+        "tokens_per_1000_chars": 383.9,
+        "chars_div_4_error_pct": -32.6
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 29,
+        "tokens_median": 13,
+        "tokens_p95": 14,
+        "tokens_max": 14,
+        "tokens_per_1000_chars": 258.9
+      }
+    },
+    {
+      "field": "retrieved_item",
+      "script_bucket": "all",
+      "texts": 345,
+      "chars_total": 132700,
+      "chars_median": 219,
+      "openai-o200k-base": {
+        "tokens_total": 43393,
+        "tokens_median": 68,
+        "tokens_p95": 291,
+        "tokens_max": 380,
+        "tokens_per_1000_chars": 327.0,
+        "chars_div_4_error_pct": -23.3
+      },
+      "deepseek-v4": {
+        "tokens_total": 50451,
+        "tokens_median": 80,
+        "tokens_p95": 329,
+        "tokens_max": 401,
+        "tokens_per_1000_chars": 380.2,
+        "chars_div_4_error_pct": -34.0
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 33291,
+        "tokens_median": 55,
+        "tokens_p95": 201,
+        "tokens_max": 201,
+        "tokens_per_1000_chars": 250.9
+      }
+    },
+    {
+      "field": "retrieved_item",
+      "script_bucket": "arabic_script",
+      "texts": 320,
+      "chars_total": 114295,
+      "chars_median": 210.0,
+      "openai-o200k-base": {
+        "tokens_total": 36876,
+        "tokens_median": 61.5,
+        "tokens_p95": 277,
+        "tokens_max": 372,
+        "tokens_per_1000_chars": 322.6,
+        "chars_div_4_error_pct": -22.2
+      },
+      "deepseek-v4": {
+        "tokens_total": 43213,
+        "tokens_median": 76.0,
+        "tokens_p95": 326,
+        "tokens_max": 388,
+        "tokens_per_1000_chars": 378.1,
+        "chars_div_4_error_pct": -33.6
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 28684,
+        "tokens_median": 53.0,
+        "tokens_p95": 201,
+        "tokens_max": 201,
+        "tokens_per_1000_chars": 251.0
+      }
+    },
+    {
+      "field": "retrieved_item",
+      "script_bucket": "mixed_script",
+      "texts": 25,
+      "chars_total": 18405,
+      "chars_median": 803,
+      "openai-o200k-base": {
+        "tokens_total": 6517,
+        "tokens_median": 276,
+        "tokens_p95": 380,
+        "tokens_max": 380,
+        "tokens_per_1000_chars": 354.1,
+        "chars_div_4_error_pct": -29.3
+      },
+      "deepseek-v4": {
+        "tokens_total": 7238,
+        "tokens_median": 315,
+        "tokens_p95": 401,
+        "tokens_max": 401,
+        "tokens_per_1000_chars": 393.3,
+        "chars_div_4_error_pct": -36.3
+      },
+      "approx-chars-div-4": {
+        "tokens_total": 4607,
+        "tokens_median": 201,
+        "tokens_p95": 201,
+        "tokens_max": 201,
+        "tokens_per_1000_chars": 250.3
+      }
+    }
+  ]
+}

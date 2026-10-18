@@ -37,6 +37,12 @@ Proposal: **pip-tools** compiles a hash-pinned lockfile from `pyproject.toml`:
 - TODO-09 re-checked: pip 26.2.1 can install from `pylock.toml`, still marked experimental, so pip-tools stays and locking stays provisional.
 - Regenerate command: `pip-compile --allow-unsafe --extra=dev --extra=eda --generate-hashes --output-file=requirements-dev.lock --strip-extras pyproject.toml`.
 
+## Update 2026-10-18 (Stage 7): `tokenizers` extra
+- New optional extra **`tokenizers`** (`tiktoken>=0.14,<0.15`, `tokenizers>=0.23,<0.24`), imported only in `adapters/tokenizers/` ([ADR-0020](0020-token-and-cost-accounting.md)). The dev lock includes it; the runtime lock (`requirements.lock`) stays pydantic-only.
+- The dev lock was recompiled **without `--upgrade`**: every existing pin is unchanged; 18 packages were added (tiktoken 0.14.0, tokenizers 0.23.2, huggingface-hub 1.33.0, and their dependencies).
+- **Release-age rule:** every newly locked package is at least two weeks old (released before 2026-10-04, checked on PyPI 2026-10-18). Three newer releases were held back by `constraints-min-age.txt` (committed, commented): tokenizers 0.23.3, filelock 4.2.2, hf-xet 1.7.0.
+- Regenerate command: `pip-compile --allow-unsafe --constraint=constraints-min-age.txt --extra=dev --extra=eda --extra=tokenizers --generate-hashes --output-file=requirements-dev.lock --strip-extras pyproject.toml`.
+
 ## Consequences
 - **Setup TODO:** this machine has no non-conda Python 3.13. Found on 2026-10-14: Anaconda 3.13.5, python.org 3.14, and system 3.9.6. A standalone 3.13 must be installed before the first venv. The Docker image (Stage 6) will use an official `python:3.13` base image.
 - Contributors who use `.vscode` with black must switch their editor to ruff. `.vscode/` is no longer tracked (ADR-0004), so this is per developer.

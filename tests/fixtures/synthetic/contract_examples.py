@@ -19,6 +19,8 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from metis_auto.contracts import (
+    DECOMPOSITION_ORDER,
+    AccountedUsage,
     ActionKind,
     AnswerSource,
     AttachmentRef,
@@ -36,6 +38,7 @@ from metis_auto.contracts import (
     CacheTier,
     Capability,
     CatalogueEntry,
+    ChatTemplate,
     CodeVersion,
     Component,
     ComponentComposition,
@@ -48,6 +51,7 @@ from metis_auto.contracts import (
     ContextPlan,
     Cost,
     CostBasis,
+    CostCaveat,
     CostEstimate,
     CostStatus,
     CounterfactualSource,
@@ -108,6 +112,7 @@ from metis_auto.contracts import (
     RunManifest,
     RunMode,
     Savings,
+    SavingsDecomposition,
     ScopeKind,
     ServedBy,
     Session,
@@ -117,6 +122,7 @@ from metis_auto.contracts import (
     StratumKey,
     StratumResult,
     TargetTokenCounts,
+    TermValue,
     TokenCount,
     TokenType,
     TokenUsage,
@@ -908,6 +914,72 @@ def store_decisions() -> tuple[CacheStoreDecision, ...]:
     )
 
 
+def chat_template() -> ChatTemplate:
+    return ChatTemplate(
+        tokenizer_ref="approx-chars-div-4",
+        version="template-0.0.0-synthetic",
+        sequence_start=1,
+        reply_priming=2,
+        role_prefix={"instructions": 0, "user": 1, "assistant": 2, "retrieved": 0},
+        role_suffix={"instructions": 0, "user": 0, "assistant": 1, "retrieved": 0},
+        fidelity=Fidelity.APPROXIMATION,
+        evidence=SOURCE,
+    )
+
+
+def tiered_price_table() -> PriceTable:
+    def row(token_type: TokenType, amount: str, tier: str, **bounds) -> PriceEntry:
+        return PriceEntry(
+            price_ref="synthetic-tiered-price",
+            token_type=token_type,
+            amount=Decimal(amount),
+            per_tokens=1_000_000,
+            currency="USD",
+            evidence=SOURCE,
+            tier=tier,
+            **bounds,
+        )
+
+    return PriceTable(
+        version="prices-0.0.0-synthetic-tiered",
+        entries=(
+            row(TokenType.INPUT, "1", "standard", max_input_tokens=1000),
+            row(TokenType.OUTPUT, "4", "standard", max_input_tokens=1000),
+            row(TokenType.INPUT, "2", "long", min_input_tokens=1001),
+            row(TokenType.OUTPUT, "6", "long", min_input_tokens=1001),
+        ),
+    )
+
+
+def accounted_usage() -> AccountedUsage:
+    usage = TokenUsage(
+        model_id=MODEL,
+        input=tokens(120),
+        output=tokens(30),
+        total=tokens(150),
+        template_overhead=tokens(5),
+    )
+    cost = computed("0.00024", CostBasis.BASELINE_ESTIMATE).model_copy(
+        update={"caveats": (CostCaveat.ANSWER_LENGTH_ASSUMED,)}
+    )
+    return AccountedUsage(model_id=MODEL, usage=usage, cost=cost, baseline="premium")
+
+
+def savings_decomposition() -> SavingsDecomposition:
+    amounts = ["1.00", "0.70", "0.05", "0", "0.02", "0.01", "0.24"]
+    return SavingsDecomposition(
+        scope="message",
+        messages=1,
+        cache_hits=0,
+        terms=tuple(
+            TermValue(term=t, status=CostStatus.COMPUTED, amount=usd(a))
+            for t, a in zip(DECOMPOSITION_ORDER, amounts, strict=True)
+        ),
+        baseline_caveats=(CostCaveat.ANSWER_LENGTH_ASSUMED,),
+        price_table_version="prices-0.0.0-synthetic",
+    )
+
+
 def all_examples() -> dict[str, object]:
     """Every example, keyed by a readable name. Used by the round-trip tests."""
     examples: dict[str, object] = {
@@ -931,6 +1003,10 @@ def all_examples() -> dict[str, object]:
         "replay_case": replay_case(),
         "evaluation_result": evaluation_result(),
         "run_manifest": run_manifest(),
+        "chat_template": chat_template(),
+        "tiered_price_table": tiered_price_table(),
+        "accounted_usage": accounted_usage(),
+        "savings_decomposition": savings_decomposition(),
     }
     groups = {
         "cache_lookup": cache_lookup_results(),

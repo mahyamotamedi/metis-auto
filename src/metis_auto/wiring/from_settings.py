@@ -16,13 +16,17 @@ import logging
 import secrets
 from dataclasses import dataclass
 
-from metis_auto.adapters.system import FileSpendLedger
+from metis_auto.adapters.system import FileSpendLedger, SystemClock
+from metis_auto.adapters.tokenizers import ApproxCharsTokenizer
+from metis_auto.application.accounting import AccountingService
+from metis_auto.application.measurement import Fingerprinter, MeasurementService
 from metis_auto.application.pipeline import PipelineConfig, RequestPipeline
 from metis_auto.contracts import AnswerSource, Identifier, Money, RunMode
 from metis_auto.ports import CacheStore, Clock, EventSink, IdSource, ModelClient
 from metis_auto.settings import CounterfactualSource, LoadedSettings, SettingsError
 
 from .pipeline import build_pipeline
+from .tokenizers import TokenizerSet, build_tokenizers
 
 log = logging.getLogger(__name__)
 
@@ -106,9 +110,12 @@ def build_pipeline_from_settings(
     run_mode: RunMode,
     clock: Clock | None = None,
     ids: IdSource | None = None,
+    tokenizers: TokenizerSet | None = None,
 ) -> RequestPipeline:
     """``build_pipeline`` from settings. A live client is refused unless
-    ``live_permission`` allows it; it then gets the file ledger."""
+    ``live_permission`` allows it; it then gets the file ledger. Tokenizers
+    come from the tokenizer table (built here unless given)."""
+    tokens = tokenizers or build_tokenizers(loaded)
     ledger = None
     if model_client.source == AnswerSource.LIVE:
         permission = live_permission(loaded)
@@ -126,5 +133,26 @@ def build_pipeline_from_settings(
         clock=clock,
         ids=ids,
         spend_ledger=ledger,
+        tokenizers=tokens.tokenizers,
+        templates=tokens.templates,
         config_hash=loaded.config_hash,
+    )
+
+
+def build_accounting_service(
+    loaded: LoadedSettings, tokenizers: TokenizerSet | None = None
+) -> AccountingService:
+    """Token and cost accounting over the configured catalogue, prices, and
+    tokenizers, outside any pipeline (scripts, the Demo UI). Its measurement
+    service fingerprints nothing that is kept, so it uses a random key."""
+    tokens = tokenizers or build_tokenizers(loaded)
+    measurement = MeasurementService(
+        Fingerprinter(secrets.token_bytes(32)),
+        SystemClock(),
+        ApproxCharsTokenizer(),
+        tokenizers=tokens.tokenizers,
+        templates=tokens.templates,
+    )
+    return AccountingService(
+        measurement, loaded.reference.catalogue, loaded.reference.prices
     )

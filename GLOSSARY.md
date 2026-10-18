@@ -1,6 +1,6 @@
 # Glossary
 
-Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-18 (Stage 5).
+Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-18 (Stage 7).
 
 | Term | Meaning | Avoid |
 |---|---|---|
@@ -57,3 +57,11 @@ Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid t
 | **Config hash** | `cfg1:` + 16 hex of SHA-256 over the non-secret, non-local settings plus reference version IDs; recorded in every event's `Versions`. | "settings ID" |
 | **Spend ledger** | The persistent, cumulative record of live spend (`data/spend/ledger.jsonl`) that enforces the lifetime and per-run caps across all runs ([ADR-0018](docs/adr/0018-live-calls-for-development-under-a-lifetime-budget.md)). | "budget file" |
 | **Metis wrapper** | Metis's direct-to-model endpoints (one API key, one base URL per model family) used for live calls ([metis_wrapper_api.md](docs/references/metis_wrapper_api.md)). | "Metis bot API" (a different product) |
+| **Tokenizer table** | `config/reference/tokenizers.toml`: for each catalogue `tokenizer_ref`, the backend, the pinned file (URL, sha256), the fidelity, the evidence, and the chat template ([token_accounting.md §2](docs/architecture/token_accounting.md)). | — |
+| **Tokenizer asset** | A tokenizer file fetched once by `scripts/fetch_tokenizer_assets.py`, pinned by sha256, stored under `data/tokenizers/` (git-ignored). Never downloaded at run time. | "model download" |
+| **Chat template** | The framing tokens a provider adds around each message (role markers, BOS, reply priming); counted as **template overhead**, an approximation until checked against reported usage. | "prompt template" (that is the instructions) |
+| **Context tier** | A price band chosen by a call's input tokens (e.g. gpt-5.4's ≤ 270,000 and long-context rows); it prices every token type of the call. | "context window" (a model limit) |
+| **Cost caveat** | A code on a computed cost naming a known way it may differ from the bill, e.g. `reasoning_not_counted` (lower bound) or `answer_length_assumed` (baseline estimate). | — |
+| **Premium-baseline estimate** | The premium model's cost on the full, uncompressed context with the served answer re-counted by its tokenizer; never a call (brief §5). | "premium cost" (it is an estimate) |
+| **Savings decomposition** | premium baseline − routing − compression − cache − provider-cache savings + extra cost = actually paid, per message and per session, exact in Decimal (brief §6, ADR-0020). | — |
+| **Extra cost** | The decomposition's remainder: Metis overhead, failed, retried, and escalated attempts, and local-vs-reported count differences. | "error term" |

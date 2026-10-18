@@ -21,3 +21,6 @@ runs/
 # Local runtime configuration and the persistent spend ledger (ADR-0018, ADR-0019)
 config/local.toml
 data/spend/
+
+# Tokenizer files fetched by scripts/fetch_tokenizer_assets.py (Stage 7).
+data/tokenizers/

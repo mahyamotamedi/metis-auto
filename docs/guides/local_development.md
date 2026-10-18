@@ -1,6 +1,6 @@
 # Local development guide
 
-How to set up Metis-Auto from a fresh clone and run the smoke test, natively and in a container, **with no secrets**. Last updated 2026-10-18 (Stage 6).
+How to set up Metis-Auto from a fresh clone and run the smoke test, natively and in a container, **with no secrets**. Last updated 2026-10-18 (Stage 7: tokenizer files).
 
 Background: [configuration.md](../architecture/configuration.md) (layers and rules), [ADR-0019](../adr/0019-configuration-format-layers-and-secrets.md) (format), [ADR-0018](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md) (live calls and the budget), [ADR-0001](../adr/0001-python-tooling.md) (tooling).
 
@@ -13,7 +13,10 @@ git clone <repo-url> metis-auto && cd metis-auto
 /opt/homebrew/bin/python3.13 -m venv .venv        # or any non-conda python3.13
 .venv/bin/pip install --require-hashes -r requirements-dev.lock
 .venv/bin/pip install -e . --no-deps
+.venv/bin/python scripts/fetch_tokenizer_assets.py   # once: tokenizer files (network)
 ```
+
+The last step downloads two public tokenizer files (OpenAI's `o200k_base`, about 3.6 MB; DeepSeek-V4-Flash's `tokenizer.json`, about 6.4 MB) into `data/tokenizers/` (git-ignored), and checks them against the sha256 pinned in `config/reference/tokenizers.toml`. It needs no key and costs nothing. `--check` verifies without downloading. Without the files, counts fall back to the labelled chars/4 approximation and the exact-tokenizer tests skip, saying why ([token_accounting.md §2](../architecture/token_accounting.md#2-tokenizers-supported-models-methods-fidelity)). The libraries come from the `tokenizers` extra, which the dev lock includes.
 
 ## 2. Run the smoke test (no secrets needed)
 
@@ -23,7 +26,7 @@ git clone <repo-url> metis-auto && cd metis-auto
 .venv/bin/python scripts/run_walking_skeleton.py   # prints content-free metadata
 ```
 
-Everything runs offline with fakes. No `.env` is needed: without `METIS_FINGERPRINT_KEY`, a random key is used per process (fingerprints then don't compare across runs, A-44). Network tests are skipped unless you pass `--run-network` (none exist yet).
+Everything runs offline with fakes. No `.env` is needed: without `METIS_FINGERPRINT_KEY`, a random key is used per process (fingerprints then don't compare across runs, A-44). Network tests are skipped unless you pass `--run-network` (none exist yet). Nothing in the suite downloads anything.
 
 Lint and format: `.venv/bin/ruff check . && .venv/bin/ruff format --check .`
 
@@ -35,8 +38,9 @@ Lint and format: `.venv/bin/ruff check . && .venv/bin/ruff format --check .`
 | change something on my machine only | `cp config/local.example.toml config/local.toml` (git-ignored) and edit |
 | override one value for one command | `METIS__LOGGING__LEVEL=DEBUG .venv/bin/python scripts/run_walking_skeleton.py` |
 | keep comparable fingerprints across runs | set `METIS_FINGERPRINT_KEY` in `.env` (generate: `python -c "import secrets; print(secrets.token_hex(32))"`) |
-| change a model, endpoint, or price | edit or add a file in `config/reference/` with a **new version**; prices need a source and check date |
+| change a model, endpoint, price, or tokenizer | edit or add a file in `config/reference/` with a **new version**; prices and tokenizers need a source and check date ([token_accounting.md §4](../architecture/token_accounting.md#4-price-schema)) |
 | see every variable | read `.env.example` |
+| measure the pipeline's overhead | `.venv/bin/python scripts/measure_overhead.py --requests 2000 --tokenizer openai-o200k-base` |
 
 Precedence, lowest first: policy code defaults < `config/defaults.toml` < experiment file < `config/local.toml` < `METIS__*` environment (process, then `.env`) < caller overrides. Each run prints its `config_hash` and the layers it used.
 
@@ -68,6 +72,7 @@ docker build --target runtime -t metis-auto:runtime . && docker run --rm metis-a
 - `.env` is **not** copied into images (`.dockerignore`); Compose passes it at run time if it exists, and works without it.
 - `runs/` and `data/spend/` are bind-mounted, so the container and native runs share **one** spend ledger.
 - The `dev` image contains the committed sample data (it is in the repository). Don't push it to a registry.
+- The images do **not** contain the tokenizer files (`data/tokenizers/` is git-ignored data), so in the container the exact-tokenizer tests skip and counts use the labelled chars/4 approximation (Stage 10 roadmap: a fetch step in the `dev` image).
 - Optional PostgreSQL (Stage 9; nothing uses it yet): set `METIS_DB_PASSWORD` in `.env`, then `docker compose --profile db up -d postgres`. It listens on `127.0.0.1:5432` only.
 - The base image is pinned by digest in the `Dockerfile` (multi-arch, checked 2026-10-18). To update it, pull `python:3.13-slim`, replace the digest, and rerun the commands above.
 - **Verified 2026-10-18** (Docker 29.8.2, Compose v5.5.1, Apple Silicon, linux/arm64): `dev` image smoke test 16/16 and full suite 392/392; `runtime` image runs the walking skeleton with the same config hash as a native run; neither image contains `.env`, `config/local.toml`, or the spend ledger (see progress.md).

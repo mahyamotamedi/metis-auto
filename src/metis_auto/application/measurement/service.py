@@ -3,8 +3,9 @@
 Responsibility: take every measurement domain policies need, using ports or
 the fingerprint key: component fingerprints, sizes, cheap token estimates
 (stage 1), per-target token counts (stage 5), token usage when a client
-reports none (stage 6), and sealing cache keys. Records each measurement's
-method and duration (FR-ROUTE-04 overhead).
+reports none (stage 6, including the target's chat-template overhead), and
+sealing cache keys. Records each measurement's method and duration
+(FR-ROUTE-04 overhead).
 Called by: application.pipeline. Calls: ports ``Tokenizer``, ``Clock``
 (``Embedder`` and model-based features are TODO(Stage 8)); the Fingerprinter.
 Built by: wiring. Traces: P-1, FR-FEAT-02, FR-ACCT-01, FR-CTX-01, ADR-0015.
@@ -12,24 +13,26 @@ Built by: wiring. Traces: P-1, FR-FEAT-02, FR-ACCT-01, FR-CTX-01, ADR-0015.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from metis_auto.contracts import (
     CacheKey,
     CacheKeyDraft,
     CatalogueEntry,
+    ChatTemplate,
     ComponentMeasurement,
     ComponentName,
     ComponentState,
     ComponentTokens,
     MeasurementRecord,
+    PartRole,
     Request,
     RequestMeasurements,
     TargetTokenCounts,
     TokenCount,
     TokenUsage,
 )
-from metis_auto.domain.accounting import sum_counts
+from metis_auto.domain.accounting import sum_counts, template_overhead, with_overhead
 from metis_auto.ports import Clock, Embedder, Tokenizer
 
 from .fingerprints import Fingerprinter, canonical
@@ -43,11 +46,13 @@ class MeasurementService:
         default_tokenizer: Tokenizer,
         tokenizers: Mapping[str, Tokenizer] | None = None,
         embedder: Embedder | None = None,
+        templates: Mapping[str, ChatTemplate] | None = None,
     ) -> None:
         self._fp = fingerprinter
         self._clock = clock
         self._default = default_tokenizer
         self._tokenizers = dict(tokenizers or {})
+        self._templates = dict(templates or {})
         self._embedder = embedder  # TODO(Stage 8): semantic tier and embedding routers
 
     @property
@@ -198,17 +203,47 @@ class MeasurementService:
             )
         return TargetTokenCounts(model_id=target.model_id, components=tuple(components))
 
+    def overhead_for(
+        self, target: CatalogueEntry, roles: Sequence[str]
+    ) -> TokenCount | None:
+        """Chat-template framing tokens for parts with ``roles`` on ``target``;
+        None when its tokenizer has no template (overhead not modelled)."""
+        ref = target.tokenizer_ref
+        return template_overhead(self._templates.get(ref) if ref else None, roles)
+
     def counted_usage(
-        self, target: CatalogueEntry, input_tokens: TokenCount | None, answer: str
+        self,
+        target: CatalogueEntry,
+        input_tokens: TokenCount | None,
+        answer: str,
+        roles: Sequence[str] = (),
     ) -> TokenUsage | None:
         """Usage for a response that reported none: the counted input of the
-        plan plus the answer counted with the target's tokenizer."""
+        plan plus its chat-template overhead, and the answer counted with the
+        target's tokenizer (token_accounting.md §3)."""
         if input_tokens is None:
             return None
+        overhead = self.overhead_for(target, roles)
+        billed_input = with_overhead(input_tokens, overhead)
         output = self.tokenizer_for(target).count(answer)
         return TokenUsage(
             model_id=target.model_id,
-            input=input_tokens,
+            input=billed_input,
             output=output,
-            total=sum_counts((input_tokens, output)),
+            total=sum_counts((billed_input, output)),
+            template_overhead=overhead,
         )
+
+
+def request_roles(request: Request) -> tuple[PartRole, ...]:
+    """Part roles of the full, uncompressed request in pass-through order:
+    instructions, history turns, retrieved items, then the message."""
+    roles: list[PartRole] = []
+    if request.instructions.value:
+        roles.append(PartRole.INSTRUCTIONS)
+    for turn in request.history.value or ():
+        roles.append(PartRole(turn.role.value))
+    if request.retrieved.value:
+        roles.extend(PartRole.RETRIEVED for _ in request.retrieved.value.items)
+    roles.append(PartRole.USER)
+    return tuple(roles)

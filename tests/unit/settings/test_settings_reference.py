@@ -56,10 +56,15 @@ def test_catalogue_has_the_five_test_models_and_the_disabled_premium(reference):
     assert set(entries) == TEST_MODELS | {"gpt-5.4"}
     assert all(entries[m].enabled for m in TEST_MODELS)
     assert entries["gpt-5.4"].enabled is False  # never called
+    reasoning = {"gpt-5-nano", "gpt-5.4"}
     for entry in entries.values():
         # Not verified yet: unknown, never invented (TODO-10).
         assert entry.context_window.value is None
-        assert entry.capabilities == ()
+        names = {c.name for c in entry.capabilities if c.verified}
+        billed = {"hidden_reasoning_billed_as_output"}
+        expected = billed if entry.model_id in reasoning else set()
+        assert names == expected
+        assert all(c.evidence is not None for c in entry.capabilities)
 
 
 def test_every_family_has_an_endpoint_and_gemini_is_deferred(reference):
@@ -89,15 +94,78 @@ def test_test_model_prices_match_the_source(reference, model):
     assert set(configured) == {"input", "output", "cached_input"}
 
 
-def test_tiered_premium_prices_are_pending_and_match_the_source(reference):
-    rows = [r for r in reference.pending_prices if r.price_ref == "metis-gpt-5.4"]
-    assert {r.context_tier for r in rows} == {"standard", "long"}
+def test_tiered_premium_prices_match_the_source(reference):
+    rows = [p for p in reference.prices.entries if p.price_ref == "metis-gpt-5.4"]
     standard, long = raw_prices("gpt-5.4")
-    by_tier = {r.context_tier: r.amounts for r in rows}
-    assert by_tier["standard"] == standard
-    assert by_tier["long"] == long
-    # Not in the usable table: its costs are "not computed" until Stage 7.
-    assert not [p for p in reference.prices.entries if p.price_ref == "metis-gpt-5.4"]
+    by_tier: dict[str, dict[str, Decimal]] = {}
+    for row in rows:
+        by_tier.setdefault(row.tier, {})[row.token_type.value] = row.amount
+    assert by_tier == {"standard": standard, "long": long}
+    # Conservative reading of "≤ 270K" (ADR-0020): 270,000, with the 1,024
+    # reading flagged as uncertain; the long tier starts right after.
+    for row in rows:
+        if row.tier == "standard":
+            assert (row.min_input_tokens, row.max_input_tokens) == (None, 270_000)
+            assert row.max_input_tokens_uncertain_up_to == 276_480
+        else:
+            assert (row.min_input_tokens, row.max_input_tokens) == (270_001, None)
+
+
+def test_cache_write_variants_and_unknown_keys(tmp_path):
+    head = (
+        'version = "x"\ncurrency = "USD"\nper_tokens = 1000000\n'
+        '[evidence]\nsource = "SYNTHETIC"\nchecked_on = 2026-10-18\n'
+    )
+    path = tmp_path / "p.toml"
+    path.write_text(
+        head + '[[prices]]\nprice_ref = "a"\ninput = "1"\noutput = "2"\n'
+        'cache_write = { "ttl-5m" = "1.25", "ttl-1h" = "2" }\n'
+    )
+    writes = {
+        p.cache_ttl: p.amount
+        for p in read_prices(path).entries
+        if p.token_type == TokenType.CACHE_WRITE
+    }
+    assert writes == {"ttl-5m": Decimal("1.25"), "ttl-1h": Decimal("2")}
+    path.write_text(head + '[[prices]]\nprice_ref = "a"\nsearch_query = "1"\n')
+    with pytest.raises(ReferenceDataError, match="unknown keys"):
+        read_prices(path)
+
+
+def test_overlapping_tiers_are_refused(tmp_path):
+    path = tmp_path / "p.toml"
+    path.write_text(
+        'version = "x"\ncurrency = "USD"\nper_tokens = 1000000\n'
+        '[evidence]\nsource = "SYNTHETIC"\nchecked_on = 2026-10-18\n'
+        '[[prices]]\nprice_ref = "a"\ntier = "s"\nmax_input_tokens = 100\n'
+        'input = "1"\noutput = "2"\n'
+        '[[prices]]\nprice_ref = "a"\ntier = "l"\nmin_input_tokens = 100\n'
+        'input = "2"\noutput = "3"\n'
+    )
+    with pytest.raises(ReferenceDataError, match="overlapping"):
+        read_prices(path)
+
+
+def test_tokenizer_table_covers_the_catalogue(reference):
+    table = reference.tokenizers
+    for entry in reference.catalogue.entries:
+        spec = table.get(entry.tokenizer_ref)
+        assert spec is not None, entry.model_id
+        assert spec.evidence.checked_on.isoformat() == "2026-10-18"
+    exact = {t.ref for t in table.tokenizers if t.fidelity == "exact_local"}
+    assert exact == {"openai-o200k-base", "deepseek-v4"}
+    # Templates are never claimed exact before a provider-reported check.
+    assert all(
+        t.template.fidelity == "approximation" for t in table.tokenizers if t.template
+    )
+
+
+def test_unknown_tokenizer_ref_is_refused(tmp_path):
+    cfg = copy_config(tmp_path)
+    cat = cfg / "reference/catalogue-metis-test.toml"
+    cat.write_text(cat.read_text().replace('"grok-approx"', '"no-such-tokenizer"'))
+    with pytest.raises(ReferenceDataError, match="no-such-tokenizer"):
+        load_settings(config_dir=cfg, environ={}, dotenv=None, runtime=None)
 
 
 def test_prices_carry_evidence(reference):
