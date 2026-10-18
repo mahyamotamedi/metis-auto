@@ -15,7 +15,7 @@ Status legend: **decided** · **provisional** (working answer, may change with e
 | [context_construction.md](context_construction.md) | Building and reducing context; overflow | reference decided, strategies open |
 | [attempts.md](attempts.md) | Retries, failover, escalation; unsatisfactory-response detection | model decided, detectors open |
 | [evaluation.md](evaluation.md) | Offline replay, counterfactual sources, baselines, metrics, judges | structure decided |
-| [configuration.md](configuration.md) | Defaults, reference data, runtime, experiment, overrides, secrets | layers decided |
+| [configuration.md](configuration.md) | Defaults, reference data, runtime, experiment, overrides, secrets; Stage 6 mechanism (TOML, `METIS__` overrides, layer rules) | decided (ADR-0019) |
 | [observability.md](observability.md) | Correlation IDs, spans, event types, dashboard derivation, full-dataset field coverage | approach decided |
 | [providers.md](providers.md) | `ModelClient` port, adapters, error taxonomy, catalogue fields, other external ports | port decided |
 | [deployment_and_data.md](deployment_and_data.md) | Local-development assumptions, future deployment view, future database extension points | local decided, future provisional |
@@ -43,7 +43,7 @@ Status legend: **decided** · **provisional** (working answer, may change with e
 
 Added beyond the master prompt's list: **context construction** (its overflow branches are easy to get wrong in prose) and **configuration** (precedence and the separate secrets path). No expected view was dropped.
 
-Every data arrow is labelled with a Stage 4 contract name or a call whose arguments are contracts. The audit, with its two documented non-contract flows and the configuration diagram deferred to Stage 6, is in [contracts.md §7](contracts.md#7-every-arrow-is-labelled-with-a-contract-exit-criterion).
+Every data arrow is labelled with a Stage 4 contract name or a call whose arguments are contracts. The audit, with its two documented non-contract flows (the configuration diagram was labelled in Stage 6), is in [contracts.md §7](contracts.md#7-every-arrow-is-labelled-with-a-contract-exit-criterion).
 
 ## Decision records from this stage
 

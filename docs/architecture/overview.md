@@ -117,7 +117,7 @@ Every component has an owner responsibility, inputs, outputs, and dependencies. 
 | CMP-07 | **Context policy** | `domain/context` | Builds the model input from request components for one target: keep, trim, summarise (via a measured summary), drop, order. Applies the overflow rule ([context_construction.md](context_construction.md)). | `Request`, per-component token counts for the target, target limits | `ContextPlan` (input parts + composition record) | contracts only | decided (pass-through reference), open (strategies) | FR-CTX-01…05 |
 | CMP-08 | **Attempt policy** | `domain/attempts` | Decides the next action after each attempt: invoke a target (primary, retry, failover, escalation), return an answer, or fail. Hosts the unsatisfactory-response detectors and how their verdicts are combined ([attempts.md](attempts.md)). | `AttemptState` (decision, chain, attempt outcomes, deadline and budget left) | `AttemptAction`, `DetectorVerdict` | contracts only | decided (model), open (detectors) | FR-CASC-*, FR-FAIL-*, ADR-0013 |
 | CMP-09 | **Accounting** | `domain/accounting` | Cost from usage and prices, request cost totals across attempts and overhead, avoided cost on cache hits, savings against baselines, the pre-call estimate for the spend cap. "Not computed" when a price is unknown. | `TokenUsage`, `PriceTable`, `ModelCatalogue` | `Cost`, `CostEstimate`, `Savings` | contracts only | decided | FR-ACCT-01…07, ADR-0002 |
-| CMP-17 | **Spend guard** | `application/pipeline` | Before every live invocation, compares the pre-call estimate with what is left under the cap; blocks and emits an event when the cap would be exceeded. | `CostEstimate`, ledger balance | allow / block | CMP-09; port `SpendLedger` | decided | ADR-0003, FR-ACCT-06 |
+| CMP-17 | **Spend guard** | `application/pipeline` | Before every live invocation, compares the pre-call estimate with what is left under the tighter of the lifetime and per-run caps (ADR-0018); blocks and emits an event when the cap would be exceeded. | `CostEstimate`, ledger balance | allow / block | CMP-09; port `SpendLedger` | decided | ADR-0003, FR-ACCT-06 |
 
 ### 3.2 Ports and adapters (infrastructure)
 
@@ -130,15 +130,15 @@ Every component has an owner responsibility, inputs, outputs, and dependencies. 
 | CMP-14 | `EventSink` | In-memory, JSON Lines file under `runs/` | Database or metrics/tracing exporter | Durable, ordered delivery of events. | decided (interface) | FR-OBS-06 |
 | CMP-15 | `Judge` | Fake judge | LLM judge (uses a `ModelClient`), human-label import | Scoring an answer on a rubric, with judge ID and version. | provisional | FR-EVAL-05, FR-CASC-02 |
 | CMP-16 | `Clock`, `IdSource` | System clock, fake clock; random and seeded ID sources | — | Wall time (UTC), monotonic durations, IDs. Seeded sources make replay reproducible. | decided | FR-REQ-02, QA-REPRO |
-| CMP-26 | `SpendLedger` | In-memory per run | File or database ledger for cumulative caps | The running total of live spend. | provisional | ADR-0003 |
+| CMP-26 | `SpendLedger` | In-memory per run (tests); **file ledger, cumulative across runs** (Stage 6) | Database ledger | The running total of live spend; lifetime and per-run caps. | provisional | ADR-0003, ADR-0018 |
 
 ### 3.3 Data, configuration, evaluation, composition
 
 | ID | Component | Home | Owns | Inputs | Outputs | Depends on | Status | Traces |
 |---|---|---|---|---|---|---|---|---|
 | CMP-18 | **Data sources** | `data_access` | Reading datasets behind the `DataSource` port. Sample loader (all sample quirks live here), re-implemented pairing heuristic with pairing-quality flags, replay-case builder, synthetic generator; later the full-dataset loader. | dataset paths (config) | `Session`, `ReplayCase` | ports `DataSource` | decided (interface) | FR-DATA-01…08, FR-REQ-03…06 |
-| CMP-19 | **Settings loader** | `settings` | Loading and layering defaults, runtime config, experiment config, overrides, and secrets; validation; config hash ([configuration.md](configuration.md)). | files, environment | `Settings`, `ModelCatalogue`, `PriceTable` | contracts only | decided (layers), provisional (format) | MP§4, ADR-0003 |
-| CMP-20 | **Composition root** | `wiring` | Building pipelines, runners, and data sources from settings. Maps strategy names to promoted components. Refuses to build a live client without a spending cap. | `Settings`, secrets | built objects | every package | decided | QA-REPL, ADR-0003, ADR-0009 |
+| CMP-19 | **Settings loader** | `settings` | Loading and layering defaults, runtime config, experiment config, overrides, and secrets; validation; config hash ([configuration.md](configuration.md)). | files, environment | `LoadedSettings` (`Settings`, `Secrets`, `ReferenceData` with `ModelCatalogue`, `PriceTable`) | contracts only | decided (layers, TOML format, ADR-0019); `Settings` shape provisional | MP§4, ADR-0003, ADR-0018, ADR-0019 |
+| CMP-20 | **Composition root** | `wiring` | Building pipelines, runners, and data sources from settings. Maps strategy names to promoted components. Refuses to build a live client unless both keys, both caps, and the API key are present (ADR-0018). | `LoadedSettings` | built objects | every package | decided | QA-REPL, ADR-0003, ADR-0009 |
 | CMP-21 | **Replay harness** | `evaluation/replay` | Feeding `ReplayCase`s to a pipeline in session and time order without look-ahead; attaching references; recording counterfactual coverage ([evaluation.md](evaluation.md)). | `ReplayCase` stream, pipeline factory | per-case outcomes, events | `application`, ports | decided | FR-EVAL-01, FR-REQ-06, ADR-0014 |
 | CMP-22 | **Baselines** | `evaluation/baselines` | As-logged (computed from the case) and premium (fixed-model pipeline). "Not computed" when unset. | `ReplayCase`, settings | baseline outcomes | CMP-09, CMP-02 | decided | FR-EVAL-02, ADR-0002 |
 | CMP-23 | **Metrics and aggregates** | `evaluation/metrics` | Computing ADR-0006 metrics and FR-OBS-05 aggregates from events, overall and per stratum, with sample sizes and intervals. | events, references, judge scores | `EvaluationResult` | ports `Judge`, `Embedder` | decided | FR-EVAL-03, 06, 09, FR-OBS-05 |
@@ -196,7 +196,7 @@ flowchart TD
 
 ## 5. Provisional contract vocabulary
 
-**Fixed in Stage 4:** [contracts.md](contracts.md) defines every name below (except `Settings`, Stage 6), with fields in the generated [contracts_reference.md](contracts_reference.md). Its §6 lists the renames and additions (`ModelNoAnswer`, `TargetTokenCounts`, `IndexMatch`, `CacheStoreDecision`, `EventPayload`, `JudgeScore`); the diagrams use the Stage 4 names. The table is kept as the Stage 3 record.
+**Fixed in Stage 4:** [contracts.md](contracts.md) defines every name below (except `Settings`, defined in `settings` in Stage 6), with fields in the generated [contracts_reference.md](contracts_reference.md). Its §6 lists the renames and additions (`ModelNoAnswer`, `TargetTokenCounts`, `IndexMatch`, `CacheStoreDecision`, `EventPayload`, `JudgeScore`); the diagrams use the Stage 4 names. The table is kept as the Stage 3 record.
 
 The flow documents label arrows with these names.
 
@@ -220,7 +220,7 @@ The flow documents label arrows with these names.
 | `Event` | Envelope (IDs, type, time, span, versions, run mode) plus a typed, content-free payload ([observability.md](observability.md)). | CMP-03 | EventSink, CMP-23 |
 | `Session`, `ReplayCase` | A logged session; one replayable request with its reference answer(s), pairing flag, and logged metadata. | CMP-18 | CMP-21, CMP-25 |
 | `EvaluationResult`, `RunManifest` | Metrics per stratum with sizes and states; run identity and versions. | CMP-23, CMP-24 | reports |
-| `Settings` | Validated, frozen configuration plus config hash; secrets held separately. **Stage 6** (contracts.md O-1). | CMP-19 | CMP-20 |
+| `Settings` | Validated, frozen configuration plus config hash; secrets held separately. **Done in Stage 6**: `settings/model.py` (ADR-0019). | CMP-19 | CMP-20 |
 
 ---
 

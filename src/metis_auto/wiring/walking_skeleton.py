@@ -1,111 +1,48 @@
-"""Walking skeleton (Stage 5): the whole pipeline offline, with fakes.
+"""Walking skeleton (Stage 5; config moved to files in Stage 6).
 
 Responsibility: build a runnable pipeline from **synthetic** reference data —
-a placeholder catalogue (not real models) and a price table with no amounts,
-so every cost comes out "not computed" — with the fake model client, the
-in-memory cache store, and an in-memory event sink. No network, no keys.
+a placeholder catalogue (not real models) and an empty price table, so every
+cost comes out "not computed" — with the fake model client, the in-memory
+cache store, and an in-memory event sink. No network, no keys.
+The reference data and routing come from ``config/profiles/walking_skeleton.toml``
+(loaded at the experiment layer over ``config/defaults.toml``, ADR-0019).
 Called by: scripts/run_walking_skeleton.py, tests/integration.
-Calls: wiring.pipeline, adapters.
-
-TODO(Stage 6): the synthetic catalogue and prices move to ``config/`` once the
-file format and the settings loader exist; the fingerprint key then comes
-from the environment through settings.
+Calls: settings, wiring.from_settings, wiring.pipeline, adapters.
 """
 
 from __future__ import annotations
 
-from datetime import date
+from collections.abc import Mapping
 
 from metis_auto.adapters.providers import FakeModelClient
 from metis_auto.adapters.sinks import InMemoryEventSink
 from metis_auto.adapters.stores import InMemoryCacheStore
 from metis_auto.application.pipeline import PipelineConfig, RequestPipeline
-from metis_auto.contracts import (
-    Capability,
-    CatalogueEntry,
-    Component,
-    Limit,
-    ModelCatalogue,
-    PriceEntry,
-    PriceTable,
-    Request,
-    Role,
-    RunMode,
-    Sourced,
-    TokenType,
-    Turn,
-)
-from metis_auto.domain.routing import FixedModelConfig, RoutingConfig
+from metis_auto.contracts import Component, Request, Role, RunMode, Turn
 from metis_auto.ports import CacheStore, Clock, EventSink, IdSource, ModelClient
+from metis_auto.settings import LoadedSettings, default_config_dir, load_settings
 
+from .from_settings import pipeline_config
 from .pipeline import build_pipeline
 
 SYNTHETIC = "[SYNTHETIC]"
-_EVIDENCE = Sourced(
-    source="SYNTHETIC walking-skeleton placeholder, not a real model",
-    checked_on=date(2026, 10, 18),
-)
+PROFILE = "profiles/walking_skeleton.toml"
 
 
-def _entry(model_id: str, provider: str, tier: int, group: str) -> CatalogueEntry:
-    return CatalogueEntry(
-        model_id=model_id,
-        provider=provider,
-        provider_model_name=f"{model_id}-synthetic",
-        tier=tier,
-        equivalence_group=group,
-        context_window=Limit(value=16_000, evidence=_EVIDENCE),
-        max_output_tokens=Limit(value=1_000, evidence=_EVIDENCE),
-        capabilities=(Capability(name="image_input", verified=False),),
-        tokenizer_ref="approx-chars-div-4",
-        price_ref=f"{model_id}-price",
-        enabled=True,
-    )
-
-
-def synthetic_catalogue() -> ModelCatalogue:
-    """Two tiers; tier 0 has two equivalent models on different providers, so
-    failover and escalation are both exercisable."""
-    return ModelCatalogue(
-        version="cat-synthetic-skeleton-1",
-        entries=(
-            _entry("synthetic-small-a", "synthetic-provider-a", 0, "synthetic-tier0"),
-            _entry("synthetic-small-b", "synthetic-provider-b", 0, "synthetic-tier0"),
-            _entry("synthetic-large", "synthetic-provider-a", 1, "synthetic-tier1"),
-        ),
-    )
-
-
-def placeholder_prices(catalogue: ModelCatalogue) -> PriceTable:
-    """Prices with **no amounts**: unknown, so costs are "not computed"
-    (FR-ACCT-02). Real prices arrive in Stage 7 with sources and dates."""
-    return PriceTable(
-        version="prices-placeholder-1",
-        entries=tuple(
-            PriceEntry(
-                price_ref=e.price_ref,
-                token_type=t,
-                per_tokens=1_000_000,
-                currency="USD",
-            )
-            for e in catalogue.entries
-            if e.price_ref
-            for t in (TokenType.INPUT, TokenType.OUTPUT)
-        ),
-    )
+def skeleton_settings(
+    *, hermetic: bool = True, environ: Mapping[str, str] | None = None
+) -> LoadedSettings:
+    """Defaults plus the walking-skeleton profile. ``hermetic`` (tests) ignores
+    the environment, ``.env``, and ``config/local.toml``; the script loads them
+    so ``METIS_FINGERPRINT_KEY`` and logging settings apply."""
+    profile = default_config_dir(environ) / PROFILE
+    if hermetic:
+        return load_settings(experiment=profile, environ={}, dotenv=None, runtime=None)
+    return load_settings(experiment=profile, environ=environ)
 
 
 def skeleton_config() -> PipelineConfig:
-    catalogue = synthetic_catalogue()
-    return PipelineConfig(
-        catalogue=catalogue,
-        prices=placeholder_prices(catalogue),
-        routing=RoutingConfig(
-            policy="fixed_model",
-            fixed_model=FixedModelConfig(model_id="synthetic-small-a"),
-            chain=("synthetic-large",),
-        ),
-    )
+    return pipeline_config(skeleton_settings())
 
 
 def build_walking_skeleton(
@@ -118,6 +55,7 @@ def build_walking_skeleton(
     clock: Clock | None = None,
     ids: IdSource | None = None,
     run_id: str = "run-walking-skeleton",
+    config_hash: str | None = None,
 ) -> RequestPipeline:
     return build_pipeline(
         config or skeleton_config(),
@@ -129,6 +67,7 @@ def build_walking_skeleton(
         run_mode=RunMode.SIMULATED,
         clock=clock,
         ids=ids,
+        config_hash=config_hash,
     )
 
 

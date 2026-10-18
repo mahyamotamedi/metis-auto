@@ -18,12 +18,14 @@ metis-auto/
 ├── README.md                     project overview → points here
 ├── metis_claude_code_master_prompt.md   engagement brief for agents (stays at root, ADR-0009)
 ├── pyproject.toml, *.lock        (Stage 5) packaging, deps, ruff, pytest config; pip-tools lockfiles (ADR-0001)
-├── Dockerfile, compose.yaml      (later, Stage 6) local-dev containers
-├── .env.example                  (later, Stage 6) placeholders only, no secrets
+├── Dockerfile, compose.yaml, .dockerignore   (Stage 6) local-dev containers (guide: docs/guides/)
+├── .env.example                  (Stage 6) every variable, placeholders only, no secrets
+├── .env                          (Stage 6, gitignored) local secrets; never committed or read by tools
 │
 ├── src/metis_auto/               the installable package: all reusable and production-path code (§2)
 ├── tests/                        automated tests (§4)
-├── config/                  (new) versioned configuration files: catalogue, prices, defaults (§5)
+├── config/                  (new) versioned configuration (§5): defaults.toml, reference/, profiles/;
+│                                 local.toml is gitignored (Stage 6)
 ├── experiments/                  experiment definitions and notebooks (§6)
 │   ├── sample_eda/               existing sample EDA. Preliminary and frozen (ADR-0008)
 │   ├── full_eda/            (new) full-dataset EDA notebooks (ADR-0008 home)
@@ -35,7 +37,8 @@ metis-auto/
 │   ├── sample_data/raw/          read-only sample (existing)
 │   ├── full_data/           (later, gitignored) the full anonymised dataset
 │   ├── derived/             (later, gitignored) intermediate derived data
-│   └── recorded/            (later, gitignored) recorded live-model responses
+│   ├── recorded/            (later, gitignored) recorded live-model responses
+│   └── spend/               (Stage 6, gitignored) persistent spend ledger; never delete (ADR-0018)
 ├── runs/                    (later, gitignored) per-run records written by the experiment runner
 └── docs/                         documentation (§9)
     ├── README.md            (new) index of all docs
@@ -43,7 +46,8 @@ metis-auto/
     ├── architecture/        (new) this file; Stage 3 architecture docs; Stage 4 contracts doc
     ├── adr/                      decision records
     ├── experiments/         (later, Stage 8) experiment framework doc and plans
-    ├── guides/              (later, Stage 6) local-dev guide, config guide
+    ├── guides/                   (Stage 6) how-to guides: local development
+    ├── references/               (Stage 6) external source extracts with save dates (Metis prices, wrapper API)
     ├── brief/                    project brief PDF
     ├── agents/                   agent-skill conventions (stays here, ADR-0009)
     ├── sample_eda/               sample EDA write-up (preliminary)
@@ -56,7 +60,7 @@ No existing file or directory was moved, renamed, or deleted in this stage.
 - Future network gateway (FR-API-03, NG-03): `src/metis_auto/gateway/`, an external-API adapter layer over `application` that has the same import rights as `wiring` (§3).
 - Dashboard (FR-FIN-02, NG-05): a separate consumer of events. It reads event sinks and aggregates and never touches the request path. Its location is decided when Action 3 returns.
 - `infra/`: created only when infrastructure files exist beyond the root `Dockerfile` and `compose.yaml`, for example PostgreSQL init scripts in Stage 9.
-- `scripts/`: thin command-line wrappers. Created in Stage 5 for `run_walking_skeleton.py`. A script contains no logic. It parses arguments, calls `wiring`, and writes outputs.
+- `scripts/`: thin command-line wrappers. Created in Stage 5 for `run_walking_skeleton.py`; Stage 6 adds `show_budget.py`. A script contains no logic. It parses arguments, calls `wiring`, and writes outputs.
 
 ---
 
@@ -187,9 +191,9 @@ Rules (QA-TEST, ADR-0003):
 
 `config/` holds **versioned configuration data**, not code. Examples: the model catalogue with equivalence groups (FR-FAIL-03), price tables with source and check date (FR-ACCT-02), the label→model mapping (FR-ACCT-07), application defaults (strategy selection, thresholds), and baseline definitions (ADR-0002).
 
-- **Never secrets.** Secrets come from the environment or an untracked `.env` (Stage 6).
+- **Never secrets.** Secrets come from the environment or an untracked `.env` (template `.env.example`). The loader rejects a secret-like key in any config file.
 - **Experiment configuration** lives with its experiment (§6). It *overrides* defaults and never copies them.
-- The file format, layering, and precedence are decided in Stage 6. The catalogue and price schema is decided in Stage 7.
+- **Decided in Stage 6** ([ADR-0019](../adr/0019-configuration-format-layers-and-secrets.md)): TOML; `defaults.toml` (application defaults), `reference/` (catalogue, prices, endpoints, baselines; each file versioned), `profiles/` (run profiles loaded at the experiment layer), `local.toml` (gitignored runtime layer; template `local.example.toml`). Precedence and layer rules: [configuration.md](configuration.md). The catalogue and price **schema** is finalised in Stage 7.
 
 ---
 
@@ -238,8 +242,9 @@ Code that several experiments need but that is not itself a strategy (for exampl
 | `data/full_data/` | **no** (gitignored; decided, Q-18) | The full dataset when it arrives. It is large and sensitive, and is distributed out of band. Its hash goes in run manifests. |
 | `data/derived/` | **no** | Intermediate derived data that may still hold content (e.g. normalised text for cache experiments). |
 | `data/recorded/` | **no** | Responses recorded from opt-in live calls on dataset prompts. These are model outputs about real content, so they are treated as sensitive. |
+| `data/spend/` | **no** | The persistent, cumulative spend ledger for live calls (Stage 6, ADR-0018). Amounts and run IDs only, no content. **Never delete it**: that resets the lifetime budget total. Read and written only by the spend-ledger adapter. |
 
-Only `data_access` (and `scripts` via `wiring`) reads these paths. All other code receives data through the DataSource port. Paths are configuration, not literals.
+Only `data_access` (and `scripts` via `wiring`) reads the dataset paths; `data/spend/` belongs to the spend-ledger adapter. All other code receives data through the DataSource port. Paths are configuration, not literals.
 
 ---
 
@@ -249,7 +254,8 @@ Only `data_access` (and `scripts` via `wiring`) reads these paths. All other cod
 - `docs/project/` holds project state.
 - `docs/architecture/` holds the design: this file, Stage 3 architecture views, the Stage 4 contracts doc, and the Stage 5 module reference.
 - `docs/experiments/` (Stage 8) holds the framework doc and one plan per area. Each experiment's README links to its plan.
-- `docs/guides/` (Stage 6) holds how-to guides.
+- `docs/guides/` (Stage 6) holds how-to guides: [local_development.md](../guides/local_development.md).
+- `docs/references/` (Stage 6) holds dated extracts of external sources the design relies on (the Metis price list, the Metis wrapper API summary). Public material only; no secrets.
 - `docs/agents/` stays where it is. `AGENTS.md` points to it, and the agent-skill conventions it describes expect that path.
 
 ---

@@ -1,4 +1,4 @@
-# Module Interaction Reference (Stage 5)
+# Module Interaction Reference (Stage 5; updated in Stage 6)
 
 Status: **matches the code as of 2026-10-18**. The *Imports* column is checked mechanically by `tests/architecture/test_module_reference.py`: every module under `src/metis_auto/` (except `contracts/` and `__init__.py` re-export files) must have exactly one row, and its *Imports* cell must equal the `metis_auto` sub-packages it imports, outside its own sub-package. Other columns are hand-written; update them in the same change as the code.
 Index: [architecture README](README.md). Components: [overview §3](overview.md#3-component-catalogue). Layers and import rules: [repository_structure.md §3](repository_structure.md#3-dependency-rules).
@@ -7,7 +7,7 @@ This document answers, for every module: **who calls it, what it calls, what dat
 
 ## How to read it
 
-- **Imports (checked):** `metis_auto` sub-packages the module imports, e.g. `domain.accounting`. `contracts` and `ports` are listed as whole packages. Imports inside the module's own sub-package are listed under *Called by / calls* instead.
+- **Imports (checked):** `metis_auto` sub-packages the module imports, e.g. `domain.accounting`. `contracts`, `ports`, and `settings` are listed as whole packages (they have no sub-packages). Imports inside the module's own sub-package are listed under *Called by / calls* instead.
 - **Kind:** *business* (pure decisions, `domain`), *orchestration* (`application`: measures and coordinates), *infrastructure* (`adapters`, `data_access`), *evaluation*, *composition* (`wiring`), *interface* (`ports`).
 - **Status:** *stable* (meant to stay; changes are normal maintenance), *reference* (a decided reference implementation that alternatives are compared against), *provisional* (works; shape may change with evidence), *skeleton* (signature and docstring only; raises `NotImplementedError` with a TODO naming the stage), *test double* (fake for offline use). Nothing under `src/` is experimental: candidates live in `experiments/` until promoted (repository_structure §6.2).
 - **Contracts** (`contracts/*`, 16 modules) are documented in [contracts.md](contracts.md) and [contracts_reference.md](contracts_reference.md). They import nothing internal and are used by every module below.
@@ -88,7 +88,7 @@ Every stage emits its event through `application.events.EventRecorder` → `Even
 | `adapters/judges/fake.py` | 15 | Fixed score or "unmeasured" | built by tests | `contracts` | `Request` + `ModelResponse` → `JudgeScore` | score | infrastructure | test double |
 | `adapters/system/clock.py` | 16 | `SystemClock`, `FakeClock` | built by wiring/tests | — | — → UTC time, ms | start, step | infrastructure | stable |
 | `adapters/system/ids.py` | 16 | UUID and sequential (seeded) ID sources | built by wiring/tests | — | prefix → ID | namespace | infrastructure | stable |
-| `adapters/system/ledger.py` | 26 | Per-run spend ledger | built by wiring for live runs | `contracts` | `Money` → remaining | cap | infrastructure | provisional |
+| `adapters/system/ledger.py` | 26 | `InMemorySpendLedger` (one run, one cap; tests) and `FileSpendLedger`: the **persistent, cumulative** ledger (append-only JSON Lines, file lock; lifetime and per-run caps; warnings at 50/80 %; fails closed on a damaged file) | built by `wiring.from_settings` for live runs; called through the spend guard | `contracts` | `Money` → remaining, `BudgetStatus` | ledger path, caps, `warn_at` | infrastructure | provisional (ADR-0018) |
 
 ## `data_access` — the data layer (CMP-18)
 
@@ -107,18 +107,27 @@ Every stage emits its event through `application.events.EventRecorder` → `Even
 | `evaluation/metrics/aggregate.py` | 23 | ADR-0006 metrics from events plus references | called by the runner | `contracts` | `Event`s + `ReplayCase`s → `EvaluationResult` | — | evaluation | skeleton (Stage 8) |
 | `evaluation/runner/runner.py` | 24 | Run an experiment; write manifest, events, results | called by scripts (Stage 8); gets a pipeline factory | `application.pipeline`, `contracts` | `ReplayCase`s → `EvaluationResult` | experiment config | evaluation | skeleton (Stage 8) |
 
+## `settings` — configuration loading (CMP-19, Stage 6)
+
+| Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
+|---|---|---|---|---|---|---|---|---|
+| `settings/model.py` | 19 | `Settings` (frozen, non-secret; `pipeline` sections opaque), `Secrets` (pydantic secret types), reference-table shapes (`EndpointTable`, `BaselineTable`, `PendingPriceRow`), `ReferenceData`, `LoadedSettings`; cap rules | built by `settings.loader`; read by `wiring` | `contracts` | dicts → typed settings | — | infrastructure | provisional (ADR-0019) |
+| `settings/loader.py` | 19 | Layers and precedence; layer rules (defaults-only ceiling, no runtime sections in experiments, no secret-like keys); `.env` reader; `METIS__` overrides; secrets; config hash | called by scripts, `wiring`, tests; calls `settings.reference` | — | files + environment → `LoadedSettings` | `METIS_CONFIG_DIR`, `METIS_RUNTIME_CONFIG` | infrastructure | provisional (ADR-0019) |
+| `settings/reference.py` | 19 | `config/reference/*.toml` → `ModelCatalogue`, `PriceTable` (+ pending tiered rows), endpoints, baselines; cross-file checks | called by `settings.loader` | `contracts` | TOML → contracts | `[reference]` paths | infrastructure | provisional (schema Stage 7) |
+
 ## `wiring` — composition root (CMP-20)
 
 | Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
 |---|---|---|---|---|---|---|---|---|
-| `wiring/pipeline.py` | 20 | `build_pipeline`; registries of **promoted** routing policies, context strategies, detectors; refuses live without a cap | called by `wiring.walking_skeleton`, tests, (Stage 8) the runner | `adapters.system`, `adapters.tokenizers`, `application.events`, `application.measurement`, `application.pipeline`, `contracts`, `domain.attempts`, `domain.context`, `domain.routing`, `ports` | `PipelineConfig` + adapters + key → `RequestPipeline` | all | composition | provisional (from `Settings` in Stage 6) |
-| `wiring/walking_skeleton.py` | 20 | Synthetic placeholder catalogue and prices (no amounts); fakes; demo requests | called by `scripts/run_walking_skeleton.py`, tests; calls `wiring.pipeline` | `adapters.providers`, `adapters.sinks`, `adapters.stores`, `application.pipeline`, `contracts`, `domain.routing`, `ports` | key → `RequestPipeline` | in code (TODO Stage 6: `config/`) | composition | provisional |
+| `wiring/pipeline.py` | 20 | `build_pipeline`; registries of **promoted** routing policies, context strategies, detectors; refuses live without a cap | called by `wiring.from_settings`, `wiring.walking_skeleton`, tests, (Stage 8) the runner | `adapters.system`, `adapters.tokenizers`, `application.events`, `application.measurement`, `application.pipeline`, `contracts`, `domain.attempts`, `domain.context`, `domain.routing`, `ports` | `PipelineConfig` + adapters + key + config hash → `RequestPipeline` | all | composition | provisional |
+| `wiring/from_settings.py` | 20 | `LoadedSettings` → `PipelineConfig` (policy types validate `[pipeline.*]`), fingerprint key, file spend ledger, `live_permission` (two keys + caps + API key), `build_pipeline_from_settings` | called by scripts, `wiring.walking_skeleton`, tests; calls `wiring.pipeline` | `adapters.system`, `application.pipeline`, `contracts`, `ports`, `settings` | `LoadedSettings` → components | all | composition | provisional (ADR-0018, ADR-0019) |
+| `wiring/walking_skeleton.py` | 20 | Settings from `config/profiles/walking_skeleton.toml` (synthetic catalogue, empty prices); fakes; demo requests | called by `scripts/run_walking_skeleton.py`, tests; calls `wiring.from_settings`, `wiring.pipeline` | `adapters.providers`, `adapters.sinks`, `adapters.stores`, `application.pipeline`, `contracts`, `ports`, `settings` | key → `RequestPipeline` | `config/profiles/walking_skeleton.toml` | composition | provisional |
 
 ## Not yet populated
 
-- `settings` (CMP-19): Stage 6. `wiring` builds `PipelineConfig` in code until then.
 - `analysis` (CMP-25): future, with the full-dataset EDA.
-- `scripts/run_walking_skeleton.py`: the walking-skeleton entry point. Outside the package; parses arguments, calls `wiring`, prints content-free metadata.
+- `scripts/run_walking_skeleton.py`: the walking-skeleton entry point. Outside the package; loads settings, calls `wiring`, prints content-free metadata and the config hash.
+- `scripts/show_budget.py`: prints the live budget (cumulative spend vs caps) and why live calls are blocked. Outside the package; calls `settings` and `wiring.from_settings`. Makes no calls.
 
 ## Swap points (QA-REPL: one interface + one config entry)
 
@@ -127,6 +136,6 @@ Every stage emits its event through `application.events.EventRecorder` → `Even
 | a routing policy | `domain.routing.RoutingPolicy` | `wiring.pipeline.ROUTING_POLICIES` | `routing.policy` |
 | a context strategy | `domain.context.ContextStrategy` | `wiring.pipeline.CONTEXT_STRATEGIES` | `context.strategy` |
 | a detector | `domain.attempts.Detector` | `wiring.pipeline.DETECTORS` | `attempts.detectors` |
-| a model client, store, tokenizer, embedder, sink, judge | the `ports` protocol | passed to `build_pipeline` | runtime config (Stage 6) |
+| a model client, store, tokenizer, embedder, sink, judge | the `ports` protocol | passed to `build_pipeline` | runtime config (Stage 6: `config/`, `METIS__*`; the live adapter factory is Stage 7.5) |
 
 Candidates under test load from `experiments/` through the Stage 8 mechanism; the registries above hold promoted components only.

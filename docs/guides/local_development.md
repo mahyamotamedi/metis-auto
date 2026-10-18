@@ -1,0 +1,79 @@
+# Local development guide
+
+How to set up Metis-Auto from a fresh clone and run the smoke test, natively and in a container, **with no secrets**. Last updated 2026-10-18 (Stage 6).
+
+Background: [configuration.md](../architecture/configuration.md) (layers and rules), [ADR-0019](../adr/0019-configuration-format-layers-and-secrets.md) (format), [ADR-0018](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md) (live calls and the budget), [ADR-0001](../adr/0001-python-tooling.md) (tooling).
+
+## 1. Native setup (Python 3.13 venv)
+
+You need a real Python 3.13 interpreter, **not** conda's (ADR-0001). On macOS with Homebrew: `brew install python@3.13`.
+
+```sh
+git clone <repo-url> metis-auto && cd metis-auto
+/opt/homebrew/bin/python3.13 -m venv .venv        # or any non-conda python3.13
+.venv/bin/pip install --require-hashes -r requirements-dev.lock
+.venv/bin/pip install -e . --no-deps
+```
+
+## 2. Run the smoke test (no secrets needed)
+
+```sh
+.venv/bin/python -m pytest tests/integration -q    # walking skeleton + settings wiring
+.venv/bin/python -m pytest -q                      # the whole suite (offline)
+.venv/bin/python scripts/run_walking_skeleton.py   # prints content-free metadata
+```
+
+Everything runs offline with fakes. No `.env` is needed: without `METIS_FINGERPRINT_KEY`, a random key is used per process (fingerprints then don't compare across runs, A-44). Network tests are skipped unless you pass `--run-network` (none exist yet).
+
+Lint and format: `.venv/bin/ruff check . && .venv/bin/ruff format --check .`
+
+## 3. Configuration in practice
+
+| I want to… | Do this |
+|---|---|
+| see the defaults | read `config/defaults.toml` |
+| change something on my machine only | `cp config/local.example.toml config/local.toml` (git-ignored) and edit |
+| override one value for one command | `METIS__LOGGING__LEVEL=DEBUG .venv/bin/python scripts/run_walking_skeleton.py` |
+| keep comparable fingerprints across runs | set `METIS_FINGERPRINT_KEY` in `.env` (generate: `python -c "import secrets; print(secrets.token_hex(32))"`) |
+| change a model, endpoint, or price | edit or add a file in `config/reference/` with a **new version**; prices need a source and check date |
+| see every variable | read `.env.example` |
+
+Precedence, lowest first: policy code defaults < `config/defaults.toml` < experiment file < `config/local.toml` < `METIS__*` environment (process, then `.env`) < caller overrides. Each run prints its `config_hash` and the layers it used.
+
+## 4. Secrets and the Metis API key
+
+- `.env` is git-ignored. It holds `METIS_API_KEY=` (empty). **Paste the key there yourself**; no tool or agent should read, print, or commit it. `.env.example` (committed) lists every variable with placeholders.
+- Secrets are never logged, never written to events or run records, and never part of the config hash. A config file containing a secret-like key is rejected.
+- **Having the key does not enable live calls.** All of these are needed (ADR-0018): an experiment asking for `counterfactual_source = "live"`, `live.enabled = true` in your runtime config (or `METIS__LIVE__ENABLED=true`), both budget caps set, and the key. Stage 6 has no live client at all; it arrives in Stage 7.5.
+- Also set a spending limit in the **Metis dashboard**, if Metis offers one, as a second safety net (Q-29).
+
+## 5. The live budget and the spend ledger
+
+- Lifetime cap **20 USD** for the whole project (the ceiling; only `config/defaults.toml` can set it, and no layer can exceed it). Per-run cap **1 USD** by default. Warnings at 50 % and 80 %.
+- The ledger is `data/spend/ledger.jsonl` (git-ignored), one line per live charge: amount, currency, time, run ID. **Never delete or edit it**: that resets or corrupts the lifetime total, and a malformed ledger blocks all live calls.
+- Check the budget at any time (no calls are made): `.venv/bin/python scripts/show_budget.py`.
+
+## 6. Container (Docker)
+
+Needs Docker with Compose v2.24 or later. Docker Desktop on macOS puts the CLI in `~/.docker/bin`; if `docker` is not found, add it to `PATH` (`export PATH="$HOME/.docker/bin:$PATH"`). The `dev` image installs `requirements-dev.lock` and the repository; the `runtime` image installs only `requirements.lock` and runs the walking skeleton.
+
+```sh
+docker compose build
+docker compose run --rm app python -m pytest tests/integration -q   # smoke test
+docker compose run --rm app                                         # whole suite
+docker compose run --rm app python scripts/run_walking_skeleton.py
+docker build --target runtime -t metis-auto:runtime . && docker run --rm metis-auto:runtime
+```
+
+- `.env` is **not** copied into images (`.dockerignore`); Compose passes it at run time if it exists, and works without it.
+- `runs/` and `data/spend/` are bind-mounted, so the container and native runs share **one** spend ledger.
+- The `dev` image contains the committed sample data (it is in the repository). Don't push it to a registry.
+- Optional PostgreSQL (Stage 9; nothing uses it yet): set `METIS_DB_PASSWORD` in `.env`, then `docker compose --profile db up -d postgres`. It listens on `127.0.0.1:5432` only.
+- The base image is pinned by digest in the `Dockerfile` (multi-arch, checked 2026-10-18). To update it, pull `python:3.13-slim`, replace the digest, and rerun the commands above.
+- **Verified 2026-10-18** (Docker 29.8.2, Compose v5.5.1, Apple Silicon, linux/arm64): `dev` image smoke test 16/16 and full suite 392/392; `runtime` image runs the walking skeleton with the same config hash as a native run; neither image contains `.env`, `config/local.toml`, or the spend ledger (see progress.md).
+
+## 7. Where things go
+
+- New config data: `config/` (rules: [repository_structure.md §5](../architecture/repository_structure.md#5-configuration-files-config)).
+- Experiment configs: `experiments/<area>/<EXP-ID>/config.toml` (Stage 8). They may not set `live`, `budget`, `paths`, or `dev`.
+- Never write into `data/sample_data/raw/` (read-only).

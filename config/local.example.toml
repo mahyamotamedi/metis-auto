@@ -1,0 +1,20 @@
+# Example runtime configuration (layer 4 of 6, ADR-0019).
+# Copy to config/local.toml (git-ignored) and edit, or point
+# METIS_RUNTIME_CONFIG at another file. Machine-specific values only.
+# NEVER put a secret here: secrets go in .env (see .env.example).
+
+[paths]
+# run_dir = "runs"
+# spend_ledger = "data/spend/ledger.jsonl"   # never delete this file
+
+[logging]
+# level = "DEBUG"
+
+[live]
+# Second key for live calls (ADR-0018). Off unless you mean it.
+# enabled = true
+
+[budget]
+# Lower the caps for this machine if you like; they can never exceed
+# budget.lifetime_ceiling (20 USD, defaults.toml only).
+# run_cap = "0.25"

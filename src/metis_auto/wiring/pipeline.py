@@ -4,7 +4,8 @@ Responsibility: map configured names to **promoted** components (routing
 policies, context strategies, detectors), build the application services, and
 inject adapters through ports. Refuses a live client without a spending cap
 (ADR-0003). No decisions beyond that.
-Called by: scripts, tests, and (Stage 8) the experiment runner via a factory.
+Called by: ``wiring.from_settings``, ``wiring.walking_skeleton``, tests, and
+(Stage 8) the experiment runner via a factory.
 Calls: application, domain, adapters (system defaults), ports.
 Traces: QA-REPL ("one interface + one config entry"), ADR-0003, ADR-0009.
 """
@@ -60,9 +61,15 @@ def _lookup(registry: Mapping[str, Callable], name: str, kind: str) -> Callable:
     return registry[name]
 
 
-def versions_for(config: PipelineConfig, fingerprinter: Fingerprinter) -> Versions:
-    """Versions in force (FR-OBS-02). TODO(Stage 6): the config hash."""
+def versions_for(
+    config: PipelineConfig,
+    fingerprinter: Fingerprinter,
+    config_hash: str | None = None,
+) -> Versions:
+    """Versions in force (FR-OBS-02). ``config_hash`` comes from settings
+    (configuration.md §3 rule 6); None when the config was built in code."""
     return Versions(
+        config_hash=config_hash,
         fingerprint_key_id=fingerprinter.key_id,
         policies={
             config.routing.policy: "configured",
@@ -89,6 +96,7 @@ def build_pipeline(
     ids: IdSource | None = None,
     spend_ledger: SpendLedger | None = None,
     tokenizers: Mapping[str, Tokenizer] | None = None,
+    config_hash: str | None = None,
 ) -> RequestPipeline:
     """Assemble a pipeline. ``fingerprint_key`` is a secret (ADR-0015): it goes
     to the measurement service only."""
@@ -111,7 +119,12 @@ def build_pipeline(
         _lookup(DETECTORS, name, "detector")() for name in config.attempts.detectors
     ]
     recorder = EventRecorder(
-        sink, clock, ids, run_id, run_mode, versions_for(config, fingerprinter)
+        sink,
+        clock,
+        ids,
+        run_id,
+        run_mode,
+        versions_for(config, fingerprinter, config_hash),
     )
     return RequestPipeline(
         config=config,

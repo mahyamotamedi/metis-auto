@@ -1,8 +1,8 @@
 # ADR-0003: Model calls — offline by default (mocks/recorded), live calls opt-in with a spending cap
 
-- Status: **decided** (provider choice and budget are **open**)
+- Status: **decided**. **Amended by [ADR-0018](0018-live-calls-for-development-under-a-lifetime-budget.md)** (2026-10-18): provider (the Metis wrapper, one key) and budget (20 USD lifetime, cumulative ledger, per-run cap) are now decided.
 - Date: 2026-10-14
-- Resolves (partly): Q-08
+- Resolves (partly): Q-08 (fully resolved by ADR-0018)
 
 ## Context
 Evaluating alternative routing or caching needs answers from models that weren't used (the counterfactual problem, context.md §8). Real model calls will eventually be allowed, but no provider has been chosen, there are no keys, and there is no budget.

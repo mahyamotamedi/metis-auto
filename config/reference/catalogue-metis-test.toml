@@ -1,0 +1,86 @@
+# Model catalogue: the five Metis test models plus the premium baseline.
+# Source of the model list: owner decisions, docs/project/live_testing_and_demo_brief.md §4
+# (2026-10-18). Model IDs as on the Metis pricing page (saved 2026-10-18).
+# Schema: provisional until Stage 7 (providers.md §4, contracts.md O-3).
+#
+# What is NOT here, on purpose (no fabrication, MP§3.8):
+# - context_window / max_output_tokens: omitted = unknown. Routing excludes a
+#   model with an unknown window (FR-ROUTE-05), so these must be filled with
+#   sourced values before live use (TODO-10, Stage 7.5).
+# - capabilities: none verified yet; unverified = unsupported.
+#
+# tier and equivalence_group are PLACEHOLDERS chosen in Stage 6 by price, not
+# by measured quality (A-48). Groups are failover sets (FR-FAIL-03): all
+# families sit behind one Metis gateway, so cross-family failover does not
+# protect against a Metis outage.
+#
+# tokenizer_ref: the labelled chars/4 approximation until Stage 7 adds exact
+# tokenizers. price_ref: a row in prices-metis-2026-10-18.toml.
+
+version = "cat-metis-test-2026-10-18"
+
+[[models]]
+model_id = "gpt-5-nano"
+provider = "openai"
+provider_model_name = "gpt-5-nano"
+# Reasoning model: hidden reasoning tokens are billed as output (brief §4).
+tier = 0
+equivalence_group = "metis-nano"
+tokenizer_ref = "approx-chars-div-4"
+price_ref = "metis-gpt-5-nano"
+enabled = true
+
+[[models]]
+model_id = "gpt-4.1-nano"
+provider = "openai"
+provider_model_name = "gpt-4.1-nano"
+tier = 0
+equivalence_group = "metis-nano"
+tokenizer_ref = "approx-chars-div-4"
+price_ref = "metis-gpt-4.1-nano"
+enabled = true
+
+[[models]]
+model_id = "gpt-4o-mini"
+provider = "openai"
+provider_model_name = "gpt-4o-mini"
+tier = 1
+equivalence_group = "metis-small"
+tokenizer_ref = "approx-chars-div-4"
+price_ref = "metis-gpt-4o-mini"
+enabled = true
+
+[[models]]
+model_id = "deepseek-v4-flash"
+provider = "deepseek"
+# Always send this exact ID: legacy names are silently redirected
+# (docs/references/metis_wrapper_api.md §2).
+provider_model_name = "deepseek-v4-flash"
+tier = 1
+equivalence_group = "metis-small"
+tokenizer_ref = "approx-chars-div-4"
+price_ref = "metis-deepseek-v4-flash"
+enabled = true
+
+[[models]]
+model_id = "grok-4-1-fast"
+provider = "grok"
+# Accepted by the wrapper: unverified until the Stage 7.5 live check.
+provider_model_name = "grok-4-1-fast"
+tier = 1
+equivalence_group = "metis-small"
+tokenizer_ref = "approx-chars-div-4"
+price_ref = "metis-grok-4-1-fast"
+enabled = true
+
+[[models]]
+# Premium baseline (baselines.toml). NEVER called: disabled, so routing and
+# failover can't select it; its cost is estimated from counted tokens (brief §5).
+model_id = "gpt-5.4"
+provider = "openai"
+provider_model_name = "gpt-5.4"
+tier = 2
+equivalence_group = "metis-premium"
+tokenizer_ref = "approx-chars-div-4"
+price_ref = "metis-gpt-5.4"
+enabled = false

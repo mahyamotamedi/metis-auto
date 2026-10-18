@@ -1,0 +1,73 @@
+# Price table: Metis user prices for the catalogue's six models.
+# Source: Metis pricing page, https://metisai.ir/pricing (cited in the brief as
+# https://docs.metisai.ir/pricing), saved by the owner on 2026-10-18; extract
+# committed as docs/references/metis_pricing_2026-10-18.csv.
+# Amounts are taken from the CSV's `raw` column, because its structured
+# columns are wrong for context-tiered models (docs/references/metis_wrapper_api.md §3).
+# tests/unit/settings/test_settings_reference.py checks every amount below
+# against that `raw` text.
+#
+# Re-verify before each live budget review and in Stage 7. A change in price
+# = a new file with a new version, never an edit of this one.
+#
+# Amounts are decimal STRINGS (exact), USD per 1,000,000 tokens.
+# Token types: input, output, cached_input. Rows with a context_tier (or a
+# token type the schema lacks, e.g. cache writes) are kept aside as pending
+# until Stage 7 extends the price schema; that model's cost is then
+# "not computed" rather than priced at the wrong tier.
+# effective_from: unknown (the page states none).
+
+version = "prices-metis-2026-10-18"
+currency = "USD"
+per_tokens = 1000000
+
+[evidence]
+source = "Metis pricing page https://metisai.ir/pricing, saved 2026-10-18; docs/references/metis_pricing_2026-10-18.csv (raw column)"
+checked_on = 2026-10-18
+
+[[prices]]
+price_ref = "metis-gpt-5-nano"
+input = "0.055"
+output = "0.44"
+cached_input = "0.0055"
+
+[[prices]]
+price_ref = "metis-gpt-4.1-nano"
+input = "0.11"
+output = "0.44"
+cached_input = "0.0275"
+
+[[prices]]
+price_ref = "metis-gpt-4o-mini"
+input = "0.165"
+output = "0.66"
+cached_input = "0.0825"
+
+[[prices]]
+price_ref = "metis-deepseek-v4-flash"
+input = "0.165"
+output = "0.66"
+cached_input = "0.0033"
+
+[[prices]]
+price_ref = "metis-grok-4-1-fast"
+input = "0.22"
+output = "0.55"
+cached_input = "0.11"
+
+# gpt-5.4 has context-length tiers. The page labels the first tier
+# "≤ 270K context"; whether K means 1,000 or 1,024 is unverified (Stage 7).
+[[prices]]
+price_ref = "metis-gpt-5.4"
+context_tier = "standard"
+max_context_tokens = 270000
+input = "2.875"
+output = "17.25"
+cached_input = "0.2875"
+
+[[prices]]
+price_ref = "metis-gpt-5.4"
+context_tier = "long"
+input = "5.75"
+output = "25.875"
+cached_input = "0.575"

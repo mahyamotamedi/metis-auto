@@ -14,7 +14,7 @@ The project explores:
 ## Repository Structure
 
 - `src/metis_auto/` — the package, in layers: contracts, ports, domain, application, adapters, data_access, settings, evaluation, analysis, wiring
-- `config/` — versioned configuration data (catalogue, prices, defaults); no secrets
+- `config/` — versioned configuration data (TOML: defaults, model catalogue, prices, endpoints, baselines); no secrets
 - `experiments/` — experiment definitions and notebooks, by area; `sample_eda/` is preliminary and frozen
 - `reports/` — committed, feature-only outputs, figures, and tables
 - `data/` — datasets (`sample_data/raw/` is read-only)
@@ -34,6 +34,8 @@ python3.13 -m venv .venv
 .venv/bin/python -m pytest                       # offline; network tests need --run-network
 .venv/bin/python scripts/run_walking_skeleton.py # the pipeline end to end with fakes
 ```
+
+No secrets are needed for tests or the walking skeleton. Containers (`docker compose run --rm app`), configuration layers, the `.env` file (copy from `.env.example`), and the live-call budget (20 USD lifetime, [ADR-0018](docs/adr/0018-live-calls-for-development-under-a-lifetime-budget.md)) are explained in the [local development guide](docs/guides/local_development.md).
 
 ## Development Workflow
 

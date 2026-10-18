@@ -12,6 +12,8 @@ Durable working rules for agent sessions on Metis-Auto. Keep this file short and
 - Modules (Stage 5): [`docs/architecture/module_reference.md`](docs/architecture/module_reference.md): who calls what, data in/out, status. Its import column is checked by `tests/architecture/test_module_reference.py`; update the row with the code. Walking skeleton: `python scripts/run_walking_skeleton.py`.
 - Contracts (Stage 4): [`docs/architecture/contracts.md`](docs/architecture/contracts.md) ([ADR-0017](docs/adr/0017-contract-modelling-with-pydantic.md)). Every contract field declares a privacy class; event and run records may hold no `content` field (tested). After changing a contract, regenerate the field reference: `python tests/architecture/contracts_docgen.py`.
 - **Where a new file goes and what it may import:** [`docs/architecture/repository_structure.md`](docs/architecture/repository_structure.md) ([ADR-0009](docs/adr/0009-repository-structure-and-dependency-rules.md)). Layer rules are enforced by `tests/architecture/test_import_rules.py`. Candidate strategies stay in `experiments/` until promoted.
+- Configuration (Stage 6): TOML in `config/` (defaults, `reference/` catalogue, prices, endpoints, baselines), layers and rules in [`configuration.md`](docs/architecture/configuration.md) ([ADR-0019](docs/adr/0019-configuration-format-layers-and-secrets.md)). Setup and Docker: [`docs/guides/local_development.md`](docs/guides/local_development.md).
+- Owner decisions on live testing and the demo: [`docs/project/live_testing_and_demo_brief.md`](docs/project/live_testing_and_demo_brief.md).
 - Sample EDA: `experiments/sample_eda/`, `docs/sample_eda/`, `reports/sample_eda/`.
 - Project brief: [`docs/brief/project-draft.pdf`](docs/brief/project-draft.pdf). Master prompt: [`metis_claude_code_master_prompt.md`](metis_claude_code_master_prompt.md).
 
@@ -19,6 +21,8 @@ Durable working rules for agent sessions on Metis-Auto. Keep this file short and
 - `data/sample_data/raw/` is **read-only**. Never modify it; write derived data elsewhere.
 - Never put raw message content, instructions, RAG context, or attachments into docs, commits, logs, test fixtures, or exported tables. Use hashed or opaque IDs and derived features. Synthetic fixtures must be clearly labelled synthetic.
 - Category names are opaque strata. Do not interpret them or tune to one category.
+- `.env` holds the Metis API key. **Never read, print, log, or commit `.env`**; the owner pastes the key. Secrets never go in `config/`.
+- **Live calls** ([ADR-0018](docs/adr/0018-live-calls-for-development-under-a-lifetime-budget.md)): development and testing only, 20 USD lifetime budget for the whole project, only own or synthetic messages (sample conversations need per-run owner approval). Never make a live call without the owner asking for it. Never delete or edit `data/spend/ledger.jsonl`.
 - **The sample EDA is exploratory only** ([ADR-0008](docs/adr/0008-sample-eda-is-exploratory.md)):
   - Its numbers (including the master prompt's "Key EDA facts") are provisional signals to re-verify on the full dataset. Designs may be informed by them but must not depend on their exact values.
   - Never import, copy, or build on `experiments/sample_eda/eda_helpers.py`. Read it only for reference; re-implement needed logic properly, with tests.

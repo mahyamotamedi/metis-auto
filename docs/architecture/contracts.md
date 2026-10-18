@@ -1,6 +1,6 @@
 # Internal Contracts (Stage 4)
 
-Status: conventions and contract set **decided**; individual fields **provisional** (the Stage 5 skeleton now uses them; two additions, §6); catalogue and price shapes **provisional** until Stage 7. Last updated 2026-10-18 (Stage 5: `CacheKeyDraft`, `RequestFeatures.known_input_tokens`, schema 0.2; O-2, O-7, O-9 resolved).
+Status: conventions and contract set **decided**; individual fields **provisional** (the Stage 5 skeleton now uses them; two additions, §6); catalogue and price shapes **provisional** until Stage 7. Last updated 2026-10-18 (Stage 5: `CacheKeyDraft`, `RequestFeatures.known_input_tokens`, schema 0.2; O-2, O-7, O-9 resolved. Stage 6: O-1 resolved, configuration diagram labelled; no contract changed).
 Index: [architecture README](README.md). Code: `src/metis_auto/contracts/`. **Field tables:** [contracts_reference.md](contracts_reference.md), generated from the code (a test fails if it is stale). Decisions: [ADR-0017](../adr/0017-contract-modelling-with-pydantic.md) (pydantic), [ADR-0015 amendment 1](../adr/0015-keyed-content-fingerprints.md#amendment-1-2026-10-17-stage-4-the-algorithm) (fingerprint algorithm).
 
 This document answers: **what data crosses each boundary, who produces and consumes it, how sensitive each part is, and how it changes over time?** It fixes the provisional vocabulary of [overview §5](overview.md#5-provisional-contract-vocabulary).
@@ -15,7 +15,7 @@ Field-level detail (type, required or optional, privacy class, description) is i
 
 **Not in scope here:**
 - **Port method signatures** (`ModelClient.invoke`, `CacheStore.get`, …): defined in Stage 5 in `src/metis_auto/ports/` ([module_reference.md](module_reference.md)). The contracts here are their arguments and return values.
-- **`Settings`**: Stage 6. Its shape depends on the config file format and loading library, which configuration.md §4 leaves to Stage 6.
+- **`Settings`**: defined in Stage 6 in `src/metis_auto/settings/model.py`, not here: it is configuration read by wiring, not data passed between components ([ADR-0019](../adr/0019-configuration-format-layers-and-secrets.md) point 6).
 - **Final catalogue and price schema**: Stage 7. The shapes here are provisional but already enforce the no-fabrication rule (§3.3).
 - **Wire formats** of providers and of the future gateway (FR-API-03). Adapters translate them into these contracts.
 - **Persistent database schema** (NG-02).
@@ -126,7 +126,7 @@ Producers and consumers use the component IDs from [overview §3](overview.md#3-
 
 | Contract | Purpose | Producer | Consumers | Persisted | Privacy | Status | Traces |
 |---|---|---|---|---|---|---|---|
-| `ModelCatalogue`, `CatalogueEntry`, `Capability`, `Limit`, `Sourced` (`reference_data`) | Models with tier, equivalence group, limits, and capabilities. A capability or limit counts only with evidence (source and check date). | CMP-19 from `config/` | CMP-05, CMP-07, CMP-08, CMP-09 | config files (versioned) | operational | **provisional (Stage 7)** | FR-ROUTE-05, FR-FAIL-03, FR-CTX-05, MP§3.8 |
+| `ModelCatalogue`, `CatalogueEntry`, `Capability`, `Limit`, `Sourced` (`reference_data`) | Models with tier, equivalence group, limits, and capabilities. A capability or limit counts only with evidence (source and check date). | CMP-19 from `config/reference/` (Stage 6) | CMP-05, CMP-07, CMP-08, CMP-09 | config files (versioned) | operational | **provisional (Stage 7)** | FR-ROUTE-05, FR-FAIL-03, FR-CTX-05, MP§3.8 |
 | `PriceTable`, `PriceEntry` (`reference_data`) | Price per token type, unit, currency, effective date, evidence. A missing amount means unknown, so costs come out "not computed". | CMP-19 | CMP-09 | config files | operational | **provisional (Stage 7)** | FR-ACCT-02, ADR-0002 |
 | `RoutingDecision` (`routing`) with `Exclusion` | Target, group, tier, eligible models, exclusions with reasons, escalation chain, policy version, reason code, features read, re-route constraint, flags | CMP-05 | CMP-01, CMP-06 (group in the key), CMP-08, `routing_decided` | in events | operational | decided | FR-ROUTE-01…06 |
 
@@ -218,7 +218,7 @@ The synthetic fixtures follow the same rule: generic, multilingual with Persian,
 
 ## 6. Changes from the Stage 3 vocabulary
 
-Names kept: all of [overview §5](overview.md#5-provisional-contract-vocabulary) except `Settings` (Stage 6). Changes:
+Names kept: all of [overview §5](overview.md#5-provisional-contract-vocabulary). `Settings` is defined in `settings` (Stage 6, ADR-0019), not in `contracts`. Changes:
 
 | Stage 3 | Stage 4 | Why |
 |---|---|---|
@@ -249,7 +249,7 @@ All 12 Mermaid blocks in `docs/architecture/` were re-parsed with Mermaid 11.4.1
 | [Data flow](request_lifecycle.md#4-data-flow-and-privacy-boundary) | labelled with contracts, **except two non-contract flows**: `normalised text` (content written to gitignored `data/derived/` by experiments) and `log records (no content)` (operator logs, which are not a measurement source, observability §6) | Both are governed by the privacy rule, not by a contract. |
 | [Offline evaluation](evaluation.md#2-offline-evaluation-flow) | labelled with contracts | `RequestPipeline (candidate / premium)` is **object injection** from `wiring`, not data. The experiment-config input is a Stage 8 file format. |
 | [Future deployment](deployment_and_data.md#3-future-deployment-and-container-view) | labelled with contracts | The client wire format is external by design (FR-API-03, Q-15). |
-| [Configuration flow](configuration.md#2-configuration-flow) | **partly**: the manifest arrow carries `Versions`; the others carry config files and `Settings` | **Deferred to Stage 6**, which fixes `Settings` together with the file format and loader (configuration.md §4). |
+| [Configuration flow](configuration.md#2-configuration-flow) | every arrow labelled (Stage 6): TOML layers, `Settings`, `ReferenceData`, `Secrets`, `LoadedSettings`, `PipelineConfig`, `Versions` | `Settings` and its secret holder live in `settings` (ADR-0019). |
 | [Routing](routing.md#2-routing-decision-flow), [caching](caching.md#3-caching-decision-flow), [context](context_construction.md#3-context-construction-flow), [attempts](attempts.md#2-escalation-and-failover-flow) decision flows | edges are branch conditions; entry and exit nodes name contracts (`RoutingDecision`, `CacheLookupResult`, `TargetTokenCounts` → `ContextPlan`, `AttemptAction`) | Decision flowcharts show control flow, not data hand-offs. |
 | [Package dependencies](repository_structure.md#31-allowed-imports-inside-srcmetis_auto-decided) | arrows are imports | Not a data diagram. |
 
@@ -259,7 +259,7 @@ All 12 Mermaid blocks in `docs/architecture/` were re-parsed with Mermaid 11.4.1
 
 | ID | Item | Resolved in |
 |---|---|---|
-| O-1 | `Settings` contract (and its secret holder) | Stage 6 |
+| O-1 | ~~`Settings` contract (and its secret holder)~~ **Done in Stage 6:** `settings/model.py` (`Settings`, `Secrets`, `LoadedSettings`), [ADR-0019](../adr/0019-configuration-format-layers-and-secrets.md). | Stage 6 |
 | O-2 | ~~Port method signatures~~ **Done in Stage 5:** `src/metis_auto/ports/`. | Stage 5 |
 | O-3 | Final catalogue, price, and label-mapping schema | Stage 7 |
 | O-4 | ~~Empty values: `present` or `absent`?~~ **Decided 2026-10-18:** empty means `absent`. Validator added (§2.3). Producers apply it. | Stage 5 request builder; Stage 9 sample loader |

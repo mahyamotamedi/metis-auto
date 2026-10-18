@@ -1,6 +1,6 @@
 # Local Development, Future Deployment, and Future Database (Stage 3)
 
-Status: local-development assumptions **decided**; the future deployment view and database integration are **provisional extension points**, not designs. Last updated 2026-10-14.
+Status: local-development assumptions **decided**; the future deployment view and database integration are **provisional extension points**, not designs. Last updated 2026-10-18 (Stage 6: containers exist; optional PostgreSQL service behind a Compose profile).
 Index: [architecture README](README.md). Requirements: ADR-0005, NG-01…03, NG-13, FR-DATA-02, 04, 05, FR-XCACHE-08, FR-OBS-06.
 
 ---
@@ -9,7 +9,7 @@ Index: [architecture README](README.md). Requirements: ADR-0005, NG-01…03, NG-
 
 | Assumption | Status | Consequence |
 |---|---|---|
-| One developer machine (macOS today), Python 3.13 venv from a non-conda interpreter (ADR-0001; Homebrew 3.13 since 2026-10-18, TODO-08 resolved). | decided | Docker (Stage 6) gives the same runtime on other machines. |
+| One developer machine (macOS today), Python 3.13 venv from a non-conda interpreter (ADR-0001; Homebrew 3.13 since 2026-10-18, TODO-08 resolved). | decided | Docker (Stage 6: `Dockerfile`, `compose.yaml`) gives the same runtime on other machines. Built and verified on the dev machine 2026-10-18 (TODO-11 resolved). |
 | **No network and no keys** for the default test suite and the walking skeleton. | decided | Fakes for every port; tests marked `network` are skipped unless explicitly enabled (QA-TEST). |
 | One process. The pipeline is a library call; replay and tests call it directly. | decided | No server, queue, or database is needed now (NG-03). |
 | CPU only. | provisional | Local embedding models (Stage 8) must run acceptably on CPU, or their experiments are run elsewhere and recorded. |
@@ -21,7 +21,7 @@ Index: [architecture README](README.md). Requirements: ADR-0005, NG-01…03, NG-
 
 ## 2. Current runtime view
 
-There is a single process: a test, a script, or a notebook calls `wiring`, which builds a pipeline with fake or replay adapters, in-memory stores, and a JSON Lines sink, then runs it. Stage 6 adds a container that runs the same thing. An optional PostgreSQL service is added to Compose only once Stage 9 needs it.
+There is a single process: a test, a script, or a notebook calls `wiring`, which builds a pipeline with fake or replay adapters, in-memory stores, and a JSON Lines sink, then runs it. Stage 6 adds a container that runs the same thing (`Dockerfile` targets `dev` and `runtime`, `compose.yaml` service `app`; [guide](../guides/local_development.md)). Compose also defines an optional PostgreSQL service behind the `db` profile, as the master prompt asks; nothing uses it until Stage 9, and it never starts by default.
 
 ---
 

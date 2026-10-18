@@ -1,0 +1,43 @@
+# SYNTHETIC placeholder catalogue for the walking skeleton: NOT real models.
+# Moved from wiring/walking_skeleton.py in Stage 6 (Q-27, A-42).
+# Two tiers; tier 0 has two equivalent models on different providers, so
+# failover and escalation are both exercisable offline. No price_ref: prices
+# are unknown, so every cost is "not computed" (FR-ACCT-02).
+
+version = "cat-synthetic-skeleton-1"
+
+[[models]]
+model_id = "synthetic-small-a"
+provider = "synthetic-provider-a"
+provider_model_name = "synthetic-small-a-synthetic"
+tier = 0
+equivalence_group = "synthetic-tier0"
+context_window = { value = 16000, evidence = { source = "SYNTHETIC walking-skeleton placeholder, not a real model", checked_on = 2026-10-18 } }
+max_output_tokens = { value = 1000, evidence = { source = "SYNTHETIC walking-skeleton placeholder, not a real model", checked_on = 2026-10-18 } }
+capabilities = [{ name = "image_input", verified = false }]
+tokenizer_ref = "approx-chars-div-4"
+enabled = true
+
+[[models]]
+model_id = "synthetic-small-b"
+provider = "synthetic-provider-b"
+provider_model_name = "synthetic-small-b-synthetic"
+tier = 0
+equivalence_group = "synthetic-tier0"
+context_window = { value = 16000, evidence = { source = "SYNTHETIC walking-skeleton placeholder, not a real model", checked_on = 2026-10-18 } }
+max_output_tokens = { value = 1000, evidence = { source = "SYNTHETIC walking-skeleton placeholder, not a real model", checked_on = 2026-10-18 } }
+capabilities = [{ name = "image_input", verified = false }]
+tokenizer_ref = "approx-chars-div-4"
+enabled = true
+
+[[models]]
+model_id = "synthetic-large"
+provider = "synthetic-provider-a"
+provider_model_name = "synthetic-large-synthetic"
+tier = 1
+equivalence_group = "synthetic-tier1"
+context_window = { value = 16000, evidence = { source = "SYNTHETIC walking-skeleton placeholder, not a real model", checked_on = 2026-10-18 } }
+max_output_tokens = { value = 1000, evidence = { source = "SYNTHETIC walking-skeleton placeholder, not a real model", checked_on = 2026-10-18 } }
+capabilities = [{ name = "image_input", verified = false }]
+tokenizer_ref = "approx-chars-div-4"
+enabled = true

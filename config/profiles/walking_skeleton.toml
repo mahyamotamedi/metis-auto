@@ -1,0 +1,21 @@
+# Run profile for the walking skeleton (Stage 5/6): synthetic reference data,
+# fixed routing, offline. Loaded at the experiment layer (ADR-0019), so it may
+# not set live, budget, paths, or dev.
+
+[reference]
+catalogue = "reference/catalogue-synthetic-skeleton.toml"
+prices = "reference/prices-synthetic-skeleton.toml"
+# The synthetic providers have no endpoints; the skeleton never calls out.
+endpoints = ""
+baselines = ""
+
+[experiment]
+name = "walking-skeleton"
+counterfactual_source = "fake"
+
+[pipeline.routing]
+policy = "fixed_model"
+chain = ["synthetic-large"]
+
+[pipeline.routing.fixed_model]
+model_id = "synthetic-small-a"

@@ -1,0 +1,85 @@
+# Application defaults (versioned). ADR-0019, docs/architecture/configuration.md.
+#
+# Layer 2 of 6. Lower: each policy's typed code defaults (domain). Higher:
+# experiment file < runtime file (config/local.toml) < METIS__* environment
+# overrides < explicit overrides. NEVER put a secret in this file.
+#
+# Every section and key below is validated by metis_auto.settings.Settings
+# (unknown keys are errors), except [pipeline.*], which wiring validates
+# against each policy's own config type.
+
+[paths]
+# Machine-local; relative paths resolve against the checkout root. Not hashed.
+run_dir = "runs"
+# Persistent, cumulative spend ledger (ADR-0018). Git-ignored. Never delete
+# it: that would reset the lifetime total. Shared with the container via a
+# bind mount (compose.yaml).
+spend_ledger = "data/spend/ledger.jsonl"
+recorded_dir = "data/recorded"
+
+[logging]
+level = "INFO"
+
+[live]
+# Live model calls are off by default (ADR-0003). Turn on only in a runtime
+# layer (config/local.toml or METIS__LIVE__ENABLED=true), never in an
+# experiment file. Stage 6 builds no live client; the adapter is Stage 7.5.
+enabled = false
+
+[budget]
+# ADR-0018. Amounts are decimal strings in `currency`.
+currency = "USD"
+# Hard ceiling for the whole project. May be set ONLY in this file; raising it
+# needs a reviewed commit and a decision record.
+lifetime_ceiling = "20"
+# Lifetime cap across all runs (<= ceiling). Live calls are refused without it.
+lifetime_cap = "20"
+# Per-run cap (<= lifetime cap). Placeholder proposed in Stage 6 (A-49).
+run_cap = "1"
+# Operator warnings when lifetime spend crosses these fractions of the cap.
+warn_at = [0.5, 0.8]
+
+[reference]
+# Paths relative to the config directory. Each file carries its own version
+# ID, which goes into the config hash and every event (FR-OBS-02).
+catalogue = "reference/catalogue-metis-test.toml"
+prices = "reference/prices-metis-2026-10-18.toml"
+endpoints = "reference/endpoints-metis.toml"
+baselines = "reference/baselines.toml"
+
+[experiment]
+name = "default"
+# fake | logged_match | recorded | live | proxy (ADR-0014). `live` is the
+# first of the two keys; [live].enabled is the second.
+counterfactual_source = "fake"
+seed = 0
+
+[embedding]
+# Semantic tier (Stage 8). `fake` is offline.
+backend = "fake"
+
+[database]
+# Future PostgreSQL (Stage 9). Nothing reads this yet. The password is the
+# secret METIS_DB_PASSWORD, never set here.
+enabled = false
+host = "localhost"
+port = 5432
+name = "metis"
+user = "metis"
+
+[dev]
+# Without METIS_FINGERPRINT_KEY, use a random key per process (A-44).
+ephemeral_fingerprint_key = true
+
+# --- Policy selection (promoted components only; repository_structure §6.2).
+# Thresholds not listed here keep their typed code defaults (A-43:
+# placeholders, not evidence). Any of them can be overridden by a higher layer.
+[pipeline.routing]
+policy = "fixed_model"
+
+[pipeline.routing.fixed_model]
+# Placeholder target until rule-based / sticky routing (Demo milestone).
+model_id = "gpt-4o-mini"
+
+[pipeline.context]
+strategy = "pass_through"

@@ -3,20 +3,27 @@ offline, with fakes. Prints content-free metadata only.
 
     python scripts/run_walking_skeleton.py [--events runs/walking_skeleton/events.jsonl]
 
-The fingerprint key is a fresh random key per run, so fingerprints are not
-comparable across runs. TODO(Stage 6): read it from the environment through
-settings (ADR-0015). Thin wrapper: all logic is in metis_auto.wiring.
+Settings: config/defaults.toml + config/profiles/walking_skeleton.toml, then
+config/local.toml, .env, and METIS__* overrides (ADR-0019). The fingerprint
+key is METIS_FINGERPRINT_KEY when set; otherwise a fresh random key per run,
+so fingerprints are not comparable across runs (A-44). No secrets needed.
+Thin wrapper: all logic is in metis_auto.wiring.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import secrets
+import logging
 from pathlib import Path
 
 from metis_auto.adapters.sinks import InMemoryEventSink, JsonLinesEventSink
-from metis_auto.wiring.walking_skeleton import build_walking_skeleton, demo_requests
+from metis_auto.wiring.from_settings import fingerprint_key, pipeline_config
+from metis_auto.wiring.walking_skeleton import (
+    build_walking_skeleton,
+    demo_requests,
+    skeleton_settings,
+)
 
 
 def main() -> None:
@@ -24,8 +31,17 @@ def main() -> None:
     parser.add_argument("--events", type=Path, help="write events as JSON Lines")
     args = parser.parse_args()
 
+    loaded = skeleton_settings(hermetic=False)
+    logging.basicConfig(level=loaded.settings.logging.level)
+    print(json.dumps({"config_hash": loaded.config_hash, "layers": loaded.layers}))
+
     sink = JsonLinesEventSink(args.events) if args.events else InMemoryEventSink()
-    pipeline = build_walking_skeleton(secrets.token_bytes(32), sink=sink)
+    pipeline = build_walking_skeleton(
+        fingerprint_key(loaded),
+        config=pipeline_config(loaded),
+        sink=sink,
+        config_hash=loaded.config_hash,
+    )
     for request in demo_requests():
         response = pipeline.handle(request)
         print(

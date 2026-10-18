@@ -4,8 +4,8 @@ Checks, by static parsing (nothing is imported):
   1. every module under src/metis_auto, except contracts/ and __init__.py
      re-export files, has exactly one row, and no row names a missing module;
   2. each row's "Imports (checked)" cell equals the metis_auto sub-packages the
-     module imports outside its own sub-package (`contracts` and `ports` as
-     whole packages).
+     module imports outside its own sub-package (`contracts`, `ports`, and
+     `settings` as whole packages: they have no sub-packages).
 """
 
 import ast
@@ -15,7 +15,7 @@ from pathlib import Path
 from test_import_rules import SRC, _module_name, imported_modules
 
 DOC = SRC.parents[1] / "docs" / "architecture" / "module_reference.md"
-WHOLE = {"contracts", "ports"}
+WHOLE = {"contracts", "ports", "settings"}
 
 
 def _key(dotted: str) -> str | None:

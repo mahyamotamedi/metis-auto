@@ -2,11 +2,14 @@
 
 from .clock import FakeClock, SystemClock
 from .ids import SequentialIdSource, UuidIdSource
-from .ledger import InMemorySpendLedger
+from .ledger import BudgetStatus, FileSpendLedger, InMemorySpendLedger, LedgerError
 
 __all__ = [
+    "BudgetStatus",
     "FakeClock",
+    "FileSpendLedger",
     "InMemorySpendLedger",
+    "LedgerError",
     "SequentialIdSource",
     "SystemClock",
     "UuidIdSource",

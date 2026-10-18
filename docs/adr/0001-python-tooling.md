@@ -31,6 +31,12 @@ Proposal: **pip-tools** compiles a hash-pinned lockfile from `pyproject.toml`:
 - `pyproject.toml` exists with extras `dev` (pytest, ruff, pip-tools) and `eda` (numpy, pandas; only the frozen sample-EDA tests need them).
 - Lockfiles compiled with pip-tools 7.6.2: `requirements.lock` (runtime) and `requirements-dev.lock` (`--extra dev --extra eda`), both with hashes. Install: `pip install --require-hashes -r requirements-dev.lock` then `pip install -e . --no-deps`. The locking mechanism stays **provisional** until Stage 6 (TODO-09: PEP 751).
 
+## Update 2026-10-18 (Stage 6): dev lock fixed for fresh venvs
+- Following the setup guide from a clean copy failed: `requirements-dev.lock` did not pin `setuptools` (needed by pip-tools), so `pip install --require-hashes` refused it. The existing `.venv` hid this.
+- Fix: the dev lock is recompiled with **`--allow-unsafe`**, keeping every existing pin (no `--upgrade`); the only change is pinned, hashed `pip==26.2.1` and `setuptools==84.0.0`. The runtime lock needs no change (pydantic only).
+- TODO-09 re-checked: pip 26.2.1 can install from `pylock.toml`, still marked experimental, so pip-tools stays and locking stays provisional.
+- Regenerate command: `pip-compile --allow-unsafe --extra=dev --extra=eda --generate-hashes --output-file=requirements-dev.lock --strip-extras pyproject.toml`.
+
 ## Consequences
 - **Setup TODO:** this machine has no non-conda Python 3.13. Found on 2026-10-14: Anaconda 3.13.5, python.org 3.14, and system 3.9.6. A standalone 3.13 must be installed before the first venv. The Docker image (Stage 6) will use an official `python:3.13` base image.
 - Contributors who use `.vscode` with black must switch their editor to ruff. `.vscode/` is no longer tracked (ADR-0004), so this is per developer.

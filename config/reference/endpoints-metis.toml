@@ -1,0 +1,44 @@
+# Provider endpoints through the Metis wrapper, one per model family.
+# Config, not secrets: every family uses the same key, named by `secret`
+# (the environment variable METIS_API_KEY). Summary and caveats:
+# docs/references/metis_wrapper_api.md. All rows are documentation claims,
+# verified by the Stage 7.5 live wrapper check.
+
+version = "endpoints-metis-2026-10-18"
+
+[[endpoints]]
+family = "openai"
+base_url = "https://api.metisai.ir/openai/v1"
+api_format = "openai_chat_completions"
+auth_header = "Authorization: Bearer"
+secret = "metis_api_key"
+status = "enabled"
+evidence = { source = "https://metisai.ir/api/wrapper/openai (saved 2026-10-18)", checked_on = 2026-10-18 }
+
+[[endpoints]]
+family = "deepseek"
+base_url = "https://api.metisai.ir/deepseek/v1"
+api_format = "openai_chat_completions"
+auth_header = "Authorization: Bearer"
+secret = "metis_api_key"
+status = "enabled"
+evidence = { source = "https://metisai.ir/api/wrapper/deepseek (saved 2026-10-18)", checked_on = 2026-10-18 }
+
+[[endpoints]]
+family = "grok"
+base_url = "https://api.metisai.ir/api/v1/wrapper/grok"
+api_format = "openai_chat_completions"
+auth_header = "Authorization: Bearer"
+secret = "metis_api_key"
+status = "enabled"
+evidence = { source = "https://metisai.ir/api/wrapper/ (Grok section, saved 2026-10-18)", checked_on = 2026-10-18 }
+
+[[endpoints]]
+# Not OpenAI-compatible: needs a second adapter (Stage 10 roadmap).
+family = "gemini"
+base_url = "https://api.metisai.ir"
+api_format = "google_genai"
+auth_header = "x-goog-api-key"
+secret = "metis_api_key"
+status = "deferred"
+evidence = { source = "https://metisai.ir/api/wrapper/gemini (saved 2026-10-18)", checked_on = 2026-10-18 }
