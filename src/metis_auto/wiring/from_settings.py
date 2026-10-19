@@ -15,6 +15,7 @@ from __future__ import annotations
 import logging
 import secrets
 from dataclasses import dataclass
+from typing import Any
 
 from metis_auto.adapters.system import FileSpendLedger, SystemClock
 from metis_auto.adapters.tokenizers import ApproxCharsTokenizer
@@ -111,10 +112,13 @@ def build_pipeline_from_settings(
     clock: Clock | None = None,
     ids: IdSource | None = None,
     tokenizers: TokenizerSet | None = None,
+    **candidates: Any,
 ) -> RequestPipeline:
-    """``build_pipeline`` from settings. A live client is refused unless
-    ``live_permission`` allows it; it then gets the file ledger. Tokenizers
-    come from the tokenizer table (built here unless given)."""
+    """``build_pipeline`` from settings. ``candidates`` are passed through
+    (``routing_policy``, ``context_strategy``, ``candidate_versions``). A
+    live client is refused unless ``live_permission`` allows it; it then
+    gets the file ledger. Tokenizers come from the tokenizer table (built
+    here unless given)."""
     tokens = tokenizers or build_tokenizers(loaded)
     ledger = None
     if model_client.source == AnswerSource.LIVE:
@@ -136,6 +140,7 @@ def build_pipeline_from_settings(
         tokenizers=tokens.tokenizers,
         templates=tokens.templates,
         config_hash=loaded.config_hash,
+        **candidates,
     )
 
 

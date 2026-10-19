@@ -1067,6 +1067,15 @@ Envelope plus payload (FR-OBS-02). Written by the event recorder.
 
 Logged sessions and replay cases (CMP-18 output; FR-REQ-03…06, FR-DATA-06).
 
+### `DataQualityFlag`
+
+A loader's warning about a component, e.g. possibly truncated (A-14). Flags are codes documented by each loader; policies never read them.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `component` | `ComponentName` | yes | operational | Affected component. |
+| `flag` | `Name` | yes | operational | e.g. possibly_truncated. |
+
 ### `LoggedMessage`
 
 One logged message. Every metadata field is tri-state: a loader sets only what its dataset actually records.
@@ -1084,6 +1093,7 @@ One logged message. Every metadata field is tri-state: a loader sets only what i
 | `retrieved` | `Component[RetrievedContext]` |  | content | Logged retrieved context. |
 | `attachments` | `Component[tuple[AttachmentRef, ...]]` |  | content | Logged attachments. |
 | `structured_input` | `Component[dict[str, JsonValue]]` |  | content | Logged structured-input configuration (uncertain proxy, A-16). |
+| `quality_flags` | `tuple[DataQualityFlag, ...]` |  | operational | Loader warnings about this message, e.g. possibly truncated (A-14). |
 
 ### `Session`
 
@@ -1109,15 +1119,6 @@ A logged answer paired with a case. Visible to metrics only, never to the pipeli
 | `provider_label` | `Component[str]` |  | operational | Provider label. |
 | `logged_timestamp` | `LoggedTimestamp \| None` |  | operational | Naive timestamp. |
 
-### `DataQualityFlag`
-
-A loader's warning about a component, e.g. possibly truncated (A-14). Flags are codes documented by each loader; policies never read them.
-
-| Field | Type | Req. | Privacy | Description |
-|---|---|---|---|---|
-| `component` | `ComponentName` | yes | operational | Affected component. |
-| `flag` | `Name` | yes | operational | e.g. possibly_truncated. |
-
 ### `ReplayCase`
 
 One replayable request as it would have been seen at its turn.
@@ -1138,7 +1139,7 @@ One replayable request as it would have been seen at its turn.
 **Enumerations**
 
 - **`PairingMethod`**: `request_id`, `heuristic_array_order`
-- **`PairingFlag`**: `clean`, `multiple_answers`, `no_preceding_user`, `skipped_consecutive_user`. Pairing quality (FR-REQ-03). ``no_preceding_user`` never becomes a case: it is counted as an exclusion (FR-EVAL-08).
+- **`PairingFlag`**: `clean`, `multiple_answers`, `no_preceding_user`, `skipped_consecutive_user`, `unanswered`. Pairing quality (FR-REQ-03). ``no_preceding_user`` never becomes a case: it is counted as an exclusion (FR-EVAL-08).
 
 ## `contracts.evaluation`
 

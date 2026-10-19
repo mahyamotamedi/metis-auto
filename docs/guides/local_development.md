@@ -51,11 +51,11 @@ Precedence, lowest first: policy code defaults < `config/defaults.toml` < experi
 - `.env` is git-ignored. It holds `METIS_API_KEY=` (empty). **Paste the key there yourself**; no tool or agent should read, print, or commit it. `.env.example` (committed) lists every variable with placeholders.
 - Secrets are never logged, never written to events or run records, and never part of the config hash. A config file containing a secret-like key is rejected.
 - **Having the key does not enable live calls.** All of these are needed (ADR-0018): an experiment asking for `counterfactual_source = "live"`, `live.enabled = true` in your runtime config (or `METIS__LIVE__ENABLED=true`), both budget caps set, and the key. The live client arrives with Stage 7.5 (§5.1); it needs the `live` extra (`openai`), which the dev lock includes.
-- Also set a spending limit in the **Metis dashboard**, if Metis offers one, as a second safety net (Q-29).
+- The **Metis dashboard** spending limit for the project's API key is **10 USD** (set by the owner; Q-29, 2026-10-18). It is the second safety net, and `budget.lifetime_cap` matches it.
 
 ## 5. The live budget and the spend ledger
 
-- Lifetime cap **20 USD** for the whole project (the ceiling; only `config/defaults.toml` can set it, and no layer can exceed it). Per-run cap **1 USD** by default. Warnings at 50 % and 80 %.
+- Lifetime cap **10 USD** (`budget.lifetime_cap` in `config/defaults.toml`), matching the Metis dashboard limit for the key (Q-29, [ADR-0018 amendment 1](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md#amendment-1-2026-10-18-lifetime-cap-10-usd-q-29)). The **20 USD ceiling** stays the project maximum: only `config/defaults.toml` can set it, and no layer can raise a cap above it. Per-run cap **1 USD** by default. Warnings at 50 % and 80 % of the lifetime cap.
 - The ledger is `data/spend/ledger.jsonl` (git-ignored), one line per live charge: amount, currency, time, run ID. **Never delete or edit it**: that resets or corrupts the lifetime total, and a malformed ledger blocks all live calls.
 - Check the budget at any time (no calls are made): `.venv/bin/python scripts/show_budget.py`.
 

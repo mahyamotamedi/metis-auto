@@ -1,6 +1,6 @@
 # ADR-0018: Live calls for development and testing, through the Metis wrapper, under a 20 USD lifetime budget
 
-- Status: **decided** (owner decisions, 2026-10-18). The per-run cap default and the placeholder tiers are **provisional**.
+- Status: **decided** (owner decisions, 2026-10-18). The per-run cap default and the placeholder tiers are **provisional**. **Amended 2026-10-18** ([amendment 1](#amendment-1-2026-10-18-lifetime-cap-10-usd-q-29)): the lifetime cap is 10 USD, under the unchanged 20 USD ceiling.
 - Date: 2026-10-18
 - Amends: [ADR-0003](0003-offline-by-default-model-calls.md) (its open points: provider choice and budget). ADR-0003's rules stay: offline by default, live opt-in, a cap before any live call.
 - Resolves: Q-08, Q-12. Partly answers Q-05.
@@ -43,3 +43,10 @@ ADR-0003 kept every model call offline and left two things open: which provider 
 - The TODO in the spend guard stands: an actual cost that can't be computed must stop the run (Stage 7.5, with the live adapter).
 - A-33 (SDK retries can be turned off) must be verified for the OpenAI SDK in Stage 7.5.
 - Catalogue context windows are unknown today, so routing would exclude every real model (FR-ROUTE-05). They need sourced values before the first live call (TODO-10).
+
+## Amendment 1 (2026-10-18): lifetime cap 10 USD (Q-29)
+
+- **Decided by:** the project owner, answering Q-29: the Metis dashboard spending limit for this API key is **10 USD**.
+- **Change:** `budget.lifetime_cap = "10"` in `config/defaults.toml`, so the ledger's limit matches the dashboard's. The **ceiling stays 20 USD** (`budget.lifetime_ceiling`, defaults only) as the project maximum; point 3's rules are unchanged (no layer can raise a cap above the ceiling, and the run cap stays 1 USD).
+- **Why both:** the ledger blocks a call *before* it is made, from its estimate; the dashboard limit is the provider-side safety net that also covers calls the ledger cannot see (another computer, another tool using the key). With equal limits, the ledger trips first on this machine.
+- **Consequences:** warnings fire at 5 and 8 USD (50 % and 80 % of the cap). Raising the cap up to 20 USD is a one-line change in `defaults.toml` (reviewed), and should follow a change of the dashboard limit. Comparing the dashboard's charges with the ledger is still open (Q-36).

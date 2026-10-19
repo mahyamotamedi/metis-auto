@@ -104,9 +104,15 @@ def build_pipeline(
     tokenizers: Mapping[str, Tokenizer] | None = None,
     templates: Mapping[str, ChatTemplate] | None = None,
     config_hash: str | None = None,
+    routing_policy: RoutingPolicy | None = None,
+    context_strategy: ContextStrategy | None = None,
+    candidate_versions: Mapping[str, str] | None = None,
 ) -> RequestPipeline:
     """Assemble a pipeline. ``fingerprint_key`` is a secret (ADR-0015): it goes
-    to the measurement service only."""
+    to the measurement service only. ``routing_policy`` / ``context_strategy``
+    inject an experiment's **candidate** (loaded by ``wiring.experiments``
+    from ``experiments/`` only) in place of the configured promoted one;
+    ``candidate_versions`` (name → version) then goes into ``Versions``."""
     clock = clock or SystemClock()
     ids = ids or SequentialIdSource(run_id)
     guard = None
@@ -122,21 +128,23 @@ def build_pipeline(
         tokenizers=tokenizers,
         templates=templates,
     )
-    routing_policy = _lookup(ROUTING_POLICIES, config.routing.policy, "routing policy")(
-        config.routing
+    if routing_policy is None:
+        routing_policy = _lookup(
+            ROUTING_POLICIES, config.routing.policy, "routing policy"
+        )(config.routing)
+    context = (
+        context_strategy
+        or _lookup(CONTEXT_STRATEGIES, config.context.strategy, "context strategy")()
     )
-    context = _lookup(CONTEXT_STRATEGIES, config.context.strategy, "context strategy")()
     detectors = [
         _lookup(DETECTORS, name, "detector")() for name in config.attempts.detectors
     ]
-    recorder = EventRecorder(
-        sink,
-        clock,
-        ids,
-        run_id,
-        run_mode,
-        versions_for(config, fingerprinter, config_hash),
-    )
+    versions = versions_for(config, fingerprinter, config_hash)
+    if candidate_versions:
+        versions = versions.model_copy(
+            update={"policies": {**versions.policies, **candidate_versions}}
+        )
+    recorder = EventRecorder(sink, clock, ids, run_id, run_mode, versions)
     return RequestPipeline(
         config=config,
         routing_policy=routing_policy,

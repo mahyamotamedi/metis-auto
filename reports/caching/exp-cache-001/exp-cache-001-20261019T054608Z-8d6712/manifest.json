@@ -1,0 +1,43 @@
+{
+  "schema_version": "0.4",
+  "run_id": "exp-cache-001-20261019T054608Z-8d6712",
+  "experiment_id": "exp-cache-001",
+  "started_at": "2026-10-19T05:46:08.688654Z",
+  "code": {
+    "commit": "08638fe2cf53daa338a99ff568f43ed1ed73c8b6",
+    "dirty": true
+  },
+  "dataset": "sample_v1",
+  "data_hash": "sha256:e0f56a2f2340b2ac70bf273e05ee2e9b56126cd3874c0c58659f46b4983549e1",
+  "seed": 0,
+  "versions": {
+    "contracts": "0.4",
+    "config_hash": "cfg1:449dc7a39553cf47",
+    "fingerprint_key_id": "kid1:09fefbb56ecbfe49",
+    "policies": {
+      "fixed_model": "configured",
+      "pass_through": "configured",
+      "attempts": "0.1.0",
+      "candidate:exact": "1"
+    },
+    "feature_set": "fs-0.1.0-skeleton",
+    "catalogue": "cat-metis-test-2026-10-18-s75",
+    "price_table": "prices-metis-2026-10-18-s75",
+    "key_schema": "ks-1",
+    "embedder": null,
+    "judge": null
+  },
+  "counterfactual_source": "logged_match",
+  "prompt_composition_assumption": "logged_full",
+  "history_mode": "logged_history",
+  "ordering_rule": "logged_time",
+  "pairing_flags_included": [
+    "clean",
+    "multiple_answers",
+    "skipped_consecutive_user",
+    "unanswered"
+  ],
+  "live_calls": false,
+  "spend_cap": null,
+  "hardware": "arm64 Darwin 25.5.0; CPython 3.13.16"
+}

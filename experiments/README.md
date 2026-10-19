@@ -12,7 +12,8 @@ Experiment definitions, candidate strategies, and notebooks. This directory is *
 | `full_eda/` | full-dataset EDA notebooks (ADR-0008) |
 | `sample_eda/` | **frozen**, preliminary sample EDA; nothing may import it |
 
-- One folder per experiment: `<area>/<EXP-ID>-<slug>/`, holding a `README.md` (hypothesis, plan link), a config, and code. IDs are assigned in Stage 8.
+- One folder per experiment: `<area>/<EXP-ID>-<slug>/`, holding a `README.md` (hypothesis, plan link), a `config.toml`, and candidate code if any. EXP-IDs are `exp-<area>-<nnn>` (`cache`, `route`, `ctx`, `cost`, `eval`); run with `scripts/run_experiment.py <config>`. Framework: [docs/experiments/framework.md](../docs/experiments/framework.md).
+- Experiments so far: [caching/exp-cache-001-exact-baseline](caching/exp-cache-001-exact-baseline/README.md).
 - Experiments don't import each other. Shared code is a promotion candidate.
 - Run records go to `runs/` (gitignored). Committed, feature-only summaries go to `reports/<area>/<EXP-ID>/`.
 - Notebooks are committed with no raw content in their outputs.

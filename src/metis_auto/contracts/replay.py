@@ -26,6 +26,14 @@ from .measurement import ComponentName
 from .request import AttachmentRef, Request, RetrievedContext, Role
 
 
+class DataQualityFlag(ContractModel):
+    """A loader's warning about a component, e.g. possibly truncated (A-14).
+    Flags are codes documented by each loader; policies never read them."""
+
+    component: ComponentName = field(Privacy.OPERATIONAL, "Affected component.")
+    flag: Name = field(Privacy.OPERATIONAL, "e.g. possibly_truncated.")
+
+
 class LoggedMessage(ContractModel):
     """One logged message. Every metadata field is tri-state: a loader sets
     only what its dataset actually records."""
@@ -68,6 +76,11 @@ class LoggedMessage(ContractModel):
         Privacy.CONTENT,
         "Logged structured-input configuration (uncertain proxy, A-16).",
         default_factory=Component[dict[str, JsonValue]].unknown,
+    )
+    quality_flags: tuple[DataQualityFlag, ...] = field(
+        Privacy.OPERATIONAL,
+        "Loader warnings about this message, e.g. possibly truncated (A-14).",
+        default=(),
     )
 
 
@@ -113,6 +126,9 @@ class PairingFlag(StrEnum):
     MULTIPLE_ANSWERS = "multiple_answers"
     NO_PRECEDING_USER = "no_preceding_user"
     SKIPPED_CONSECUTIVE_USER = "skipped_consecutive_user"
+    """A user message followed by another user message before any answer."""
+    UNANSWERED = "unanswered"
+    """A user message with no answer after it (the log ends first). Stage 8."""
 
 
 class Reference(ContractModel):
@@ -132,14 +148,6 @@ class Reference(ContractModel):
     logged_timestamp: LoggedTimestamp | None = field(
         Privacy.OPERATIONAL, "Naive timestamp.", default=None
     )
-
-
-class DataQualityFlag(ContractModel):
-    """A loader's warning about a component, e.g. possibly truncated (A-14).
-    Flags are codes documented by each loader; policies never read them."""
-
-    component: ComponentName = field(Privacy.OPERATIONAL, "Affected component.")
-    flag: Name = field(Privacy.OPERATIONAL, "e.g. possibly_truncated.")
 
 
 class ReplayCase(ContractModel):

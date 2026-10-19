@@ -23,6 +23,19 @@ Reading:
 - Exact tokenizers cost little on short requests. With long instructions, counting them dominates the overhead. The DeepSeek tokenizer (Hugging Face `tokenizers`) is about 6–8× slower than tiktoken on the same text: about 7 ms per miss at 40,000 characters. Sample instructions reach about 271,000 characters (provisional signal), so a miss could cost tens of ms with DeepSeek. Caching counts per instructions fingerprint would remove most of it (token_accounting.md §9, Stage 8).
 - Hits stay cheap: the exact lookup comes before context building.
 
+## Overhead with the sample's request sizes (Stage 8, brief §11)
+
+`python scripts/measure_overhead.py --sizes-from-sample --tokenizer <ref> --out …`: one SYNTHETIC request per sample replay case (465), rebuilt from **sizes only** (message, instructions, each history turn, each retrieved item get filler of the same length; attachments kept present where the case had them). Every request is a miss (unique messages), so this is the worst case for counting; the synthetic models' windows were raised to 1,000,000 placeholder tokens so that nothing overflows. Same hardware as above. **Indicative only (A-22).**
+
+Sizes (characters; provisional sample signals): message p50 29 / p95 424 / max 4,666; instructions (400 cases) 3,578 / 79,050 / 271,155; history 490 / 8,711 / 34,828 over 4 / 22 / 43 turns; retrieved (71 cases) 1,472 / 4,015 / 4,015.
+
+| Tokenizer | Overhead p50 / p95 / max (ms) | Context p50 / p95 / max | Whole request p50 / p95 / max | Data |
+|---|---|---|---|---|
+| `openai-o200k-base` | 0.207 / 1.375 / 5.89 | 0.146 / 1.345 / 5.52 | 0.294 / 1.507 / 5.98 | [json](overhead-2026-10-18-sample-sizes-openai-o200k-base.json) |
+| `deepseek-v4` | 0.951 / 10.22 / 57.7 | 0.915 / 11.68 / 57.4 | 1.057 / 10.34 / 57.9 | [json](overhead-2026-10-18-sample-sizes-deepseek-v4.json) |
+
+Reading: p95 stays far inside 100 ms. The DeepSeek maximum (58 ms, the 271,155-character instructions) is the first figure that approaches the budget; a per-instructions-fingerprint token-count cache (token_accounting.md §9) would remove repeated counting, since instructions repeat heavily. Context n is 451: the 14 attachment cases have no eligible model in the synthetic catalogue, so no context is built.
+
 ## Tokenizer-specific size estimates of the sample (optional item)
 
 [sample_token_estimates.json](sample_token_estimates.json), from `python scripts/estimate_sample_tokens.py`: per text field (user messages, answers, instructions with every occurrence and distinct texts once, retrieval queries, retrieved items), per tokenizer, and per writing-system bucket (a crude letter-count heuristic, not language detection): counts, character and token totals, median, p95, max, tokens per 1,000 characters, and the chars/4 error. **ESTIMATES of size, not billed tokens:** no chat framing, and what production really sent is unknown (A-03, TODO-04). Provisional sample signals (ADR-0008). The sample file was only read (sha256 recorded in the JSON).

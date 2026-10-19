@@ -35,6 +35,7 @@ from metis_auto.contracts import (
 from .model import (
     BaselineTable,
     EndpointTable,
+    LabelMapping,
     ReferenceData,
     ReferenceSettings,
     TokenizerTable,
@@ -73,7 +74,14 @@ def load_reference(config_dir: Path, paths: ReferenceSettings) -> ReferenceData:
     tokenizers = (
         read_tokenizers(config_dir / paths.tokenizers) if paths.tokenizers else None
     )
-    data = ReferenceData(catalogue, prices, endpoints, baselines, tokenizers)
+    label_mapping = (
+        read_label_mapping(config_dir / paths.label_mapping)
+        if paths.label_mapping
+        else None
+    )
+    data = ReferenceData(
+        catalogue, prices, endpoints, baselines, tokenizers, label_mapping
+    )
     check_consistency(data)
     return data
 
@@ -153,6 +161,22 @@ def read_tokenizers(path: Path) -> TokenizerTable:
     )
 
 
+def read_label_mapping(path: Path) -> LabelMapping:
+    """``version``, ``dataset``, and ``[[labels]]`` rows (Stage 8)."""
+    raw = _read(path)
+    mapping = _validated(
+        path,
+        LabelMapping,
+        version=raw.get("version"),
+        dataset=raw.get("dataset"),
+        labels=raw.get("labels"),
+    )
+    labels = [e.label for e in mapping.labels]
+    if len(labels) != len(set(labels)):
+        raise ReferenceDataError(f"{path.name}: a label is listed twice")
+    return mapping
+
+
 def check_consistency(data: ReferenceData) -> None:
     """Cross-file rules: every ``price_ref`` has input and output prices;
     every catalogue provider has an endpoint when endpoints are configured;
@@ -185,6 +209,13 @@ def check_consistency(data: ReferenceData) -> None:
             raise ReferenceDataError(
                 f"{entry.model_id}: no endpoint for provider {entry.provider!r}"
             )
+    if data.label_mapping is not None:
+        for row in data.label_mapping.labels:
+            if row.model_id is not None and row.model_id not in model_ids:
+                raise ReferenceDataError(
+                    f"label {row.label!r} maps to {row.model_id!r}, which is not "
+                    "in the catalogue"
+                )
     if data.baselines is not None:
         for baseline in data.baselines.baselines:
             if baseline.model_id is not None and baseline.model_id not in model_ids:

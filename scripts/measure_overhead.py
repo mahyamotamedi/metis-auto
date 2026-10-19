@@ -2,7 +2,7 @@
 
     python scripts/measure_overhead.py [--requests 2000] [--hit-ratio 0.5]
         [--tokenizer openai-o200k-base] [--instructions-chars 0]
-        [--out reports/cost/overhead.json]
+        [--sizes-from-sample] [--out reports/cost/overhead.json]
 
 Runs N SYNTHETIC requests through the real pipeline (fake model client,
 in-memory cache, no network, no keys) and reports p50 / p95 / max per span,
@@ -14,6 +14,16 @@ so the tokenizer's cost is part of the measurement. ``--instructions-chars``
 adds SYNTHETIC instructions of that size, to see how counting scales.
 Indicative only (A-22): a local machine, synthetic requests, a fake model.
 Prints content-free numbers only. Thin wrapper over wiring.
+
+``--sizes-from-sample`` (Stage 8, brief §11): one request per sample replay
+case, rebuilt from **sizes only**: the message, instructions, each history
+turn (with its role), and each retrieved item get SYNTHETIC filler of the
+same character length, and attachments stay present where the case had
+them. No sample text is kept or written; only size aggregates are printed.
+Every message is unique, so every request is an exact-cache miss (the worst
+case for counting). The synthetic models' context windows are raised to
+1,000,000 placeholder tokens so large sample instructions do not overflow
+(``--requests`` and ``--hit-ratio`` are then ignored).
 """
 
 from __future__ import annotations
@@ -31,14 +41,22 @@ from pathlib import Path
 from metis_auto.adapters.providers import FakeModelClient
 from metis_auto.adapters.sinks import InMemoryEventSink
 from metis_auto.adapters.stores import InMemoryCacheStore
+from metis_auto.application.measurement import Fingerprinter
 from metis_auto.contracts import (
     SPAN_CATEGORY,
+    AttachmentRef,
     Component,
     LatencyCategory,
+    Modality,
     Request,
+    RetrievedContext,
+    RetrievedItem,
     RunMode,
     ServedBy,
+    Turn,
 )
+from metis_auto.settings import load_settings
+from metis_auto.wiring.experiments import sample_cases
 from metis_auto.wiring.from_settings import fingerprint_key, pipeline_config
 from metis_auto.wiring.pipeline import build_pipeline
 from metis_auto.wiring.tokenizers import build_tokenizers
@@ -107,12 +125,96 @@ def requests(n: int, hit_ratio: float, instructions_chars: int) -> list[Request]
     return out
 
 
+def filler(n: int, salt: str = "") -> str:
+    text = salt + FILLER * (n // len(FILLER) + 1)
+    return text[:n] if n > len(salt) else (salt + "x")[: max(n, 1)]
+
+
+def sample_sized_requests() -> tuple[list[Request], dict[str, dict[str, int]]]:
+    """SYNTHETIC requests with the sample cases' component sizes."""
+    import secrets
+
+    loaded = load_settings(environ={}, dotenv=None, runtime=None)
+    fp = Fingerprinter(secrets.token_bytes(32))  # IDs only; never written
+    cases = sample_cases(loaded, fp).cases
+    out: list[Request] = []
+    sizes: dict[str, list[int]] = defaultdict(list)
+    for i, case in enumerate(cases):
+        r = case.request
+        sizes["message"].append(len(r.message))
+        instr = r.instructions.value
+        hist = r.history.value or ()
+        items = r.retrieved.value.items if r.retrieved.value else ()
+        if instr:
+            sizes["instructions"].append(len(instr))
+        sizes["history_chars"].append(sum(len(t.text) for t in hist))
+        sizes["history_turns"].append(len(hist))
+        if items:
+            sizes["retrieved_chars"].append(sum(len(x.text) for x in items))
+
+        def state(c, value):
+            return (
+                Component.present(value)
+                if value
+                else (
+                    Component.absent()
+                    if c.state.value != "unknown"
+                    else Component.unknown()
+                )
+            )
+
+        out.append(
+            Request(
+                message=filler(len(r.message), f"{SYNTHETIC} {i} "),
+                instructions=state(
+                    r.instructions, filler(len(instr)) if instr else None
+                ),
+                history=state(
+                    r.history,
+                    tuple(
+                        Turn(role=t.role, text=filler(len(t.text), SYNTHETIC))
+                        for t in hist
+                    )
+                    or None,
+                ),
+                retrieved=state(
+                    r.retrieved,
+                    RetrievedContext(
+                        items=tuple(
+                            RetrievedItem(text=filler(len(x.text), SYNTHETIC))
+                            for x in items
+                        )
+                    )
+                    if items
+                    else None,
+                ),
+                attachments=Component.present((AttachmentRef(modality=Modality.IMAGE),))
+                if r.attachments.value
+                else Component.absent(),
+                structured_input=Component.absent(),
+                session_ref=f"sess-bench-{case.session_ref[-8:]}",
+            )
+        )
+    agg = {
+        k: {
+            "n": len(v),
+            "p50": int(statistics.median(v)),
+            "p95": int(percentile(v, 0.95)),
+            "max": max(v),
+        }
+        for k, v in sorted(sizes.items())
+        if v
+    }
+    return out, agg
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--requests", type=int, default=2000)
     parser.add_argument("--hit-ratio", type=float, default=0.5)
     parser.add_argument("--tokenizer", default="openai-o200k-base")
     parser.add_argument("--instructions-chars", type=int, default=0)
+    parser.add_argument("--sizes-from-sample", action="store_true")
     parser.add_argument("--out", type=Path, help="also write the JSON here")
     args = parser.parse_args()
 
@@ -123,10 +225,16 @@ def main() -> int:
         return 2
     status = next(s for s in tokens.status if s.ref == args.tokenizer)
     config = pipeline_config(loaded)
-    entries = tuple(
-        e.model_copy(update={"tokenizer_ref": args.tokenizer})
-        for e in config.catalogue.entries
-    )
+
+    def patched(e):
+        update = {"tokenizer_ref": args.tokenizer}
+        if args.sizes_from_sample:  # SYNTHETIC placeholder window, see docstring
+            update["context_window"] = e.context_window.model_copy(
+                update={"value": 1_000_000}
+            )
+        return e.model_copy(update=update)
+
+    entries = tuple(patched(e) for e in config.catalogue.entries)
     config = config.model_copy(
         update={"catalogue": config.catalogue.model_copy(update={"entries": entries})}
     )
@@ -143,7 +251,11 @@ def main() -> int:
         config_hash=loaded.config_hash,
     )
 
-    batch = requests(args.requests, args.hit_ratio, args.instructions_chars)
+    size_summary = None
+    if args.sizes_from_sample:
+        batch, size_summary = sample_sized_requests()
+    else:
+        batch = requests(args.requests, args.hit_ratio, args.instructions_chars)
     spans: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
     served: dict[str, int] = defaultdict(int)
     for request in batch:
@@ -168,7 +280,8 @@ def main() -> int:
     result = {
         "measured_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "script": "scripts/measure_overhead.py",
-        "requests": args.requests,
+        "requests": len(batch),
+        "sizes_from_sample": size_summary,
         "hit_ratio_requested": args.hit_ratio,
         "served": dict(served),
         "instructions_chars": args.instructions_chars,

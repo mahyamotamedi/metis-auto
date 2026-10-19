@@ -170,6 +170,6 @@ Every computed `Cost` carries `caveats` (`CostCaveat`), shown with the figure:
 | ~~Templates vs provider-reported usage; whether the wrapper reports cached and reasoning tokens~~ checked 2026-10-18 (live check); Grok overhead and a real provider-cache hit remain (Q-33) | Stage 7.5 live check |
 | ~~DeepSeek thinking mode~~ verified (on by default; keep or disable: Q-34); Grok reasoning (no field reported) | Q-33, Q-34 |
 | gpt-5.4 tokenizer by family mapping (A-53): **accepted** (Q-31, 2026-10-18); re-check at each tiktoken upgrade | an OpenAI statement if one appears |
-| Label mapping (logged label → catalogue model) for the as-logged baseline (contracts.md O-3) | Stage 8, with the as-logged baseline |
+| ~~Label mapping (logged label → catalogue model) for the as-logged baseline~~ **done in Stage 8**: `config/reference/label-mapping-sample-v1.toml` (contracts.md O-3) | Stage 8 |
 | Structured input and attachment tokens | Stage 8 (A-16), and live reported usage |
 | Repeated instruction counting dominates overhead with large instructions (§8); a per-fingerprint count cache would remove it | Stage 8, if realistic sizes make it matter |

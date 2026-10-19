@@ -36,7 +36,7 @@ python3.13 -m venv .venv
 .venv/bin/python scripts/run_walking_skeleton.py # the pipeline end to end with fakes
 ```
 
-No secrets are needed for tests or the walking skeleton. Containers (`docker compose run --rm app`), configuration layers, the `.env` file (copy from `.env.example`), and the live-call budget (20 USD lifetime, [ADR-0018](docs/adr/0018-live-calls-for-development-under-a-lifetime-budget.md)) are explained in the [local development guide](docs/guides/local_development.md).
+No secrets are needed for tests or the walking skeleton. Containers (`docker compose run --rm app`), configuration layers, the `.env` file (copy from `.env.example`), and the live-call budget (10 USD lifetime cap under a 20 USD project ceiling, [ADR-0018](docs/adr/0018-live-calls-for-development-under-a-lifetime-budget.md)) are explained in the [local development guide](docs/guides/local_development.md).
 
 **New to the project and want to try the demo?** Start with the [demo quickstart](docs/guides/demo_quickstart.md): setup, free fake mode, your own Metis key, the `config/local.toml` safety switch, the shared budget, and troubleshooting.
 

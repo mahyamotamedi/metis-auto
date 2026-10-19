@@ -1,6 +1,6 @@
 # Caching Flow: Exact and Semantic (Stage 3)
 
-Status: structure **decided** ([ADR-0011](../adr/0011-cache-key-and-lookup-design.md)); validity rules and thresholds **provisional**; the final sharing policy is **open** (Q-16). Last updated 2026-10-14.
+Status: structure **decided** ([ADR-0011](../adr/0011-cache-key-and-lookup-design.md)); validity rules and thresholds **provisional**; the final sharing policy is **open** (Q-16). Last updated 2026-10-18 (Stage 8: normalisation treatments in `domain/caching/normalise.py`; the multi-variant candidate measurement of §4 implemented as `evaluation/cache_candidates`; first results in [EXP-CACHE-001](../../reports/caching/exp-cache-001/README.md); plan: [caching_plan.md](../experiments/caching_plan.md)).
 Index: [architecture README](README.md). Components: CMP-06 (cache policy), CMP-11 (stores), CMP-13 (embedder). Requirements: FR-XCACHE-*, FR-SCACHE-*, [ADR-0007](../adr/0007-cache-sharing-scope.md).
 
 The sample EDA *informs* this design without fixing any value in it ([ADR-0008](../adr/0008-sample-eda-is-exploratory.md)). Its signal: repeated requests were common, but repeats usually differed in instructions, model, retrieved context, or history (F-6, F-7). So a key that uses the request text alone would produce unsafe hits.
@@ -103,7 +103,7 @@ flowchart TD
 - **Avoided cost** on a hit is a counterfactual estimate: the cost of the routed target on this request's composition, with the token method and price version stated (FR-ACCT-04).
 - **Charged cost** on a hit is overhead only: embedding and verifier (FR-SCACHE-05).
 - Hit rate is always reported with hit correctness (ADR-0006). Offline, matches are **candidate hits**. Their correctness is estimated by comparing the cached answer with the reference or a judge ([evaluation.md](evaluation.md)).
-- Offline experiments compute candidates for **every key variant and every scope in one pass** (within session, cross-session, cross-user when a user reference exists), as ADR-0007 requires. This is done by the experiment, which evaluates several keys per request. The serving path uses only the configured serving variant.
+- Offline experiments compute candidates for **every key variant and every scope in one pass** (Stage 8: `evaluation.cache_candidates.CandidateHarness`; the serving rule is the `ExactKeyIndex`, the measurement-only "unknown as wildcard" rule the `WildcardIndex`) (within session, cross-session, cross-user when a user reference exists), as ADR-0007 requires. This is done by the experiment, which evaluates several keys per request. The serving path uses only the configured serving variant.
 
 ## 5. Stores
 

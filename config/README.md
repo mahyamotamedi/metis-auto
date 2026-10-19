@@ -10,6 +10,7 @@ Versioned configuration **data**, not code ([ADR-0019](../docs/adr/0019-configur
 | `reference/tokenizers.toml` | How each `tokenizer_ref` is counted: backend, pinned file (URL, sha256), fidelity, evidence, chat template (Stage 7, [token_accounting.md](../docs/architecture/token_accounting.md)) | reference data |
 | `reference/endpoints-metis.toml` | Base URL and wire format per model family (Gemini deferred) | reference data |
 | `reference/baselines.toml` | Premium and as-logged baseline definitions | reference data |
+| `reference/label-mapping-sample-v1.toml` | Logged model labels of the sample → catalogue models (fidelity or unmapped reason), for the as-logged baseline (Stage 8) | reference data |
 | `reference/*-synthetic-skeleton.toml` | **Synthetic** catalogue (not real models) and empty price table for the walking skeleton | reference data |
 | `profiles/walking_skeleton.toml` | The walking skeleton's run profile | 3 (experiment) |
 | `local.example.toml` | Template for your untracked `local.toml` | 4 (runtime) |

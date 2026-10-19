@@ -1,0 +1,43 @@
+# EXP-CACHE-001: exact-cache baseline on the sample (Stage 8).
+# Plan: docs/experiments/caching_plan.md, stage C1. Framework:
+# docs/experiments/framework.md. Layer 3 of the configuration (ADR-0019):
+# it may not set live, budget, paths, or dev.
+#
+# Run:  .venv/bin/python scripts/run_experiment.py \
+#         experiments/caching/exp-cache-001-exact-baseline/config.toml
+# and, for the conservative alternative (missing key = unknown), reported
+# beside the primary run:
+#       ... --set experiment.data.missing_key=unknown
+
+[experiment]
+id = "exp-cache-001"
+name = "exact-cache-baseline"
+kind = "cache_candidates"
+# The candidate answers are the logged answers of earlier cases (no model
+# call): ADR-0014's logged source. Quality is not measured (no judge).
+counterfactual_source = "logged_match"
+seed = 0
+hypotheses = ["H-3", "H-8"]
+baselines = ["as_logged", "premium"]
+metrics = ["candidate_hit_rate", "hit_correctness", "savings", "total_cost", "coverage"]
+prompt_composition = "logged_full"
+
+[experiment.data]
+dataset = "sample_v1"
+# Optional keys missing from a sample message (attachments, rag, input):
+# "absent", the primary default (they appear only when present; owner
+# decision Q-37, 2026-10-19, A-61), or "unknown" (the alternative run).
+# Nulls (model + provider + instructions together) stay unknown (Q-25).
+missing_key = "absent"
+pairing_flags = ["clean", "multiple_answers", "skipped_consecutive_user", "unanswered"]
+ordering = "logged_time"
+
+[experiment.strategy]
+slot = "candidate_index"
+builtin = "exact"
+version = "1"
+
+[experiment.strategy.params]
+bases = ["msg_only", "msg_instr", "msg_instr_ctx", "full_no_model", "full"]
+message_treatments = ["literal", "whitespace", "nfkc_casefold_ws"]
+unknown_modes = ["strict", "wildcard"]

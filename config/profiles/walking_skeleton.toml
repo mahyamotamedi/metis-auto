@@ -8,6 +8,7 @@ prices = "reference/prices-synthetic-skeleton.toml"
 # The synthetic providers have no endpoints; the skeleton never calls out.
 endpoints = ""
 baselines = ""
+label_mapping = ""
 
 [experiment]
 name = "walking-skeleton"

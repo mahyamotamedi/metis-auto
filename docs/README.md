@@ -37,10 +37,12 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 | [0015](adr/0015-keyed-content-fingerprints.md) | Keyed (HMAC) content fingerprints; amendment 1: HMAC-SHA-256 algorithm, format, test vectors | decided |
 | [0016](adr/0016-curated-cache-and-traffic-source-scope.md) | Curated shared cache and traffic-source-based cache scope | **proposed — to be tested** (Q-21); scope rule S-b chosen; serving defaults unchanged; `traffic_source` reserved in Stage 4 |
 | [0017](adr/0017-contract-modelling-with-pydantic.md) | Contracts are pydantic v2 models: frozen, extra fields forbidden, a privacy class on every field | decided (pydantic 2.14.1 locked, Stage 5) |
-| [0018](adr/0018-live-calls-for-development-under-a-lifetime-budget.md) | Live calls for development and testing through the Metis wrapper, under a 20 USD lifetime budget (amends ADR-0003) | decided (per-run cap and tiers provisional) |
+| [0018](adr/0018-live-calls-for-development-under-a-lifetime-budget.md) | Live calls for development and testing through the Metis wrapper, under a 20 USD project ceiling (amends ADR-0003); amendment 1: lifetime cap 10 USD = the Metis dashboard limit (Q-29) | decided (per-run cap and tiers provisional) |
 | [0019](adr/0019-configuration-format-layers-and-secrets.md) | Configuration: TOML, six layers, `METIS__` overrides, secrets only from the environment | decided (`Settings` shape provisional) |
 | [0020](adr/0020-token-and-cost-accounting.md) | Token and cost accounting: tokenizers per family as configuration (exact where published, labelled approximation otherwise), strict fidelity, tiered prices ("270K" = 270,000), labelled premium estimate, exact savings decomposition | decided (templates and Grok approximation provisional; Q-31 answered) |
 | [0021](adr/0021-live-openai-compatible-adapter.md) | One live OpenAI-compatible adapter (OpenAI, DeepSeek, Grok via the Metis wrapper; openai SDK in extra `live`), SDK retries off, an uncomputable actual cost charges the estimate and stops the run, generation-limit cap | decided (usage mappings confirmed by the live check 2026-10-18; error mappings provisional) |
+
+| [0022](adr/0022-experiment-runner-and-run-tracking.md) | Experiment runs tracked by our own small runner (not MLflow; an exporter stays an option); the event stream stays the record; EXP-ID naming; candidate loading from `experiments/` only | decided (Stage 8) |
 
 ## Guides
 - [demo_quickstart.md](guides/demo_quickstart.md): **start here if you are new**: a step-by-step guide for teammates to run the demo: setup, fake and real-model modes, `.env` and the Metis key, `config/local.toml`, the shared budget, reading the cost panel, troubleshooting. Required deliverable of the Demo milestone (UI parts completed then).
@@ -52,10 +54,12 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 - [metis_pricing_2026-10-18.csv](references/metis_pricing_2026-10-18.csv): extract of the Metis pricing page saved 2026-10-18 (public prices; structured columns defective for tiered models, see the wrapper summary §3).
 
 ## Reports
-- [reports/cost/README.md](../reports/cost/README.md): **Stage 7** overhead with real tokenizers (A-38) and tokenizer-specific size estimates of the sample (estimates, not billed tokens).
+- [reports/cost/README.md](../reports/cost/README.md): **Stage 7** overhead with real tokenizers (A-38) and tokenizer-specific size estimates of the sample (estimates, not billed tokens); **Stage 8** overhead with the sample's request sizes.
+- [reports/caching/](../reports/caching/README.md): **Stage 8** [EXP-CACHE-001](../reports/caching/exp-cache-001/README.md), the exact-cache baseline (candidate hits per key variant and scope; feature-only).
 
 ## Experiments
-- *Stage 8:* framework doc and the routing, cache, and context plans, in `docs/experiments/`.
+- [experiments/framework.md](experiments/framework.md): **Stage 8** experiment framework: config shape, EXP-IDs, runner kinds, adding a strategy (one interface + one config entry), run records, the comparison format, harness components.
+- Plans: [caching_plan.md](experiments/caching_plan.md) (exact → semantic → persistent → curated; provider cache), [routing_plan.md](experiments/routing_plan.md) (rules to learned and LLM routers, cascades, sticky routing v1; the label problem; hidden reasoning), [context_plan.md](experiments/context_plan.md) (history windows and summaries, LLMLingua-2 and LLMLingua, retrieved-context trimming, instruction handling; Persian quality and overhead).
 - Experiment conventions: [experiments/README.md](../experiments/README.md).
 
 ## Inputs

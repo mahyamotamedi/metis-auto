@@ -24,8 +24,9 @@
 
 [budget]
 # Lower the caps for this machine if you like; they can never exceed
-# budget.lifetime_ceiling (20 USD, defaults.toml only). The spend ledger is
-# per computer: teammates sharing one Metis account should split the lifetime
-# cap (e.g. "5" each for four people) or rely on a Metis dashboard limit.
+# budget.lifetime_ceiling (20 USD, defaults.toml only); the default lifetime
+# cap is 10 USD, the Metis dashboard limit of the key (Q-29). The spend ledger
+# is per computer: teammates sharing one Metis account should split the
+# lifetime cap (e.g. "2.5" each for four people) or rely on the dashboard limit.
 # run_cap = "0.25"
-# lifetime_cap = "5"
+# lifetime_cap = "2.5"

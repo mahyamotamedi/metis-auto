@@ -1,6 +1,6 @@
 # Offline Evaluation Flow (Stage 3)
 
-Status: structure **decided** ([ADR-0014](../adr/0014-counterfactual-answers-via-model-client.md)); runner details and the strategy-loading mechanism **provisional** until Stage 8. Last updated 2026-10-14.
+Status: structure **decided** ([ADR-0014](../adr/0014-counterfactual-answers-via-model-client.md)); runner, strategy loading, EXP-IDs, and the comparison format **decided** in Stage 8 ([ADR-0022](../adr/0022-experiment-runner-and-run-tracking.md), [framework.md](../experiments/framework.md)). Last updated 2026-10-18.
 Index: [architecture README](README.md). Components: CMP-21 (replay), CMP-22 (baselines), CMP-23 (metrics), CMP-24 (runner), CMP-18 (data sources). Requirements: FR-EVAL-*, [ADR-0002](../adr/0002-configurable-baselines.md), [ADR-0006](../adr/0006-evaluation-metric-definitions.md).
 
 ---
@@ -56,7 +56,7 @@ The candidate and premium baseline run through the real `RequestPipeline` (P-2).
 - **Cases** come from the `DataSource` via the replay-case builder (CMP-18, re-implemented, not taken from the EDA helpers, FR-DATA-08). A `ReplayCase` holds the request as it would have been seen at that turn, the reference answer(s), the pairing-quality flag, and logged metadata (model label, presence flags).
 - **No look-ahead** (FR-REQ-06): a case contains only what came before its turn. The reference is visible to metrics only, never to the pipeline.
 - **Order.** Within a session: array order. Across sessions, for cache experiments that measure cross-session reuse: by the logged message timestamp, which is naive with an unknown timezone (A-06). The ordering rule is recorded in the manifest.
-- **Pairing flags** (FR-REQ-03): `clean`, `multiple_answers` (renamed from `multiple_bots` in Stage 4, because `bot` is a sample role name), `skipped_consecutive_user`. An answer with `no_preceding_user` never becomes a case; it is counted as an exclusion. The run config says which flags are included. Excluded and flagged counts are reported (FR-EVAL-08). Contracts: `ReplayCase`, `PairingFlag`, `ExclusionCount` ([contracts.md §4](contracts.md#4-tolerating-the-sample-without-baking-it-in-fr-data-06-adr-0008)).
+- **Pairing flags** (FR-REQ-03): `clean`, `multiple_answers` (renamed from `multiple_bots` in Stage 4, because `bot` is a sample role name), `skipped_consecutive_user`, `unanswered` (Stage 8: a user message with no answer before the log ends; 15 in the sample). Implemented in `data_access/replay_cases/builder.py` (latest preceding user message in log order, A-04). An answer with `no_preceding_user` never becomes a case; it is counted as an exclusion. The run config says which flags are included. Excluded and flagged counts are reported (FR-EVAL-08). Contracts: `ReplayCase`, `PairingFlag`, `ExclusionCount` ([contracts.md §4](contracts.md#4-tolerating-the-sample-without-baking-it-in-fr-data-06-adr-0008)).
 - **Cache state** is reset at the start of each run, and evolves in replay order.
 
 ---
@@ -99,8 +99,8 @@ Savings = baseline cost − candidate cost, per baseline, with both methods and 
 - **Judges** are pluggable through the `Judge` port and versioned. An LLM judge is opt-in. It runs on a stratified subset, and its cost is **evaluation cost**, reported separately from request cost. A judge used as a *runtime detector* is request overhead instead ([attempts.md §4](attempts.md#4-detecting-an-unsatisfactory-response)). Calibration against human ratings is planned (TODO-05).
 - Agreement uses a Persian-capable `Embedder`, chosen and verified in Stage 8 (ADR-0006).
 
-## 7. Open items (Stage 8)
+## 7. Open items
 
-- The strategy-loading mechanism for candidates in `experiments/` (A-26).
-- The results comparison format and `EXP-ID` naming.
+Resolved in Stage 8 (framework.md): the strategy-loading mechanism (A-26), the comparison format, and `EXP-ID` naming; the as-logged baseline (label mapping) and the `logged_match` and `recorded` replay clients exist. Still open:
+
 - Which judge, which embedder, and which proxy labels each routing approach needs.

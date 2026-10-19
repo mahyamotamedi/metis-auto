@@ -1,0 +1,114 @@
+{
+  "measured_at": "2026-10-18T13:23:12+00:00",
+  "script": "scripts/measure_overhead.py",
+  "requests": 465,
+  "sizes_from_sample": {
+    "history_chars": {
+      "n": 465,
+      "p50": 490,
+      "p95": 8711,
+      "max": 34828
+    },
+    "history_turns": {
+      "n": 465,
+      "p50": 4,
+      "p95": 22,
+      "max": 43
+    },
+    "instructions": {
+      "n": 400,
+      "p50": 3578,
+      "p95": 79050,
+      "max": 271155
+    },
+    "message": {
+      "n": 465,
+      "p50": 29,
+      "p95": 424,
+      "max": 4666
+    },
+    "retrieved_chars": {
+      "n": 71,
+      "p50": 1472,
+      "p95": 4015,
+      "max": 4015
+    }
+  },
+  "hit_ratio_requested": 0.5,
+  "served": {
+    "miss": 465
+  },
+  "instructions_chars": 0,
+  "tokenizer": {
+    "ref": "openai-o200k-base",
+    "loaded": "tiktoken-o200k_base@0.14.0",
+    "fidelity": "exact_local",
+    "fallback_reason": null
+  },
+  "config_hash": "cfg1:616df8ec8732c4c1",
+  "hardware": {
+    "machine": "arm64",
+    "system": "Darwin 25.5.0",
+    "python": "CPython 3.13.16",
+    "cpu": "Apple M4"
+  },
+  "spans": {
+    "miss": {
+      "cache_lookup.exact": {
+        "n": 465,
+        "p50_ms": 0.0037,
+        "p95_ms": 0.0433,
+        "max_ms": 0.1273
+      },
+      "cache_store": {
+        "n": 465,
+        "p50_ms": 0.0019,
+        "p95_ms": 0.0056,
+        "max_ms": 0.0223
+      },
+      "context": {
+        "n": 451,
+        "p50_ms": 0.1463,
+        "p95_ms": 1.3452,
+        "max_ms": 5.5216
+      },
+      "features": {
+        "n": 465,
+        "p50_ms": 0.0071,
+        "p95_ms": 0.0084,
+        "max_ms": 0.048
+      },
+      "measure": {
+        "n": 465,
+        "p50_ms": 0.0425,
+        "p95_ms": 0.12,
+        "max_ms": 0.3268
+      },
+      "model_call": {
+        "n": 451,
+        "p50_ms": 0.0012,
+        "p95_ms": 0.0013,
+        "max_ms": 0.0069
+      },
+      "overhead_total": {
+        "n": 465,
+        "p50_ms": 0.2067,
+        "p95_ms": 1.3745,
+        "max_ms": 5.8867
+      },
+      "request": {
+        "n": 465,
+        "p50_ms": 0.2935,
+        "p95_ms": 1.5066,
+        "max_ms": 5.9792
+      },
+      "route": {
+        "n": 465,
+        "p50_ms": 0.0063,
+        "p95_ms": 0.0073,
+        "max_ms": 0.0889
+      }
+    }
+  },
+  "note": "Indicative only (A-22): synthetic requests, fake model, one machine."
+}

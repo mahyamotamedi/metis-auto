@@ -273,6 +273,11 @@ def _check_layer(name: str, data: Mapping[str, Any]) -> None:
             )
         if kind != "defaults" and path[:2] in DEFAULTS_ONLY:
             raise SettingsError(f"{name}: {dotted!r} may be set only in defaults.toml")
+        if kind != "experiment" and path[:2] == ("experiment", "strategy"):
+            raise SettingsError(
+                f"{name}: {dotted!r} may be set only in an experiment file "
+                "(candidate code never loads from defaults or runtime layers)"
+            )
         if kind == "experiment" and path[0] in NOT_IN_EXPERIMENT:
             raise SettingsError(
                 f"{name}: an experiment may not set {path[0]!r} (runtime decides)"

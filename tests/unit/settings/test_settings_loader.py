@@ -47,7 +47,7 @@ def test_defaults_load_and_record_their_layer(cfg):
     loaded = load(cfg)
     assert loaded.layers == ("defaults:config/defaults.toml",)
     assert loaded.settings.live.enabled is False
-    assert loaded.settings.budget.lifetime_cap == Decimal("20")
+    assert loaded.settings.budget.lifetime_cap == Decimal("10")  # Q-29
     assert loaded.settings.budget.run_cap == Decimal("1")
     assert loaded.config_hash.startswith("cfg1:")
     assert loaded.root == cfg.parent

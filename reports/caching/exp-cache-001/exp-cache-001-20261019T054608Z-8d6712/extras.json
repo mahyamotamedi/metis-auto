@@ -1,0 +1,347 @@
+{
+  "label_resolution": {
+    "alias": 2,
+    "exact_id": 242,
+    "not_a_model": 33,
+    "not_in_catalogue": 132,
+    "unknown_label": 27
+  },
+  "lexical_answer_match": {
+    "full.lit.strict": {},
+    "full.lit.wildcard": {},
+    "full.nfkc.strict": {},
+    "full.nfkc.wildcard": {},
+    "full.ws.strict": {},
+    "full.ws.wildcard": {},
+    "full_no_model.lit.strict": {},
+    "full_no_model.lit.wildcard": {},
+    "full_no_model.nfkc.strict": {},
+    "full_no_model.nfkc.wildcard": {},
+    "full_no_model.ws.strict": {},
+    "full_no_model.ws.wildcard": {},
+    "msg_instr.lit.strict": {},
+    "msg_instr.lit.wildcard": {
+      "global_hits": 14,
+      "global_identical_answer": 4,
+      "session_hits": 10,
+      "session_identical_answer": 4
+    },
+    "msg_instr.nfkc.strict": {},
+    "msg_instr.nfkc.wildcard": {
+      "global_hits": 14,
+      "global_identical_answer": 4,
+      "session_hits": 10,
+      "session_identical_answer": 4
+    },
+    "msg_instr.ws.strict": {},
+    "msg_instr.ws.wildcard": {
+      "global_hits": 14,
+      "global_identical_answer": 4,
+      "session_hits": 10,
+      "session_identical_answer": 4
+    },
+    "msg_instr_ctx.lit.strict": {},
+    "msg_instr_ctx.lit.wildcard": {
+      "global_hits": 13,
+      "global_identical_answer": 4,
+      "session_hits": 9,
+      "session_identical_answer": 4
+    },
+    "msg_instr_ctx.nfkc.strict": {},
+    "msg_instr_ctx.nfkc.wildcard": {
+      "global_hits": 13,
+      "global_identical_answer": 4,
+      "session_hits": 9,
+      "session_identical_answer": 4
+    },
+    "msg_instr_ctx.ws.strict": {},
+    "msg_instr_ctx.ws.wildcard": {
+      "global_hits": 13,
+      "global_identical_answer": 4,
+      "session_hits": 9,
+      "session_identical_answer": 4
+    },
+    "msg_only.lit.strict": {},
+    "msg_only.lit.wildcard": {
+      "global_hits": 47,
+      "global_identical_answer": 4,
+      "session_hits": 10,
+      "session_identical_answer": 4
+    },
+    "msg_only.nfkc.strict": {},
+    "msg_only.nfkc.wildcard": {
+      "global_hits": 47,
+      "global_identical_answer": 4,
+      "session_hits": 10,
+      "session_identical_answer": 4
+    },
+    "msg_only.ws.strict": {},
+    "msg_only.ws.wildcard": {
+      "global_hits": 47,
+      "global_identical_answer": 4,
+      "session_hits": 10,
+      "session_identical_answer": 4
+    }
+  },
+  "lexical_repeats": {
+    "literal": {
+      "groups_crossing_sessions": 11,
+      "largest_group": 26,
+      "messages": 465,
+      "messages_in_repeat_groups": 76,
+      "repeat_groups": 21
+    },
+    "nfkc_casefold_ws": {
+      "groups_crossing_sessions": 11,
+      "largest_group": 26,
+      "messages": 465,
+      "messages_in_repeat_groups": 76,
+      "repeat_groups": 21
+    },
+    "whitespace": {
+      "groups_crossing_sessions": 11,
+      "largest_group": 26,
+      "messages": 465,
+      "messages_in_repeat_groups": 76,
+      "repeat_groups": 21
+    }
+  },
+  "pairing_flags": {
+    "clean": 432,
+    "multiple_answers": 2,
+    "skipped_consecutive_user": 16,
+    "unanswered": 15
+  },
+  "variant_table": {
+    "full.lit.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "full.lit.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_session": 0,
+      "ineligible_attachments": 14
+    },
+    "full.nfkc.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "full.nfkc.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_session": 0,
+      "ineligible_attachments": 14
+    },
+    "full.ws.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "full.ws.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_session": 0,
+      "ineligible_attachments": 14
+    },
+    "full_no_model.lit.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "full_no_model.lit.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_session": 0,
+      "ineligible_attachments": 14
+    },
+    "full_no_model.nfkc.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "full_no_model.nfkc.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_session": 0,
+      "ineligible_attachments": 14
+    },
+    "full_no_model.ws.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "full_no_model.ws.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_session": 0,
+      "ineligible_attachments": 14
+    },
+    "msg_instr.lit.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "msg_instr.lit.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_cross_session": 4,
+      "hits_global": 14,
+      "hits_session": 10,
+      "ineligible_attachments": 14
+    },
+    "msg_instr.nfkc.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "msg_instr.nfkc.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_cross_session": 4,
+      "hits_global": 14,
+      "hits_session": 10,
+      "ineligible_attachments": 14
+    },
+    "msg_instr.ws.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "msg_instr.ws.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_cross_session": 4,
+      "hits_global": 14,
+      "hits_session": 10,
+      "ineligible_attachments": 14
+    },
+    "msg_instr_ctx.lit.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "msg_instr_ctx.lit.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_cross_session": 4,
+      "hits_global": 13,
+      "hits_session": 9,
+      "ineligible_attachments": 14
+    },
+    "msg_instr_ctx.nfkc.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "msg_instr_ctx.nfkc.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_cross_session": 4,
+      "hits_global": 13,
+      "hits_session": 9,
+      "ineligible_attachments": 14
+    },
+    "msg_instr_ctx.ws.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "msg_instr_ctx.ws.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_cross_session": 4,
+      "hits_global": 13,
+      "hits_session": 9,
+      "ineligible_attachments": 14
+    },
+    "msg_only.lit.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "msg_only.lit.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_cross_session": 37,
+      "hits_global": 47,
+      "hits_session": 10,
+      "ineligible_attachments": 14
+    },
+    "msg_only.nfkc.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "msg_only.nfkc.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_cross_session": 37,
+      "hits_global": 47,
+      "hits_session": 10,
+      "ineligible_attachments": 14
+    },
+    "msg_only.ws.strict": {
+      "cases": 465,
+      "hits_session": 0,
+      "ineligible_attachments": 14,
+      "ineligible_unknown_component": 451
+    },
+    "msg_only.ws.wildcard": {
+      "cases": 465,
+      "eligible": 451,
+      "hits_cross_session": 37,
+      "hits_global": 47,
+      "hits_session": 10,
+      "ineligible_attachments": 14
+    }
+  },
+  "variants": [
+    "msg_only.lit.strict",
+    "msg_only.lit.wildcard",
+    "msg_only.ws.strict",
+    "msg_only.ws.wildcard",
+    "msg_only.nfkc.strict",
+    "msg_only.nfkc.wildcard",
+    "msg_instr.lit.strict",
+    "msg_instr.lit.wildcard",
+    "msg_instr.ws.strict",
+    "msg_instr.ws.wildcard",
+    "msg_instr.nfkc.strict",
+    "msg_instr.nfkc.wildcard",
+    "msg_instr_ctx.lit.strict",
+    "msg_instr_ctx.lit.wildcard",
+    "msg_instr_ctx.ws.strict",
+    "msg_instr_ctx.ws.wildcard",
+    "msg_instr_ctx.nfkc.strict",
+    "msg_instr_ctx.nfkc.wildcard",
+    "full_no_model.lit.strict",
+    "full_no_model.lit.wildcard",
+    "full_no_model.ws.strict",
+    "full_no_model.ws.wildcard",
+    "full_no_model.nfkc.strict",
+    "full_no_model.nfkc.wildcard",
+    "full.lit.strict",
+    "full.lit.wildcard",
+    "full.ws.strict",
+    "full.ws.wildcard",
+    "full.nfkc.strict",
+    "full.nfkc.wildcard"
+  ]
+}

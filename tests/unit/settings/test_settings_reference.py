@@ -221,3 +221,27 @@ def test_a_baseline_outside_the_catalogue_is_refused(tmp_path):
 
 def test_input_token_type_names_match_the_contract():
     assert {"input", "output", "cached_input"} <= {t.value for t in TokenType}
+
+
+def test_label_mapping_loads_and_checks_the_catalogue(tmp_path):
+    from metis_auto.settings import LabelFidelity, load_settings
+    from metis_auto.settings.reference import ReferenceDataError, read_label_mapping
+
+    loaded = load_settings(environ={}, dotenv=None, runtime=None)
+    mapping = loaded.reference.label_mapping
+    assert mapping is not None and mapping.dataset == "sample_v1"
+    assert mapping.get("gpt-4o-mini").fidelity == LabelFidelity.EXACT_ID
+    assert mapping.get("default").model_id is None
+    assert mapping.model_ids()["deepseek-chat"] == "deepseek-v4-flash"
+    bad = tmp_path / "m.toml"
+    bad.write_text(
+        'version = "v"\ndataset = "d"\n[[labels]]\nlabel = "x"\nmodel_id = "x"\n'
+    )
+    with pytest.raises(ReferenceDataError, match="fidelity"):
+        read_label_mapping(bad)
+    bad.write_text(
+        'version = "v"\ndataset = "d"\n[[labels]]\nlabel = "x"\n'
+        'model_id = "x"\nfidelity = "alias"\n'
+    )
+    with pytest.raises(ReferenceDataError, match="evidence"):
+        read_label_mapping(bad)

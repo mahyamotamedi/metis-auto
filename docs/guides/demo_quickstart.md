@@ -122,7 +122,7 @@ Your Metis key alone is never enough. A fresh clone therefore cannot spend money
 | `[paths]` | where run records and the spend ledger live on this computer | leave commented out |
 | `[logging]` | how much the programs log (`"DEBUG"`, `"INFO"`, …) | leave commented out |
 | `[live]` | `enabled = true` allows real calls on this computer (the second key) | `true` only while you want real answers |
-| `[budget]` | lower caps for this computer: `run_cap` (per run) and `lifetime_cap` (in total); they can never exceed the 20 USD ceiling | e.g. `run_cap = "0.10"` |
+| `[budget]` | lower caps for this computer: `run_cap` (per run) and `lifetime_cap` (in total); they can never exceed the 20 USD ceiling (the shared default lifetime cap is 10 USD) | e.g. `run_cap = "0.10"` |
 
 **Check it:** `.venv/bin/python scripts/show_budget.py` prints the budget and `live_blocked_by`. With `.env` and `local.toml` set up, the only reason left should be `experiment.counterfactual_source is not 'live'`. That is expected: `chat.py` supplies that key itself.
 
@@ -130,7 +130,7 @@ Your Metis key alone is never enough. A fresh clone therefore cannot spend money
 
 ## 6. The budget
 
-- **20 USD for the whole project, for good.** This *lifetime cap* covers every real call by everyone on the project. Only `config/defaults.toml` can set the ceiling, and no local setting can raise it.
+- **10 USD lifetime cap; 20 USD for the whole project, for good.** The *lifetime cap* (`budget.lifetime_cap`, 10 USD in `config/defaults.toml`) matches the spending limit the owner set on the Metis dashboard for the project key (Q-29, 2026-10-18). The *ceiling* of 20 USD is the project maximum: only `config/defaults.toml` can set it, and no local setting can raise a cap above it.
 - **Per-run cap:** 1 USD by default for each run (one `chat.py` session is one run). Your `local.toml` can lower it, e.g. `run_cap = "0.10"`.
 - **The spend guard:** before every real call, Metis-Auto estimates the call's maximum cost and refuses the call if it would go over either cap. You see `failure: budget_exhausted`. Every answered call is charged at its actual cost.
 - **The ledger:** `data/spend/ledger.jsonl` records every charge (amount, time, run ID; no messages). **Never delete or edit it**: deleting it resets the lifetime total to zero on this computer, and a damaged file blocks all real calls.
@@ -140,13 +140,13 @@ Your Metis key alone is never enough. A fresh clone therefore cannot spend money
   .venv/bin/python scripts/show_budget.py
   ```
 
-- **The ledger is per computer.** Your ledger counts only the calls made *from your computer*. If several teammates use **one Metis account**, each ledger allows up to 20 USD, so together you could spend more than the budget. Coordinate in one of two ways:
-  1. **Preferably,** the account owner sets a **spending limit in the Metis dashboard** (at or below 20 USD), which covers everyone; and/or
-  2. **split the budget:** each person lowers their own lifetime cap in `config/local.toml`, e.g. for four people:
+- **The ledger is per computer.** Your ledger counts only the calls made *from your computer*. If several teammates use **one Metis account**, each ledger allows up to the 10 USD lifetime cap, so together you could spend more than the budget. Coordinate in one of two ways:
+  1. **Preferably,** the account owner sets a **spending limit in the Metis dashboard**, which covers everyone (the owner's key has a 10 USD limit); and/or
+  2. **split the budget:** each person lowers their own lifetime cap in `config/local.toml`, e.g. for four people sharing the 10 USD:
 
      ```toml
      [budget]
-     lifetime_cap = "5"
+     lifetime_cap = "2.5"
      run_cap = "0.10"
      ```
 
@@ -199,7 +199,7 @@ savings (this message | session):
   extra_cost                         0.000000 USD | 0.000000 USD
   actually_paid                      0.000016 USD | 0.000016 USD
 overhead: 0.84 ms, cost 0.000000 USD
-budget: 0 of 20 USD used (0.00%); this run 0 of 1
+budget: 0 of 10 USD used (0.00%); this run 0 of 1
 ```
 
 | Line | Meaning |
@@ -216,7 +216,7 @@ budget: 0 of 20 USD used (0.00%); this run 0 of 1
 | `provider_cache_saving` | the provider's cached-input discount |
 | `extra_cost` | anything else paid: retries, failed attempts, small counting differences |
 | `overhead` | Metis-Auto's own processing time (not the model's) and the cost of any helper calls |
-| `budget` | lifetime spend vs the 20 USD cap, and this run vs the per-run cap |
+| `budget` | lifetime spend vs the lifetime cap (10 USD), and this run vs the per-run cap |
 
 In fake mode, costs are what the fake answer *would* cost; nothing is charged and the budget does not move.
 

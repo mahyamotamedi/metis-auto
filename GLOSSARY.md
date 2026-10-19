@@ -8,7 +8,7 @@ Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid t
 | **Turn** | One user message plus the bot response(s) associated with it. | — |
 | **Request** | What Metis-Auto answers: the current user message plus optional history, instructions, retrieved context, attachments, and structured-input config (FR-REQ-01). | "query" in code (fine in prose) |
 | **Instructions** | The system-level text logged on bot messages. It is *not proven* to be the provider system prompt (A-03). | "system prompt" (unless proven) |
-| **Retrieved context (RAG)** | The logged `rag.context` strings. A missing `rag` means **unknown**, not "no retrieval" (FR-REQ-04). | — |
+| **Retrieved context (RAG)** | The logged `rag.context` strings. In the sample, a missing `rag` key means **absent** (the export lists it only when present; Q-37, 2026-10-19); a value the log can't tell is **unknown**, never "no retrieval" (FR-REQ-04). | — |
 | **Attempt** | One unit of work for a request: a cache lookup or a model call, including escalations and failovers. Each has its own ID. | "try", "call" (ambiguous) |
 | **Pairing** | The heuristic link from a bot record to its request in logged data: the latest preceding user message by array order. It always carries a pairing-quality flag. | "request log", "1:1" |
 | **Model label** | A logged `model` string. It is not a billing entity (A-07). | "model" when the label is meant |
@@ -65,3 +65,9 @@ Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid t
 | **Premium-baseline estimate** | The premium model's cost on the full, uncompressed context with the served answer re-counted by its tokenizer; never a call (brief §5). | "premium cost" (it is an estimate) |
 | **Savings decomposition** | premium baseline − routing − compression − cache − provider-cache savings + extra cost = actually paid, per message and per session, exact in Decimal (brief §6, ADR-0020). | — |
 | **Extra cost** | The decomposition's remainder: Metis overhead, failed, retried, and escalated attempts, and local-vs-reported count differences. | "error term" |
+| **EXP-ID** | An experiment's ID, `exp-<area>-<nnn>` (`cache`, `route`, `ctx`, `cost`, `eval`); its folder is `experiments/<area>/<EXP-ID>-<slug>/` (framework.md §2). | "experiment number" |
+| **Candidate hit** | An offline match between a request and an earlier cached (logged) answer under a key variant; not a safe hit until hit correctness is measured (ADR-0006). | "cache hit" (for offline results) |
+| **Key variant** | One key composition × message treatment × unknown treatment, e.g. `msg_only.lit.strict`; narrow variants are measurement only (P-5). | — |
+| **Unknown as wildcard** | A measurement-only key rule: an unknown component matches anything, bounding the opportunity hidden by unknowns; never a serving rule. | — |
+| **Candidate index** | The swap point of cache-candidate experiments (`CandidateIndex`): stores earlier cases' key material and returns a match. | — |
+| **Label mapping** | The reference file mapping a dataset's logged model labels to catalogue models, with a fidelity (`exact_id`, `alias`) or an unmapped reason; used by the as-logged baseline. | "model mapping" |

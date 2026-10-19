@@ -1,6 +1,6 @@
 # Repository Structure and Dependency Rules (Stage 2)
 
-Status: **decided** for the top-level layout and the dependency rules; **provisional** for sub-package names inside `src/metis_auto/` (refined by Stage 3, created in Stage 5) and for the experiment-loading mechanism (Stage 8). Last updated 2026-10-17 (S3-2 applied: `domain` imports only `contracts`; [ADR-0009 amendment](../adr/0009-repository-structure-and-dependency-rules.md#amendment-1-2026-10-17-domain-imports-only-contracts-s3-2)).
+Status: **decided** for the top-level layout and the dependency rules; **provisional** for sub-package names inside `src/metis_auto/` (refined by Stage 3, created in Stage 5); the experiment-loading mechanism and EXP-ID naming are **decided** in Stage 8 ([ADR-0022](../adr/0022-experiment-runner-and-run-tracking.md)). Last updated 2026-10-18 (Stage 8); before that 2026-10-17 (S3-2 applied: `domain` imports only `contracts`; [ADR-0009 amendment](../adr/0009-repository-structure-and-dependency-rules.md#amendment-1-2026-10-17-domain-imports-only-contracts-s3-2)).
 Decision record: [ADR-0009](../adr/0009-repository-structure-and-dependency-rules.md). Related: [requirements](../project/requirements.md) · [progress](../project/progress.md) · [docs index](../README.md).
 
 **Use this document to answer two questions:** where does a new file go, and what may it import?
@@ -199,7 +199,7 @@ Rules (QA-TEST, ADR-0003):
 
 ## 6. Experiments: `experiments/`
 
-### 6.1 Layout (provisional naming; IDs assigned in Stage 8)
+### 6.1 Layout (decided in Stage 8; naming in [framework.md §2](../experiments/framework.md#2-exp-id-naming))
 
 ```
 experiments/<area>/<EXP-ID>-<slug>/
@@ -215,7 +215,7 @@ Areas: `routing/`, `caching/`, `context/`, `cost/` (tokenizer and size estimates
 
 ### 6.2 Promotion process: experiment → `src/metis_auto/` (decided)
 
-Candidate strategies, for example a new router, live in their experiment folder and implement a `ports` interface or a `domain` policy interface. The evaluation runner loads them for that experiment only. The mechanism, such as a dotted path in the experiment config, is **provisional until Stage 8**. Production defaults in `config/` may name only promoted components. `settings` rejects a default that points outside `metis_auto`.
+Candidate strategies, for example a new router, live in their experiment folder and implement a `ports` interface or a `domain` policy interface. The evaluation runner loads them for that experiment only. **Mechanism (decided in Stage 8, ADR-0022):** `[experiment.strategy]` in the experiment's `config.toml` names a `builtin` or a `file` + `object` in the experiment's folder; `wiring.experiments` loads the file with `importlib` only if it lies under `experiments/`, and `settings` refuses `experiment.strategy` in every layer except an experiment file ([framework.md §4](../experiments/framework.md#4-adding-a-strategy-one-interface-and-one-config-entry)). Production defaults in `config/` may name only promoted components. `settings` rejects a default that points outside `metis_auto`.
 
 A strategy is promoted when **all** of these hold:
 1. **Evidence:** the experiment report meets its plan's success criteria against both baselines, overall and per stratum (FR-EVAL-06, ADR-0006 thresholds).
