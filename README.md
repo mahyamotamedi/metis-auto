@@ -37,11 +37,18 @@ python3.13 -m venv .venv
 .venv/bin/python scripts/chat.py --fake          # the terminal demo (Demo A), offline
 ```
 
+The demo UI in the browser (Demo B; Streamlit, extra `ui`, never in the runtime lock):
+
+```sh
+.venv/bin/pip install --require-hashes -r requirements-ui.lock && .venv/bin/pip install -e . --no-deps
+.venv/bin/python scripts/demo_ui.py              # http://localhost:8501, fake mode by default
+```
+
 Optional, for EXPERIMENTAL LLMLingua-2 compression only: `requirements-compress.lock` (torch; never in the runtime lock) and `scripts/fetch_compressor_assets.py` (about 2.2 GB, sha256-pinned); see the [local development guide](docs/guides/local_development.md).
 
 No secrets are needed for tests or the walking skeleton. Containers (`docker compose run --rm app`), configuration layers, the `.env` file (copy from `.env.example`), and the live-call budget (10 USD lifetime cap under a 20 USD project ceiling, [ADR-0018](docs/adr/0018-live-calls-for-development-under-a-lifetime-budget.md)) are explained in the [local development guide](docs/guides/local_development.md).
 
-**New to the project and want to try the demo?** Start with the [demo quickstart](docs/guides/demo_quickstart.md): setup, free fake mode, the terminal demo's routing, cache, and compression toggles, your own Metis key, the `config/local.toml` safety switch, the shared budget, and troubleshooting.
+**New to the project and want to try the demo?** Start with the [demo quickstart](docs/guides/demo_quickstart.md): setup, free fake mode, the browser UI and a 5-minute demo script, the terminal demo, reading the cost panel, your own Metis key, the `config/local.toml` safety switch, the shared budget, and troubleshooting.
 
 ## Development Workflow
 

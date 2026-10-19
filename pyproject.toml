@@ -48,6 +48,13 @@ compress = [
     "accelerate>=1.15,<2",
     "llmlingua==0.2.2",
 ]
+# Demo UI (Demo milestone B): Streamlit, imported only by scripts/demo_ui.py
+# (tested). Never in the runtime lock or the dev lock: its own lock,
+# requirements-ui.lock (= the dev lock + this extra, shared pins equal to
+# requirements-compress.lock so both can be installed together).
+ui = [
+    "streamlit>=1.65,<1.66",
+]
 # Needed only by the frozen sample-EDA tests (tests/test_sample_eda_helpers.py).
 eda = [
     "numpy>=2",

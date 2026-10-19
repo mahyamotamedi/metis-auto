@@ -23,7 +23,8 @@ history, same instructions and cache).
 Live or fake: ``live=True`` builds recording(live) through ``wiring.live``
 (refused unless ``live_permission`` allows it); ``live=False`` uses the fake
 client, offline. Used by ``scripts/chat.py`` and ``scripts/live_wrapper_check.py``;
-the Demo B UI will use it too.
+and the Demo B UI
+(``scripts/demo_ui.py`` through ``wiring.demo_ui``).
 Calls: settings, wiring.{from_settings, live, compression, demo}, application,
 domain.accounting, adapters (fake client and compressor, memory store and
 sink).
@@ -135,6 +136,10 @@ class TurnReport:
     cache: tuple[str, ...] = ()
     compression: dict[str, str] = field(default_factory=dict)
     settings: dict[str, str] = field(default_factory=dict)
+    parts: SavingsDecomposition | None = None
+    """The message's decomposition as numbers (content-free; for the UI)."""
+    session_parts: SavingsDecomposition | None = None
+    """The session's summed decomposition as numbers."""
 
 
 class ChatSession:
@@ -317,6 +322,14 @@ class ChatSession:
     def set_instructions(self, text: str | None) -> None:
         self.instructions = text
 
+    def set_retrieved(self, documents: Sequence[str]) -> None:
+        """Replace the retrieved context (one document per item; blanks dropped)."""
+        self.retrieved = tuple(d for d in documents if d.strip())
+
+    @property
+    def live(self) -> bool:
+        return self._live
+
     def degrade_next(self) -> None:
         """Fake mode: the next model answer comes back truncated, so the
         truncation detector fires and the attempt loop escalates (offline
@@ -428,11 +441,11 @@ class ChatSession:
             )
             self._decompositions.append(parts)
             decomposition = _terms(parts)
-        session = (
-            _terms(sum_decompositions(self._decompositions))
-            if self._decompositions
-            else ()
+        parts_obj = self._decompositions[-1] if decomposition else None
+        session_obj = (
+            sum_decompositions(self._decompositions) if self._decompositions else None
         )
+        session = _terms(session_obj) if session_obj is not None else ()
         return TurnReport(
             status=response.status.value,
             served_by=meta.served_by.value,
@@ -457,6 +470,8 @@ class ChatSession:
             cache=_cache(trace),
             compression=_compression(response, trace),
             settings=self.settings(),
+            parts=parts_obj,
+            session_parts=session_obj,
         )
 
     def settings(self) -> dict[str, str]:

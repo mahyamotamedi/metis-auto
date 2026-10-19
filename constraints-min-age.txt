@@ -13,3 +13,10 @@ truststore==0.10.4      # 0.10.5 released 2026-10-12 (pulled in by openai via ht
 # `compress`): cutoff 2026-10-05, checked on PyPI 2026-10-19.
 typer==0.27.2           # 0.27.3 released 2026-10-06 (pulled in by transformers)
 transformers==5.18.0    # 5.19.0 released 2026-10-06
+#
+# Added 2026-10-19 (Demo milestone B) for requirements-ui.lock (extra `ui`):
+# cutoff 2026-10-05, checked on PyPI 2026-10-19. streamlit itself is held
+# to 1.65.0 (2026-10-02) by its range in pyproject.toml.
+starlette==1.7.0        # 1.8.0 released 2026-10-13, 1.9.0 2026-10-18
+narwhals==2.26.0        # 2.27.x released 2026-10-10 (pulled in by altair)
+httptools==0.8.0        # 0.9.0 released 2026-10-09 (pulled in by uvicorn)

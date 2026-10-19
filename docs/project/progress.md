@@ -14,7 +14,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 | 7 | Token & cost accounting utility (+ brief §12 items) | done (approved by the instruction to continue with Stage 8, 2026-10-18) | Yes |
 | 7.5 | Live adapter and wrapper check (**new**, small; [brief](live_testing_and_demo_brief.md) §12) | done (approved by the instruction to continue with Stage 8, 2026-10-18) | Yes |
 | 8 | Experiment framework & exact-cache baseline (+ sample loader, pairing, case builder pulled forward from Stage 9) | **awaiting review** (2026-10-18; follow-up 2026-10-19: Q-37, Q-38) | **Yes** (see below) |
-| Demo | Demo milestone (**new**, after Stage 8; brief §12; includes the required teammate quickstart): **A** backend, **B** UI | **A: awaiting review** (2026-10-19); B: not started | A: **yes** (see below); B: — |
+| Demo | Demo milestone (**new**, after Stage 8; brief §12; includes the required teammate quickstart): **A** backend, **B** UI | **A: awaiting review** (2026-10-19); **B: awaiting review** (2026-10-19) | A: **yes**; B: **yes** (see below; live smoke test run 2026-10-19) |
 | 9 | Data layer plan | not started | — |
 | 10 | Architecture review & roadmap | not started | — |
 
@@ -820,3 +820,47 @@ Owner request: the gap found while testing ("write a python function to add two 
 **Validation:** 675 passed, 1 skipped (the opt-in network test), offline; ruff clean; no live call.
 
 **Not changed:** a follow-up without the intent stays on the anchor; only appearing counts, by design. Code disappearing still re-routes even when the new message has a coding intent (the rules then send it to tier 1 again).
+
+---
+
+## Demo milestone, part B — the UI ("the face") (2026-10-19)
+
+Owner request of 2026-10-19: a browser UI over the existing backend, no new routing, caching, or accounting logic. Decision record: [ADR-0024](../adr/0024-demo-ui-streamlit.md).
+
+### Outputs
+1. **`scripts/demo_ui.py`** (Streamlit 1.65.0): one command, `.venv/bin/python scripts/demo_ui.py` (starts Streamlit on itself; localhost only, usage statistics off, no file watcher; `.streamlit/config.toml` repeats it). Main area: the chat (Persian right to left, English left to right, code left to right; CSS on keyed containers, message HTML escaped), the live banner (off / on / blocked with every reason / stopped), a badge line and expandable **Details** under each answer (served by, model, provider-reported model, routing decision and reason, features, cache lookups, tokens, cost, premium estimate and caveats, compression, overhead), suggested messages. Sidebar **Bot setup** (instructions, one box per document with add/remove, two SYNTHETIC presets) and **Settings** (fake/live, sticky v1 / per request / fixed + model picker, bot-level cache [DEMO], seed [DEMO, local only], compression off / fake / LLMLingua-2 [EXPERIMENTAL, with the CPU and ZWNJ warning], DeepSeek thinking, New user (same bot), Reset conversation; fake mode: cut off the next answer). **Cost panel** beside the chat: paid vs premium estimate and % saved, a horizontal waterfall (palette slots 1–3) and the full term table for the message and the session, budget bars (lifetime and per-run cap, the 50 %/80 % warnings), the estimate and placeholder caveats.
+2. **`wiring/demo_ui.py`**, the Streamlit-free view model: presets loader (refuses unmarked texts), `live_check`/`live_banner`, `cost_view`/`waterfall_rows`, `budget_view`, `detail_sections`, `routing_kind`, `friendly_failure`, `text_direction`. **`wiring/chat.py`:** `TurnReport.parts` / `session_parts` (the decompositions as numbers), `ChatSession.set_retrieved`, `ChatSession.live`.
+3. **Presets** `config/demo/presets-synthetic.toml`: a Persian online-shop support bot and an English FAQ bot for a fictional note app; long instructions + 3 documents each (1,261–2,451 tokens, above the providers' minimum cacheable prefix); suggested messages for the demo script. Written for the demo, never from the sample.
+4. **Extra `ui`** with its own lock **`requirements-ui.lock`** (dev lock + `ui`, 67 packages, hashes; shared pins equal to `requirements-compress.lock`, no dev pin changed). Min-age rule kept: `starlette 1.7.0`, `narwhals 2.26.0`, `httptools 0.8.0` pinned in `constraints-min-age.txt` (newer releases were under two weeks old). Installed here with `--require-hashes` next to the compress lock; `pip check` clean.
+5. **Safety:** the page checks `live_permission` itself before building a live session (defence in depth, besides `build_live_client`); live calls go through the spend guard, ledger, and recording as before; the code never touches the key, logs nothing, and prints nothing (tested); `.streamlit/secrets.toml` git-ignored.
+6. **Docs:** ADR-0024; demo_quickstart.md (status, setup step 4, §3, §5, §7.1–§7.5 new: start, tour, **5-minute demo script**, reading the cost panel, fake vs live; §7.6–§7.7 the terminal demo; a UI troubleshooting table; a screenshot `docs/guides/img/demo_ui_cache_hit.jpg`, synthetic content only); README, docs index, CLAUDE.md, local_development.md, module reference (+1 row), register (A-72, A-73, Q-43).
+
+### Validation
+- **Full suite: 701 passed, 1 skipped** (the opt-in network test) with the UI and compress locks installed, offline, warnings as errors; ruff clean. New: view model (17: presets, unmarked preset refused, direction cases, decomposition order and exact sum, waterfall continuity, cache-hit view, badges for every decision, content-free details, budget thresholds, live check and banner, friendly failures), the page under `AppTest` (7: loads in fake mode and a round trip, presets, toggles reach the backend and a cross-user cache hit, a failed toggle reverts and says why, a blocked live switch lists the reasons, no message content in logs at DEBUG, a live budget refusal over mocked HTTP is explained and sends no request), an import test (Streamlit/Altair only in the page; no key access, logging, or printing in it).
+- **Looked at in a browser** (fake mode): the demo script end to end; found and fixed: badge "anchored" on a re-route (label contains "re-anchored"), truncated metrics, thinned chart labels, chat input below the fold, preset buttons truncated, Streamlit's red primary colour.
+- **Fresh-clone walkthrough** (fake mode; HEAD clone plus this change, no `.env` or `local.toml`): §2 steps 1–5 → 698 passed, 4 skipped; the UI started, a preset loaded, greeting / anchored / re-routed shown, the Live switch blocked with both reasons; the terminal chat and `show_budget.py` unchanged. Guide fixes found: three (not two) LLMLingua-2 tests skip without the extra; Streamlit takes the next port when 8501 is busy; `.env` and `local.toml` are re-read without a restart.
+- **No live call**; `.env` never opened by me; raw sample data untouched.
+
+### Decisions, assumptions, questions
+- ADR-0024. Register: **A-72** (display direction rule), **A-73** (the Session tab sums the run, across users), **Q-43** (simulate provider caching in fake mode? default: no).
+- **Optional live smoke test** of the UI: approved and run in the follow-up below.
+
+**Exit criteria (Demo B):** the UI runs with one command in fake mode and live mode (behind both keys), shows everything the request lists, is tested offline, and the quickstart was followed end to end on a fresh clone in fake mode. **Met**, pending review.
+
+### Demo B follow-up — owner answers Q-43 and the UI live smoke test (2026-10-19)
+
+| Item | Status | Answer and what was done |
+|---|---|---|
+| Q-43 | answered | **Keep fake mode as is**: no simulated provider-cache numbers; the quickstart already says provider caching is live only. Nothing changed in code. |
+| UI live smoke test | **run** (owner-approved: SYNTHETIC only, under 0.02 USD, estimate first) | `scripts/demo_ui_live_check.py` (drives the real page in live mode with Streamlit's test runner) + `wiring/demo_ui_check.py` (steps, limits, plan, content-free rows). Exact plan first (no call): **0.001791 USD for 4 calls**, 0.003706 if every call escalated once; output cap 512; the run's spend cap set to the approved 0.02 USD so the guard enforced it. **Charged 0.001674 USD** (6 billed attempts); ledger 0.006098 USD of 10. [Results](../references/metis_demo_ui_live_check.md) (+ content-free JSON). |
+
+**Findings:**
+- **The UI works live end to end.** Live switch accepted, routing decisions as planned, a second user's greeting was a bot-level cache hit with no call, and the cost panel equals the backend's decomposition, which adds up exactly.
+- **gpt-5-nano billed 512 reasoning tokens of the 512-token cap** on both of its calls (finish `length`, no visible answer). Both escalated to gpt-4o-mini, which became the anchor (extra cost 0.000593 USD). The routing placeholder of 150 under-ranks it on the presets' long prompts: **A-66 updated; Q-44 opened** (raise the placeholder, set a reasoning effort, keep it, or disable it in demos). Checked offline: a placeholder of 512 moves the English preset from gpt-5-nano to gpt-4.1-nano. Nothing changed.
+- **No provider-cache hit** on 4 consecutive gpt-4o-mini calls sharing a ~1,300-token prefix (best effort; the Stage 7.5 probe did see one). The quickstart's demo script step 7 no longer promises a hit.
+- The ledger also held two charges (0.000067 USD) from run `chat-20261019T132838Z-1c397509` at 13:29–13:32 UTC, made shortly before the check and not by this session; recorded in the results note.
+
+**Changes:** new `wiring/demo_ui_check.py`, `scripts/demo_ui_live_check.py`, `tests/integration/test_demo_ui_check.py` (plan offline: 4 calls + a cache hit, under the approval; caps); `scripts/demo_ui.py` (`use_container_width` → `width="stretch"`, Streamlit 1.65 deprecation warnings seen in the run); `tests/architecture/test_ui_imports.py` (the live check script may import Streamlit); results note + JSON in `docs/references/`; register (Q-43 answered, A-66, Q-44); quickstart (step 7; gpt-5-nano in live mode); module reference (+1 row, + script); docs index.
+
+**Validation:** full suite 703 passed, 1 skipped (the opt-in network test), offline; ruff clean; `.env` never opened by me; the only live calls were the 6 attempts of this approved run.
+

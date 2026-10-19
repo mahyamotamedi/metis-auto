@@ -28,7 +28,17 @@ The last step downloads two public tokenizer files (OpenAI's `o200k_base`, about
 .venv/bin/python scripts/fetch_compressor_assets.py                     # once; sha256-pinned; --check verifies
 ```
 
-Without them everything else runs, compression stays off (the chat says why if you ask for it), and the two LLMLingua-2 tests skip. The lock was resolved on macOS arm64 (TODO-14); the Docker images do not include it.
+Without them everything else runs, compression stays off (the chat says why if you ask for it), and three LLMLingua-2 tests skip. The lock was resolved on macOS arm64 (TODO-14); the Docker images do not include it.
+
+**Optional: the demo UI (Demo milestone B, [ADR-0024](../adr/0024-demo-ui-streamlit.md)).** Streamlit is in neither the runtime nor the dev lock:
+
+```sh
+.venv/bin/pip install --require-hashes -r requirements-ui.lock   # the dev lock + extra `ui`
+.venv/bin/pip install -e . --no-deps
+.venv/bin/python scripts/demo_ui.py                             # localhost only, no usage statistics
+```
+
+Its shared packages are pinned to the same versions as `requirements-compress.lock`, so both can be installed into one venv. Without it the UI tests skip. Usage: [demo quickstart §7](demo_quickstart.md#7-start-the-demo-and-read-the-cost-panel).
 
 ## 2. Run the smoke test (no secrets needed)
 

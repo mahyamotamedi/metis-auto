@@ -1,0 +1,28 @@
+# Streamlit settings for the demo UI (scripts/demo_ui.py; Demo milestone B).
+# Read when Streamlit starts from the repository root; scripts/demo_ui.py also
+# passes the privacy settings on the command line, so they hold from anywhere.
+
+[browser]
+# No usage statistics are sent to Streamlit.
+gatherUsageStats = false
+
+[server]
+# Listen on this computer only: the demo is never served to the network.
+address = "localhost"
+headless = false
+# No file watcher: the demo does not reload on save (and needs no watchdog).
+fileWatcherType = "none"
+
+[client]
+toolbarMode = "minimal"
+showErrorDetails = "type"
+
+[runner]
+magicEnabled = false
+
+[logger]
+level = "warning"
+
+[theme]
+# Blue (data-viz palette slot 1) instead of Streamlit's red: red reads as an error.
+primaryColor = "#2a78d6"
