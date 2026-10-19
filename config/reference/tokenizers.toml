@@ -1,0 +1,222 @@
+# Tokenizer table (Stage 7): how tokens are counted for each catalogue
+# tokenizer_ref, with fidelity and evidence (MP§3.8). Details and the full
+# research record: docs/architecture/token_accounting.md §2. ADR-0020.
+#
+# Assets are fetched ONCE by `python scripts/fetch_tokenizer_assets.py`
+# (network, explicit) into paths.tokenizer_assets (git-ignored), and checked by
+# sha256 before every load. Nothing is downloaded at run time or in tests. If
+# the library (extra `tokenizers`) or the asset is missing, wiring falls back to
+# the chars/4 approximation for that ref and every count says so.
+#
+# fidelity: exact_local = an official or vendor-published tokenizer for the
+# model; approximation = anything else. A ChatTemplate (message framing) is an
+# approximation until checked against provider-reported usage (Stage 7.5).
+#
+# Template roles are the generic PartRole values: instructions, user,
+# assistant, retrieved. ASSUMPTION (A-55): the Stage 7.5 adapter sends each
+# input part as one message, with retrieved context as its own system-role
+# message.
+
+# Version history: "tokenizers-2026-10-18" (Stage 7); "-s75" (Stage 7.5)
+# applies the live wrapper check of 2026-10-18
+# (docs/references/metis_wrapper_live_check.md): DeepSeek thinking-mode
+# framing; evidence notes on the OpenAI and Grok rows; the MiMo row (Q-32);
+# "tokenizers-2026-10-19-demo" (Demo milestone, Q-34) adds `mode_templates`:
+# the framing with thinking disabled for DeepSeek and MiMo, used for a model
+# whose [model_options] set thinking = "disabled" (wiring.from_settings);
+# "-lc" adds the evidence of the Demo A live check (same day; no count changed).
+
+version = "tokenizers-2026-10-19-demo-lc"
+
+# --- OpenAI: gpt-5-nano, gpt-4.1-nano, gpt-4o-mini, gpt-5.4 -----------------
+[[tokenizers]]
+ref = "openai-o200k-base"
+backend = "tiktoken"
+encoding = "o200k_base"
+fidelity = "exact_local"
+library = "tiktoken==0.14.0"
+evidence = { source = "tiktoken 0.14.0 (OpenAI's tokenizer library) tiktoken/model.py maps 'gpt-5' (MODEL_TO_ENCODING and prefix), 'gpt-4.1-' and 'gpt-4o-' to o200k_base; encoding_name_for_model() returns o200k_base for all four model IDs. OpenAI's gpt-5.4 model page names no tokenizer: for gpt-5.4 this rests on tiktoken's gpt-5 family mapping (A-53).", checked_on = 2026-10-18 }
+
+[tokenizers.asset]
+# tiktoken's own cache layout: the file name is sha1 of the URL, which lets
+# tiktoken load it offline (TIKTOKEN_CACHE_DIR); the sha256 is the hash pinned
+# in tiktoken_ext/openai_public.py, and matched our download on 2026-10-18.
+path = "tiktoken/fb374d419588a4632f3f557e76b4b70aebbca790"
+url = "https://openaipublic.blob.core.windows.net/encodings/o200k_base.tiktoken"
+sha256 = "446a9538cb6c348e3516120d7c08b09f57c36495e2acfffe59a5bf8b0cfb1a2d"
+size_bytes = 3613922
+
+[tokenizers.template]
+tokenizer_ref = "openai-o200k-base"
+version = "openai-chat-cookbook-2026-10-18"
+# OpenAI cookbook "How to count tokens with tiktoken" (num_tokens_from_messages,
+# repo HEAD 5bd6cb40, checked 2026-10-18): 3 tokens per message plus the role
+# string (1 token for system/developer/user/assistant in o200k_base, checked
+# 2026-10-18), and 3 tokens priming the reply. Stated for gpt-4o-mini-2024-07-18
+# and gpt-4o-2024-08-06 only; assumed for gpt-4.1 and gpt-5: approximation.
+# LIVE CHECK 2026-10-18 (one system + one user message, through the Metis
+# wrapper): reported prompt_tokens = counted input EXACTLY for gpt-4.1-nano and
+# gpt-4o-mini (33 content + 11 framing = 44); gpt-5-nano reported 43, i.e. this
+# template overcounts it by 1 token (conservative). PROBE 2026-10-18 (1,263
+# content tokens): the same again (1,274 exact; gpt-5-nano 1,273). Kept as an
+# approximation: two-message layouts only.
+sequence_start = 0
+reply_priming = 3
+role_prefix = { instructions = 4, user = 4, assistant = 4, retrieved = 4 }
+role_suffix = { instructions = 0, user = 0, assistant = 0, retrieved = 0 }
+fidelity = "approximation"
+evidence = { source = "https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb (num_tokens_from_messages)", checked_on = 2026-10-18 }
+
+# --- DeepSeek: deepseek-v4-flash --------------------------------------------
+[[tokenizers]]
+ref = "deepseek-v4"
+backend = "hf_tokenizers"
+fidelity = "exact_local"
+library = "tokenizers==0.23.2"
+evidence = { source = "tokenizer.json in the model's own repository, https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash (MIT licence), revision 60d8d70770c6776ff598c94bb586a859a38244f1 (last modified 2026-06-22). Assumes the Metis model ID deepseek-v4-flash is this open-weight model (A-54).", checked_on = 2026-10-18 }
+
+[tokenizers.asset]
+path = "deepseek-v4-flash/60d8d70770c6776ff598c94bb586a859a38244f1/tokenizer.json"
+url = "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/resolve/60d8d70770c6776ff598c94bb586a859a38244f1/tokenizer.json"
+# Computed from our download on 2026-10-18 (the Hub lists no hash for this
+# non-LFS file; its size, 6,367,146 bytes, matched the Hub's file listing).
+sha256 = "8f9f37ca37fdc4f5fd36d5cf4d3b0e8392edb4e894fd10cc0d70b4957c8633cf"
+size_bytes = 6367146
+
+[tokenizers.template]
+tokenizer_ref = "deepseek-v4"
+version = "deepseek-v41-thinking-2026-10-18"
+# THINKING MODE, as the Metis wrapper serves deepseek-v4-flash (live check
+# 2026-10-18: reported model "deepseek-flash", 30 reasoning tokens, i.e.
+# DeepSeek-V4.1-Flash-1017 with thinking on by default; A-58). Format from
+# encoding/README.md of deepseek-ai/DeepSeek-V4.1-Flash-1017 (revision
+# 1bae0e10..., "Thinking mode"):
+#   <BOS><System>Reasoning Effort: N (range 1-100, ...)\n\n{system}
+#   <User>{msg}<Assistant><think>
+# Counted with the tokenizer: BOS 1 + <System> 1 + effort prefix 25 (the same
+# for N = 50, 75, 100) = sequence_start 27; user prefix <User> 1; reply primed
+# with <Assistant><think> 2. This reproduced the reported prompt_tokens EXACTLY
+# (35 content + 30 framing = 65) for one system + one user message, and again
+# in the probe of 2026-10-18 (1,505 + 30 = 1,535 exact).
+# With [model_options] thinking = "disabled" (probe 2026-10-18) the wrapper
+# reported 40 for the 65 counted here: framing 5, not 30, so this template
+# overcounts by 25 in that mode. Two framings fit 40 (BOS <System> ...
+# <Assistant></think>, or BOS ... <Assistant><think></think>); one request
+# cannot tell them apart; the variant below takes the first (Demo milestone).
+# Unverified, kept from the V4 chat template or the README: earlier assistant
+# turns (<Assistant></think>{answer}<EOS>: prefix 2, suffix 1, reasoning of
+# earlier turns dropped) and retrieved context as a later system message
+# (README: mid-conversation system messages get <System>, prefix 1).
+# Content counts: V4.1's tokenizer.json has the same vocabulary and merges as
+# the pinned V4 file (checked 2026-10-18), so the V4 asset above stays.
+sequence_start = 27
+reply_priming = 2
+role_prefix = { instructions = 0, user = 1, assistant = 2, retrieved = 1 }
+role_suffix = { instructions = 0, user = 0, assistant = 1, retrieved = 0 }
+fidelity = "approximation"
+evidence = { source = "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/1bae0e1088993b9b82de08f59de5be5a34e42170/encoding/README.md (Thinking mode) and the Metis live wrapper check of 2026-10-18 (docs/references/metis_wrapper_live_check.md)", checked_on = 2026-10-18 }
+
+[tokenizers.mode_templates.thinking_disabled]
+tokenizer_ref = "deepseek-v4"
+version = "deepseek-v41-chat-2026-10-19"
+# THINKING DISABLED ([model_options."deepseek-v4-flash"] thinking = "disabled",
+# Q-34). Probe 2026-10-18 (live_check.md §4.3): 40 prompt tokens reported for
+# 35 content tokens (system + user), so the framing is 5. Two layouts give 5:
+#   (a) <BOS><System>{system}<User>{msg}<Assistant></think>   (chosen)
+#   (b) <BOS>{system}<User>{msg}<Assistant><think></think>
+# (a) is the thinking-mode layout without the 25-token reasoning-effort prefix
+# and with the reply primed by <Assistant></think>, the non-thinking marker of
+# DeepSeek's chat format; (b) would drop the <System> marker that V4.1 uses.
+# One request cannot separate them, so this is an approximation: sequence
+# start BOS + <System> = 2; user <User> 1; reply <Assistant></think> 2. History
+# and retrieved layouts are kept from the thinking template.
+# DEMO LIVE CHECK 2026-10-19 (docs/references/metis_demo_live_check.md):
+# reported prompt tokens EXACTLY equal the count for system + user (41 = 36 + 5)
+# and for system + user + assistant + user (76 = 67 + 9). The history turn fits
+# (a) (earlier assistant <Assistant></think>{answer}<EOS> = 3) and not (b)
+# (which would give 10). Retrieved layout still unverified.
+sequence_start = 2
+reply_priming = 2
+role_prefix = { instructions = 0, user = 1, assistant = 2, retrieved = 1 }
+role_suffix = { instructions = 0, user = 0, assistant = 1, retrieved = 0 }
+fidelity = "approximation"
+evidence = { source = "Metis live probe of 2026-10-18 with thinking disabled (docs/references/metis_wrapper_live_check.md §4.3: 40 prompt tokens reported, 35 content); Demo A live check 2026-10-19 (docs/references/metis_demo_live_check.md: 41 and 76 reported = counted, system + user and with one history turn); the V4.1 encoding README (revision 1bae0e10)", checked_on = 2026-10-19 }
+
+# --- Xiaomi MiMo: mimo-v2.5 (Stage 7.5, Q-32) ---------------------------------
+[[tokenizers]]
+ref = "mimo-v2"
+backend = "hf_tokenizers"
+fidelity = "exact_local"
+library = "tokenizers==0.23.2"
+evidence = { source = "tokenizer.json in the model's own repository, https://huggingface.co/XiaomiMiMo/MiMo-V2.5 (MIT licence), revision 63651580ca774f8504f676040460aed3e1244ac1 (last modified 2026-07-09). Xiaomi serves the API ID mimo-v2.5 with mimo-v2.6-flash since 2026-10-14; the MiMo-V2.6-Flash tokenizer (XiaomiMiMo/MiMo-V2.6-Flash-RL, revision dcd3fd83) has the same vocabulary (151,643), merges, normalizer, pre-tokenizer, and special tokens (diffed 2026-10-18; only the merges' JSON layout differs), so counts are the same for either model. Assumes Metis's mimo-v2.5 is Xiaomi's (A-59).", checked_on = 2026-10-18 }
+
+[tokenizers.asset]
+path = "mimo-v2.5/63651580ca774f8504f676040460aed3e1244ac1/tokenizer.json"
+url = "https://huggingface.co/XiaomiMiMo/MiMo-V2.5/resolve/63651580ca774f8504f676040460aed3e1244ac1/tokenizer.json"
+# Computed from our download on 2026-10-18 (the Hub lists no hash for this
+# non-LFS file; its size, 7,033,572 bytes, matched the Hub's file listing).
+sha256 = "633518aad78f9f61bae2ae420d621215754a4424c918b052cd8c22a3b59e99d2"
+size_bytes = 7033572
+
+[tokenizers.template]
+tokenizer_ref = "mimo-v2"
+version = "mimo-v26-chatml-2026-10-18"
+# chat_template of MiMo-V2.6-Flash-RL (revision dcd3fd83; the model that
+# serves mimo-v2.5), thinking on (the API default): every non-assistant
+# message is <|im_start|>{role}\n{content}<|im_end|> (3 + 1 tokens, checked
+# with the tokenizer); earlier assistant turns add <think></think> (2) after
+# the role line; the reply is primed with <|im_start|>assistant\n (3), plus
+# <think></think> (2 more) only when thinking is disabled. No BOS, no default
+# system prompt (V2.5's template inserted one when none was sent; V2.6's does
+# not). Expected for one system + one user message: content + 11.
+# PROBE 2026-10-18 (live_check.md §4): reported prompt_tokens EXACTLY equal to
+# the count for both layouts tried (36 + 11 = 47; 1,796 + 11 = 1,807), which
+# also confirms the content tokenizer (A-59). Kept as an approximation: system
+# + user only (history and retrieved layouts unverified).
+sequence_start = 0
+reply_priming = 3
+role_prefix = { instructions = 3, user = 3, assistant = 5, retrieved = 3 }
+role_suffix = { instructions = 1, user = 1, assistant = 1, retrieved = 1 }
+fidelity = "approximation"
+evidence = { source = "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL/blob/dcd3fd83fb181622fbc606fbb1709901982a62c2/tokenizer_config.json (chat_template)", checked_on = 2026-10-18 }
+
+[tokenizers.mode_templates.thinking_disabled]
+tokenizer_ref = "mimo-v2"
+version = "mimo-v26-chatml-nothink-2026-10-19"
+# THINKING DISABLED: the same chat_template primes the reply with
+# <|im_start|>assistant\n<think></think> (3 + 2 tokens) when thinking is off.
+# Not checked against reported usage (no live call with MiMo thinking off).
+sequence_start = 0
+reply_priming = 5
+role_prefix = { instructions = 3, user = 3, assistant = 5, retrieved = 3 }
+role_suffix = { instructions = 1, user = 1, assistant = 1, retrieved = 1 }
+fidelity = "approximation"
+evidence = { source = "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL/blob/dcd3fd83fb181622fbc606fbb1709901982a62c2/tokenizer_config.json (chat_template, enable_thinking false branch)", checked_on = 2026-10-19 }
+
+# --- xAI: grok-4-1-fast -------------------------------------------------------
+[[tokenizers]]
+# No public tokenizer for Grok 4 / grok-4-1-fast was found (2026-10-18). xAI
+# published Grok-2's tokenizer (xai-org/grok-2, tokenizer.tok.json), a different
+# model generation: not used (no evidence it matches Grok 4; custom format).
+# A tokenize-text API endpoint is reported by third parties but was not found
+# on docs.x.ai, nor in the Metis wrapper docs: not used (network, unverified).
+# So: the labelled chars/4 approximation, and no template (overhead not
+# modelled).
+# LIVE CHECK 2026-10-18: for one system + one user message (29 tokens by
+# chars/4) the wrapper reported 98 prompt tokens: chars/4 without framing
+# undercounts this tiny request by 70 %. One request cannot separate a fixed
+# overhead (framing or a provider-added system prompt) from the chars/4 error
+# on the content (Q-33), so nothing is fitted yet.
+ref = "grok-approx"
+backend = "approx_chars"
+chars_per_token = 4
+fidelity = "approximation"
+evidence = { source = "no public Grok 4 tokenizer found: huggingface.co/xai-org (grok-1, grok-2 only), docs.x.ai (checked 2026-10-18); chars/4 is the sample EDA's heuristic", checked_on = 2026-10-18 }
+
+# --- Fallback approximation (walking skeleton, unknown models) ----------------
+[[tokenizers]]
+ref = "approx-chars-div-4"
+backend = "approx_chars"
+chars_per_token = 4
+fidelity = "approximation"
+evidence = { source = "chars/4 heuristic used by the sample EDA (not a tokenizer)", checked_on = 2026-10-18 }

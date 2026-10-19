@@ -1,0 +1,85 @@
+# Provider endpoints through the Metis wrapper, one per model family.
+# Config, not secrets: every family uses the same key, named by `secret`
+# (the environment variable METIS_API_KEY). Summary and caveats:
+# docs/references/metis_wrapper_api.md. All rows are documentation claims,
+# verified by the Stage 7.5 live wrapper check.
+#
+# max_tokens_param (Stage 7.5): the request field carrying the generation
+# limit, which the live adapter always sends (cost control).
+# - openai: max_completion_tokens. The openai SDK 3.24.0 (checked 2026-10-18)
+#   documents max_tokens as "deprecated in favor of max_completion_tokens, and
+#   ... not compatible with o-series models"; max_completion_tokens includes
+#   reasoning tokens.
+# - deepseek: max_tokens, per https://api-docs.deepseek.com/api/create-chat-completion
+#   (checked 2026-10-18).
+# - grok: max_tokens. docs.x.ai now documents only its Responses API (checked
+#   2026-10-18); accepted by the Metis wrapper's chat completions in the live
+#   check of 2026-10-18 (docs/references/metis_wrapper_live_check.md).
+#
+# request_options: ModelRequestOptions fields the family documents, settable
+# per model in [model_options] (Stage 7.5, Q-34): `thinking` for DeepSeek
+# (https://api-docs.deepseek.com/api/create-chat-completion) and Xiaomi MiMo
+# (https://mimo.mi.com/docs/en-US/api/chat/openai-api), both checked
+# 2026-10-18; both default to thinking enabled.
+#
+# Version history: "endpoints-metis-2026-10-18" (Stage 6); "-s75" adds
+# max_tokens_param, request_options, and the MiMo family (Q-32).
+
+version = "endpoints-metis-2026-10-18-s75"
+
+[[endpoints]]
+family = "openai"
+base_url = "https://api.metisai.ir/openai/v1"
+api_format = "openai_chat_completions"
+auth_header = "Authorization: Bearer"
+secret = "metis_api_key"
+max_tokens_param = "max_completion_tokens"
+status = "enabled"
+evidence = { source = "https://metisai.ir/api/wrapper/openai (saved 2026-10-18)", checked_on = 2026-10-18 }
+
+[[endpoints]]
+family = "deepseek"
+base_url = "https://api.metisai.ir/deepseek/v1"
+api_format = "openai_chat_completions"
+auth_header = "Authorization: Bearer"
+secret = "metis_api_key"
+max_tokens_param = "max_tokens"
+request_options = ["thinking"]
+status = "enabled"
+evidence = { source = "https://metisai.ir/api/wrapper/deepseek (saved 2026-10-18)", checked_on = 2026-10-18 }
+
+[[endpoints]]
+family = "grok"
+base_url = "https://api.metisai.ir/api/v1/wrapper/grok"
+api_format = "openai_chat_completions"
+auth_header = "Authorization: Bearer"
+secret = "metis_api_key"
+max_tokens_param = "max_tokens"
+status = "enabled"
+evidence = { source = "https://metisai.ir/api/wrapper/ (Grok section, saved 2026-10-18)", checked_on = 2026-10-18 }
+
+[[endpoints]]
+# Xiaomi MiMo (Stage 7.5, Q-32). OpenAI-compatible; the Metis page also shows
+# an Anthropic-format endpoint (/mimo/anthropic/v1), not used.
+# max_completion_tokens: the Metis page's example and Xiaomi's API reference
+# (https://mimo.mi.com/docs/en-US/api/chat/openai-api, range [1, 131072],
+# checked 2026-10-18; max_tokens is not documented there).
+family = "mimo"
+base_url = "https://api.metisai.ir/mimo/v1"
+api_format = "openai_chat_completions"
+auth_header = "Authorization: Bearer"
+secret = "metis_api_key"
+max_tokens_param = "max_completion_tokens"
+request_options = ["thinking"]
+status = "enabled"
+evidence = { source = "https://metisai.ir/api/wrapper/mimo (saved 2026-10-18: metis-docs-api-wrapper-mimo.html)", checked_on = 2026-10-18 }
+
+[[endpoints]]
+# Not OpenAI-compatible: needs a second adapter (Stage 10 roadmap).
+family = "gemini"
+base_url = "https://api.metisai.ir"
+api_format = "google_genai"
+auth_header = "x-goog-api-key"
+secret = "metis_api_key"
+status = "deferred"
+evidence = { source = "https://metisai.ir/api/wrapper/gemini (saved 2026-10-18)", checked_on = 2026-10-18 }

@@ -1,0 +1,83 @@
+# Packaging, dependencies, and tool configuration (ADR-0001).
+# Layout: src/metis_auto (ADR-0009). Locked versions: requirements-dev.lock (pip-tools).
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "metis-auto"
+version = "0.0.0"
+description = "Cost-reducing middleware between applications and LLM providers (offline foundation)."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    # The only third-party library allowed in contracts, ports, domain (ADR-0017).
+    "pydantic>=2.10,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "pip-tools>=7.4",
+]
+# Exact local tokenizers (Stage 7, docs/architecture/token_accounting.md).
+# Imported only in adapters/tokenizers. Without this extra, every model is
+# counted with the labelled chars/4 approximation. Tokenizer files are fetched
+# once by scripts/fetch_tokenizer_assets.py (sha256-pinned), never at run time.
+tokenizers = [
+    "tiktoken>=0.14,<0.15",
+    "tokenizers>=0.23,<0.24",
+]
+# Live model calls through the Metis wrapper (Stage 7.5, ADR-0018): the
+# OpenAI-compatible adapter in adapters/providers/openai_compat.py, the only
+# module that imports it. Without this extra, no live client can be built;
+# every test runs offline (HTTP is mocked).
+live = [
+    "openai>=3.24,<4",
+]
+# EXPERIMENTAL context compression (Demo milestone, ADR-0023; context plan X3):
+# LLMLingua-2 on CPU, imported only in adapters/compressors/llmlingua2.py.
+# Heavy (torch); never in the runtime lock or the dev lock: its own lock,
+# requirements-compress.lock (= the dev lock + this extra). Model files come
+# from scripts/fetch_compressor_assets.py (sha256-pinned), never at run time.
+compress = [
+    "torch>=2.14,<2.15",
+    "transformers>=5.18,<5.19",
+    "accelerate>=1.15,<2",
+    "llmlingua==0.2.2",
+]
+# Demo UI (Demo milestone B): Streamlit, imported only by scripts/demo_ui.py
+# (tested). Never in the runtime lock or the dev lock: its own lock,
+# requirements-ui.lock (= the dev lock + this extra, shared pins equal to
+# requirements-compress.lock so both can be installed together).
+ui = [
+    "streamlit>=1.65,<1.66",
+]
+# Needed only by the frozen sample-EDA tests (tests/test_sample_eda_helpers.py).
+eda = [
+    "numpy>=2",
+    "pandas>=2.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# tests/ holds the synthetic fixtures package (tests/fixtures).
+pythonpath = ["tests"]
+filterwarnings = ["error"]
+markers = [
+    "network: needs network or API keys; skipped unless --run-network is given (ADR-0003)",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+# Frozen, preliminary sample EDA (ADR-0008): not reformatted or linted.
+extend-exclude = ["experiments/sample_eda", "tests/test_sample_eda_helpers.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

@@ -1,0 +1,24 @@
+# Keep secrets, local state, and sensitive data out of the build context.
+.env
+.env.*
+!.env.example
+config/local.toml
+data/full_data/
+data/derived/
+data/recorded/
+data/spend/
+data/tokenizers/
+runs/
+.git/
+.venv/
+venv/
+**/__pycache__/
+*.pyc
+*.egg-info/
+build/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.idea/
+.vscode/
+.DS_Store

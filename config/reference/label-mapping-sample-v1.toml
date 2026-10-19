@@ -1,0 +1,107 @@
+# Logged model labels of the sample (dataset sample_v1) → catalogue models,
+# for the as-logged baseline (Stage 8; contracts.md §4, evaluation.md §5).
+#
+# Labels are operational metadata, not content. They are NOT billing
+# entities (A-07): even an exact ID says nothing about the snapshot served
+# at log time (March–September 2026, naive timestamps), and the prices used
+# are the Metis prices of 2026-10-18, not those in force when the answer was
+# logged. Every as-logged cost is therefore an estimate and says so.
+#
+# fidelity: exact_id (label = catalogue model ID) | alias (documented alias;
+#           whether it applied at log time is unknown).
+# unmapped: not_in_catalogue (a real model with no catalogue row or price) |
+#           not_a_model (names no model, A-16).
+# A label missing from this file is unmapped with reason not_listed.
+# Labels seen in the sample (counted 2026-10-18, Stage 8; provisional, ADR-0008).
+
+version = "label-mapping-sample-v1-2026-10-18"
+dataset = "sample_v1"
+
+[[labels]]
+label = "deepseek-v4-flash"
+model_id = "deepseek-v4-flash"
+fidelity = "exact_id"
+
+[[labels]]
+label = "gpt-4o-mini"
+model_id = "gpt-4o-mini"
+fidelity = "exact_id"
+
+[[labels]]
+label = "gpt-5-nano"
+model_id = "gpt-5-nano"
+fidelity = "exact_id"
+
+[[labels]]
+label = "gpt-4.1-nano"
+model_id = "gpt-4.1-nano"
+fidelity = "exact_id"
+
+[[labels]]
+label = "grok-4-1-fast"
+model_id = "grok-4-1-fast"
+fidelity = "exact_id"
+note = "Disabled for routing (Q-32); priced, so the as-logged cost is computable."
+
+[[labels]]
+label = "gpt-5.4"
+model_id = "gpt-5.4"
+fidelity = "exact_id"
+note = "The premium baseline model; logged answers from it are priced at its tier."
+
+[[labels]]
+label = "deepseek-chat"
+model_id = "deepseek-v4-flash"
+fidelity = "alias"
+evidence = { source = "docs/references/metis_wrapper_api.md (Metis DeepSeek page saved 2026-10-18): legacy names redirect to deepseek-v4-flash", checked_on = 2026-10-18 }
+note = "Whether the redirect applied when the answer was logged is unknown."
+
+[[labels]]
+label = "deepseek-reasoner"
+model_id = "deepseek-v4-flash"
+fidelity = "alias"
+evidence = { source = "docs/references/metis_wrapper_api.md (Metis DeepSeek page saved 2026-10-18): legacy names redirect to deepseek-v4-flash", checked_on = 2026-10-18 }
+note = "Whether the redirect applied when the answer was logged is unknown; a reasoner may have billed hidden reasoning."
+
+[[labels]]
+label = "gemini-2.5-flash"
+unmapped = "not_in_catalogue"
+note = "Gemini adapter deferred (Stage 10); no catalogue row or price."
+
+[[labels]]
+label = "gemini-2.5-flash-lite"
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gemini-2.0-flash"
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "claude-sonnet-4-6"
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-4.1-mini"
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-4.1"
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-5.2"
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "o3-mini"
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "dalle"
+unmapped = "not_in_catalogue"
+note = "An image model; not priced per token."
+
+[[labels]]
+label = "default"
+unmapped = "not_a_model"
+note = "Logged with provider label 'workflow' (A-16, Q-09)."

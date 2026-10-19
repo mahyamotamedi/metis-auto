@@ -1,0 +1,129 @@
+provider,model,Cache Write (1h),Cache Write (5m),Cache Write Token,Cached Input Token,Input Audio Token,Input Token,Long contextInput Token,Output Token,Per Call,Search Query,Web Search,raw
+anthropic,claude-opus-4-7,11.0,6.875,,0.55,,5.5,,27.5,,,,Input Token: $5.5000 / 1M tokensOutput Token: $27.5000 / 1M tokensCached Input Token: $0.5500 / 1M tokensCache Write (1h): $11.0000 / 1M tokensCache Write (5m): $6.8750 / 1M tokens
+anthropic,claude-opus-5,11.0,6.875,,0.55,,5.5,,27.5,,,,Input Token: $5.5000 / 1M tokensOutput Token: $27.5000 / 1M tokensCached Input Token: $0.5500 / 1M tokensCache Write (1h): $11.0000 / 1M tokensCache Write (5m): $6.8750 / 1M tokens
+anthropic,claude-3-haiku,0.55,0.33,,0.033,,0.275,,1.375,,,,Input Token: $0.2750 / 1M tokensOutput Token: $1.3750 / 1M tokensCached Input Token: $0.0330 / 1M tokensCache Write (1h): $0.5500 / 1M tokensCache Write (5m): $0.3300 / 1M tokens
+anthropic,claude-fable-5,22.0,13.75,,1.1,,11.0,,55.0,,,,Input Token: $11.0000 / 1M tokensOutput Token: $55.0000 / 1M tokensCached Input Token: $1.1000 / 1M tokensCache Write (1h): $22.0000 / 1M tokensCache Write (5m): $13.7500 / 1M tokens
+anthropic,claude-opus-4-5,11.0,6.875,,0.55,,5.5,,27.5,,,,Input Token: $5.5000 / 1M tokensOutput Token: $27.5000 / 1M tokensCached Input Token: $0.5500 / 1M tokensCache Write (1h): $11.0000 / 1M tokensCache Write (5m): $6.8750 / 1M tokens
+anthropic,claude-opus-4-6,11.0,6.875,,0.55,,5.5,,27.5,,,,Input Token: $5.5000 / 1M tokensOutput Token: $27.5000 / 1M tokensCached Input Token: $0.5500 / 1M tokensCache Write (1h): $11.0000 / 1M tokensCache Write (5m): $6.8750 / 1M tokens
+anthropic,claude-opus-4-8,11.0,6.875,,0.55,,5.5,,27.5,,,,Input Token: $5.5000 / 1M tokensOutput Token: $27.5000 / 1M tokensCached Input Token: $0.5500 / 1M tokensCache Write (1h): $11.0000 / 1M tokensCache Write (5m): $6.8750 / 1M tokens
+anthropic,claude-sonnet-4-5,6.6,4.125,,0.33,,3.3,,16.5,,,,Input Token: $3.3000 / 1M tokensOutput Token: $16.5000 / 1M tokensCached Input Token: $0.3300 / 1M tokensCache Write (1h): $6.6000 / 1M tokensCache Write (5m): $4.1250 / 1M tokens
+anthropic,claude-sonnet-5,4.4,2.75,,0.22,,2.2,,11.0,,,,Input Token: $2.2000 / 1M tokensOutput Token: $11.0000 / 1M tokensCached Input Token: $0.2200 / 1M tokensCache Write (1h): $4.4000 / 1M tokensCache Write (5m): $2.7500 / 1M tokens
+anthropic,claude-fable-5-1,22.0,13.75,,1.1,,11.0,,55.0,,,,Input Token: $11.0000 / 1M tokensOutput Token: $55.0000 / 1M tokensCached Input Token: $1.1000 / 1M tokensCache Write (1h): $22.0000 / 1M tokensCache Write (5m): $13.7500 / 1M tokens
+anthropic,claude-opus-5-5,8.8,5.5,,0.22,,4.4,,22.0,,,,Input Token: $4.4000 / 1M tokensOutput Token: $22.0000 / 1M tokensCached Input Token: $0.2200 / 1M tokensCache Write (1h): $8.8000 / 1M tokensCache Write (5m): $5.5000 / 1M tokens
+anthropic,claude-sonnet-4-6,10.1,6.3125,,0.505,,5.05,,22.0,,,,Input Token: $5.0500 / 1M tokensOutput Token: $22.0000 / 1M tokensCached Input Token: $0.5050 / 1M tokensCache Write (1h): $10.1000 / 1M tokensCache Write (5m): $6.3125 / 1M tokens
+anthropic,claude-3-opus,33.0,20.625,,1.65,,16.5,,82.5,,,,Input Token: $16.5000 / 1M tokensOutput Token: $82.5000 / 1M tokensCached Input Token: $1.6500 / 1M tokensCache Write (1h): $33.0000 / 1M tokensCache Write (5m): $20.6250 / 1M tokens
+anthropic,claude-3-opus-20240229,34.0,21.25,,1.7,,17.0,,83.0,,,,Input Token: $17.0000 / 1M tokensOutput Token: $83.0000 / 1M tokensCached Input Token: $1.7000 / 1M tokensCache Write (1h): $34.0000 / 1M tokensCache Write (5m): $21.2500 / 1M tokens
+anthropic,claude-4-sonnet,6.6,4.125,,0.33,,3.3,,16.5,,,,Input Token: $3.3000 / 1M tokensOutput Token: $16.5000 / 1M tokensCached Input Token: $0.3300 / 1M tokensCache Write (1h): $6.6000 / 1M tokensCache Write (5m): $4.1250 / 1M tokens
+anthropic,claude-4-opus,33.0,20.625,,1.65,,16.5,,82.5,,,,Input Token: $16.5000 / 1M tokensOutput Token: $82.5000 / 1M tokensCached Input Token: $1.6500 / 1M tokensCache Write (1h): $33.0000 / 1M tokensCache Write (5m): $20.6250 / 1M tokens
+anthropic,claude-opus-4-1,33.0,20.625,,1.65,,16.5,,82.5,,,,Input Token: $16.5000 / 1M tokensOutput Token: $82.5000 / 1M tokensCached Input Token: $1.6500 / 1M tokensCache Write (1h): $33.0000 / 1M tokensCache Write (5m): $20.6250 / 1M tokens
+anthropic,claude-haiku-4-5,2.2,1.375,,0.11,,1.1,,5.5,,,,Input Token: $1.1000 / 1M tokensOutput Token: $5.5000 / 1M tokensCached Input Token: $0.1100 / 1M tokensCache Write (1h): $2.2000 / 1M tokensCache Write (5m): $1.3750 / 1M tokens
+anthropic,claude-3-7-sonnet,6.6,4.125,,0.33,,3.3,,16.5,,,,Input Token: $3.3000 / 1M tokensOutput Token: $16.5000 / 1M tokensCached Input Token: $0.3300 / 1M tokensCache Write (1h): $6.6000 / 1M tokensCache Write (5m): $4.1250 / 1M tokens
+anthropic,claude-sonnet-5-5,4.4,2.75,,0.22,,2.2,,11.0,,,,Input Token: $2.2000 / 1M tokensOutput Token: $11.0000 / 1M tokensCached Input Token: $0.2200 / 1M tokensCache Write (1h): $4.4000 / 1M tokensCache Write (5m): $2.7500 / 1M tokens
+cohere,command-r,,,,,,0.165,,0.66,,,,Input Token: $0.1650 / 1M tokensOutput Token: $0.6600 / 1M tokens
+cohere,command-r-plus,,,,,,2.75,,11.0,,,,Input Token: $2.7500 / 1M tokensOutput Token: $11.0000 / 1M tokens
+deepseek,deepseek-flash,,,,0.0033,,0.165,,0.66,,,,Input Token: $0.1650 / 1M tokensOutput Token: $0.6600 / 1M tokensCached Input Token: $0.0033 / 1M tokens
+deepseek,deepseek-v4-flash,,,,0.0033,,0.165,,0.66,,,,Input Token: $0.1650 / 1M tokensOutput Token: $0.6600 / 1M tokensCached Input Token: $0.0033 / 1M tokens
+deepseek,deepseek-v4.1-flash,,,,0.0033,,0.165,,0.66,,,,Input Token: $0.1650 / 1M tokensOutput Token: $0.6600 / 1M tokensCached Input Token: $0.0033 / 1M tokens
+deepseek,deepseek-v4-pro,,,,0.0242,,0.726,,2.178,,,,Input Token: $0.7260 / 1M tokensOutput Token: $2.1780 / 1M tokensCached Input Token: $0.0242 / 1M tokens
+google,gemini-3-pro-image-preview,,,,,,2.2,,132.0,,0.0154,,Input Token: $2.2000 / 1M tokensOutput Token: $132.0000 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-2.5-pro,,,,,,2.75,,16.5,,0.0154,,Input Token: $2.7500 / 1M tokensOutput Token: $16.5000 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-3.5-flash-lite,,,,,,0.33,,2.75,,0.0154,,Input Token: $0.3300 / 1M tokensOutput Token: $2.7500 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-3.7-flash,,,,0.0825,,0.825,,4.125,,0.0154,,Input Token: $0.8250 / 1M tokensOutput Token: $4.1250 / 1M tokensCached Input Token: $0.0825 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-2.5-pro-preview-03-25,,,,,,2.75,,16.5,,0.0154,,Input Token: $2.7500 / 1M tokensOutput Token: $16.5000 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-3.5-flash,,,,,,1.65,,9.9,,0.0154,,Input Token: $1.6500 / 1M tokensOutput Token: $9.9000 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-3.1-flash-lite,,,,,0.55,0.275,,1.65,,0.0154,,Input Token: $0.2750 / 1M tokensOutput Token: $1.6500 / 1M tokensInput Audio Token: $0.5500 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-2.5-flash,,,,,1.1,0.33,,2.75,,0.0154,,Input Token: $0.3300 / 1M tokensOutput Token: $2.7500 / 1M tokensInput Audio Token: $1.1000 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-3-flash-preview,,,,,1.1,0.55,,3.3,,0.0154,,Input Token: $0.5500 / 1M tokensOutput Token: $3.3000 / 1M tokensInput Audio Token: $1.1000 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-3.6-flash,,,,0.0825,,0.825,,4.125,,0.0154,,Input Token: $0.8250 / 1M tokensOutput Token: $4.1250 / 1M tokensCached Input Token: $0.0825 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-3.1-pro-preview,,,,,,4.4,,19.8,,0.0154,,Input Token: $4.4000 / 1M tokensOutput Token: $19.8000 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-2.5-flash-lite,,,,,0.33,0.11,,0.44,,0.0154,,Input Token: $0.1100 / 1M tokensOutput Token: $0.4400 / 1M tokensInput Audio Token: $0.3300 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-2.0-flash-lite-preview,,,,,,0.0825,,0.33,,0.0154,,Input Token: $0.0825 / 1M tokensOutput Token: $0.3300 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-2.5-pro-preview-06-05,,,,,,2.75,,16.5,,0.0154,,Input Token: $2.7500 / 1M tokensOutput Token: $16.5000 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-2.0-flash,,,,,0.77,0.11,,0.44,,0.0154,,Input Token: $0.1100 / 1M tokensOutput Token: $0.4400 / 1M tokensInput Audio Token: $0.7700 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-2.5-flash-preview-04-17,,,,,1.1,0.33,,2.75,,0.0154,,Input Token: $0.3300 / 1M tokensOutput Token: $2.7500 / 1M tokensInput Audio Token: $1.1000 / 1M tokensSearch Query: $0.0154 / call
+google,imagen-4.0-generate-preview-06-06,,,,,,,,,0.044,,,Per Call: $0.0440 / call
+google,gemma-3-27b-it,,,,,,,,,,,,-
+google,imagen-4.0-fast-generate-001,,,,,,,,,0.022,,,Per Call: $0.0220 / call
+google,imagen-4.0-generate-001,,,,,,,,,0.044,,,Per Call: $0.0440 / call
+google,imagen-4.0-ultra-generate-001,,,,,,,,,0.066,,,Per Call: $0.0660 / call
+google,gemini-2.5-flash-lite-preview,,,,,0.33,0.11,,0.44,,0.0154,,Input Token: $0.1100 / 1M tokensOutput Token: $0.4400 / 1M tokensInput Audio Token: $0.3300 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-2.5-flash-preview,,,,,1.1,0.33,,2.75,,0.0154,,Input Token: $0.3300 / 1M tokensOutput Token: $2.7500 / 1M tokensInput Audio Token: $1.1000 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-3-pro-preview,,,,,,4.4,,19.8,,0.0154,,Input Token: $4.4000 / 1M tokensOutput Token: $19.8000 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-3.1-flash-image-preview,,,,,,0.55,,66.0,,0.0154,,Input Token: $0.5500 / 1M tokensOutput Token: $66.0000 / 1M tokensSearch Query: $0.0154 / call
+google,gemini-3.1-flash-lite-preview,,,,,0.55,0.275,,1.65,,0.0154,,Input Token: $0.2750 / 1M tokensOutput Token: $1.6500 / 1M tokensInput Audio Token: $0.5500 / 1M tokensSearch Query: $0.0154 / call
+grok,grok-4.7,,,,1.1,,,4.4,13.2,,,,≤ 200K contextInput Token: $2.2000 / 1M tokensOutput Token: $6.6000 / 1M tokensCached Input Token: $0.5500 / 1M tokensLong contextInput Token: $4.4000 / 1M tokensOutput Token: $13.2000 / 1M tokensCached Input Token: $1.1000 / 1M tokens
+grok,grok-4.6,,,,1.1,,,4.4,13.2,,,,≤ 200K contextInput Token: $2.2000 / 1M tokensOutput Token: $6.6000 / 1M tokensCached Input Token: $0.5500 / 1M tokensLong contextInput Token: $4.4000 / 1M tokensOutput Token: $13.2000 / 1M tokensCached Input Token: $1.1000 / 1M tokens
+grok,grok-3-beta,,,,1.65,,3.3,,16.5,,,,Input Token: $3.3000 / 1M tokensOutput Token: $16.5000 / 1M tokensCached Input Token: $1.6500 / 1M tokens
+grok,grok-3-mini-beta,,,,0.165,,0.33,,0.55,,,,Input Token: $0.3300 / 1M tokensOutput Token: $0.5500 / 1M tokensCached Input Token: $0.1650 / 1M tokens
+grok,grok-beta,,,,2.75,,5.5,,16.5,,,,Input Token: $5.5000 / 1M tokensOutput Token: $16.5000 / 1M tokensCached Input Token: $2.7500 / 1M tokens
+grok,grok-2-1212,,,,1.1,,2.2,,11.0,,,,Input Token: $2.2000 / 1M tokensOutput Token: $11.0000 / 1M tokensCached Input Token: $1.1000 / 1M tokens
+grok,grok-2,,,,1.1,,2.2,,11.0,,,,Input Token: $2.2000 / 1M tokensOutput Token: $11.0000 / 1M tokensCached Input Token: $1.1000 / 1M tokens
+grok,grok-2-latest,,,,1.1,,2.2,,11.0,,,,Input Token: $2.2000 / 1M tokensOutput Token: $11.0000 / 1M tokensCached Input Token: $1.1000 / 1M tokens
+grok,grok-4-0709,,,,1.65,,3.3,,16.5,,,,Input Token: $3.3000 / 1M tokensOutput Token: $16.5000 / 1M tokensCached Input Token: $1.6500 / 1M tokens
+grok,grok-4-fast,,,,0.11,,0.22,,0.55,,,,Input Token: $0.2200 / 1M tokensOutput Token: $0.5500 / 1M tokensCached Input Token: $0.1100 / 1M tokens
+grok,grok-code-fast-1,,,,0.11,,0.22,,1.65,,,,Input Token: $0.2200 / 1M tokensOutput Token: $1.6500 / 1M tokensCached Input Token: $0.1100 / 1M tokens
+grok,grok-4-1-fast,,,,0.11,,0.22,,0.55,,,,Input Token: $0.2200 / 1M tokensOutput Token: $0.5500 / 1M tokensCached Input Token: $0.1100 / 1M tokens
+imagination,gpt-image-2,,,,2.2,,11.0,,33.0,,,,Input Token: $11.0000 / 1M tokensOutput Token: $33.0000 / 1M tokensCached Input Token: $2.2000 / 1M tokens
+imagination,dalle,,,,,,,,,0.07,,,Per Call: $0.0700 / call
+imagination,leonardo,,,,,,,,,0.02,,,Per Call: $0.0200 / call
+imagination,Flux-Pro,,,,,,,,,0.07,,,Per Call: $0.0700 / call
+imagination,Flux-Schnell,,,,,,,,,0.005,,,Per Call: $0.0050 / call
+imagination,gpt-image-1,,,,,,11.0,,44.0,,,,Input Token: $11.0000 / 1M tokensOutput Token: $44.0000 / 1M tokens
+meta,llama-3-8b-chat,,,,,,3.3,,16.5,,,,Input Token: $3.3000 / 1M tokensOutput Token: $16.5000 / 1M tokens
+mistral,mixtral-8x7b-instruct-v0.1,,,,,,3.3,,16.5,,,,Input Token: $3.3000 / 1M tokensOutput Token: $16.5000 / 1M tokens
+netmind,moonshotai/Kimi-K3,,,,0.33,,3.3,,16.5,,,,Input Token: $3.3000 / 1M tokensOutput Token: $16.5000 / 1M tokensCached Input Token: $0.3300 / 1M tokens
+openai_chat_completion,gpt-5.4,,,,0.575,,,5.75,25.875,,,,Web Search: $0.0115 / call≤ 270K contextInput Token: $2.8750 / 1M tokensOutput Token: $17.2500 / 1M tokensCached Input Token: $0.2875 / 1M tokensLong contextInput Token: $5.7500 / 1M tokensOutput Token: $25.8750 / 1M tokensCached Input Token: $0.5750 / 1M tokens
+openai_chat_completion,gpt-5.4-mini,,,,0.0862,,0.8625,,5.175,,,0.0115,Input Token: $0.8625 / 1M tokensOutput Token: $5.1750 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.0862 / 1M tokens
+openai_chat_completion,gpt-5.4-nano,,,,0.023,,0.23,,1.4375,,,0.0115,Input Token: $0.2300 / 1M tokensOutput Token: $1.4375 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.0230 / 1M tokens
+openai_chat_completion,gpt-5.5-pro,,,,6.6,,,66.0,297.0,,,,Web Search: $0.0110 / call≤ 270K contextInput Token: $33.0000 / 1M tokensOutput Token: $198.0000 / 1M tokensCached Input Token: $3.3000 / 1M tokensLong contextInput Token: $66.0000 / 1M tokensOutput Token: $297.0000 / 1M tokensCached Input Token: $6.6000 / 1M tokens
+openai_chat_completion,gpt-5.5,,,,1.1,,,11.0,49.5,,,,Web Search: $0.0110 / call≤ 270K contextInput Token: $5.5000 / 1M tokensOutput Token: $33.0000 / 1M tokensCached Input Token: $0.5500 / 1M tokensLong contextInput Token: $11.0000 / 1M tokensOutput Token: $49.5000 / 1M tokensCached Input Token: $1.1000 / 1M tokens
+openai_chat_completion,gpt-5-nano,,,,0.0055,,0.055,,0.44,,,0.0115,Input Token: $0.0550 / 1M tokensOutput Token: $0.4400 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.0055 / 1M tokens
+openai_chat_completion,gpt-4o-mini,,,,0.0825,,0.165,,0.66,,,0.0115,Input Token: $0.1650 / 1M tokensOutput Token: $0.6600 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.0825 / 1M tokens
+openai_chat_completion,gpt-4o-mini-2024-07-18,,,,0.0825,,0.165,,0.66,,,0.0115,Input Token: $0.1650 / 1M tokensOutput Token: $0.6600 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.0825 / 1M tokens
+openai_chat_completion,gpt-4o,,,,1.375,,2.75,,11.0,,,0.0115,Input Token: $2.7500 / 1M tokensOutput Token: $11.0000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $1.3750 / 1M tokens
+openai_chat_completion,o1-preview,,,,8.25,,16.5,,66.0,,,0.0115,Input Token: $16.5000 / 1M tokensOutput Token: $66.0000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $8.2500 / 1M tokens
+openai_chat_completion,o1-preview-2024-09-12,,,,8.25,,16.5,,66.0,,,0.0115,Input Token: $16.5000 / 1M tokensOutput Token: $66.0000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $8.2500 / 1M tokens
+openai_chat_completion,gpt-4.5-preview,,,,41.25,,82.5,,165.0,,,0.0115,Input Token: $82.5000 / 1M tokensOutput Token: $165.0000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $41.2500 / 1M tokens
+openai_chat_completion,gpt-4o-audio-preview,,,,1.375,,2.75,,11.0,,,0.0115,Input Token: $2.7500 / 1M tokensOutput Token: $11.0000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $1.3750 / 1M tokens
+openai_chat_completion,gpt-4o-mini-audio-preview,,,,0.0825,,0.165,,0.66,,,0.0115,Input Token: $0.1650 / 1M tokensOutput Token: $0.6600 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.0825 / 1M tokens
+openai_chat_completion,metis-gpt,,,,1.0588,,2.1175,,16.94,,,0.0115,Input Token: $2.1175 / 1M tokensOutput Token: $16.9400 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $1.0588 / 1M tokens
+openai_chat_completion,metis-gpt-mini,,,,0.1375,,0.275,,2.2,,,0.0115,Input Token: $0.2750 / 1M tokensOutput Token: $2.2000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.1375 / 1M tokens
+openai_chat_completion,gpt-4o-mini-search-preview,,,,0.0825,,0.165,,0.66,,,0.0115,Input Token: $0.1650 / 1M tokensOutput Token: $0.6600 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.0825 / 1M tokens
+openai_chat_completion,gpt-4,,,,,,33.0,,66.0,,,0.0115,Input Token: $33.0000 / 1M tokensOutput Token: $66.0000 / 1M tokensWeb Search: $0.0115 / call
+openai_chat_completion,gpt-4.1,,,,0.55,,2.2,,8.8,,,0.0115,Input Token: $2.2000 / 1M tokensOutput Token: $8.8000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.5500 / 1M tokens
+openai_chat_completion,gpt-4.1-mini,,,,0.11,,0.44,,1.76,,,0.0115,Input Token: $0.4400 / 1M tokensOutput Token: $1.7600 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.1100 / 1M tokens
+openai_chat_completion,gpt-4.1-nano,,,,0.0275,,0.11,,0.44,,,0.0115,Input Token: $0.1100 / 1M tokensOutput Token: $0.4400 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.0275 / 1M tokens
+openai_chat_completion,gpt-4o-2024-08-06,,,,1.375,,2.75,,11.0,,,0.0115,Input Token: $2.7500 / 1M tokensOutput Token: $11.0000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $1.3750 / 1M tokens
+openai_chat_completion,o4-mini,,,,0.3025,,1.21,,4.84,,,0.0115,Input Token: $1.2100 / 1M tokensOutput Token: $4.8400 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.3025 / 1M tokens
+openai_chat_completion,o1-mini,,,,0.605,,1.21,,4.84,,,0.0115,Input Token: $1.2100 / 1M tokensOutput Token: $4.8400 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.6050 / 1M tokens
+openai_chat_completion,o3-mini,,,,0.605,,1.21,,4.84,,,0.0115,Input Token: $1.2100 / 1M tokensOutput Token: $4.8400 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.6050 / 1M tokens
+openai_chat_completion,gpt-5,,,,0.1375,,1.375,,11.0,,,0.0115,Input Token: $1.3750 / 1M tokensOutput Token: $11.0000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.1375 / 1M tokens
+openai_chat_completion,gpt-5-chat-latest,,,,0.1375,,1.375,,11.0,,,0.0115,Input Token: $1.3750 / 1M tokensOutput Token: $11.0000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.1375 / 1M tokens
+openai_chat_completion,gpt-5-mini,,,,0.0275,,0.275,,2.2,,,0.0115,Input Token: $0.2750 / 1M tokensOutput Token: $2.2000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.0275 / 1M tokens
+openai_chat_completion,gpt-5.1,,,,0.1375,,1.375,,11.0,,,0.0115,Input Token: $1.3750 / 1M tokensOutput Token: $11.0000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.1375 / 1M tokens
+openai_chat_completion,gpt-5.2-codex,,,,,,1.925,,15.4,,,0.0115,Input Token: $1.9250 / 1M tokensOutput Token: $15.4000 / 1M tokensWeb Search: $0.0115 / call
+openai_chat_completion,gpt-5.2,,,,0.1925,,1.925,,15.4,,,0.0115,Input Token: $1.9250 / 1M tokensOutput Token: $15.4000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.1925 / 1M tokens
+openai_chat_completion,o1,,,,8.25,,16.5,,66.0,,,0.0115,Input Token: $16.5000 / 1M tokensOutput Token: $66.0000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $8.2500 / 1M tokens
+openai_chat_completion,gpt-3.5-turbo-instruct,,,,,,1.65,,2.2,,,0.0115,Input Token: $1.6500 / 1M tokensOutput Token: $2.2000 / 1M tokensWeb Search: $0.0115 / call
+openai_chat_completion,gpt-3.5-turbo-0125,,,,,,0.55,,1.65,,,0.0115,Input Token: $0.5500 / 1M tokensOutput Token: $1.6500 / 1M tokensWeb Search: $0.0115 / call
+openai_chat_completion,gpt-4-turbo,,,,,,11.0,,33.0,,,0.0115,Input Token: $11.0000 / 1M tokensOutput Token: $33.0000 / 1M tokensWeb Search: $0.0115 / call
+openai_chat_completion,gpt-5.3-codex,,,,0.1925,,1.925,,15.4,,,0.0115,Input Token: $1.9250 / 1M tokensOutput Token: $15.4000 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.1925 / 1M tokens
+openai_chat_completion,gpt-5.5-mini,,,,0.0862,,0.8625,,5.175,,,0.0115,Input Token: $0.8625 / 1M tokensOutput Token: $5.1750 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.0862 / 1M tokens
+openai_chat_completion,gpt-5.5-nano,,,,0.023,,0.23,,1.4375,,,0.0115,Input Token: $0.2300 / 1M tokensOutput Token: $1.4375 / 1M tokensWeb Search: $0.0115 / callCached Input Token: $0.0230 / 1M tokens
+openai_chat_completion,gpt-6-sol,,,5.0,0.4,,,4.0,15.0,,,,Web Search: $0.0110 / call≤ 270K contextInput Token: $2.0000 / 1M tokensOutput Token: $10.0000 / 1M tokensCache Write Token: $2.5000 / 1M tokensCached Input Token: $0.2000 / 1M tokensLong contextInput Token: $4.0000 / 1M tokensOutput Token: $15.0000 / 1M tokensCache Write Token: $5.0000 / 1M tokensCached Input Token: $0.4000 / 1M tokens
+openai_chat_completion,gpt-6-luna,,,0.275,0.022,,,0.22,0.825,,,,Web Search: $0.0110 / call≤ 270K contextInput Token: $0.1100 / 1M tokensOutput Token: $0.5500 / 1M tokensCache Write Token: $0.1375 / 1M tokensCached Input Token: $0.0110 / 1M tokensLong contextInput Token: $0.2200 / 1M tokensOutput Token: $0.8250 / 1M tokensCache Write Token: $0.2750 / 1M tokensCached Input Token: $0.0220 / 1M tokens
+openai_chat_completion,gpt-5.6-terra,,,5.5,0.44,,,4.4,19.8,,,,Web Search: $0.0110 / call≤ 270K contextInput Token: $2.2000 / 1M tokensOutput Token: $13.2000 / 1M tokensCache Write Token: $2.7500 / 1M tokensCached Input Token: $0.2200 / 1M tokensLong contextInput Token: $4.4000 / 1M tokensOutput Token: $19.8000 / 1M tokensCache Write Token: $5.5000 / 1M tokensCached Input Token: $0.4400 / 1M tokens
+openai_chat_completion,gpt-5.6-sol,,,11.0,0.88,,,8.8,33.0,,,,Web Search: $0.0110 / call≤ 270K contextInput Token: $4.4000 / 1M tokensOutput Token: $22.0000 / 1M tokensCache Write Token: $5.5000 / 1M tokensCached Input Token: $0.4400 / 1M tokensLong contextInput Token: $8.8000 / 1M tokensOutput Token: $33.0000 / 1M tokensCache Write Token: $11.0000 / 1M tokensCached Input Token: $0.8800 / 1M tokens
+openai_chat_completion,gpt-5.6-luna,,,0.55,0.044,,,0.44,1.98,,,,Web Search: $0.0110 / call≤ 270K contextInput Token: $0.2200 / 1M tokensOutput Token: $1.3200 / 1M tokensCache Write Token: $0.2750 / 1M tokensCached Input Token: $0.0220 / 1M tokensLong contextInput Token: $0.4400 / 1M tokensOutput Token: $1.9800 / 1M tokensCache Write Token: $0.5500 / 1M tokensCached Input Token: $0.0440 / 1M tokens
+openai_chat_completion,codex-auto-review,,,,0.575,,,5.75,25.875,,,,≤ 270K contextInput Token: $2.8750 / 1M tokensOutput Token: $17.2500 / 1M tokensCached Input Token: $0.2875 / 1M tokensLong contextInput Token: $5.7500 / 1M tokensOutput Token: $25.8750 / 1M tokensCached Input Token: $0.5750 / 1M tokens
+openai_chat_completion,gpt-6.1-sol,,,5.5,0.22,,,4.4,16.5,,,,Web Search: $0.0110 / call≤ 270K contextInput Token: $2.2000 / 1M tokensOutput Token: $11.0000 / 1M tokensCache Write Token: $2.7500 / 1M tokensCached Input Token: $0.1100 / 1M tokensLong contextInput Token: $4.4000 / 1M tokensOutput Token: $16.5000 / 1M tokensCache Write Token: $5.5000 / 1M tokensCached Input Token: $0.2200 / 1M tokens
+openai_chat_completion,gpt-6-astra,,,27.5,2.2,,,22.0,82.5,,,,Web Search: $0.0110 / call≤ 270K contextInput Token: $11.0000 / 1M tokensOutput Token: $55.0000 / 1M tokensCache Write Token: $13.7500 / 1M tokensCached Input Token: $1.1000 / 1M tokensLong contextInput Token: $22.0000 / 1M tokensOutput Token: $82.5000 / 1M tokensCache Write Token: $27.5000 / 1M tokensCached Input Token: $2.2000 / 1M tokens
+sotoon,google/gemma3-27b,,,,,,7.0,,13.0,,,,Input Token: $7.0000 / 1M tokensOutput Token: $13.0000 / 1M tokens
+typesafe,jev-latest,,,,,,0.0462,,0.0,,,,Input Token: $0.0462 / 1M tokensOutput Token: $0.0000 / 1M tokens
+workflow,default,,,,,,,,,0.0005,,,Per Call: $0.0005 / call
+xiaomi,mimo-v2.5-pro,,,,0.004,,0.4785,,0.957,,,,Input Token: $0.4785 / 1M tokensOutput Token: $0.9570 / 1M tokensCached Input Token: $0.0040 / 1M tokens
+xiaomi,mimo-v2.5,,,,0.0031,,0.154,,0.308,,,,Input Token: $0.1540 / 1M tokensOutput Token: $0.3080 / 1M tokensCached Input Token: $0.0031 / 1M tokens
+zai,glm-5.3,,,,0.286,,1.54,,4.84,,,,Input Token: $1.5400 / 1M tokensOutput Token: $4.8400 / 1M tokensCached Input Token: $0.2860 / 1M tokens
+zai,glm-5.3-flash,,,,0.033,,0.165,,0.55,,,,Input Token: $0.1650 / 1M tokensOutput Token: $0.5500 / 1M tokensCached Input Token: $0.0330 / 1M tokens
+zai,glm-5.3-flashx,,,,0.0825,,0.407,,1.375,,,,Input Token: $0.4070 / 1M tokensOutput Token: $1.3750 / 1M tokensCached Input Token: $0.0825 / 1M tokens
+zai,glm-5.2,,,,0.286,,1.54,,4.84,,,,Input Token: $1.5400 / 1M tokensOutput Token: $4.8400 / 1M tokensCached Input Token: $0.2860 / 1M tokens

@@ -1,0 +1,43 @@
+# Example runtime configuration (layer 4 of 6, ADR-0019).
+# Copy to config/local.toml (git-ignored) and edit, or point
+# METIS_RUNTIME_CONFIG at another file. Machine-specific values only.
+# NEVER put a secret here: secrets go in .env (see .env.example).
+# Step by step: docs/guides/demo_quickstart.md §5.
+#
+# Each [section] may appear ONCE. To change a value, edit it in its existing
+# section (e.g. remove the "#" before `enabled = true` under [live]); do not
+# paste a second [live] at the end ("Cannot declare ('live',) twice").
+
+[paths]
+# run_dir = "runs"
+# spend_ledger = "data/spend/ledger.jsonl"   # never delete this file
+
+[logging]
+# level = "DEBUG"
+
+[live]
+# Second key for live calls (ADR-0018). Off unless you mean it. The scripts
+# (live_wrapper_check.py, chat.py) supply the first key themselves; METIS_API_KEY
+# must be in .env. Guides: docs/guides/demo_quickstart.md §5,
+# docs/guides/local_development.md §5.1. Turn live calls off: enabled = false.
+# enabled = true
+
+[budget]
+# Lower the caps for this machine if you like; they can never exceed
+# budget.lifetime_ceiling (20 USD, defaults.toml only); the default lifetime
+# cap is 10 USD, the Metis dashboard limit of the key (Q-29). The spend ledger
+# is per computer: teammates sharing one Metis account should split the
+# lifetime cap (e.g. "2.5" each for four people) or rely on the dashboard limit.
+# run_cap = "0.25"
+# lifetime_cap = "2.5"
+
+# --- Demo settings (Demo milestone A, ADR-0023) ------------------------------
+# scripts/chat.py chooses these itself (sticky routing by default; /mode,
+# /compress, /botcache, /seed, /thinking at its prompt), so you rarely need
+# them here. They are placeholders and DEMO settings, never serving defaults.
+# Each section may appear once. Examples:
+# [pipeline.routing]
+# policy = "sticky"                 # or "rule_based", "fixed_model"
+#
+# [model_options."deepseek-v4-flash"]
+# thinking = "disabled"             # unset = DeepSeek's default (thinking on)

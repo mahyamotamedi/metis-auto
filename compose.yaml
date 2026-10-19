@@ -1,0 +1,43 @@
+# Local development with Docker Compose (Stage 6). Guide: docs/guides/local_development.md.
+#
+#   docker compose run --rm app                         # full test suite (offline)
+#   docker compose run --rm app python -m pytest tests/integration -q   # smoke test
+#   docker compose run --rm app python scripts/run_walking_skeleton.py
+#   docker compose --profile db up -d postgres          # optional, not yet used
+#
+# Needs Docker Compose v2.24+ (for `required: false` on env_file).
+
+name: metis-auto
+
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    # Secrets at run time only; the file is optional (tests need none).
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      # Run records stay on the host (git-ignored).
+      - ./runs:/app/runs
+      # ONE spend ledger for native and container runs, so the 20 USD
+      # lifetime total is shared (ADR-0018). Never delete it.
+      - ./data/spend:/app/data/spend
+
+  # Optional future database (Stage 9). Not required by anything yet; starts
+  # only with `--profile db`. Needs METIS_DB_PASSWORD in .env.
+  postgres:
+    image: postgres:17
+    profiles: ["db"]
+    environment:
+      POSTGRES_DB: metis
+      POSTGRES_USER: metis
+      POSTGRES_PASSWORD: ${METIS_DB_PASSWORD:-}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata: {}

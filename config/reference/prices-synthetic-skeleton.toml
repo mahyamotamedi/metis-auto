@@ -1,0 +1,10 @@
+# SYNTHETIC: an empty price table. Every price is unknown, so every cost is
+# "not computed" (FR-ACCT-02). Used only by the walking skeleton.
+
+version = "prices-synthetic-empty-1"
+currency = "USD"
+per_tokens = 1000000
+
+[evidence]
+source = "SYNTHETIC walking-skeleton placeholder: no prices"
+checked_on = 2026-10-18

@@ -1,0 +1,18 @@
+# Baseline definitions (ADR-0002, ADR-0014).
+# - premium: gpt-5.4, chosen by the owner for development and the demo
+#   (brief §4–5; Q-05 partly answered). Never called: its cost is estimated
+#   from locally counted tokens (Stage 7). The choice for the full-dataset
+#   evaluation is revisited then.
+# - as_logged: mandatory for every experiment; computed from replay cases,
+#   with no model (the label mapping arrives in Stage 7/8).
+
+version = "baselines-2026-10-18"
+
+[[baselines]]
+name = "premium"
+model_id = "gpt-5.4"
+method = "estimate_only"
+
+[[baselines]]
+name = "as_logged"
+method = "from_replay_cases"

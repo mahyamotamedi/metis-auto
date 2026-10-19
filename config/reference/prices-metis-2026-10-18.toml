@@ -1,0 +1,101 @@
+# Price table: Metis user prices for the catalogue's seven models.
+# Source: Metis pricing page, https://metisai.ir/pricing (cited in the brief as
+# https://docs.metisai.ir/pricing), saved by the owner on 2026-10-18; extract
+# committed as docs/references/metis_pricing_2026-10-18.csv.
+# Amounts are taken from the CSV's `raw` column, because its structured
+# columns are wrong for context-tiered models (docs/references/metis_wrapper_api.md §3).
+# tests/unit/settings/test_settings_reference.py checks every amount below
+# against that `raw` text.
+#
+# Re-verify before each live budget review and in Stage 7. A change in price
+# = a new file with a new version, never an edit of this one.
+#
+# Amounts are decimal STRINGS (exact), USD per 1,000,000 tokens.
+# Schema (Stage 7, docs/architecture/token_accounting.md §4): token types
+# input, output, cached_input, cache_write (none of these six models lists a
+# cache-write price on the page: OpenAI, DeepSeek, and xAI caching is
+# automatic). A row may carry a context tier (tier, min_input_tokens,
+# max_input_tokens): the tier is chosen by the call's INPUT tokens and then
+# prices every token type of that call.
+# Hidden reasoning tokens are billed as output (no separate price).
+# effective_from: unknown (the page states none).
+#
+# Version history: "prices-metis-2026-10-18" (Stage 6) kept gpt-5.4 aside as
+# pending; "-s7" (Stage 7) adds its tiers; "-s75" (Stage 7.5) adds mimo-v2.5
+# (Q-32), from the same saved page. No existing amount changed.
+
+version = "prices-metis-2026-10-18-s75"
+currency = "USD"
+per_tokens = 1000000
+
+[evidence]
+source = "Metis pricing page https://metisai.ir/pricing, saved 2026-10-18; docs/references/metis_pricing_2026-10-18.csv (raw column)"
+checked_on = 2026-10-18
+
+[[prices]]
+price_ref = "metis-gpt-5-nano"
+input = "0.055"
+output = "0.44"
+cached_input = "0.0055"
+
+[[prices]]
+price_ref = "metis-gpt-4.1-nano"
+input = "0.11"
+output = "0.44"
+cached_input = "0.0275"
+
+[[prices]]
+price_ref = "metis-gpt-4o-mini"
+input = "0.165"
+output = "0.66"
+cached_input = "0.0825"
+
+[[prices]]
+price_ref = "metis-deepseek-v4-flash"
+input = "0.165"
+output = "0.66"
+cached_input = "0.0033"
+
+[[prices]]
+price_ref = "metis-grok-4-1-fast"
+input = "0.22"
+output = "0.55"
+cached_input = "0.11"
+
+[[prices]]
+# mimo-v2.5 (Stage 7.5, Q-32): pricing page row "xiaomi,mimo-v2.5". The Metis
+# MiMo wrapper page (saved the same day) shows lower figures (0.14 / 0.0028 /
+# 0.28), about 10 % below: probably Xiaomi's list price. The pricing page is
+# the price source for every model here. Xiaomi bills requests to mimo-v2.5
+# at mimo-v2.6-flash prices since 2026-10-14 (mimo.mi.com/docs/en-US/updates/
+# deprecate); what Metis charges after that switch is unverified (A-60).
+price_ref = "metis-mimo-v2.5"
+input = "0.154"
+output = "0.308"
+cached_input = "0.0031"
+
+# gpt-5.4 has context-length tiers. The Metis page labels the first tier
+# "≤ 270K context". Whether K means 1,000 or 1,024 (270,000 or 276,480 tokens)
+# is not stated, and OpenAI's own model page (checked 2026-10-18) uses a
+# different figure (">272K input tokens ... for the full session"). Chosen
+# reading (conservative, ADR-0020): the cheaper tier ends at 270,000 input
+# tokens, so a call is never priced below the bill; inputs of 270,001-276,480
+# get the caveat context_tier_boundary_uncertain. "Context" is read as the
+# call's input tokens, and the tier prices the whole call (OpenAI's "full
+# session" rule). Re-verify on the next pricing-page check.
+[[prices]]
+price_ref = "metis-gpt-5.4"
+tier = "standard"
+max_input_tokens = 270000
+max_input_tokens_uncertain_up_to = 276480
+input = "2.875"
+output = "17.25"
+cached_input = "0.2875"
+
+[[prices]]
+price_ref = "metis-gpt-5.4"
+tier = "long"
+min_input_tokens = 270001
+input = "5.75"
+output = "25.875"
+cached_input = "0.575"

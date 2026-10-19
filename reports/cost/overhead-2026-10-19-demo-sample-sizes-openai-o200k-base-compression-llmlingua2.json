@@ -1,0 +1,137 @@
+{
+  "measured_at": "2026-10-19T06:55:00+00:00",
+  "script": "scripts/measure_overhead.py",
+  "requests": 465,
+  "sizes_from_sample": {
+    "history_chars": {
+      "n": 465,
+      "p50": 490,
+      "p95": 8711,
+      "max": 34828
+    },
+    "history_turns": {
+      "n": 465,
+      "p50": 4,
+      "p95": 22,
+      "max": 43
+    },
+    "instructions": {
+      "n": 400,
+      "p50": 3578,
+      "p95": 79050,
+      "max": 271155
+    },
+    "message": {
+      "n": 465,
+      "p50": 29,
+      "p95": 424,
+      "max": 4666
+    },
+    "retrieved_chars": {
+      "n": 71,
+      "p50": 1472,
+      "p95": 4015,
+      "max": 4015
+    }
+  },
+  "hit_ratio_requested": 0.5,
+  "served": {
+    "miss": 465
+  },
+  "instructions_chars": 0,
+  "tokenizer": {
+    "ref": "openai-o200k-base",
+    "loaded": "tiktoken-o200k_base@0.14.0",
+    "fidelity": "exact_local",
+    "fallback_reason": null
+  },
+  "config_hash": "cfg1:541d3e5baa5e5bda",
+  "compression": {
+    "mode": "llmlingua2",
+    "compressor": "llmlingua-2-xlm-roberta-large-meetingbank@ebaba9b0e874@llmlingua==0.2.2",
+    "rate": 0.5,
+    "token_method": "llmlingua-tiktoken-cl100k",
+    "items_compressed": 1062,
+    "items_skipped": 2195,
+    "chars_before": 800637,
+    "chars_after": 423839,
+    "compressor_tokens_before": 311829,
+    "compressor_tokens_after": 153691
+  },
+  "sent_input_tokens_per_context": {
+    "n": 451,
+    "sum": 1262036,
+    "p50": 1145
+  },
+  "hardware": {
+    "machine": "arm64",
+    "system": "Darwin 25.5.0",
+    "python": "CPython 3.13.16",
+    "cpu": "Apple M4"
+  },
+  "spans": {
+    "miss": {
+      "cache_lookup.exact": {
+        "n": 465,
+        "p50_ms": 0.0599,
+        "p95_ms": 0.088,
+        "max_ms": 0.4206
+      },
+      "cache_store": {
+        "n": 465,
+        "p50_ms": 0.0095,
+        "p95_ms": 0.019,
+        "max_ms": 0.0682
+      },
+      "context": {
+        "n": 451,
+        "p50_ms": 0.2078,
+        "p95_ms": 1.6335,
+        "max_ms": 6.4707
+      },
+      "context.compress": {
+        "n": 451,
+        "p50_ms": 317.3289,
+        "p95_ms": 3123.5109,
+        "max_ms": 6159.525
+      },
+      "features": {
+        "n": 465,
+        "p50_ms": 0.2033,
+        "p95_ms": 0.7848,
+        "max_ms": 2.1864
+      },
+      "measure": {
+        "n": 465,
+        "p50_ms": 0.0706,
+        "p95_ms": 0.1809,
+        "max_ms": 0.5187
+      },
+      "model_call": {
+        "n": 451,
+        "p50_ms": 0.0036,
+        "p95_ms": 0.0044,
+        "max_ms": 0.0228
+      },
+      "overhead_total": {
+        "n": 465,
+        "p50_ms": 316.3123,
+        "p95_ms": 3123.2379,
+        "max_ms": 6162.6103
+      },
+      "request": {
+        "n": 465,
+        "p50_ms": 316.5457,
+        "p95_ms": 3123.4972,
+        "max_ms": 6162.8858
+      },
+      "route": {
+        "n": 465,
+        "p50_ms": 0.0149,
+        "p95_ms": 0.0189,
+        "max_ms": 0.0558
+      }
+    }
+  },
+  "note": "Indicative only (A-22): synthetic requests, fake model, one machine."
+}
