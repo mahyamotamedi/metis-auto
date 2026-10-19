@@ -177,3 +177,33 @@ def test_wrapper_check_plan_and_mocked_run(paths):
     assert "comparison" in row
     assert "[SYNTHETIC] OK" not in json.dumps(results)  # no answer text kept
     assert len(_ledger_lines(paths)) == 5
+
+
+def test_demo_live_check_plan_and_mocked_run(paths):
+    from metis_auto.adapters.compressors import FakeCompressor
+    from metis_auto.wiring import demo_check
+
+    rows, total, worst = demo_check.plan(_loader(paths))
+    assert total <= demo_check.MAX_TOTAL_ESTIMATE < worst
+    assert [r.served_by for r in rows].count("cache") == 1
+
+    wrapper = Wrapper()
+    results = demo_check.run(
+        _loader(paths),
+        client_factory=_factory(wrapper),
+        compressor_factory=lambda _l, _n: FakeCompressor(),
+        run_id="run-demo-check-test",
+    )
+    by_step = {r["step"]: r for r in results["results"]}
+    assert len(wrapper.requests) == 7  # the cache hit makes no call
+    assert by_step["bot_cache_hit"]["served_by"] == "cache"
+    assert by_step["greeting_anchored"]["reason_code"] == "sticky.greeting.stay"
+    sent = [json.loads(r.content) for r in wrapper.requests]
+    deepseek = [b for b in sent if b["model"] == "deepseek-v4-flash"]
+    assert len(deepseek) == 2 and all(
+        b["thinking"] == {"type": "disabled"} for b in deepseek
+    )
+    assert all(b.get("max_completion_tokens", b.get("max_tokens")) == 512 for b in sent)
+    assert by_step["compressed_retrieved"]["compression"]
+    assert "input_reported_vs_counted" in by_step["deepseek_turn_2_with_history"]
+    assert results["budget_after"]["run_cap"] == "0.0021"

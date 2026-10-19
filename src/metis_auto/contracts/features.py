@@ -33,6 +33,29 @@ class Language(StrEnum):
     UNDETERMINED = "undetermined"
 
 
+class TurnFeatures(ContractModel):
+    """Cheap features of one earlier user turn and who answered it (Demo
+    milestone: sticky routing reads them, routing_plan §5). Content-free."""
+
+    language: Language = field(Privacy.DERIVED, "Language of the user turn.")
+    has_code: bool = field(Privacy.DERIVED, "Code detected in the user turn.")
+    has_coding_intent: bool = field(
+        Privacy.DERIVED,
+        "The turn asks for code or programming help, with no code in it.",
+        default=False,
+    )
+    length_bucket: NonNegInt = field(Privacy.DERIVED, "Length bucket of the turn.")
+    is_greeting: bool = field(Privacy.DERIVED, "Greeting or small talk.")
+    producer_state: ComponentState = field(
+        Privacy.DERIVED, "State of the answering turn's producer."
+    )
+    producer: Name | None = field(
+        Privacy.OPERATIONAL,
+        "Model ID or 'cache' that answered; None if absent, unknown, or no answer.",
+        default=None,
+    )
+
+
 class RequestFeatures(ContractModel):
     """Features of one request. None means unknown (the component's state was
     unknown), not zero."""
@@ -50,6 +73,22 @@ class RequestFeatures(ContractModel):
         default=None,
     )
     has_code: bool | None = field(Privacy.DERIVED, "Code detected.", default=None)
+    has_coding_intent: bool | None = field(
+        Privacy.DERIVED,
+        "Asks for code or programming help, with no code present (configured "
+        "keywords, request cues, and templates).",
+        default=None,
+    )
+    length_bucket: NonNegInt | None = field(
+        Privacy.DERIVED,
+        "Message length bucket (configured character bounds).",
+        default=None,
+    )
+    is_greeting: bool | None = field(
+        Privacy.DERIVED,
+        "Greeting or small talk (configured phrase list).",
+        default=None,
+    )
     attachment_count: NonNegInt | None = field(
         Privacy.DERIVED, "Attachments; None if unknown.", default=None
     )
@@ -89,6 +128,11 @@ class RequestFeatures(ContractModel):
     )
     traffic_source_provenance: Provenance | None = field(
         Privacy.OPERATIONAL, "Declared or inferred.", default=None
+    )
+    history_turns: tuple[TurnFeatures, ...] = field(
+        Privacy.DERIVED,
+        "Earlier user turns, oldest first, with their producers (sticky routing).",
+        default=(),
     )
     extra: dict[Name, FeatureValue] = field(
         Privacy.DERIVED,

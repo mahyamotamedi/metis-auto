@@ -43,18 +43,20 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 | [0021](adr/0021-live-openai-compatible-adapter.md) | One live OpenAI-compatible adapter (OpenAI, DeepSeek, Grok via the Metis wrapper; openai SDK in extra `live`), SDK retries off, an uncomputable actual cost charges the estimate and stops the run, generation-limit cap | decided (usage mappings confirmed by the live check 2026-10-18; error mappings provisional) |
 
 | [0022](adr/0022-experiment-runner-and-run-tracking.md) | Experiment runs tracked by our own small runner (not MLflow; an exporter stays an option); the event stream stays the record; EXP-ID naming; candidate loading from `experiments/` only | decided (Stage 8) |
+| [0023](adr/0023-demo-backend-components.md) | Demo A backend: detectors, rule-based routing on effective cost (hidden reasoning counted), sticky routing v1 with `Turn.producer` (A-64, schema 0.5; coding intent, schema 0.6), labelled demo cache settings (bot-level scope, seed), EXPERIMENTAL LLMLingua-2 (extra `compress`), DeepSeek thinking templates; promoted as **placeholders**, serving defaults unchanged | decided for the demo (Demo milestone A) |
 
 ## Guides
-- [demo_quickstart.md](guides/demo_quickstart.md): **start here if you are new**: a step-by-step guide for teammates to run the demo: setup, fake and real-model modes, `.env` and the Metis key, `config/local.toml`, the shared budget, reading the cost panel, troubleshooting. Required deliverable of the Demo milestone (UI parts completed then).
-- [local_development.md](guides/local_development.md): **Stage 6** setup from a fresh clone, smoke test natively and in Docker, configuration in practice, secrets, the live budget and spend ledger; **Stage 7.5** enabling live calls, `chat.py`, and the live wrapper check (§5.1).
+- [demo_quickstart.md](guides/demo_quickstart.md): **start here if you are new**: a step-by-step guide for teammates to run the demo: setup, fake and real-model modes, the terminal demo (Demo A: sticky routing, demo cache settings, compression, thinking toggle) with a walkthrough, `.env` and the Metis key, `config/local.toml`, the shared budget, reading the cost panel, troubleshooting, and what Demo B (the UI) will add. Required deliverable of the Demo milestone.
+- [local_development.md](guides/local_development.md): **Stage 6** setup from a fresh clone, smoke test natively and in Docker, configuration in practice, secrets, the live budget and spend ledger; **Stage 7.5** enabling live calls, `chat.py`, and the live wrapper check (§5.1); **Demo A** the optional compression extra and model files (§1).
 
 ## References (external sources, dated)
 - [metis_wrapper_api.md](references/metis_wrapper_api.md): Metis wrapper endpoints and notes, summarised from the docs saved 2026-10-18; §4 links the Stage 7.5 live check results.
 - [metis_wrapper_live_check.md](references/metis_wrapper_live_check.md): **Stage 7.5** live wrapper check of 2026-10-18 (one tiny synthetic message per test model, 0.000188 USD): reported vs counted tokens, cached and reasoning reporting, reported models; raw content-free results in `metis_wrapper_live_check_2026-10-18.json`.
+- [metis_demo_live_check.md](references/metis_demo_live_check.md): **Demo A** live check of the whole flow, 2026-10-19 (7 SYNTHETIC calls, 0.000271 USD; reported = counted input on every call; DeepSeek thinking-off template verified with history, A-68; sticky routing and bot-level cache on live answers); raw content-free results in `metis_demo_live_check_2026-10-19.json`.
 - [metis_pricing_2026-10-18.csv](references/metis_pricing_2026-10-18.csv): extract of the Metis pricing page saved 2026-10-18 (public prices; structured columns defective for tiered models, see the wrapper summary §3).
 
 ## Reports
-- [reports/cost/README.md](../reports/cost/README.md): **Stage 7** overhead with real tokenizers (A-38) and tokenizer-specific size estimates of the sample (estimates, not billed tokens); **Stage 8** overhead with the sample's request sizes.
+- [reports/cost/README.md](../reports/cost/README.md): **Stage 7** overhead with real tokenizers (A-38) and tokenizer-specific size estimates of the sample (estimates, not billed tokens); **Stage 8** overhead with the sample's request sizes; **Demo A** overhead with the detectors and with LLMLingua-2 on and off.
 - [reports/caching/](../reports/caching/README.md): **Stage 8** [EXP-CACHE-001](../reports/caching/exp-cache-001/README.md), the exact-cache baseline (candidate hits per key variant and scope; feature-only).
 
 ## Experiments

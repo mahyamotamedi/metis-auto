@@ -16,6 +16,11 @@ Traces: FR-API-01, FR-OBS-01, FR-ACCT-03…05, FR-CASC-*, FR-FAIL-*, ADR-0010.
 
 Status: walking skeleton. TODO markers name the missing pieces: semantic tier,
 re-route on context overflow, savings per baseline, model-based measurements.
+Demo milestone (ADR-0023): ``handle_traced`` also returns a ``RequestTrace``
+(routing, lookups, the request actually sent); an optional ``TextCompressor``
+compresses history and retrieved context before the context build (span
+``context.compress``, overhead); the labelled demo seed is looked up after a
+main-cache miss and filled by ``seed_demo_entry``.
 """
 
 from __future__ import annotations
@@ -73,6 +78,7 @@ from metis_auto.contracts.events import (
     CacheStored,
     CacheStoreSkipped,
     ContextBuilt,
+    ContextCompressed,
     EscalationTriggered,
     FailoverTriggered,
     FeaturesExtracted,
@@ -83,9 +89,9 @@ from metis_auto.contracts.events import (
 )
 from metis_auto.domain import accounting, attempts, caching, features, routing
 from metis_auto.domain.attempts import Detector
-from metis_auto.domain.context import ContextStrategy
+from metis_auto.domain.context import ContextStrategy, compression
 from metis_auto.domain.routing import RoutingPolicy
-from metis_auto.ports import CacheStore, Clock, IdSource, ModelClient
+from metis_auto.ports import CacheStore, Clock, IdSource, ModelClient, TextCompressor
 
 from ..events import EventRecorder
 from ..measurement import MeasurementService, request_roles
@@ -115,6 +121,27 @@ class _Run:
     responses: dict[str, ModelResponse] = field(default_factory=dict)
     plans: dict[str, ContextPlan] = field(default_factory=dict)
     measurements: RequestMeasurements | None = None
+    decision: RoutingDecision | None = None
+    lookups: list[CacheLookupResult] = field(default_factory=list)
+    sent: Request | None = None
+    """The request after compression; None until computed (or not compressed)."""
+    compressed: ContextCompressed | None = None
+
+
+SEED_PRODUCER = "demo-seed"
+"""``producing_model_id`` of a demo-seed entry: a logged answer, not a model."""
+
+
+@dataclass(frozen=True)
+class RequestTrace:
+    """What the caller of ``handle_traced`` may show besides the response.
+    ``sent_request`` is content and stays in memory (never in events)."""
+
+    decision: RoutingDecision | None
+    lookups: tuple[CacheLookupResult, ...]
+    sent_request: Request | None
+    compression: ContextCompressed | None
+    seed_hit: bool
 
 
 class RequestPipeline:
@@ -132,6 +159,7 @@ class RequestPipeline:
         clock: Clock,
         ids: IdSource,
         spend_guard: SpendGuard | None = None,
+        compressor: TextCompressor | None = None,
     ) -> None:
         if model_client.source == AnswerSource.LIVE and spend_guard is None:
             raise ValueError("a live model client needs a spend guard (ADR-0003)")
@@ -146,7 +174,10 @@ class RequestPipeline:
         self._clock = clock
         self._ids = ids
         self._guard = spend_guard
+        self._compressor = compressor
         self._entries = {e.model_id: e for e in config.catalogue.entries}
+        if config.context.compression.enabled and compressor is None:
+            raise ValueError("context.compression.enabled needs a compressor")
 
     @property
     def live_stopped(self) -> str | None:
@@ -164,16 +195,64 @@ class RequestPipeline:
     ) -> FinalResponse:
         """Answer one request. ``case_id`` and ``logged_timestamp`` are set by
         the replay harness only (never visible to policies)."""
+        response, _ = self.handle_traced(
+            request, case_id=case_id, logged_timestamp=logged_timestamp
+        )
+        return response
+
+    def handle_traced(
+        self,
+        request: Request,
+        *,
+        case_id: Identifier | None = None,
+        logged_timestamp: datetime | None = None,
+    ) -> tuple[FinalResponse, RequestTrace]:
+        """``handle``, plus the trace a demo or report needs (Demo milestone)."""
         run = self._receive(request, case_id, logged_timestamp)
         measurements = self._measure(run)
         feats = self._extract_features(run, measurements)
         decision = self._route(run, feats)
+        run.decision = decision
         lookup, entry, key = self._cache_lookup(run, measurements, decision)
         if entry is not None:
-            return self._respond_from_cache(run, decision, entry)
-        action = self._attempt_loop(run, decision)
-        self._store_answer(run, action, key, lookup)
-        return self._respond(run, action)
+            response = self._respond_from_cache(run, decision, entry)
+        else:
+            action = self._attempt_loop(run, decision)
+            self._store_answer(run, action, key, lookup)
+            response = self._respond(run, action)
+        trace = RequestTrace(
+            decision=decision,
+            lookups=tuple(run.lookups),
+            sent_request=run.sent,
+            compression=run.compressed,
+            seed_hit=entry is not None and entry.producing_model_id == SEED_PRODUCER,
+        )
+        return response, trace
+
+    def seed_demo_entry(self, request: Request, answer: str) -> bool:
+        """DEMO ONLY (ADR-0023): store a logged ``answer`` for ``request`` under
+        the demo seed's message-only key. Never calls a model; the answer is
+        served locally on an exact first-turn match while the seed is enabled.
+        False if the request cannot be seeded."""
+        config = self._config.cache
+        if caching.seed_eligibility(request, config) is not None:
+            return False
+        measurements = self._measurement.measure(request)
+        key = self._measurement.seal_key(caching.compose_seed_key(measurements, config))
+        self._store.put(
+            CacheEntry(
+                entry_id=self._ids.new_id("seed"),
+                key=key,
+                answer=answer,
+                producing_model_id=SEED_PRODUCER,
+                producing_tier=0,
+                created_at=self._clock.now(),
+                status=EntryStatus.COMPLETE,
+                source_request_id=self._ids.new_id("seedreq"),
+                versions=self._recorder.versions,
+            )
+        )
+        return True
 
     # --- stage 0: receive ---
 
@@ -262,7 +341,7 @@ class RequestPipeline:
         key: CacheKey | None = None
         entry: CacheEntry | None = None
         if reason is not None:
-            result = caching.ineligible_result(reason, config)
+            result = caching.ineligible_result(reason, config, scope)
         else:
             assert scope is not None  # eligibility checked it
             draft = caching.compose_key(measurements, decision, scope, config)
@@ -277,7 +356,37 @@ class RequestPipeline:
             span=SpanName.CACHE_LOOKUP_EXACT,
             duration_ms=duration,
         )
+        run.lookups.append(result)
+        if entry is None and config.demo_seed.enabled:
+            entry = self._seed_lookup(run, measurements)
         return result, entry, key
+
+    def _seed_lookup(
+        self, run: _Run, measurements: RequestMeasurements
+    ) -> CacheEntry | None:
+        """DEMO ONLY: the demo seed's message-only lookup (ADR-0023)."""
+        start = self._clock.monotonic_ms()
+        config = self._config.cache
+        reason = caching.seed_eligibility(run.request, config)
+        entry = None
+        if reason is not None:
+            result = caching.seed_ineligible_result(reason, config)
+        else:
+            key = self._measurement.seal_key(
+                caching.compose_seed_key(measurements, config)
+            )
+            found = self._store.get(key.key)
+            result = caching.validate_entry(found, key, self._clock.now(), config)
+            entry = found if result.outcome == LookupOutcome.HIT else None
+        duration = self._span(run, SpanName.CACHE_LOOKUP_EXACT, start)
+        self._emit(
+            run,
+            CacheLookedUp(result=result),
+            span=SpanName.CACHE_LOOKUP_EXACT,
+            duration_ms=duration,
+        )
+        run.lookups.append(result)
+        return entry
 
     def _respond_from_cache(
         self, run: _Run, decision: RoutingDecision, entry: CacheEntry
@@ -315,16 +424,22 @@ class RequestPipeline:
     ) -> ContextPlan:
         if target.model_id in run.plans:
             return run.plans[target.model_id]
+        sent = self._sent_request(run, attempt_id)
         start = self._clock.monotonic_ms()
-        counts = self._measurement.target_counts(run.request, target)
+        counts = self._measurement.target_counts(sent, target)
         plan = self._context.build(
-            run.request,
+            sent,
             run.measurements,
             counts,
             target,
             self._config.context,
             rerouted=False,  # TODO(Stage 8): re-route on overflow
         )
+        if run.compressed is not None and self._compressor is not None:
+            done = tuple(
+                c.component for c in run.compressed.components if c.items_compressed
+            )
+            plan = compression.mark(plan, done, self._compressor.ref)
         duration = self._span(run, SpanName.CONTEXT, start)
         self._emit(
             run,
@@ -335,6 +450,39 @@ class RequestPipeline:
         )
         run.plans[target.model_id] = plan
         return plan
+
+    def _sent_request(self, run: _Run, attempt_id: str) -> Request:
+        """The request after compression, computed once per request (the
+        compressor is target-independent). Without compression: the request."""
+        if run.sent is not None:
+            return run.sent
+        config = self._config.context.compression
+        if not config.enabled or self._compressor is None:
+            run.sent = run.request
+            return run.sent
+        start = self._clock.monotonic_ms()
+        results = {}
+        for t in compression.targets(run.request, config):
+            out = self._compressor.compress(t.text, config.rate)
+            results[(t.component, t.index)] = compression.Compressed(
+                out.text, out.tokens_before, out.tokens_after
+            )
+        run.sent = compression.apply(run.request, results)
+        duration = self._span(run, SpanName.CONTEXT_COMPRESS, start)
+        run.compressed = ContextCompressed(
+            compressor=self._compressor.ref,
+            rate=config.rate,
+            token_method=self._compressor.token_method,
+            components=compression.summary(run.request, config, results),
+        )
+        self._emit(
+            run,
+            run.compressed,
+            attempt_id=attempt_id,
+            span=SpanName.CONTEXT_COMPRESS,
+            duration_ms=duration,
+        )
+        return run.sent
 
     # --- stage 6: attempt loop (ADR-0013) ---
 

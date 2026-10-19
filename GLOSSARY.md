@@ -1,6 +1,6 @@
 # Glossary
 
-Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-18 (Stage 7).
+Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid the listed synonyms. Requirements: [`docs/project/requirements.md`](docs/project/requirements.md). Last updated 2026-10-19 (Demo milestone A).
 
 | Term | Meaning | Avoid |
 |---|---|---|
@@ -71,3 +71,12 @@ Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid t
 | **Unknown as wildcard** | A measurement-only key rule: an unknown component matches anything, bounding the opportunity hidden by unknowns; never a serving rule. | — |
 | **Candidate index** | The swap point of cache-candidate experiments (`CandidateIndex`): stores earlier cases' key material and returns a match. | — |
 | **Label mapping** | The reference file mapping a dataset's logged model labels to catalogue models, with a fidelity (`exact_id`, `alias`) or an unmapped reason; used by the as-logged baseline. | "model mapping" |
+| **Producer** | Who produced an assistant turn: a catalogue model ID or `cache` (`Turn.producer`; absent for user turns, unknown when not recorded). Sticky routing reads it from the request (A-64). | "author" |
+| **Sticky routing (v1)** | Routing that keeps a session on its **anchor** model while messages stay similar, re-routes and re-anchors on a very different message, keeps greetings on the anchor (or sends them to the cheapest model while unanchored), never letting them anchor, and raises the anchor on escalation (brief §7, ADR-0023). | "session routing" |
+| **Anchor** | The model a sticky session stays on: set by the first substantive message, replaced on re-anchoring, raised (never lowered) by an escalation. Reconstructed from producers on every request. | — |
+| **Substantive message** | A message that may anchor: not served from cache and not a greeting or small talk. Never "short = trivial". | "non-trivial" |
+| **Coding intent** | A message that asks for code or programming help but contains no code: a configured keyword with a request cue ("how", «بنویس»), or a word template ("write ... function"). A placeholder feature (A-71), separate from code presence. | "code request" |
+| **Greeting / small talk** | A short message made only of phrases from the configured Persian + English list (e.g. سلام, مرسی, hi, thanks). | — |
+| **Effective cost** | Routing's expected cost of one answer on a model, with its expected hidden reasoning tokens billed as output (routing plan §3). | "price" (for this) |
+| **Bot-level scope (demo)** | The DEMO cache setting that shares entries across users of one bot (global scope only when instructions are present). Not a serving option (ADR-0023). | "global cache" |
+| **Demo seed** | DEMO ONLY: a few logged first-turn sample answers served on an exact message match, shown locally, never sent to a provider. | — |

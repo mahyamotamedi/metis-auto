@@ -110,6 +110,8 @@
 
 ## Consequences
 
+**Demo milestone (2026-10-19):** the S-b shape (global scope only with instructions present) is available as a labelled DEMO setting, `scope_rule = "demo_bot_level"`, off by default and without the traffic-source rule or the prerequisites below ([ADR-0023](0023-demo-backend-components.md)). It is not acceptance for serving; this proposal's status is unchanged.
+
 **Now (2026-10-17):**
 - Stage 4 reserves the optional `traffic_source` field. It defaults to unknown, which maps to `session` scope. Serving is unaffected.
 - The Stage 8 caching plan includes this experiment.

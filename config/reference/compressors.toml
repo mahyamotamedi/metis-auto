@@ -1,0 +1,70 @@
+# Context compressors (Demo milestone; context plan X3, ADR-0023). EXPERIMENTAL
+# and unpromoted: no ablation evidence yet (FR-CTX-03), Persian quality unknown
+# (trained on the English MeetingBank set). Off by default
+# ([pipeline.context.compression] enabled = false).
+#
+# Model files are fetched ONCE by `python scripts/fetch_compressor_assets.py`
+# (network, explicit) into paths.compressor_assets (default data/compressors/,
+# git-ignored), into <ref>/<revision>/, and checked by sha256 before every
+# load. Nothing is downloaded at run time or in tests (the adapter sets the
+# Hugging Face libraries offline). Libraries: the optional extra `compress`
+# (torch, transformers, llmlingua), never in the runtime lock.
+#
+# sha256: model.safetensors and tokenizer.json are LFS files whose sha256 the
+# Hub lists (checked 2026-10-19); the small JSON files are not in LFS, so
+# their pins were computed from our download on 2026-10-19
+# (trust-on-first-download, recorded as such), as for the DeepSeek tokenizer.
+
+version = "compressors-2026-10-19"
+
+[[compressors]]
+# The ref is also the local directory name, and it must contain
+# "xlm-roberta-large": llmlingua 0.2.2 picks its word-boundary rules by a
+# substring of the model path (llmlingua/utils.py is_begin_of_new_word).
+ref = "llmlingua-2-xlm-roberta-large-meetingbank"
+backend = "llmlingua2"
+model = "microsoft/llmlingua-2-xlm-roberta-large-meetingbank"
+revision = "ebaba9b0e874dadd3003ffcff828e4397e568089"
+licence = "MIT"
+library = "llmlingua==0.2.2"
+evidence = { source = "Model card https://huggingface.co/microsoft/llmlingua-2-xlm-roberta-large-meetingbank (revision ebaba9b0, last modified 2025-01-08; licence MIT; XLMRobertaForTokenClassification, 24 layers, hidden 1024, max_position_embeddings 514; fine-tuned on microsoft/MeetingBank-LLMCompressed, English). Paper: Pan et al. 2024, arXiv 2403.12968. Library: llmlingua 0.2.2 on PyPI (MIT, released 2024-04-09), PromptCompressor(use_llmlingua2=True).compress_prompt_llmlingua2", checked_on = 2026-10-19 }
+
+[[compressors.files]]
+name = "model.safetensors"
+url = "https://huggingface.co/microsoft/llmlingua-2-xlm-roberta-large-meetingbank/resolve/ebaba9b0e874dadd3003ffcff828e4397e568089/model.safetensors"
+sha256 = "a33a153b2493bff6be06af6921e69de9c0d0bb6ff06fe5bbb68670ba8d980ae2"
+size_bytes = 2235829648
+
+[[compressors.files]]
+name = "tokenizer.json"
+url = "https://huggingface.co/microsoft/llmlingua-2-xlm-roberta-large-meetingbank/resolve/ebaba9b0e874dadd3003ffcff828e4397e568089/tokenizer.json"
+sha256 = "f59925fcb90c92b894cb93e51bb9b4a6105c5c249fe54ce1c704420ac39b81af"
+size_bytes = 17082756
+
+[[compressors.files]]
+name = "config.json"
+url = "https://huggingface.co/microsoft/llmlingua-2-xlm-roberta-large-meetingbank/resolve/ebaba9b0e874dadd3003ffcff828e4397e568089/config.json"
+sha256 = "a3fdcf4e63057797101ecc84412bc654f9adb4e8d4ed3c91c5afb28eda327706"
+size_bytes = 752
+
+[[compressors.files]]
+name = "tokenizer_config.json"
+url = "https://huggingface.co/microsoft/llmlingua-2-xlm-roberta-large-meetingbank/resolve/ebaba9b0e874dadd3003ffcff828e4397e568089/tokenizer_config.json"
+sha256 = "f90024142df07163e5e6c5b9a6ad7c8c68b22a9112af11e3db4559a9ff90f737"
+size_bytes = 1147
+
+[[compressors.files]]
+name = "special_tokens_map.json"
+url = "https://huggingface.co/microsoft/llmlingua-2-xlm-roberta-large-meetingbank/resolve/ebaba9b0e874dadd3003ffcff828e4397e568089/special_tokens_map.json"
+sha256 = "06e405a36dfe4b9604f484f6a1e619af1a7f7d09e34a8555eb0b77b66318067f"
+size_bytes = 280
+
+[[compressors.files]]
+# tiktoken's cl100k_base encoding: llmlingua's PromptCompressor loads it at
+# start-up to count its own (GPT-3.5) tokens (origin_tokens, compressed_tokens).
+# Stored under the sha1 of its URL (tiktoken's cache layout) so it loads
+# offline; sha256 = the hash tiktoken pins in tiktoken_ext/openai_public.py
+# (tiktoken 0.14.0, checked 2026-10-19).
+name = "9b5ad71b2ce5302211f9c61530b329a4922fc6a4"
+url = "https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken"
+sha256 = "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7"

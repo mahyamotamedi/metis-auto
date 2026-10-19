@@ -30,3 +30,14 @@
 # lifetime cap (e.g. "2.5" each for four people) or rely on the dashboard limit.
 # run_cap = "0.25"
 # lifetime_cap = "2.5"
+
+# --- Demo settings (Demo milestone A, ADR-0023) ------------------------------
+# scripts/chat.py chooses these itself (sticky routing by default; /mode,
+# /compress, /botcache, /seed, /thinking at its prompt), so you rarely need
+# them here. They are placeholders and DEMO settings, never serving defaults.
+# Each section may appear once. Examples:
+# [pipeline.routing]
+# policy = "sticky"                 # or "rule_based", "fixed_model"
+#
+# [model_options."deepseek-v4-flash"]
+# thinking = "disabled"             # unset = DeepSeek's default (thinking on)

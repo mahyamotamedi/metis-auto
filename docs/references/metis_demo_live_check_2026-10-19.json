@@ -1,0 +1,619 @@
+{
+  "check": "metis-demo-a-live-check",
+  "date": "2026-10-19",
+  "time_utc": "2026-10-19T07:34:09+00:00",
+  "run_id": "demo-check-20261019T073409Z-c153f5",
+  "output_cap": 512,
+  "synthetic_input": {
+    "note": "All messages SYNTHETIC, written for this check.",
+    "instructions": "[SYNTHETIC] You are the assistant of a demo shop in a test. Answer in one or two short sentences.",
+    "document": "[SYNTHETIC] Returns are accepted within 14 days of delivery if the item is unused and in its original packaging. To start a return, the customer opens the order page, chooses the item, and selects a reason; a courier collects the parcel within two working days. Refunds go to the original payment method within five working days after the warehouse checks the item. Sale items and gift cards cannot be returned.",
+    "steps": [
+      [
+        "first_substantive",
+        "ask",
+        "سفارشم کی می‌رسه؟"
+      ],
+      [
+        "greeting_anchored",
+        "ask",
+        "مرسی"
+      ],
+      [
+        "code_reroute",
+        "ask",
+        "def total(items):\n    return sum(items) / len(items)\nWhy does this fail for an empty list?"
+      ],
+      [
+        "bot_cache_on",
+        "botcache",
+        null
+      ],
+      [
+        "user_2",
+        "newuser",
+        null
+      ],
+      [
+        "bot_cache_first_user",
+        "ask",
+        "ساعت کاری فروشگاه چیست؟"
+      ],
+      [
+        "user_3",
+        "newuser",
+        null
+      ],
+      [
+        "bot_cache_hit",
+        "ask",
+        "ساعت کاری فروشگاه چیست؟"
+      ],
+      [
+        "user_4",
+        "newuser",
+        null
+      ],
+      [
+        "deepseek_thinking_off",
+        "thinking_off",
+        null
+      ],
+      [
+        "deepseek_fixed",
+        "model",
+        "deepseek-v4-flash"
+      ],
+      [
+        "deepseek_turn_1",
+        "ask",
+        "آدرس فروشگاه کجاست؟"
+      ],
+      [
+        "deepseek_turn_2_with_history",
+        "ask",
+        "و شماره تلفن پشتیبانی؟"
+      ],
+      [
+        "user_5",
+        "newuser",
+        null
+      ],
+      [
+        "sticky_again",
+        "mode",
+        "sticky_v1"
+      ],
+      [
+        "retrieved_document",
+        "retrieved",
+        "[SYNTHETIC] Returns are accepted within 14 days of delivery if the item is unused and in its original packaging. To start a return, the customer opens the order page, chooses the item, and selects a reason; a courier collects the parcel within two working days. Refunds go to the original payment method within five working days after the warehouse checks the item. Sale items and gift cards cannot be returned."
+      ],
+      [
+        "compression_on",
+        "compress",
+        null
+      ],
+      [
+        "compressed_retrieved",
+        "ask",
+        "Can I return a sale item?"
+      ]
+    ]
+  },
+  "config": {
+    "catalogue": "cat-metis-test-2026-10-18-s75",
+    "prices": "prices-metis-2026-10-18-s75",
+    "endpoints": "endpoints-metis-2026-10-18-s75",
+    "baselines": "baselines-2026-10-18",
+    "tokenizers": "tokenizers-2026-10-19-demo",
+    "label_mapping": "label-mapping-sample-v1-2026-10-18",
+    "compressors": "compressors-2026-10-19"
+  },
+  "results": [
+    {
+      "step": "first_substantive",
+      "reason_code": "sticky.first_substantive.rule.default",
+      "decision": "anchored: first substantive message → mimo-v2.5",
+      "served_by": "model",
+      "model_id": "mimo-v2.5",
+      "provider_model": "mimo-v2.5",
+      "attempts": 1,
+      "escalations": 0,
+      "finish_reasons": [
+        "complete"
+      ],
+      "failure": null,
+      "features": {
+        "language": "fa",
+        "code": "no",
+        "length_bucket": "0",
+        "greeting": "no",
+        "turn_depth": "0"
+      },
+      "cache": [
+        "full/session: miss"
+      ],
+      "tokens_reported": {
+        "input": "49 (provider_reported)",
+        "output": "113 (provider_reported)",
+        "cached_input": "not reported",
+        "reasoning": "46 (provider_reported)",
+        "template_overhead": "-"
+      },
+      "cost": "0.000042 USD",
+      "cost_caveats": [
+        "cached_input_not_reported"
+      ],
+      "premium_estimate": "0.000770 USD",
+      "decomposition": {
+        "premium_baseline": "0.000770 USD",
+        "routing_saving": "0.000728 USD",
+        "compression_saving": "0.000000 USD",
+        "cache_saving": "0.000000 USD",
+        "provider_cache_saving": "0.000000 USD",
+        "extra_cost": "0.000000 USD",
+        "actually_paid": "0.000042 USD"
+      },
+      "compression": null,
+      "model_call_ms": [
+        13144.4
+      ],
+      "overhead_ms": 2.0,
+      "settings": {
+        "routing": "sticky_v1",
+        "compression": "off",
+        "cache_scope": "session",
+        "seed": "off",
+        "deepseek_thinking": "on (default)",
+        "user": "1"
+      },
+      "input_reported_vs_counted": {
+        "reported": 49,
+        "counted": 49,
+        "counted_framing": 11
+      }
+    },
+    {
+      "step": "greeting_anchored",
+      "reason_code": "sticky.greeting.stay",
+      "decision": "greeting/small talk in an anchored session → stayed on the anchor mimo-v2.5; does not anchor",
+      "served_by": "model",
+      "model_id": "mimo-v2.5",
+      "provider_model": "mimo-v2.5",
+      "attempts": 1,
+      "escalations": 0,
+      "finish_reasons": [
+        "complete"
+      ],
+      "failure": null,
+      "features": {
+        "language": "fa",
+        "code": "no",
+        "length_bucket": "0",
+        "greeting": "yes",
+        "turn_depth": "1"
+      },
+      "cache": [
+        "full/session: miss"
+      ],
+      "tokens_reported": {
+        "input": "127 (provider_reported)",
+        "output": "43 (provider_reported)",
+        "cached_input": "not reported",
+        "reasoning": "14 (provider_reported)",
+        "template_overhead": "-"
+      },
+      "cost": "0.000033 USD",
+      "cost_caveats": [
+        "cached_input_not_reported"
+      ],
+      "premium_estimate": "0.000578 USD",
+      "decomposition": {
+        "premium_baseline": "0.000578 USD",
+        "routing_saving": "0.000545 USD",
+        "compression_saving": "0.000000 USD",
+        "cache_saving": "0.000000 USD",
+        "provider_cache_saving": "0.000000 USD",
+        "extra_cost": "0.000000 USD",
+        "actually_paid": "0.000033 USD"
+      },
+      "compression": null,
+      "model_call_ms": [
+        3285.0
+      ],
+      "overhead_ms": 3.0,
+      "settings": {
+        "routing": "sticky_v1",
+        "compression": "off",
+        "cache_scope": "session",
+        "seed": "off",
+        "deepseek_thinking": "on (default)",
+        "user": "1"
+      },
+      "input_reported_vs_counted": {
+        "reported": 127,
+        "counted": 127,
+        "counted_framing": 21
+      }
+    },
+    {
+      "step": "code_reroute",
+      "reason_code": "sticky.reroute.code_appeared.rule.code",
+      "decision": "re-routed (code_appeared) and re-anchored → gpt-4o-mini",
+      "served_by": "model",
+      "model_id": "gpt-4o-mini",
+      "provider_model": "gpt-4o-mini-2024-07-18",
+      "attempts": 1,
+      "escalations": 0,
+      "finish_reasons": [
+        "complete"
+      ],
+      "failure": null,
+      "features": {
+        "language": "en",
+        "code": "yes",
+        "length_bucket": "1",
+        "greeting": "no",
+        "turn_depth": "2"
+      },
+      "cache": [
+        "full/session: miss"
+      ],
+      "tokens_reported": {
+        "input": "141 (provider_reported)",
+        "output": "98 (provider_reported)",
+        "cached_input": "0 (provider_reported)",
+        "reasoning": "0 (provider_reported)",
+        "template_overhead": "-"
+      },
+      "cost": "0.000088 USD",
+      "cost_caveats": [],
+      "premium_estimate": "0.002096 USD",
+      "decomposition": {
+        "premium_baseline": "0.002096 USD",
+        "routing_saving": "0.002008 USD",
+        "compression_saving": "0.000000 USD",
+        "cache_saving": "0.000000 USD",
+        "provider_cache_saving": "0.000000 USD",
+        "extra_cost": "0.000000 USD",
+        "actually_paid": "0.000088 USD"
+      },
+      "compression": null,
+      "model_call_ms": [
+        1640.5
+      ],
+      "overhead_ms": 3.1,
+      "settings": {
+        "routing": "sticky_v1",
+        "compression": "off",
+        "cache_scope": "session",
+        "seed": "off",
+        "deepseek_thinking": "on (default)",
+        "user": "1"
+      },
+      "input_reported_vs_counted": {
+        "reported": 141,
+        "counted": 141,
+        "counted_framing": 27
+      }
+    },
+    {
+      "step": "bot_cache_first_user",
+      "reason_code": "sticky.first_substantive.rule.default",
+      "decision": "anchored: first substantive message → mimo-v2.5",
+      "served_by": "model",
+      "model_id": "mimo-v2.5",
+      "provider_model": "mimo-v2.5",
+      "attempts": 1,
+      "escalations": 0,
+      "finish_reasons": [
+        "complete"
+      ],
+      "failure": null,
+      "features": {
+        "language": "fa",
+        "code": "no",
+        "length_bucket": "0",
+        "greeting": "no",
+        "turn_depth": "0"
+      },
+      "cache": [
+        "full/global: miss"
+      ],
+      "tokens_reported": {
+        "input": "53 (provider_reported)",
+        "output": "79 (provider_reported)",
+        "cached_input": "not reported",
+        "reasoning": "32 (provider_reported)",
+        "template_overhead": "-"
+      },
+      "cost": "0.000032 USD",
+      "cost_caveats": [
+        "cached_input_not_reported"
+      ],
+      "premium_estimate": "0.000558 USD",
+      "decomposition": {
+        "premium_baseline": "0.000558 USD",
+        "routing_saving": "0.000525 USD",
+        "compression_saving": "0.000000 USD",
+        "cache_saving": "0.000000 USD",
+        "provider_cache_saving": "0.000000 USD",
+        "extra_cost": "0.000000 USD",
+        "actually_paid": "0.000032 USD"
+      },
+      "compression": null,
+      "model_call_ms": [
+        10192.7
+      ],
+      "overhead_ms": 2.7,
+      "settings": {
+        "routing": "sticky_v1",
+        "compression": "off",
+        "cache_scope": "bot-level [DEMO]",
+        "seed": "off",
+        "deepseek_thinking": "on (default)",
+        "user": "2"
+      },
+      "input_reported_vs_counted": {
+        "reported": 53,
+        "counted": 53,
+        "counted_framing": 11
+      }
+    },
+    {
+      "step": "bot_cache_hit",
+      "reason_code": "sticky.first_substantive.rule.default",
+      "decision": "served from cache: does not anchor the session",
+      "served_by": "cache",
+      "model_id": "mimo-v2.5",
+      "provider_model": null,
+      "attempts": 0,
+      "escalations": 0,
+      "finish_reasons": [],
+      "failure": null,
+      "features": {
+        "language": "fa",
+        "code": "no",
+        "length_bucket": "0",
+        "greeting": "no",
+        "turn_depth": "0"
+      },
+      "cache": [
+        "full/global: hit"
+      ],
+      "tokens_reported": {},
+      "cost": "0.000000 USD",
+      "cost_caveats": [],
+      "premium_estimate": "0.000558 USD",
+      "decomposition": {
+        "premium_baseline": "0.000558 USD",
+        "routing_saving": "0.000536 USD",
+        "compression_saving": "0.000000 USD",
+        "cache_saving": "0.000022 USD",
+        "provider_cache_saving": "0.000000 USD",
+        "extra_cost": "0.000000 USD",
+        "actually_paid": "0.000000 USD"
+      },
+      "compression": null,
+      "model_call_ms": [],
+      "overhead_ms": 1.2,
+      "settings": {
+        "routing": "sticky_v1",
+        "compression": "off",
+        "cache_scope": "bot-level [DEMO]",
+        "seed": "off",
+        "deepseek_thinking": "on (default)",
+        "user": "3"
+      }
+    },
+    {
+      "step": "deepseek_turn_1",
+      "reason_code": "fixed_model",
+      "decision": "fixed_model",
+      "served_by": "model",
+      "model_id": "deepseek-v4-flash",
+      "provider_model": "deepseek-flash",
+      "attempts": 1,
+      "escalations": 0,
+      "finish_reasons": [
+        "complete"
+      ],
+      "failure": null,
+      "features": {
+        "language": "fa",
+        "code": "no",
+        "length_bucket": "0",
+        "greeting": "no",
+        "turn_depth": "0"
+      },
+      "cache": [
+        "full/global: miss"
+      ],
+      "tokens_reported": {
+        "input": "41 (provider_reported)",
+        "output": "20 (provider_reported)",
+        "cached_input": "0 (provider_reported)",
+        "reasoning": "not reported",
+        "template_overhead": "-"
+      },
+      "cost": "0.000020 USD",
+      "cost_caveats": [],
+      "premium_estimate": "0.000423 USD",
+      "decomposition": {
+        "premium_baseline": "0.000423 USD",
+        "routing_saving": "0.000403 USD",
+        "compression_saving": "0.000000 USD",
+        "cache_saving": "0.000000 USD",
+        "provider_cache_saving": "0.000000 USD",
+        "extra_cost": "0.000000 USD",
+        "actually_paid": "0.000020 USD"
+      },
+      "compression": null,
+      "model_call_ms": [
+        1852.2
+      ],
+      "overhead_ms": 1.8,
+      "settings": {
+        "routing": "fixed (deepseek-v4-flash)",
+        "compression": "off",
+        "cache_scope": "bot-level [DEMO]",
+        "seed": "off",
+        "deepseek_thinking": "off",
+        "user": "4"
+      },
+      "input_reported_vs_counted": {
+        "reported": 41,
+        "counted": 41,
+        "counted_framing": 5
+      }
+    },
+    {
+      "step": "deepseek_turn_2_with_history",
+      "reason_code": "fixed_model",
+      "decision": "fixed_model",
+      "served_by": "model",
+      "model_id": "deepseek-v4-flash",
+      "provider_model": "deepseek-flash",
+      "attempts": 1,
+      "escalations": 0,
+      "finish_reasons": [
+        "complete"
+      ],
+      "failure": null,
+      "features": {
+        "language": "fa",
+        "code": "no",
+        "length_bucket": "0",
+        "greeting": "no",
+        "turn_depth": "1"
+      },
+      "cache": [
+        "full/global: miss"
+      ],
+      "tokens_reported": {
+        "input": "76 (provider_reported)",
+        "output": "22 (provider_reported)",
+        "cached_input": "0 (provider_reported)",
+        "reasoning": "not reported",
+        "template_overhead": "-"
+      },
+      "cost": "0.000027 USD",
+      "cost_caveats": [],
+      "premium_estimate": "0.000569 USD",
+      "decomposition": {
+        "premium_baseline": "0.000569 USD",
+        "routing_saving": "0.000542 USD",
+        "compression_saving": "0.000000 USD",
+        "cache_saving": "0.000000 USD",
+        "provider_cache_saving": "0.000000 USD",
+        "extra_cost": "0.000000 USD",
+        "actually_paid": "0.000027 USD"
+      },
+      "compression": null,
+      "model_call_ms": [
+        1089.0
+      ],
+      "overhead_ms": 2.0,
+      "settings": {
+        "routing": "fixed (deepseek-v4-flash)",
+        "compression": "off",
+        "cache_scope": "bot-level [DEMO]",
+        "seed": "off",
+        "deepseek_thinking": "off",
+        "user": "4"
+      },
+      "input_reported_vs_counted": {
+        "reported": 76,
+        "counted": 76,
+        "counted_framing": 9
+      }
+    },
+    {
+      "step": "compressed_retrieved",
+      "reason_code": "sticky.first_substantive.rule.default",
+      "decision": "anchored: first substantive message → mimo-v2.5",
+      "served_by": "model",
+      "model_id": "mimo-v2.5",
+      "provider_model": "mimo-v2.5",
+      "attempts": 1,
+      "escalations": 0,
+      "finish_reasons": [
+        "complete"
+      ],
+      "failure": null,
+      "features": {
+        "language": "en",
+        "code": "no",
+        "length_bucket": "0",
+        "greeting": "no",
+        "turn_depth": "0"
+      },
+      "cache": [
+        "full/global: miss"
+      ],
+      "tokens_reported": {
+        "input": "92 (provider_reported)",
+        "output": "46 (provider_reported)",
+        "cached_input": "not reported",
+        "reasoning": "21 (provider_reported)",
+        "template_overhead": "-"
+      },
+      "cost": "0.000028 USD",
+      "cost_caveats": [
+        "cached_input_not_reported"
+      ],
+      "premium_estimate": "0.000745 USD",
+      "decomposition": {
+        "premium_baseline": "0.000745 USD",
+        "routing_saving": "0.000710 USD",
+        "compression_saving": "0.000007 USD",
+        "cache_saving": "0.000000 USD",
+        "provider_cache_saving": "0.000000 USD",
+        "extra_cost": "0.000000 USD",
+        "actually_paid": "0.000028 USD"
+      },
+      "compression": {
+        "compressor": "llmlingua-2-xlm-roberta-large-meetingbank@ebaba9b0e874@llmlingua==0.2.2 [EXPERIMENTAL]",
+        "rate": "0.5",
+        "components": "retrieved 1 compressed/0 skipped, 86→42 tokens",
+        "token_method": "llmlingua-tiktoken-cl100k",
+        "time_ms": "414.4"
+      },
+      "model_call_ms": [
+        3134.1
+      ],
+      "overhead_ms": 418.1,
+      "settings": {
+        "routing": "sticky_v1",
+        "compression": "llmlingua2",
+        "cache_scope": "bot-level [DEMO]",
+        "seed": "off",
+        "deepseek_thinking": "off",
+        "user": "5"
+      },
+      "input_reported_vs_counted": {
+        "reported": 92,
+        "counted": 92,
+        "counted_framing": 15
+      }
+    }
+  ],
+  "session_decomposition": {
+    "premium_baseline": "0.006296 USD",
+    "routing_saving": "0.005996 USD",
+    "compression_saving": "0.000007 USD",
+    "cache_saving": "0.000022 USD",
+    "provider_cache_saving": "0.000000 USD",
+    "extra_cost": "0.000000 USD",
+    "actually_paid": "0.000271 USD"
+  },
+  "budget_after": {
+    "lifetime_spent": "0.0026225762",
+    "lifetime_cap": "10",
+    "lifetime_used": "0.03%",
+    "run_spent": "0.000270952",
+    "run_cap": "0.0021",
+    "currency": "USD"
+  }
+}

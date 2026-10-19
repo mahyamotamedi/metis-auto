@@ -24,3 +24,6 @@ data/spend/
 
 # Tokenizer files fetched by scripts/fetch_tokenizer_assets.py (Stage 7).
 data/tokenizers/
+
+# Context-compressor model files fetched by scripts/fetch_compressor_assets.py (Demo milestone).
+data/compressors/

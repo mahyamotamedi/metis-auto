@@ -192,6 +192,8 @@ class IneligibleReason(StrEnum):
     NO_TARGET = "no_target"
     VARIANT_NOT_SERVING = "variant_not_serving"
     DISABLED = "disabled"
+    NOT_FIRST_TURN = "not_first_turn"
+    """The demo seed serves first-turn requests only (history absent)."""
 
 
 class InvalidReason(StrEnum):

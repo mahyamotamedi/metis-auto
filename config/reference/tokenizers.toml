@@ -20,9 +20,13 @@
 # Version history: "tokenizers-2026-10-18" (Stage 7); "-s75" (Stage 7.5)
 # applies the live wrapper check of 2026-10-18
 # (docs/references/metis_wrapper_live_check.md): DeepSeek thinking-mode
-# framing; evidence notes on the OpenAI and Grok rows; the MiMo row (Q-32).
+# framing; evidence notes on the OpenAI and Grok rows; the MiMo row (Q-32);
+# "tokenizers-2026-10-19-demo" (Demo milestone, Q-34) adds `mode_templates`:
+# the framing with thinking disabled for DeepSeek and MiMo, used for a model
+# whose [model_options] set thinking = "disabled" (wiring.from_settings);
+# "-lc" adds the evidence of the Demo A live check (same day; no count changed).
 
-version = "tokenizers-2026-10-18-s75"
+version = "tokenizers-2026-10-19-demo-lc"
 
 # --- OpenAI: gpt-5-nano, gpt-4.1-nano, gpt-4o-mini, gpt-5.4 -----------------
 [[tokenizers]]
@@ -98,7 +102,7 @@ version = "deepseek-v41-thinking-2026-10-18"
 # reported 40 for the 65 counted here: framing 5, not 30, so this template
 # overcounts by 25 in that mode. Two framings fit 40 (BOS <System> ...
 # <Assistant></think>, or BOS ... <Assistant><think></think>); one request
-# cannot tell them apart, so no chat-mode variant is configured yet.
+# cannot tell them apart; the variant below takes the first (Demo milestone).
 # Unverified, kept from the V4 chat template or the README: earlier assistant
 # turns (<Assistant></think>{answer}<EOS>: prefix 2, suffix 1, reasoning of
 # earlier turns dropped) and retrieved context as a later system message
@@ -111,6 +115,32 @@ role_prefix = { instructions = 0, user = 1, assistant = 2, retrieved = 1 }
 role_suffix = { instructions = 0, user = 0, assistant = 1, retrieved = 0 }
 fidelity = "approximation"
 evidence = { source = "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/1bae0e1088993b9b82de08f59de5be5a34e42170/encoding/README.md (Thinking mode) and the Metis live wrapper check of 2026-10-18 (docs/references/metis_wrapper_live_check.md)", checked_on = 2026-10-18 }
+
+[tokenizers.mode_templates.thinking_disabled]
+tokenizer_ref = "deepseek-v4"
+version = "deepseek-v41-chat-2026-10-19"
+# THINKING DISABLED ([model_options."deepseek-v4-flash"] thinking = "disabled",
+# Q-34). Probe 2026-10-18 (live_check.md §4.3): 40 prompt tokens reported for
+# 35 content tokens (system + user), so the framing is 5. Two layouts give 5:
+#   (a) <BOS><System>{system}<User>{msg}<Assistant></think>   (chosen)
+#   (b) <BOS>{system}<User>{msg}<Assistant><think></think>
+# (a) is the thinking-mode layout without the 25-token reasoning-effort prefix
+# and with the reply primed by <Assistant></think>, the non-thinking marker of
+# DeepSeek's chat format; (b) would drop the <System> marker that V4.1 uses.
+# One request cannot separate them, so this is an approximation: sequence
+# start BOS + <System> = 2; user <User> 1; reply <Assistant></think> 2. History
+# and retrieved layouts are kept from the thinking template.
+# DEMO LIVE CHECK 2026-10-19 (docs/references/metis_demo_live_check.md):
+# reported prompt tokens EXACTLY equal the count for system + user (41 = 36 + 5)
+# and for system + user + assistant + user (76 = 67 + 9). The history turn fits
+# (a) (earlier assistant <Assistant></think>{answer}<EOS> = 3) and not (b)
+# (which would give 10). Retrieved layout still unverified.
+sequence_start = 2
+reply_priming = 2
+role_prefix = { instructions = 0, user = 1, assistant = 2, retrieved = 1 }
+role_suffix = { instructions = 0, user = 0, assistant = 1, retrieved = 0 }
+fidelity = "approximation"
+evidence = { source = "Metis live probe of 2026-10-18 with thinking disabled (docs/references/metis_wrapper_live_check.md §4.3: 40 prompt tokens reported, 35 content); Demo A live check 2026-10-19 (docs/references/metis_demo_live_check.md: 41 and 76 reported = counted, system + user and with one history turn); the V4.1 encoding README (revision 1bae0e10)", checked_on = 2026-10-19 }
 
 # --- Xiaomi MiMo: mimo-v2.5 (Stage 7.5, Q-32) ---------------------------------
 [[tokenizers]]
@@ -149,6 +179,19 @@ role_prefix = { instructions = 3, user = 3, assistant = 5, retrieved = 3 }
 role_suffix = { instructions = 1, user = 1, assistant = 1, retrieved = 1 }
 fidelity = "approximation"
 evidence = { source = "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL/blob/dcd3fd83fb181622fbc606fbb1709901982a62c2/tokenizer_config.json (chat_template)", checked_on = 2026-10-18 }
+
+[tokenizers.mode_templates.thinking_disabled]
+tokenizer_ref = "mimo-v2"
+version = "mimo-v26-chatml-nothink-2026-10-19"
+# THINKING DISABLED: the same chat_template primes the reply with
+# <|im_start|>assistant\n<think></think> (3 + 2 tokens) when thinking is off.
+# Not checked against reported usage (no live call with MiMo thinking off).
+sequence_start = 0
+reply_priming = 5
+role_prefix = { instructions = 3, user = 3, assistant = 5, retrieved = 3 }
+role_suffix = { instructions = 1, user = 1, assistant = 1, retrieved = 1 }
+fidelity = "approximation"
+evidence = { source = "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL/blob/dcd3fd83fb181622fbc606fbb1709901982a62c2/tokenizer_config.json (chat_template, enable_thinking false branch)", checked_on = 2026-10-19 }
 
 # --- xAI: grok-4-1-fast -------------------------------------------------------
 [[tokenizers]]

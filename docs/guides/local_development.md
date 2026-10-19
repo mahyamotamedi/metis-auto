@@ -20,6 +20,16 @@ git clone <repo-url> metis-auto && cd metis-auto
 
 The last step downloads two public tokenizer files (OpenAI's `o200k_base`, about 3.6 MB; DeepSeek-V4-Flash's `tokenizer.json`, about 6.4 MB) into `data/tokenizers/` (git-ignored), and checks them against the sha256 pinned in `config/reference/tokenizers.toml`. It needs no key and costs nothing. `--check` verifies without downloading. Without the files, counts fall back to the labelled chars/4 approximation and the exact-tokenizer tests skip, saying why ([token_accounting.md §2](../architecture/token_accounting.md#2-tokenizers-supported-models-methods-fidelity)). The libraries come from the `tokenizers` extra, which the dev lock includes.
 
+**Optional: experimental context compression (Demo milestone, [ADR-0023](../adr/0023-demo-backend-components.md)).** LLMLingua-2 needs heavy libraries (torch, transformers, llmlingua) that are in neither the runtime nor the dev lock, and about 2.2 GB of model files:
+
+```sh
+.venv/bin/pip install --require-hashes -r requirements-compress.lock   # the dev lock + extra `compress`
+.venv/bin/pip install -e . --no-deps
+.venv/bin/python scripts/fetch_compressor_assets.py                     # once; sha256-pinned; --check verifies
+```
+
+Without them everything else runs, compression stays off (the chat says why if you ask for it), and the two LLMLingua-2 tests skip. The lock was resolved on macOS arm64 (TODO-14); the Docker images do not include it.
+
 ## 2. Run the smoke test (no secrets needed)
 
 ```sh

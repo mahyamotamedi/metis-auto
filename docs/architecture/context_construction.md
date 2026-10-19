@@ -1,6 +1,6 @@
 # Context Construction and Reduction (Stage 3)
 
-Status: pass-through reference **decided**; reduction strategies **open** (they are experiments, FR-CTX-02); overflow rule **provisional**. Last updated 2026-10-14.
+Status: pass-through reference **decided**; reduction strategies **open** (they are experiments, FR-CTX-02); overflow rule **provisional**. Last updated 2026-10-19 (Demo milestone A: LLMLingua-2 as an EXPERIMENTAL compression step, §6).
 Index: [architecture README](README.md). Component: CMP-07 (context policy), with CMP-02 for token counts. Requirements: FR-CTX-01…05, H-1, H-2.
 
 ---
@@ -74,3 +74,7 @@ flowchart TD
 - Which strategies to test, with which parameters: the Stage 8 context plan.
 - The default overflow rule and safety margin (configuration).
 - Whether instructions may ever be trimmed or compacted: only with a decision record backed by ablation evidence.
+
+## 6. Experimental compression (Demo milestone A, [ADR-0023](../adr/0023-demo-backend-components.md))
+
+`[pipeline.context.compression]` (off by default). When on, the pipeline runs the configured `TextCompressor` (LLMLingua-2, `microsoft/llmlingua-2-xlm-roberta-large-meetingbank` with `llmlingua` 0.2.2 on CPU; or the labelled fake) **once per request, before the first context build**, on history turns and retrieved items of at least `min_chars`. **Instructions are never compressed by default** (the `compress_instructions` opt-in exists for experiment arms only; §5) and the current message never. `domain/context/compression.py` decides the targets, rebuilds the request that is sent, and marks those components `compressed` in the composition record; the cache key keeps the original request. The time is the `context.compress` span (overhead); the `context_compressed` event records sizes and the compressor's tokens; the target-token saving is the decomposition's compression term (the accounting compares the full and the sent request). Unpromoted: no ablation yet (§4, context plan X3); Persian quality unknown; about 310 ms per 300-character text on CPU (A-67).

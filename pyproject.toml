@@ -37,6 +37,17 @@ tokenizers = [
 live = [
     "openai>=3.24,<4",
 ]
+# EXPERIMENTAL context compression (Demo milestone, ADR-0023; context plan X3):
+# LLMLingua-2 on CPU, imported only in adapters/compressors/llmlingua2.py.
+# Heavy (torch); never in the runtime lock or the dev lock: its own lock,
+# requirements-compress.lock (= the dev lock + this extra). Model files come
+# from scripts/fetch_compressor_assets.py (sha256-pinned), never at run time.
+compress = [
+    "torch>=2.14,<2.15",
+    "transformers>=5.18,<5.19",
+    "accelerate>=1.15,<2",
+    "llmlingua==0.2.2",
+]
 # Needed only by the frozen sample-EDA tests (tests/test_sample_eda_helpers.py).
 eda = [
     "numpy>=2",

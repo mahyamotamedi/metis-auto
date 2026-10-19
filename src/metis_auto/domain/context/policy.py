@@ -26,6 +26,8 @@ from metis_auto.contracts import (
     TargetTokenCounts,
 )
 
+from .compression import CompressionConfig
+
 
 class OverflowRule(StrEnum):
     TRIM = "trim"
@@ -35,6 +37,9 @@ class OverflowRule(StrEnum):
 
 
 class ContextConfig(ContractModel):
+    compression: CompressionConfig = CompressionConfig()
+    """EXPERIMENTAL compression of history and retrieved context (Demo
+    milestone); off by default."""
     strategy: Name = "pass_through"
     """Name wiring resolves to a promoted ``ContextStrategy``."""
     overflow_rule: OverflowRule = OverflowRule.TRIM_THEN_REROUTE  # provisional

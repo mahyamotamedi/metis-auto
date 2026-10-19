@@ -45,6 +45,9 @@ class PathSettings(ContractModel):
     tokenizer_assets: str = "data/tokenizers"
     """Tokenizer files fetched once by scripts/fetch_tokenizer_assets.py
     (git-ignored; token_accounting.md §2)."""
+    compressor_assets: str = "data/compressors"
+    """Context-compressor model files (LLMLingua-2) fetched once by
+    scripts/fetch_compressor_assets.py (git-ignored; Demo milestone)."""
 
 
 class LoggingSettings(ContractModel):
@@ -106,6 +109,8 @@ class ReferenceSettings(ContractModel):
     label_mapping: str | None = "reference/label-mapping-sample-v1.toml"
     """Logged model label → catalogue model, for the as-logged baseline
     (Stage 8; contracts.md O-3)."""
+    compressors: str | None = "reference/compressors.toml"
+    """Pinned context-compressor models (Demo milestone, experimental)."""
 
 
 class CounterfactualSource(StrEnum):
@@ -492,6 +497,10 @@ class TokenizerSpec(ContractModel):
     """Backend ``approx_chars`` only."""
     template: ChatTemplate | None = None
     """Chat-template overhead; None = not modelled (not added)."""
+    mode_templates: dict[Name, ChatTemplate] = {}
+    """Framing for a non-default provider mode, keyed by mode name, e.g.
+    ``thinking_disabled`` (Demo milestone, Q-34). Wiring uses it for a model
+    whose ``[model_options]`` select that mode; otherwise ``template``."""
 
     @model_validator(mode="after")
     def _check(self) -> TokenizerSpec:
@@ -508,6 +517,8 @@ class TokenizerSpec(ContractModel):
             )
         if self.template is not None and self.template.tokenizer_ref != self.ref:
             raise ValueError(f"tokenizer {self.ref}: template is for another ref")
+        if any(t.tokenizer_ref != self.ref for t in self.mode_templates.values()):
+            raise ValueError(f"tokenizer {self.ref}: mode template for another ref")
         return self
 
 
@@ -517,6 +528,52 @@ class TokenizerTable(ContractModel):
 
     def get(self, ref: str) -> TokenizerSpec | None:
         return next((t for t in self.tokenizers if t.ref == ref), None)
+
+
+class CompressorBackend(StrEnum):
+    LLMLINGUA2 = "llmlingua2"
+    """LLMLingua-2 token classification (``llmlingua`` package, extra
+    ``compress``)."""
+
+
+class CompressorAsset(ContractModel):
+    """One model file, fetched once (scripts/fetch_compressor_assets.py) and
+    checked by sha256 before every load. Never downloaded at run time."""
+
+    name: str = Field(pattern=r"^[A-Za-z0-9_.\-]+$")
+    """File name inside the compressor's directory."""
+    url: str = Field(pattern=r"^https://")
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    size_bytes: int | None = Field(default=None, gt=0)
+
+
+class CompressorSpec(ContractModel):
+    """A pinned context-compression model (Demo milestone; context plan X3).
+    Experimental: unpromoted, needs ablation evidence (FR-CTX-03)."""
+
+    ref: Name
+    backend: CompressorBackend
+    model: str
+    """Hugging Face repository ID, for the record (the files are local)."""
+    revision: str = Field(pattern=r"^[0-9a-f]{40}$")
+    licence: str
+    library: str
+    """Library and version it was checked with, e.g. llmlingua==0.2.2."""
+    evidence: Sourced
+    files: tuple[CompressorAsset, ...] = Field(min_length=1)
+
+    @property
+    def directory(self) -> str:
+        """Relative to ``paths.compressor_assets``."""
+        return f"{self.ref}/{self.revision}"
+
+
+class CompressorTable(ContractModel):
+    version: Version
+    compressors: tuple[CompressorSpec, ...]
+
+    def get(self, ref: str) -> CompressorSpec | None:
+        return next((c for c in self.compressors if c.ref == ref), None)
 
 
 @dataclass(frozen=True)
@@ -529,6 +586,7 @@ class ReferenceData:
     baselines: BaselineTable | None = None
     tokenizers: TokenizerTable | None = None
     label_mapping: LabelMapping | None = None
+    compressors: CompressorTable | None = None
 
     def versions(self) -> dict[str, str]:
         found = {"catalogue": self.catalogue.version, "prices": self.prices.version}
@@ -540,6 +598,8 @@ class ReferenceData:
             found["tokenizers"] = self.tokenizers.version
         if self.label_mapping is not None:
             found["label_mapping"] = self.label_mapping.version
+        if self.compressors is not None:
+            found["compressors"] = self.compressors.version
         return found
 
 

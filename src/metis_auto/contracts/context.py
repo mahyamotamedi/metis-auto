@@ -47,6 +47,8 @@ class ContextAction(StrEnum):
     KEPT = "kept"
     TRIMMED = "trimmed"
     SUMMARISED = "summarised"
+    COMPRESSED = "compressed"
+    """Text kept but shortened by a compressor (e.g. LLMLingua-2)."""
     DROPPED = "dropped"
     NOT_APPLICABLE = "not_applicable"
     """The component was absent or unknown."""

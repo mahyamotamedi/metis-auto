@@ -34,11 +34,33 @@ class Role(StrEnum):
     ASSISTANT = "assistant"
 
 
+CACHE_PRODUCER = "cache"
+"""``Turn.producer`` value for an answer served from cache (sticky routing)."""
+
+
 class Turn(ContractModel):
-    """One earlier message in the conversation history."""
+    """One earlier message in the conversation history.
+
+    ``producer`` (Demo milestone, A-64): who produced an assistant turn, a
+    catalogue model ID or ``cache``, so a stateless policy can read a session's
+    routing history from the request (P-8; sticky routing, routing_plan §5).
+    Unknown by default (e.g. logged history); absent for a user turn. It is
+    metadata, not content: it is not part of the history fingerprint.
+    """
 
     role: Role = field(Privacy.DERIVED, "Who wrote the message.")
     text: str = field(Privacy.CONTENT, "Message text.")
+    producer: Component[Name] = field(
+        Privacy.OPERATIONAL,
+        "Assistant turns: the model ID or 'cache' that produced it.",
+        default_factory=Component[Name].unknown,
+    )
+
+    @model_validator(mode="after")
+    def _user_turn_has_no_producer(self) -> Turn:
+        if self.role == Role.USER and self.producer.state == ComponentState.PRESENT:
+            raise ValueError("a user turn has no producer (absent or unknown)")
+        return self
 
 
 class RetrievedItem(ContractModel):

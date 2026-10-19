@@ -66,6 +66,11 @@ class RoutingDecision(ContractModel):
         Privacy.OPERATIONAL, "Constraint applied on a re-route.", default=None
     )
     flags: tuple[RoutingFlag, ...] = field(Privacy.OPERATIONAL, "Flags.", default=())
+    anchor_model_id: Name | None = field(
+        Privacy.OPERATIONAL,
+        "Sticky routing: the session's anchor model before this request, if any.",
+        default=None,
+    )
 
     @model_validator(mode="after")
     def _check_target(self) -> RoutingDecision:

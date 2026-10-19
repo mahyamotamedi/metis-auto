@@ -25,6 +25,8 @@ from metis_auto.contracts.routing import NO_ELIGIBLE_MODEL
 from .base import RequestedModelMode, RoutingPolicy
 from .eligibility import EligibilityConfig, filter_eligible
 from .fixed_model import FixedModelConfig
+from .rule_based import RuleBasedConfig
+from .sticky import StickyConfig
 
 
 class RoutingConfig(ContractModel):
@@ -36,6 +38,10 @@ class RoutingConfig(ContractModel):
     """Escalation targets after the routed target (ADR-0013); configuration."""
     fixed_model: FixedModelConfig | None = None
     """Config of the ``fixed_model`` policy, when selected."""
+    rule_based: RuleBasedConfig | None = None
+    """Rules of ``rule_based``, also the initial routing of ``sticky``."""
+    sticky: StickyConfig | None = None
+    """Config of the ``sticky`` policy (mode sticky_v1 or per_request)."""
 
 
 def route(
@@ -56,6 +62,7 @@ def route(
 
     choice = policy.choose(features, eligible) if eligible else None
     target = None
+    anchor = choice.anchor_model_id if choice is not None else None
     if choice is not None:
         if choice.model_id is not None:
             target = next((e for e in eligible if e.model_id == choice.model_id), None)
@@ -72,6 +79,7 @@ def route(
             reason_code=NO_ELIGIBLE_MODEL,
             min_context_window=min_context_window,
             flags=tuple(flags),
+            anchor_model_id=anchor,
         )
     eligible_ids = {e.model_id for e in eligible}
     return RoutingDecision(
@@ -80,14 +88,20 @@ def route(
         tier=target.tier,
         eligible=tuple(e.model_id for e in eligible),
         exclusions=exclusions,
-        # TODO(Stage 8): per-tier chains. A chain model that is not eligible
-        # for this request is dropped here, never invoked.
-        chain=tuple(m for m in config.chain if m in eligible_ids),
+        # A chain model that is not eligible for this request is dropped here,
+        # never invoked. A policy may choose its own chain (rule_based: the
+        # cheapest model of each higher tier).
+        chain=tuple(
+            m
+            for m in (choice.chain if choice.chain is not None else config.chain)
+            if m in eligible_ids and m != target.model_id
+        ),
         policy=policy.ref,
         reason_code=choice.reason_code,
         features_used=choice.features_used,
         min_context_window=min_context_window,
         flags=tuple(flags),
+        anchor_model_id=choice.anchor_model_id,
     )
 
 

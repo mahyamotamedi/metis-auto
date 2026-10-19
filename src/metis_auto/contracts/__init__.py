@@ -96,7 +96,7 @@ from .evaluation import (
     StratumResult,
 )
 from .events import PAYLOAD_TYPES, Event, EventPayload, RunMode
-from .features import Language, RequestFeatures
+from .features import Language, RequestFeatures, TurnFeatures
 from .measurement import (
     ComponentMeasurement,
     ComponentName,
@@ -140,6 +140,7 @@ from .replay import (
     Session,
 )
 from .request import (
+    CACHE_PRODUCER,
     KNOWN_TRAFFIC_SOURCES,
     AttachmentRef,
     Modality,
@@ -230,6 +231,7 @@ __all__ = [
     "InvalidReason",
     "JudgeScore",
     "KeyComponent",
+    "CACHE_PRODUCER",
     "KNOWN_TRAFFIC_SOURCES",
     "Language",
     "LatencyCategory",
@@ -297,6 +299,7 @@ __all__ = [
     "TokenUsage",
     "TrafficSource",
     "Turn",
+    "TurnFeatures",
     "UtcDatetime",
     "VerdictState",
     "Version",

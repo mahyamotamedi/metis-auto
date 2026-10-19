@@ -37,7 +37,9 @@ TARGET = ex.model_catalogue().entries[0]  # window 8,000; output limit unknown
 
 def test_features_keep_unknown_as_none():
     feats = extract_features(ex.request(), ex.request_measurements(), FeatureConfig())
-    assert feats.language == Language.UNDETERMINED  # TODO(Stage 8) detector
+    # The synthetic message mixes the Latin "[SYNTHETIC]" marker with Persian.
+    assert feats.language in (Language.PERSIAN, Language.MIXED)
+    assert feats.is_greeting is False  # no phrases in the default config
     assert feats.turn_depth == 1
     assert feats.structured_input_state == ComponentState.UNKNOWN
     assert feats.instructions_group == ex.FP_INSTRUCTIONS

@@ -65,6 +65,7 @@ One earlier message in the conversation history.
 |---|---|---|---|---|
 | `role` | `Role` | yes | derived | Who wrote the message. |
 | `text` | `str` | yes | content | Message text. |
+| `producer` | `Component[Name]` |  | operational | Assistant turns: the model ID or 'cache' that produced it. |
 
 ### `RetrievedItem`
 
@@ -347,6 +348,20 @@ Counts with the target's tokenizer, for the context stage (stage 5).
 
 Derived request features (CMP-04 output; FR-FEAT-01…05).
 
+### `TurnFeatures`
+
+Cheap features of one earlier user turn and who answered it (Demo milestone: sticky routing reads them, routing_plan §5). Content-free.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `language` | `Language` | yes | derived | Language of the user turn. |
+| `has_code` | `bool` | yes | derived | Code detected in the user turn. |
+| `has_coding_intent` | `bool` |  | derived | The turn asks for code or programming help, with no code in it. |
+| `length_bucket` | `NonNegInt` | yes | derived | Length bucket of the turn. |
+| `is_greeting` | `bool` | yes | derived | Greeting or small talk. |
+| `producer_state` | `ComponentState` | yes | derived | State of the answering turn's producer. |
+| `producer` | `Name \| None` |  | operational | Model ID or 'cache' that answered; None if absent, unknown, or no answer. |
+
 ### `RequestFeatures`
 
 Features of one request. None means unknown (the component's state was unknown), not zero.
@@ -359,6 +374,9 @@ Features of one request. None means unknown (the component's state was unknown),
 | `message_tokens` | `TokenCount \| None` |  | derived | Message token estimate, with its method. |
 | `known_input_tokens` | `TokenCount \| None` |  | derived | Cheap estimate over present components; unknown ones add nothing, so it is a lower bound. Used for the routing context-fit check. |
 | `has_code` | `bool \| None` |  | derived | Code detected. |
+| `has_coding_intent` | `bool \| None` |  | derived | Asks for code or programming help, with no code present (configured keywords, request cues, and templates). |
+| `length_bucket` | `NonNegInt \| None` |  | derived | Message length bucket (configured character bounds). |
+| `is_greeting` | `bool \| None` |  | derived | Greeting or small talk (configured phrase list). |
 | `attachment_count` | `NonNegInt \| None` |  | derived | Attachments; None if unknown. |
 | `attachment_modalities` | `tuple[Modality, ...]` |  | derived | Distinct modalities present. |
 | `turn_depth` | `NonNegInt \| None` |  | derived | User turns before this one; None if history unknown. |
@@ -373,6 +391,7 @@ Features of one request. None means unknown (the component's state was unknown),
 | `traffic_source_state` | `ComponentState` | yes | derived | Traffic-source state (reserved, Q-21). |
 | `traffic_source_kind` | `Name \| None` |  | derived | Traffic-source kind, if present. |
 | `traffic_source_provenance` | `Provenance \| None` |  | operational | Declared or inferred. |
+| `history_turns` | `tuple[TurnFeatures, ...]` |  | derived | Earlier user turns, oldest first, with their producers (sticky routing). |
 | `extra` | `dict[Name, FeatureValue]` |  | derived | Experimental or measured features (e.g. semantic intent). |
 
 **Enumerations**
@@ -509,6 +528,7 @@ The chosen target and why (FR-ROUTE-02). Content-free.
 | `features_used` | `tuple[Name, ...]` |  | operational | Names of the features the policy read. |
 | `min_context_window` | `PosInt \| None` |  | operational | Constraint applied on a re-route. |
 | `flags` | `tuple[RoutingFlag, ...]` |  | operational | Flags. |
+| `anchor_model_id` | `Name \| None` |  | operational | Sticky routing: the session's anchor model before this request, if any. |
 
 **Enumerations**
 
@@ -630,7 +650,7 @@ Whether the final answer may be stored (caching.md §2 store rules).
 - **`EntryStatus`**: `complete`, `invalidated`
 - **`CacheTier`**: `exact`, `semantic`
 - **`LookupOutcome`**: `hit`, `miss`, `ineligible`
-- **`IneligibleReason`**: `attachments`, `unknown_component`, `time_sensitive`, `scope_ref_missing`, `no_target`, `variant_not_serving`, `disabled`
+- **`IneligibleReason`**: `attachments`, `unknown_component`, `time_sensitive`, `scope_ref_missing`, `no_target`, `variant_not_serving`, `disabled`, `not_first_turn`
 - **`InvalidReason`**: `expired`, `status`, `tier_too_low`, `below_threshold`, `verifier_failed`. Why a found entry was not usable (the lookup becomes a miss).
 - **`StoreSkipReason`**: `not_eligible`, `served_from_cache`, `no_answer`, `error`, `truncated`, `content_filtered`, `unsatisfactory`, `disabled`
 
@@ -691,7 +711,7 @@ Ordered input parts for one target, plus their record.
 **Enumerations**
 
 - **`PartRole`**: `instructions`, `user`, `assistant`, `retrieved`. Generic roles of input parts. Adapters map them to provider formats.
-- **`ContextAction`**: `kept`, `trimmed`, `summarised`, `dropped`, `not_applicable`
+- **`ContextAction`**: `kept`, `trimmed`, `summarised`, `compressed`, `dropped`, `not_applicable`
 - **`OverflowOutcome`**: `fits`, `trimmed_to_fit`, `reroute_requested`, `rejected`
 
 ## `contracts.model_io`
@@ -881,7 +901,7 @@ What the pipeline returns. Expected failures are an error status, not an excepti
 
 **Enumerations**
 
-- **`SpanName`**: `request`, `measure`, `features`, `route`, `cache_lookup.exact`, `cache_lookup.semantic`, `embed`, `context`, `attempt`, `model_call`, `measurement_call`, `cache_store`, `respond`
+- **`SpanName`**: `request`, `measure`, `features`, `route`, `cache_lookup.exact`, `cache_lookup.semantic`, `embed`, `context`, `context.compress`, `attempt`, `model_call`, `measurement_call`, `cache_store`, `respond`
 - **`LatencyCategory`**: `overhead`, `model`, `end_to_end`, `container`, `post_response`. ADR-0006 latency split.
 - **`LatencySource`**: `measured_local`, `provider_reported`, `recorded`, `simulated`
 - **`ResponseStatus`**: `ok`, `error`
@@ -945,6 +965,32 @@ Events: the single measurement record (ADR-0012, observability.md §3).
 |---|---|---|---|---|
 | `event_type` | `Literal['context_built']` |  | operational | Discriminator. |
 | `record` | `CompositionRecord` | yes | derived | Composition record. |
+
+### `CompressedComponent`
+
+What a compressor did to one component (sizes only).
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `component` | `ComponentName` | yes | operational | Which component. |
+| `items_compressed` | `NonNegInt` | yes | derived | Items compressed. |
+| `items_skipped` | `NonNegInt` | yes | derived | Items left as they were (below the minimum length). |
+| `chars_before` | `NonNegInt` | yes | derived | Characters before. |
+| `chars_after` | `NonNegInt` | yes | derived | Characters after. |
+| `tokens_before` | `NonNegInt` | yes | derived | Compressor tokens before (not the target's tokens). |
+| `tokens_after` | `NonNegInt` | yes | derived | Compressor tokens after. |
+
+### `ContextCompressed`
+
+A context compressor ran (Demo milestone, experimental; brief §9). Its time is overhead (span ``context.compress``); the target-token saving is the decomposition's compression term.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `event_type` | `Literal['context_compressed']` |  | operational | Discriminator. |
+| `compressor` | `PolicyRef` | yes | operational | Compressor and version. |
+| `rate` | `float` | yes | operational | Configured share of tokens kept. |
+| `token_method` | `str` | yes | operational | How compressor tokens were counted. |
+| `components` | `tuple[CompressedComponent, ...]` | yes | derived | Per compressed component. |
 
 ### `AttemptStarted`
 

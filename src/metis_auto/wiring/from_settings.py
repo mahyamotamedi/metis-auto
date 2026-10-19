@@ -22,9 +22,27 @@ from metis_auto.adapters.tokenizers import ApproxCharsTokenizer
 from metis_auto.application.accounting import AccountingService
 from metis_auto.application.measurement import Fingerprinter, MeasurementService
 from metis_auto.application.pipeline import PipelineConfig, RequestPipeline
-from metis_auto.contracts import AnswerSource, Identifier, Money, RunMode
-from metis_auto.ports import CacheStore, Clock, EventSink, IdSource, ModelClient
-from metis_auto.settings import CounterfactualSource, LoadedSettings, SettingsError
+from metis_auto.contracts import (
+    AnswerSource,
+    ChatTemplate,
+    Identifier,
+    Money,
+    RunMode,
+)
+from metis_auto.ports import (
+    CacheStore,
+    Clock,
+    EventSink,
+    IdSource,
+    ModelClient,
+    TextCompressor,
+)
+from metis_auto.settings import (
+    CounterfactualSource,
+    LoadedSettings,
+    SettingsError,
+    ThinkingMode,
+)
 
 from .pipeline import build_pipeline
 from .tokenizers import TokenizerSet, build_tokenizers
@@ -34,9 +52,11 @@ log = logging.getLogger(__name__)
 
 def pipeline_config(loaded: LoadedSettings) -> PipelineConfig:
     """Reference data plus the ``[pipeline.*]`` sections, validated by each
-    policy's config type (unknown keys are errors)."""
+    policy's config type (unknown keys are errors). A model whose
+    ``[model_options]`` disable thinking gets 0 expected reasoning tokens in
+    the routing cost model (Q-34: no hidden reasoning in that mode)."""
     try:
-        return PipelineConfig.model_validate(
+        config = PipelineConfig.model_validate(
             {
                 "catalogue": loaded.reference.catalogue,
                 "prices": loaded.reference.prices,
@@ -45,6 +65,51 @@ def pipeline_config(loaded: LoadedSettings) -> PipelineConfig:
         )
     except ValueError as exc:
         raise SettingsError(f"invalid [pipeline] settings: {exc}") from None
+    rules = config.routing.rule_based
+    off = thinking_disabled(loaded)
+    if rules is None or not off:
+        return config
+    model = rules.cost_model
+    reasoning = {**model.expected_reasoning_tokens, **dict.fromkeys(off, 0)}
+    rules = rules.model_copy(
+        update={
+            "cost_model": model.model_copy(
+                update={"expected_reasoning_tokens": reasoning}
+            )
+        }
+    )
+    routing = config.routing.model_copy(update={"rule_based": rules})
+    return config.model_copy(update={"routing": routing})
+
+
+def thinking_disabled(loaded: LoadedSettings) -> tuple[str, ...]:
+    """Models whose ``[model_options]`` set ``thinking = "disabled"``."""
+    return tuple(
+        model_id
+        for model_id, options in loaded.settings.model_options.items()
+        if options.thinking == ThinkingMode.DISABLED
+    )
+
+
+def model_templates(
+    loaded: LoadedSettings, tokens: TokenizerSet
+) -> dict[str, ChatTemplate]:
+    """Chat templates by tokenizer ref, plus a per-model entry for a model
+    whose provider mode has its own framing (``mode_templates`` in
+    ``tokenizers.toml``, e.g. DeepSeek with thinking disabled). A mode with
+    no configured template keeps the default one (counts say approximation)."""
+    templates: dict[str, ChatTemplate] = dict(tokens.templates)
+    table = loaded.reference.tokenizers
+    entries = {e.model_id: e for e in loaded.reference.catalogue.entries}
+    for model_id, options in loaded.settings.model_options.items():
+        entry = entries.get(model_id)
+        if entry is None or options.thinking is None or table is None:
+            continue
+        spec = table.get(entry.tokenizer_ref) if entry.tokenizer_ref else None
+        mode = f"thinking_{options.thinking.value}"
+        if spec is not None and mode in spec.mode_templates:
+            templates[model_id] = spec.mode_templates[mode]
+    return templates
 
 
 def fingerprint_key(loaded: LoadedSettings) -> bytes:
@@ -112,14 +177,26 @@ def build_pipeline_from_settings(
     clock: Clock | None = None,
     ids: IdSource | None = None,
     tokenizers: TokenizerSet | None = None,
+    compressor: TextCompressor | None = None,
+    fingerprint_key_bytes: bytes | None = None,
     **candidates: Any,
 ) -> RequestPipeline:
     """``build_pipeline`` from settings. ``candidates`` are passed through
     (``routing_policy``, ``context_strategy``, ``candidate_versions``). A
     live client is refused unless ``live_permission`` allows it; it then
     gets the file ledger. Tokenizers come from the tokenizer table (built
-    here unless given)."""
+    here unless given). With ``context.compression.enabled``, the compressor
+    is ``compressor`` or built from the compressor table (extra ``compress``
+    and the fetched model files; a SettingsError says what is missing).
+    ``fingerprint_key_bytes`` keeps one key across rebuilds (a chat session
+    that rebuilds its pipeline keeps its cache reachable); default: from
+    settings (``fingerprint_key``)."""
     tokens = tokenizers or build_tokenizers(loaded)
+    config = pipeline_config(loaded)
+    if config.context.compression.enabled and compressor is None:
+        from .compression import build_compressor
+
+        compressor = build_compressor(loaded, config.context.compression.compressor)
     ledger = None
     if model_client.source == AnswerSource.LIVE:
         permission = live_permission(loaded)
@@ -127,19 +204,20 @@ def build_pipeline_from_settings(
             raise SettingsError("live calls refused: " + "; ".join(permission.reasons))
         ledger = spend_ledger(loaded, run_id)
     return build_pipeline(
-        pipeline_config(loaded),
+        config,
         model_client=model_client,
         cache_store=cache_store,
         sink=sink,
-        fingerprint_key=fingerprint_key(loaded),
+        fingerprint_key=fingerprint_key_bytes or fingerprint_key(loaded),
         run_id=run_id,
         run_mode=run_mode,
         clock=clock,
         ids=ids,
         spend_ledger=ledger,
         tokenizers=tokens.tokenizers,
-        templates=tokens.templates,
+        templates=model_templates(loaded, tokens),
         config_hash=loaded.config_hash,
+        compressor=compressor,
         **candidates,
     )
 
@@ -156,7 +234,7 @@ def build_accounting_service(
         SystemClock(),
         ApproxCharsTokenizer(),
         tokenizers=tokens.tokenizers,
-        templates=tokens.templates,
+        templates=model_templates(loaded, tokens),
     )
     return AccountingService(
         measurement, loaded.reference.catalogue, loaded.reference.prices

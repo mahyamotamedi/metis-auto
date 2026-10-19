@@ -89,11 +89,152 @@ ephemeral_fingerprint_key = true
 # Thresholds not listed here keep their typed code defaults (A-43:
 # placeholders, not evidence). Any of them can be overridden by a higher layer.
 [pipeline.routing]
+# fixed_model (default: one model), rule_based (rules below, per request), or
+# sticky (sticky routing v1 or per_request, below). rule_based and sticky are
+# DEMO components (Demo milestone, ADR-0023): placeholders until the
+# routing-plan experiments (exp-route-002, exp-route-010) give evidence. The
+# serving default stays fixed_model; scripts/chat.py starts in sticky.
 policy = "fixed_model"
 
 [pipeline.routing.fixed_model]
-# Placeholder target until rule-based / sticky routing (Demo milestone).
 model_id = "gpt-4o-mini"
+
+[pipeline.routing.sticky]
+# sticky_v1 (owner brief §7) or per_request (the rules on every message).
+mode = "sticky_v1"
+# "Very different" message → re-route and re-anchor: code appears or
+# disappears, a coding intent appears (A-71), an attachment appears, the language switches, or the length
+# bucket moves by at least this many buckets (placeholder).
+length_bucket_jump = 2
+language_switch = true
+
+[pipeline.routing.rule_based]
+# PLACEHOLDER rules (A-43 style; not tuned, no quality evidence). First match
+# wins; the tier's cheapest model by EFFECTIVE cost is chosen (cost_model).
+# Tiers are the catalogue's price-based placeholders (A-48): 0 = gpt-5-nano,
+# gpt-4.1-nano, mimo-v2.5; 1 = gpt-4o-mini, deepseek-v4-flash. The escalation
+# chain is the cheapest model of each higher tier.
+version = "rules-demo-2026-10-19"
+default_tier = 0
+
+[[pipeline.routing.rule_based.rules]]
+id = "attachment"
+when = { has_attachments = true }
+tier = 1
+
+[[pipeline.routing.rule_based.rules]]
+id = "code"
+when = { has_code = true }
+tier = 1
+
+[[pipeline.routing.rule_based.rules]]
+id = "coding_intent"
+# Asks for code or programming help with no code in the message
+# ([pipeline.features.coding_intent]; placeholder, A-71): same tier as code.
+when = { has_coding_intent = true }
+tier = 1
+
+[[pipeline.routing.rule_based.rules]]
+id = "long_message"
+# length bucket 2 = 400 characters or more ([pipeline.features] bounds)
+when = { length_bucket_min = 2 }
+tier = 1
+
+[[pipeline.routing.rule_based.rules]]
+id = "deep_session"
+when = { turn_depth_min = 8 }
+tier = 1
+
+[pipeline.routing.rule_based.cost_model]
+# Effective cost per answer = estimated input + assumed visible output +
+# expected HIDDEN REASONING (billed as output; routing plan §3). The nominal
+# price alone would rank gpt-5-nano cheapest; with its reasoning it is not.
+# PLACEHOLDERS from one tiny synthetic live check each (2026-10-18,
+# docs/references/metis_wrapper_live_check.md): gpt-5-nano billed 256, 64, and
+# 128 reasoning tokens (mean ≈ 150); deepseek-v4-flash 30; mimo-v2.5 10-13.
+# Short answers only: real reasoning varies with the request. A model whose
+# [model_options] disable thinking gets 0 (wiring). A model that bills
+# reasoning and is not listed gets default_reasoning_tokens.
+assumed_output_tokens = 300
+default_reasoning_tokens = 256
+expected_reasoning_tokens = { "gpt-5-nano" = 150, "deepseek-v4-flash" = 30, "mimo-v2.5" = 12 }
+
+[pipeline.features]
+# Cheap detectors (Demo milestone; placeholders). Length buckets in characters:
+# 0 below 80, 1 below 400, 2 below 2,000, 3 from 2,000.
+length_bounds = [80, 400, 2000]
+
+[pipeline.features.coding_intent]
+# Coding INTENT (A-71; PLACEHOLDER word lists, not tuned): the message asks for
+# code or programming help and has NO code (code presence is the separate
+# code detector). True when a template matches, or when a keyword (after
+# removing exclude_phrases; their last word also matches with a suffix,
+# «کد تخفیفم») and a request cue both appear: "I studied python"
+# has no cue and is no. Whole words after casefolding, Persian letter folding,
+# ZWNJ → space, and removing punctuation; "..." in a template = up to max_gap
+# words. Known false positives: a customer's "how do I fix this payment
+# error" (error + how) and «برنامه» in the sense "plan".
+max_gap = 4
+keywords = [
+    "python", "javascript", "typescript", "java", "function", "code", "script",
+    "bug", "error", "exception", "sql", "regex", "html", "css", "json", "api",
+    "algorithm", "compile", "compiler", "debug", "programming",
+    "کد", "برنامه", "تابع", "اسکریپت", "خطا", "باگ", "ارور", "پایتون",
+    "جاوااسکریپت", "الگوریتم", "دیباگ", "برنامه نویسی",
+    # Whole words only («کد» must not match «کدام»), so common inflections:
+    "خطای", "کدم", "کدش", "کدی", "باگش",
+]
+request_cues = [
+    "write", "fix", "debug", "help", "how", "why", "can you", "could you",
+    "please", "implement", "create", "generate", "convert", "explain", "show me",
+    "refactor", "optimize", "what is wrong", "not working",
+    "بنویس", "بنویسید", "بنویسی", "درست کن", "درست کنم", "رفع", "حل", "کمک",
+    "چطور", "چطوری", "چگونه", "چرا", "توضیح", "لطفا", "میشه", "می شه",
+]
+templates = [
+    "write ... function", "write ... script", "write ... code", "write ... program",
+    "write ... query", "write ... regex", "fix ... error", "fix ... bug",
+    "fix ... code",
+    "تابع ... بنویس", "کد ... بنویس", "اسکریپت ... بنویس", "برنامه ... بنویس",
+    "خطا ... رفع", "باگ ... رفع", "باگ ... درست",
+]
+# Shop uses of "code" that are not programming (removed before keywords).
+exclude_phrases = [
+    "discount code", "promo code", "coupon code", "tracking code", "postal code",
+    "zip code", "کد تخفیف", "کد رهگیری", "کد پیگیری", "کد پستی", "کد ملی",
+]
+
+[pipeline.features.greeting]
+# Greetings and small talk (owner brief §7): such a message goes to the
+# cheapest model and does not anchor the session. Matched after casefolding,
+# Persian/Arabic letter folding, and removing punctuation and emoji; the whole
+# message must be made of these phrases and at most max_chars long. Never
+# "short = trivial". Answers like "yes"/"no" are left out on purpose (they
+# answer the bot and may be substantive).
+max_chars = 40
+phrases = [
+    "سلام", "سلام علیکم", "درود", "وقت بخیر", "صبح بخیر", "عصر بخیر", "شب بخیر",
+    "روز بخیر", "خوبی", "خوبید", "خوبین", "چطوری", "مرسی", "ممنون", "ممنونم",
+    "متشکرم", "سپاس", "سپاسگزارم", "تشکر", "خیلی ممنون", "خیلی مرسی", "دمت گرم",
+    "قربانت", "خداحافظ", "خدانگهدار", "بای", "باشه", "اوکی", "اکی", "حله",
+    "hi", "hello", "hey", "hiya", "good morning", "good afternoon", "good evening",
+    "good night", "thanks", "thank you", "thanks a lot", "thank you very much",
+    "many thanks", "thx", "ty", "cheers", "ok", "okay", "cool", "great", "nice",
+    "bye", "goodbye", "see you",
+]
+
+[pipeline.cache]
+# Serving defaults (ADR-0007, ADR-0011): session scope, the full key.
+scope = "session"
+# DEMO ONLY (ADR-0023): "demo_bot_level" shares entries across users of one
+# bot (global scope only when instructions are present; ADR-0016 S-b shape).
+# Never the serving default.
+scope_rule = "fixed"
+
+[pipeline.cache.demo_seed]
+# DEMO ONLY (ADR-0023): logged first-turn sample answers under a message-only
+# key, shown locally, never sent to a provider. Off by default.
+enabled = false
 
 [pipeline.context]
 strategy = "pass_through"
@@ -102,3 +243,15 @@ strategy = "pass_through"
 # (Stage 7.5; provisional, A-43-style placeholder). 4,096 output tokens cost
 # at most 0.0027 USD on the dearest test model (0.66 USD / 1M).
 max_output_tokens_cap = 4096
+
+[pipeline.context.compression]
+# EXPERIMENTAL (Demo milestone, context plan X3, ADR-0023): LLMLingua-2 on
+# history and retrieved context, never instructions (compress_instructions
+# stays false) and never the current message. Off by default. Needs the extra
+# `compress` (requirements-compress.lock) and the model files
+# (scripts/fetch_compressor_assets.py). Persian quality is unknown.
+enabled = false
+compressor = "llmlingua-2-xlm-roberta-large-meetingbank"
+rate = 0.5
+min_chars = 200
+compress_instructions = false

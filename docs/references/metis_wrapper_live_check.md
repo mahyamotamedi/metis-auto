@@ -66,7 +66,7 @@ Costs in USD, from reported usage and the Metis prices of 2026-10-18. Latency wa
 
 ### 4.3 DeepSeek with `thinking: {"type": "disabled"}` (Q-34)
 
-**Works through the wrapper.** Reported model `deepseek-flash`, no reasoning field, output 1 token (the visible answer), 0.000007 USD against 0.000033 with thinking on (§1). Prompt tokens **40** against 65 counted with the thinking-mode template, so the framing is 5 tokens in this mode. Two framings fit 40 (`BOS <｜System｜>{system}<｜User｜>{msg}<｜Assistant｜></think>`, or `BOS {system}<｜User｜>{msg}<｜Assistant｜><think></think>`), and one request can't separate them. No chat-mode template is configured; with the option set, counted input overcounts by about 25 tokens (conservative). The default stays thinking on (Stage 8 decides).
+**Works through the wrapper.** Reported model `deepseek-flash`, no reasoning field, output 1 token (the visible answer), 0.000007 USD against 0.000033 with thinking on (§1). Prompt tokens **40** against 65 counted with the thinking-mode template, so the framing is 5 tokens in this mode. Two framings fit 40 (`BOS <｜System｜>{system}<｜User｜>{msg}<｜Assistant｜></think>`, or `BOS {system}<｜User｜>{msg}<｜Assistant｜><think></think>`), and one request can't separate them. No chat-mode template is configured; with the option set, counted input overcounts by about 25 tokens (conservative). The default stays thinking on (Stage 8 decides). *Update 2026-10-19 (Demo milestone A):* a `thinking_disabled` template variant (framing 5, the first layout) is now configured and used when the option is set (A-68).
 
 ### 4.4 Configuration changed by the probe
 

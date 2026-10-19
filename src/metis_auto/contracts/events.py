@@ -21,6 +21,7 @@ from ._base import (
     Name,
     NonNegFloat,
     NonNegInt,
+    PolicyRef,
     Privacy,
     UtcDatetime,
     Version,
@@ -33,7 +34,7 @@ from .caching import CacheLookupResult, ScopeKind, StoreSkipReason
 from .context import CompositionRecord
 from .evaluation import ExclusionCount, MetricValue
 from .features import RequestFeatures
-from .measurement import ComponentMeasurement, MeasurementRecord
+from .measurement import ComponentMeasurement, ComponentName, MeasurementRecord
 from .model_io import AttemptKind, ErrorClass
 from .replay import PairingFlag
 from .request import TrafficSource
@@ -105,6 +106,38 @@ class CacheStoreSkipped(ContractModel):
 class ContextBuilt(ContractModel):
     event_type: Literal["context_built"] = _type("context_built")
     record: CompositionRecord = field(Privacy.DERIVED, "Composition record.")
+
+
+class CompressedComponent(ContractModel):
+    """What a compressor did to one component (sizes only)."""
+
+    component: ComponentName = field(Privacy.OPERATIONAL, "Which component.")
+    items_compressed: NonNegInt = field(Privacy.DERIVED, "Items compressed.")
+    items_skipped: NonNegInt = field(
+        Privacy.DERIVED, "Items left as they were (below the minimum length)."
+    )
+    chars_before: NonNegInt = field(Privacy.DERIVED, "Characters before.")
+    chars_after: NonNegInt = field(Privacy.DERIVED, "Characters after.")
+    tokens_before: NonNegInt = field(
+        Privacy.DERIVED, "Compressor tokens before (not the target's tokens)."
+    )
+    tokens_after: NonNegInt = field(Privacy.DERIVED, "Compressor tokens after.")
+
+
+class ContextCompressed(ContractModel):
+    """A context compressor ran (Demo milestone, experimental; brief §9).
+    Its time is overhead (span ``context.compress``); the target-token saving
+    is the decomposition's compression term."""
+
+    event_type: Literal["context_compressed"] = _type("context_compressed")
+    compressor: PolicyRef = field(Privacy.OPERATIONAL, "Compressor and version.")
+    rate: float = field(Privacy.OPERATIONAL, "Configured share of tokens kept.")
+    token_method: str = field(
+        Privacy.OPERATIONAL, "How compressor tokens were counted."
+    )
+    components: tuple[CompressedComponent, ...] = field(
+        Privacy.DERIVED, "Per compressed component."
+    )
 
 
 class AttemptStarted(ContractModel):
@@ -193,6 +226,7 @@ EventPayload = Annotated[
     | CacheStored
     | CacheStoreSkipped
     | ContextBuilt
+    | ContextCompressed
     | AttemptStarted
     | AttemptFinished
     | RetryScheduled
@@ -214,6 +248,7 @@ PAYLOAD_TYPES: tuple[type[ContractModel], ...] = (
     CacheStored,
     CacheStoreSkipped,
     ContextBuilt,
+    ContextCompressed,
     AttemptStarted,
     AttemptFinished,
     RetryScheduled,

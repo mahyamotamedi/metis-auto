@@ -2,7 +2,8 @@
 
     python scripts/measure_overhead.py [--requests 2000] [--hit-ratio 0.5]
         [--tokenizer openai-o200k-base] [--instructions-chars 0]
-        [--sizes-from-sample] [--out reports/cost/overhead.json]
+        [--sizes-from-sample] [--compression off|llmlingua2|fake]
+        [--compress-rate 0.5] [--out reports/cost/overhead.json]
 
 Runs N SYNTHETIC requests through the real pipeline (fake model client,
 in-memory cache, no network, no keys) and reports p50 / p95 / max per span,
@@ -24,6 +25,18 @@ Every message is unique, so every request is an exact-cache miss (the worst
 case for counting). The synthetic models' context windows are raised to
 1,000,000 placeholder tokens so large sample instructions do not overflow
 (``--requests`` and ``--hit-ratio`` are then ignored).
+
+``--compression`` (Demo milestone, brief §9 and §11): run the EXPERIMENTAL
+context compressor on every miss (history turns and retrieved items of at
+least ``min_chars``; never instructions or the message). Its time is the
+``context.compress`` span, part of the overhead total. The JSON adds the
+compressor's token totals (its own tokens) and the input tokens actually
+sent per miss (the target tokenizer), so the saving can be compared with the
+run without compression. ``llmlingua2`` needs the extra ``compress`` and the
+model files (scripts/fetch_compressor_assets.py); ``fake`` is the SYNTHETIC
+word-dropper (mechanics only). With ``--sizes-from-sample`` the texts are
+repeated SYNTHETIC filler: times reflect the lengths, compression rates do not
+reflect real text.
 """
 
 from __future__ import annotations
@@ -38,6 +51,7 @@ from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
+from metis_auto.adapters.compressors import FakeCompressor
 from metis_auto.adapters.providers import FakeModelClient
 from metis_auto.adapters.sinks import InMemoryEventSink
 from metis_auto.adapters.stores import InMemoryCacheStore
@@ -55,7 +69,9 @@ from metis_auto.contracts import (
     ServedBy,
     Turn,
 )
+from metis_auto.contracts.events import ContextBuilt, ContextCompressed
 from metis_auto.settings import load_settings
+from metis_auto.wiring.compression import build_compressor
 from metis_auto.wiring.experiments import sample_cases
 from metis_auto.wiring.from_settings import fingerprint_key, pipeline_config
 from metis_auto.wiring.pipeline import build_pipeline
@@ -215,6 +231,10 @@ def main() -> int:
     parser.add_argument("--tokenizer", default="openai-o200k-base")
     parser.add_argument("--instructions-chars", type=int, default=0)
     parser.add_argument("--sizes-from-sample", action="store_true")
+    parser.add_argument(
+        "--compression", choices=["off", "llmlingua2", "fake"], default="off"
+    )
+    parser.add_argument("--compress-rate", type=float, default=0.5)
     parser.add_argument("--out", type=Path, help="also write the JSON here")
     args = parser.parse_args()
 
@@ -238,17 +258,32 @@ def main() -> int:
     config = config.model_copy(
         update={"catalogue": config.catalogue.model_copy(update={"entries": entries})}
     )
+    compressor = None
+    if args.compression != "off":
+        settings = pipeline_config(load_settings(environ={}, dotenv=None, runtime=None))
+        compression = settings.context.compression.model_copy(
+            update={"enabled": True, "rate": args.compress_rate}
+        )
+        context = config.context.model_copy(update={"compression": compression})
+        config = config.model_copy(update={"context": context})
+        compressor = (
+            FakeCompressor()
+            if args.compression == "fake"
+            else build_compressor(loaded, compression.compressor)
+        )
+    sink = InMemoryEventSink()
     pipeline = build_pipeline(
         config,
         model_client=FakeModelClient(),
         cache_store=InMemoryCacheStore(),
-        sink=InMemoryEventSink(),
+        sink=sink,
         fingerprint_key=fingerprint_key(loaded),
         run_id="run-measure-overhead",
         run_mode=RunMode.SIMULATED,
         tokenizers=tokens.tokenizers,
         templates=tokens.templates,
         config_hash=loaded.config_hash,
+        compressor=compressor,
     )
 
     size_summary = None
@@ -258,6 +293,8 @@ def main() -> int:
         batch = requests(args.requests, args.hit_ratio, args.instructions_chars)
     spans: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
     served: dict[str, int] = defaultdict(int)
+    sent_tokens: list[int] = []
+    squeezed = defaultdict(int)
     for request in batch:
         meta = pipeline.handle(request).metadata
         kind = "hit" if meta.served_by == ServedBy.CACHE else "miss"
@@ -268,6 +305,19 @@ def main() -> int:
             if SPAN_CATEGORY[span.span] == LatencyCategory.OVERHEAD:
                 overhead += span.duration_ms
         spans[kind]["overhead_total"].append(overhead)
+        for event in sink.events:
+            payload = event.payload
+            if isinstance(payload, ContextBuilt) and payload.record.input_tokens:
+                sent_tokens.append(payload.record.input_tokens.tokens)
+            elif isinstance(payload, ContextCompressed):
+                for c in payload.components:
+                    squeezed["items_compressed"] += c.items_compressed
+                    squeezed["items_skipped"] += c.items_skipped
+                    squeezed["chars_before"] += c.chars_before
+                    squeezed["chars_after"] += c.chars_after
+                    squeezed["compressor_tokens_before"] += c.tokens_before
+                    squeezed["compressor_tokens_after"] += c.tokens_after
+        sink.events.clear()
 
     def summary(values: list[float]) -> dict[str, float]:
         return {
@@ -292,6 +342,20 @@ def main() -> int:
             "fallback_reason": status.reason,
         },
         "config_hash": loaded.config_hash,
+        "compression": {
+            "mode": args.compression,
+            "compressor": f"{compressor.ref.name}@{compressor.ref.version}"
+            if compressor
+            else None,
+            "rate": args.compress_rate if compressor else None,
+            "token_method": compressor.token_method if compressor else None,
+            **dict(squeezed),
+        },
+        "sent_input_tokens_per_context": {
+            "n": len(sent_tokens),
+            "sum": sum(sent_tokens),
+            "p50": int(statistics.median(sent_tokens)) if sent_tokens else None,
+        },
         "hardware": hardware(),
         "spans": {
             kind: {name: summary(v) for name, v in sorted(by_span.items())}

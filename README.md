@@ -34,11 +34,14 @@ python3.13 -m venv .venv
 .venv/bin/python scripts/fetch_tokenizer_assets.py # once: tokenizer files (network, no key)
 .venv/bin/python -m pytest                       # offline; network tests need --run-network
 .venv/bin/python scripts/run_walking_skeleton.py # the pipeline end to end with fakes
+.venv/bin/python scripts/chat.py --fake          # the terminal demo (Demo A), offline
 ```
+
+Optional, for EXPERIMENTAL LLMLingua-2 compression only: `requirements-compress.lock` (torch; never in the runtime lock) and `scripts/fetch_compressor_assets.py` (about 2.2 GB, sha256-pinned); see the [local development guide](docs/guides/local_development.md).
 
 No secrets are needed for tests or the walking skeleton. Containers (`docker compose run --rm app`), configuration layers, the `.env` file (copy from `.env.example`), and the live-call budget (10 USD lifetime cap under a 20 USD project ceiling, [ADR-0018](docs/adr/0018-live-calls-for-development-under-a-lifetime-budget.md)) are explained in the [local development guide](docs/guides/local_development.md).
 
-**New to the project and want to try the demo?** Start with the [demo quickstart](docs/guides/demo_quickstart.md): setup, free fake mode, your own Metis key, the `config/local.toml` safety switch, the shared budget, and troubleshooting.
+**New to the project and want to try the demo?** Start with the [demo quickstart](docs/guides/demo_quickstart.md): setup, free fake mode, the terminal demo's routing, cache, and compression toggles, your own Metis key, the `config/local.toml` safety switch, the shared budget, and troubleshooting.
 
 ## Development Workflow
 

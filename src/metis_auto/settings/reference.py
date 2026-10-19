@@ -1,7 +1,8 @@
 """Reference-data reader (CMP-19; configuration.md §1, providers.md §4).
 
 Responsibility: read the versioned reference files in ``config/reference/``
-(model catalogue, price table, provider endpoints, baselines, tokenizers)
+(model catalogue, price table, provider endpoints, baselines, tokenizers,
+compressors)
 into contracts, and check them against each other. Enforces the
 no-fabrication rule at the file level: prices are decimal strings with a
 source and check date; a limit or capability counts only with evidence (the
@@ -34,6 +35,7 @@ from metis_auto.contracts import (
 
 from .model import (
     BaselineTable,
+    CompressorTable,
     EndpointTable,
     LabelMapping,
     ReferenceData,
@@ -79,8 +81,11 @@ def load_reference(config_dir: Path, paths: ReferenceSettings) -> ReferenceData:
         if paths.label_mapping
         else None
     )
+    compressors = (
+        read_compressors(config_dir / paths.compressors) if paths.compressors else None
+    )
     data = ReferenceData(
-        catalogue, prices, endpoints, baselines, tokenizers, label_mapping
+        catalogue, prices, endpoints, baselines, tokenizers, label_mapping, compressors
     )
     check_consistency(data)
     return data
@@ -158,6 +163,17 @@ def read_tokenizers(path: Path) -> TokenizerTable:
         TokenizerTable,
         version=raw.get("version"),
         tokenizers=raw.get("tokenizers"),
+    )
+
+
+def read_compressors(path: Path) -> CompressorTable:
+    """``version`` plus ``[[compressors]]`` specs (Demo milestone)."""
+    raw = _read(path)
+    return _validated(
+        path,
+        CompressorTable,
+        version=raw.get("version"),
+        compressors=raw.get("compressors"),
     )
 
 

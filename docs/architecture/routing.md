@@ -1,6 +1,6 @@
 # Routing Flow (Stage 3)
 
-Status: structure **decided**; feature set and rules **provisional**; which routing strategy wins is **open** (NG-06). Last updated 2026-10-14.
+Status: structure **decided**; feature set and rules **provisional**; which routing strategy wins is **open** (NG-06). Last updated 2026-10-19 (Demo milestone A: `rule_based` and `sticky` as placeholder demo components, §6; [ADR-0023](../adr/0023-demo-backend-components.md); coding intent added to the rules and the "very different" check, amendment 2, A-71).
 Index: [architecture README](README.md). Components: CMP-02 (measurement), CMP-04 (features), CMP-05 (routing). Requirements: FR-FEAT-*, FR-ROUTE-*.
 
 ---
@@ -73,6 +73,36 @@ flowchart TD
 
 ## 5. Open items
 
-- The initial rule set for `rule_based` is configuration written in Stage 8 from the experiment plan, not here.
+- The initial rule set for `rule_based` is configuration; the Demo milestone's set (§6) is a placeholder, and the routing plan (R1) replaces it with evidence.
 - The context-fit safety margin and the approximation used before exact counts are configuration (provisional).
 - FR-ROUTE-06 (explicit model requests) stays open.
+
+## 6. Demo components: `rule_based` and `sticky` (Demo milestone A, placeholders)
+
+[ADR-0023](../adr/0023-demo-backend-components.md). Both are selectable by `[pipeline.routing] policy`; the default stays `fixed_model`. Configuration: `[pipeline.routing.rule_based]` and `[pipeline.routing.sticky]` in `config/defaults.toml`.
+
+- **Features** (`domain/features/detectors.py`): language (fa, en, mixed, other, undetermined), code, length bucket, greeting / small talk, and the same for each earlier user turn with the producer of its answer (`history_turns`, from `Turn.producer`).
+- **`rule_based`** (`domain/routing/rule_based.py`): the first matching rule picks a tier (placeholders: attachment, code, a coding intent (a request for code with no code in the message, A-71), a message of 400+ characters, or 8+ earlier user turns → tier 1; otherwise tier 0). Inside the tier, the eligible model with the lowest **effective** cost per answer: estimated input + assumed visible output + the model's expected **hidden reasoning** tokens (billed as output; placeholders from the live check, A-66). The nominal price would pick gpt-5-nano; with its reasoning it ranks last in tier 0. This implements routing.md §1 step 5's "cheapest in tier" with reasoning counted. The chain is the cheapest model of each higher tier.
+- **`sticky`** (`domain/routing/sticky.py`), mode `sticky_v1` (owner brief §7) or `per_request`:
+
+```mermaid
+%% Question: in sticky routing v1, how does one request's routing follow from the session's history?
+flowchart TD
+    f(["RequestFeatures<br/>+ history_turns (with producers)"]) --> a["Reconstruct the anchor from history:<br/>skip cache-served, greeting, unknown-producer turns;<br/>first substantive turn anchors; a very different turn re-anchors;<br/>a higher-tier producer (escalation) raises it, never lowers it"]
+    a --> g{"Greeting or<br/>small talk?"}
+    g -- "yes, anchored<br/>(anchor eligible)" --> gstay["Stay on the anchor<br/>sticky.greeting.stay<br/>(Q-41: keeps the prefix cache warm)"]
+    g -- "yes, unanchored" --> cheap["Cheapest eligible model<br/>sticky.greeting"]
+    g -- no --> has{"Anchor?"}
+    has -- no --> rules1["Rules (rule_based)<br/>sticky.first_substantive: this message anchors"]
+    has -- yes --> diff{"Very different?<br/>code appears/disappears, coding intent appears,<br/>attachment, language switch, length-bucket jump"}
+    diff -- yes --> rules2["Rules<br/>sticky.reroute.&lt;why&gt;: re-anchor"]
+    diff -- no --> elig{"Anchor eligible?"}
+    elig -- yes --> stay["Stay on the anchor<br/>sticky.stay (.escalated)"]
+    elig -- no --> rules3["Rules<br/>sticky.reroute.anchor_ineligible"]
+```
+
+  A **coding intent** (the message asks for code or programming help and has no code: configured keywords with a request cue, or a word template; A-71) counts only when it **appears**: a follow-up without it ("and make it handle negatives") stays on the anchor. An anchor that already had code does not count it as new; code disappearing re-routes as before, and the rules send the intent to tier 1.
+
+  A greeting never anchors. In an anchored session it stays on the anchor (owner decision Q-41, 2026-10-19: the provider's prefix cache stays warm, and a greeting costs almost nothing on any model); only in an unanchored session, or when the anchor is not eligible, does it go to the cheapest model.
+
+  Escalation happens in the attempt loop along the policy's chain (ADR-0013); the next request sees the stronger producer and stays on it. The policy is stateless: nothing is kept between requests (P-8). Cost: below 0.1 ms per decision with 43 earlier turns (reports/cost).

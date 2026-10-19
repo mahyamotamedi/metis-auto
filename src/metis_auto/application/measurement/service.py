@@ -71,7 +71,12 @@ class MeasurementService:
                 ComponentName.HISTORY,
                 request.history.state,
                 [t.text for t in request.history.value or ()],
-                [t.model_dump(mode="json") for t in request.history.value or ()],
+                # Role and text only: a turn's producer is metadata, not content,
+                # so it never splits a cache key (Demo milestone, A-64).
+                [
+                    {"role": t.role.value, "text": t.text}
+                    for t in request.history.value or ()
+                ],
             ),
             self._texts(
                 ComponentName.INSTRUCTIONS,
@@ -207,9 +212,14 @@ class MeasurementService:
         self, target: CatalogueEntry, roles: Sequence[str]
     ) -> TokenCount | None:
         """Chat-template framing tokens for parts with ``roles`` on ``target``;
-        None when its tokenizer has no template (overhead not modelled)."""
+        None when its tokenizer has no template (overhead not modelled). A
+        template keyed by the model ID (a provider mode with its own framing,
+        e.g. thinking disabled) wins over the tokenizer ref's."""
         ref = target.tokenizer_ref
-        return template_overhead(self._templates.get(ref) if ref else None, roles)
+        template = self._templates.get(target.model_id) or (
+            self._templates.get(ref) if ref else None
+        )
+        return template_overhead(template, roles)
 
     def counted_usage(
         self,

@@ -28,7 +28,14 @@ from metis_auto.contracts import (
 )
 from metis_auto.domain.attempts import Detector, EmptyOutputDetector, TruncationDetector
 from metis_auto.domain.context import ContextStrategy, PassThroughStrategy
-from metis_auto.domain.routing import FixedModelPolicy, RoutingConfig, RoutingPolicy
+from metis_auto.domain.routing import (
+    FixedModelPolicy,
+    RoutingPolicy,
+    RuleBasedConfig,
+    RuleBasedPolicy,
+    StickyConfig,
+    StickyPolicy,
+)
 from metis_auto.ports import (
     CacheStore,
     Clock,
@@ -36,19 +43,38 @@ from metis_auto.ports import (
     IdSource,
     ModelClient,
     SpendLedger,
+    TextCompressor,
     Tokenizer,
 )
 
 
-def _fixed_model(config: RoutingConfig) -> RoutingPolicy:
-    if config.fixed_model is None:
+def _fixed_model(config: PipelineConfig) -> RoutingPolicy:
+    if config.routing.fixed_model is None:
         raise ValueError("routing.policy = fixed_model needs routing.fixed_model")
-    return FixedModelPolicy(config.fixed_model)
+    return FixedModelPolicy(config.routing.fixed_model)
 
 
-ROUTING_POLICIES: dict[str, Callable[[RoutingConfig], RoutingPolicy]] = {
+def _rule_based(config: PipelineConfig) -> RoutingPolicy:
+    rules = config.routing.rule_based or RuleBasedConfig()
+    return RuleBasedPolicy(rules, config.catalogue, config.prices)
+
+
+def _sticky(config: PipelineConfig) -> RoutingPolicy:
+    return StickyPolicy(
+        config.routing.sticky or StickyConfig(),
+        config.routing.rule_based or RuleBasedConfig(),
+        config.catalogue,
+        config.prices,
+    )
+
+
+ROUTING_POLICIES: dict[str, Callable[[PipelineConfig], RoutingPolicy]] = {
     "fixed_model": _fixed_model,
-    # TODO(Stage 8): rule_based; candidates load from experiments/ only.
+    # Demo components (Demo milestone, ADR-0023): placeholders until the
+    # routing-plan experiments give evidence. Candidates load from
+    # experiments/ only.
+    "rule_based": _rule_based,
+    "sticky": _sticky,
 }
 CONTEXT_STRATEGIES: dict[str, Callable[[], ContextStrategy]] = {
     "pass_through": PassThroughStrategy,
@@ -107,12 +133,15 @@ def build_pipeline(
     routing_policy: RoutingPolicy | None = None,
     context_strategy: ContextStrategy | None = None,
     candidate_versions: Mapping[str, str] | None = None,
+    compressor: TextCompressor | None = None,
 ) -> RequestPipeline:
     """Assemble a pipeline. ``fingerprint_key`` is a secret (ADR-0015): it goes
     to the measurement service only. ``routing_policy`` / ``context_strategy``
     inject an experiment's **candidate** (loaded by ``wiring.experiments``
     from ``experiments/`` only) in place of the configured promoted one;
-    ``candidate_versions`` (name → version) then goes into ``Versions``."""
+    ``candidate_versions`` (name → version) then goes into ``Versions``.
+    ``compressor`` is needed when ``context.compression.enabled`` (built by
+    ``wiring.compression``)."""
     clock = clock or SystemClock()
     ids = ids or SequentialIdSource(run_id)
     guard = None
@@ -131,7 +160,7 @@ def build_pipeline(
     if routing_policy is None:
         routing_policy = _lookup(
             ROUTING_POLICIES, config.routing.policy, "routing policy"
-        )(config.routing)
+        )(config)
     context = (
         context_strategy
         or _lookup(CONTEXT_STRATEGIES, config.context.strategy, "context strategy")()
@@ -143,6 +172,15 @@ def build_pipeline(
     if candidate_versions:
         versions = versions.model_copy(
             update={"policies": {**versions.policies, **candidate_versions}}
+        )
+    if compressor is not None and config.context.compression.enabled:
+        versions = versions.model_copy(
+            update={
+                "policies": {
+                    **versions.policies,
+                    f"compressor.{compressor.ref.name}": compressor.ref.version,
+                }
+            }
         )
     recorder = EventRecorder(sink, clock, ids, run_id, run_mode, versions)
     return RequestPipeline(
@@ -157,4 +195,5 @@ def build_pipeline(
         clock=clock,
         ids=ids,
         spend_guard=guard,
+        compressor=compressor if config.context.compression.enabled else None,
     )

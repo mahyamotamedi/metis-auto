@@ -32,6 +32,10 @@ class PolicyChoice:
     model_id: str | None = None
     tier: int | None = None
     features_used: tuple[str, ...] = ()
+    chain: tuple[str, ...] | None = None
+    """Escalation chain chosen by the policy; None = ``RoutingConfig.chain``."""
+    anchor_model_id: str | None = None
+    """Sticky routing: the session's anchor before this request."""
 
 
 class RoutingPolicy(Protocol):
