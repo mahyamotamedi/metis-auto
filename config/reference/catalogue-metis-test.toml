@@ -38,9 +38,10 @@
 # sets tokenizer refs and the reasoning capability; "-s75" (Stage 7.5) adds
 # context windows and output limits (TODO-10) and, from the live wrapper check,
 # DeepSeek's verified reasoning capability; and (Q-32) mimo-v2.5 added as the
-# fifth test model, grok-4-1-fast disabled.
+# fifth test model, grok-4-1-fast disabled; "-s75-g55" (2026-10-30, E2) adds
+# gpt-5.5, the new premium baseline (disabled, never called).
 
-version = "cat-metis-test-2026-10-18-s75"
+version = "cat-metis-test-2026-10-18-s75-g55"
 
 [[models]]
 model_id = "gpt-5-nano"
@@ -161,4 +162,22 @@ tokenizer_ref = "openai-o200k-base"
 price_ref = "metis-gpt-5.4"
 # Supports reasoning (model page, checked 2026-10-18; default effort "none").
 capabilities = [{ name = "hidden_reasoning_billed_as_output", verified = true, evidence = { source = "OpenAI reasoning guide https://developers.openai.com/api/docs/guides/reasoning (reasoning tokens 'are billed as output tokens', 'not visible via the API'); model page lists reasoning token support", checked_on = 2026-10-18 } }]
+enabled = false
+
+[[models]]
+model_id = "gpt-5.5"
+provider = "openai"
+provider_model_name = "gpt-5.5"
+# Premium baseline since 2026-10-30 (owner). context_window and
+# max_output_tokens: UNKNOWN. OpenAI's own model page was not retrieved
+# (2026-10-30 search returned only third-party aggregators that disagree on
+# the window: 1.05M vs 272K); not used, not invented. Routing excludes a model
+# with an unknown window, and this model is disabled anyway. No capability is
+# listed: hidden reasoning is plausible but unverified by a first-party source
+# (unverified = unsupported, so a cost counted from the visible answer is
+# labelled accordingly).
+tier = 2
+equivalence_group = "metis-premium"
+tokenizer_ref = "openai-o200k-base"
+price_ref = "metis-gpt-5.5"
 enabled = false

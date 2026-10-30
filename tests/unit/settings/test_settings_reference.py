@@ -55,16 +55,17 @@ def raw_prices(model: str) -> list[dict[str, Decimal]]:
 
 def test_catalogue_has_the_five_test_models_and_the_disabled_premium(reference):
     entries = {e.model_id: e for e in reference.catalogue.entries}
-    assert set(entries) == TEST_MODELS | RETIRED | {"gpt-5.4"}
+    assert set(entries) == TEST_MODELS | RETIRED | {"gpt-5.4", "gpt-5.5"}
     assert all(entries[m].enabled for m in TEST_MODELS)
     assert not any(entries[m].enabled for m in RETIRED)
     assert entries["gpt-5.4"].enabled is False  # never called
+    assert entries["gpt-5.5"].enabled is False  # the premium baseline: never called
     # deepseek-v4-flash: verified by the live wrapper check (Stage 7.5).
     reasoning = {"gpt-5-nano", "gpt-5.4", "deepseek-v4-flash", "mimo-v2.5"}
     for entry in entries.values():
         # Sourced in Stage 7.5 (TODO-10), except Grok's: unknown, never invented
         # (test_settings_live_reference.py checks the values).
-        if entry.model_id == "grok-4-1-fast":
+        if entry.model_id in ("grok-4-1-fast", "gpt-5.5"):
             assert entry.context_window.value is None
         else:
             assert entry.context_window.evidence is not None
@@ -83,9 +84,9 @@ def test_every_family_has_an_endpoint_and_gemini_is_deferred(reference):
     assert reference.endpoints.get("gemini").status == "deferred"
 
 
-def test_premium_baseline_is_gpt_5_4(reference):
+def test_premium_baseline_is_gpt_5_5(reference):
     premium = {b.name: b for b in reference.baselines.baselines}["premium"]
-    assert premium.model_id == "gpt-5.4"
+    assert premium.model_id == "gpt-5.5"
     assert premium.method == "estimate_only"
 
 
@@ -102,9 +103,10 @@ def test_test_model_prices_match_the_source(reference, model):
     assert set(configured) == {"input", "output", "cached_input"}
 
 
-def test_tiered_premium_prices_match_the_source(reference):
-    rows = [p for p in reference.prices.entries if p.price_ref == "metis-gpt-5.4"]
-    standard, long = raw_prices("gpt-5.4")
+@pytest.mark.parametrize("model", ["gpt-5.4", "gpt-5.5"])
+def test_tiered_premium_prices_match_the_source(reference, model):
+    rows = [p for p in reference.prices.entries if p.price_ref == f"metis-{model}"]
+    standard, long = raw_prices(model)
     by_tier: dict[str, dict[str, Decimal]] = {}
     for row in rows:
         by_tier.setdefault(row.tier, {})[row.token_type.value] = row.amount
@@ -202,7 +204,7 @@ def test_float_prices_are_refused(tmp_path):
 
 def test_a_price_ref_without_prices_is_refused(tmp_path):
     cfg = copy_config(tmp_path)
-    prices = cfg / "reference/prices-metis-2026-10-18.toml"
+    prices = cfg / "reference/prices-metis-2026-10-18-g55.toml"
     text = prices.read_text().replace(
         'price_ref = "metis-gpt-4o-mini"', 'price_ref = "x"'
     )
@@ -214,7 +216,7 @@ def test_a_price_ref_without_prices_is_refused(tmp_path):
 def test_a_baseline_outside_the_catalogue_is_refused(tmp_path):
     cfg = copy_config(tmp_path)
     path = cfg / "reference/baselines.toml"
-    path.write_text(path.read_text().replace('"gpt-5.4"', '"not-in-catalogue"'))
+    path.write_text(path.read_text().replace('"gpt-5.5"', '"not-in-catalogue"'))
     with pytest.raises(ReferenceDataError, match="not in the catalogue"):
         load_settings(config_dir=cfg, environ={}, dotenv=None, runtime=None)
 

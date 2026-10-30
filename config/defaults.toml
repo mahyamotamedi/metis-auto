@@ -48,7 +48,7 @@ warn_at = [0.5, 0.8]
 # Paths relative to the config directory. Each file carries its own version
 # ID, which goes into the config hash and every event (FR-OBS-02).
 catalogue = "reference/catalogue-metis-test.toml"
-prices = "reference/prices-metis-2026-10-18.toml"
+prices = "reference/prices-metis-2026-10-18-g55.toml"
 endpoints = "reference/endpoints-metis.toml"
 baselines = "reference/baselines.toml"
 # Logged label → catalogue model for the as-logged baseline (Stage 8).
