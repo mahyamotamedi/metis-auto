@@ -21,13 +21,13 @@ def _roots(tree: ast.AST) -> set[str]:
 
 def test_live_libraries_only_in_the_adapter():
     offenders = [
-        str(path.relative_to(SRC))
+        path.relative_to(SRC).as_posix()
         for path in SRC.rglob("*.py")
-        if path not in ALLOWED and _roots(ast.parse(path.read_text())) & LIVE_LIBRARIES
+        if path not in ALLOWED and _roots(ast.parse(path.read_text(encoding="utf-8"))) & LIVE_LIBRARIES
     ]
     assert offenders == []
 
 
 def test_the_providers_package_does_not_import_the_adapter_eagerly():
-    init = (SRC / "adapters" / "providers" / "__init__.py").read_text()
+    init = (SRC / "adapters" / "providers" / "__init__.py").read_text(encoding="utf-8")
     assert "openai_compat" not in init

@@ -296,6 +296,6 @@ def _deep_merge(base: dict[str, Any], top: Mapping[str, Any]) -> dict[str, Any]:
 
 def _rel(path: Path, root: Path) -> str:
     try:
-        return str(path.resolve().relative_to(root.resolve()))
+        return path.resolve().relative_to(root.resolve()).as_posix()
     except ValueError:
-        return str(path)
+        return path.as_posix()

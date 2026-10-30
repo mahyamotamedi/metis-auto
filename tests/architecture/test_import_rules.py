@@ -104,7 +104,7 @@ def layer_violations(src: Path) -> list[str]:
     src_root = src.parent
     for path in sorted(src.rglob("*.py")):
         module = _module_name(path, src_root)
-        rel = path.relative_to(src_root)
+        rel = path.relative_to(src_root).as_posix()
         layer = module[1] if len(module) > 1 else None
         if layer is not None and layer not in ALLOWED:
             violations.append(f"{rel}: package '{layer}' has no rule in ALLOWED")
@@ -141,7 +141,9 @@ def sample_eda_violations(repo: Path) -> list[str]:
                 is_helper = parts[0] in SAMPLE_EDA_MODULES
                 if is_helper or parts[:2] == ["experiments", "sample_eda"]:
                     reason = "sample-EDA code is reference-only"
-                    violations.append(f"{rel}: imports '{parts[0]}' ({reason})")
+                    violations.append(
+                        f"{rel.as_posix()}: imports '{parts[0]}' ({reason})"
+                    )
     return list(dict.fromkeys(violations))
 
 

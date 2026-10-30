@@ -20,10 +20,12 @@ via the spend guard.
 
 from __future__ import annotations
 
-import fcntl
 import json
 import logging
-from collections.abc import Callable, Sequence
+import os
+import sys
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
@@ -33,6 +35,39 @@ from metis_auto.contracts import Money
 
 LEDGER_FORMAT = 1
 log = logging.getLogger(__name__)
+
+# Windows has no shared advisory lock in ``msvcrt``, so both readers and
+# writers take an exclusive byte-range lock far past the data: the lock never
+# overlaps the bytes being read or appended.
+_WINDOWS_LOCK_OFFSET = 1 << 40
+
+if sys.platform == "win32":
+    import msvcrt
+
+    @contextmanager
+    def _file_lock(handle, *, exclusive: bool) -> Iterator[None]:
+        fd = handle.fileno()
+        position = os.lseek(fd, 0, os.SEEK_CUR)
+        os.lseek(fd, _WINDOWS_LOCK_OFFSET, os.SEEK_SET)
+        msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
+        os.lseek(fd, position, os.SEEK_SET)
+        try:
+            yield
+        finally:
+            os.lseek(fd, _WINDOWS_LOCK_OFFSET, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+            os.lseek(fd, position, os.SEEK_SET)
+
+else:
+    import fcntl
+
+    @contextmanager
+    def _file_lock(handle, *, exclusive: bool) -> Iterator[None]:
+        fcntl.flock(handle, fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
 
 
 class InMemorySpendLedger:
@@ -124,8 +159,7 @@ class FileSpendLedger:
             raise ValueError("a charge cannot be negative")
         self._path.parent.mkdir(parents=True, exist_ok=True)
         with self._path.open("a+", encoding="utf-8") as handle:
-            fcntl.flock(handle, fcntl.LOCK_EX)
-            try:
+            with _file_lock(handle, exclusive=True):
                 handle.seek(0)
                 before = self._summarise(handle.read()).lifetime_spent
                 record = {
@@ -137,8 +171,6 @@ class FileSpendLedger:
                 }
                 handle.write(json.dumps(record, sort_keys=True) + "\n")
                 handle.flush()
-            finally:
-                fcntl.flock(handle, fcntl.LOCK_UN)
         self._warn_on_crossing(before, before + amount.amount)
 
     def status(self) -> BudgetStatus:
@@ -146,11 +178,8 @@ class FileSpendLedger:
             return self._summarise("")
         try:
             with self._path.open("r", encoding="utf-8") as handle:
-                fcntl.flock(handle, fcntl.LOCK_SH)
-                try:
+                with _file_lock(handle, exclusive=False):
                     text = handle.read()
-                finally:
-                    fcntl.flock(handle, fcntl.LOCK_UN)
         except OSError as exc:
             raise LedgerError(f"spend ledger unreadable: {self._path}") from exc
         return self._summarise(text)

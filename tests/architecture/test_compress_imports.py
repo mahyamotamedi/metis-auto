@@ -23,18 +23,18 @@ def _roots(tree: ast.AST) -> set[str]:
 
 def test_compression_libraries_only_in_the_adapter():
     offenders = [
-        str(path.relative_to(SRC))
+        path.relative_to(SRC).as_posix()
         for path in SRC.rglob("*.py")
         if path not in ALLOWED
-        and _roots(ast.parse(path.read_text())) & COMPRESS_LIBRARIES
+        and _roots(ast.parse(path.read_text(encoding="utf-8"))) & COMPRESS_LIBRARIES
     ]
     assert offenders == []
 
 
 def test_the_adapter_is_not_imported_eagerly():
-    init = (SRC / "adapters" / "compressors" / "__init__.py").read_text()
+    init = (SRC / "adapters" / "compressors" / "__init__.py").read_text(encoding="utf-8")
     assert "llmlingua2" not in init.split('"""', 2)[-1]
-    tree = ast.parse((SRC / "wiring" / "compression.py").read_text())
+    tree = ast.parse((SRC / "wiring" / "compression.py").read_text(encoding="utf-8"))
     top_level = {
         node.module
         for node in tree.body
