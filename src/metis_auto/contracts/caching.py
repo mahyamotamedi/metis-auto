@@ -18,6 +18,7 @@ from ._base import (
     Fingerprint,
     Identifier,
     Name,
+    NonNegFloat,
     NonNegInt,
     Privacy,
     UtcDatetime,
@@ -234,6 +235,18 @@ class CacheLookupResult(ContractModel):
     )
     candidates_considered: NonNegInt | None = field(
         Privacy.DERIVED, "Index results examined (semantic tier).", default=None
+    )
+    key_schema_version: Version | None = field(
+        Privacy.OPERATIONAL,
+        "Key schema version looked up (Stage E6). Not populated by any "
+        "production code yet: always None until the cache lookup fills it.",
+        default=None,
+    )
+    entry_age_ms: NonNegFloat | None = field(
+        Privacy.OPERATIONAL,
+        "Age of the matched entry on a hit (Stage E6). Not populated by any "
+        "production code yet: always None until the cache lookup fills it.",
+        default=None,
     )
     not_evaluated: tuple[Name, ...] = field(
         Privacy.OPERATIONAL,

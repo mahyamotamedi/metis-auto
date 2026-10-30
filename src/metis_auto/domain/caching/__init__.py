@@ -3,7 +3,7 @@ store rules. Stores hold data only (ADR-0011 point 5). Demo-only settings
 (bot-level scope rule, demo seed) are labelled (ADR-0023). Traces:
 FR-XCACHE-*, FR-SCACHE-*, ADR-0007, ADR-0011."""
 
-from .normalise import TREATMENTS, normalise
+from .normalise import ALL_TREATMENTS, PERSIAN_TREATMENTS, TREATMENTS, normalise
 from .policy import (
     CachePolicyConfig,
     DemoSeedConfig,
@@ -21,6 +21,8 @@ from .policy import (
 )
 
 __all__ = [
+    "ALL_TREATMENTS",
+    "PERSIAN_TREATMENTS",
     "TREATMENTS",
     "CachePolicyConfig",
     "DemoSeedConfig",

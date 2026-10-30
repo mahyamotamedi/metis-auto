@@ -63,6 +63,7 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 
 ## Experiments
 - [experiments/framework.md](experiments/framework.md): **Stage 8** experiment framework: config shape, EXP-IDs, runner kinds, adding a strategy (one interface + one config entry), run records, the comparison format, harness components.
+- Evaluation framework (research-backed spec and E0-E6 notes): [experiments/evaluation_framework.md](experiments/evaluation_framework.md), [e2](experiments/e2_scenario_config.md), [e4](experiments/e4_sampling_run.md), [e5](experiments/e5_judging.md), [e6](experiments/e6_logging_and_status.md); implementation prompt: [evaluation_implementation_prompt.md](experiments/evaluation_implementation_prompt.md); guide: [guides/offline_evaluation.md](guides/offline_evaluation.md). ADRs [0025](adr/0025-persian-folding-treatments-and-evaluation-groups.md), [0026](adr/0026-premium-baseline-gpt-5-5.md).
 - Plans: [caching_plan.md](experiments/caching_plan.md) (exact → semantic → persistent → curated; provider cache), [routing_plan.md](experiments/routing_plan.md) (rules to learned and LLM routers, cascades, sticky routing v1; the label problem; hidden reasoning), [context_plan.md](experiments/context_plan.md) (history windows and summaries, LLMLingua-2 and LLMLingua, retrieved-context trimming, instruction handling; Persian quality and overhead).
 - Experiment conventions: [experiments/README.md](../experiments/README.md).
 

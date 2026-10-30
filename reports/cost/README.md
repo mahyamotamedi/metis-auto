@@ -59,3 +59,16 @@ Reading:
 - **LLMLingua-2 on CPU is far outside the 100 ms budget:** p50 about 0.3 s, p95 about 3 s, up to 6 s for the longest histories. On real traffic it would need a GPU, a smaller model, caching of compressed history per session prefix, or compressing only once per turn as history grows (each turn re-compresses the whole history today).
 - **The target-token saving is small on this composition (−8.4 %),** because instructions dominate input and are never compressed (context plan §1). It is a saving at the cheapest price (the savings decomposition's compression term), against a large latency cost; and compressed history breaks the provider's prefix cache for everything after it (caching plan C5).
 - Quality is unmeasured (needs the ablation, context plan §2); on SYNTHETIC Persian text it drops the ZWNJ (A-67).
+
+## Full-prompt input cost on the sample (Stage E3, 2026-10-30)
+
+`python scripts/input_cost_report.py [--min-n N] [--max-age-days D] --as-of YYYY-MM-DD`: for each of the 465 replay cases, the assumed full input (instructions, history, retrieved context, message; no compression) counted with each catalogue model's own tokenizer. Output: [input_cost_full_prompt-2026-10-30.json](input_cost_full_prompt-2026-10-30.json), aggregates only (no text, no hash, no per-case value). **Estimates, not billed tokens or measured costs**; the sample is exploratory (ADR-0008); no real recorded usage exists. Costs are **input-only, uncached lower bounds** at the historical price snapshot `prices-metis-2026-10-18-s75-g55` (checked 2026-10-18, 12 days old on 2026-10-30; `max_age_days` unset, so staleness is not evaluated). No output, reasoning or cache scenario is set. `--min-n` was not given, so every slice is `descriptive` (no ranking claim).
+
+Persian slice (placeholder language detector A-43 on the message; n = 421; English n = 23, mixed n = 19, shown separately):
+- Mean full-prompt input per case: o200k family about 4,052 tokens; DeepSeek V4 about 4,453 (1.10×); MiMo about 5,612 (1.38×). Grok is counted by chars/4 only (approximation) and is excluded from rankings.
+- Instructions are about 56% of the input on average (o200k). The same instruction text recurs: 364 of 368 Persian cases with instructions share their literal text with another case (72 distinct texts in the slice). Descriptive only: not a cache hit rate, and the provider's minimum cacheable prefix is unknown.
+- No sample case reaches the long price tier for `gpt-5.4` or `gpt-5.5` (0 of 421).
+- Mean input-only cost per case at snapshot prices: about 0.0223 USD for `gpt-5.5`, about 0.00022 USD for `gpt-5-nano` (lower bounds).
+- Ranking by input cost, exact tokenizers: gpt-5-nano < gpt-4.1-nano < gpt-4o-mini < deepseek-v4-flash < mimo-v2.5 < gpt-5.4 < gpt-5.5. With chars/4 for everyone: gpt-5-nano < gpt-4.1-nano < mimo-v2.5 < deepseek-v4-flash < gpt-4o-mini < gpt-5.4 < gpt-5.5. Three pairs flip, all among gpt-4o-mini, deepseek-v4-flash and mimo-v2.5.
+- Length buckets by characters versus by tokens (rank-matched): about 3% of Persian cases change bucket per tokenizer.
+

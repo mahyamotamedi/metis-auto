@@ -20,6 +20,11 @@ evaluation.md §4): replay (``logged_match`` / ``recorded``) and ``proxy``.
   "case × model × composition" is the same input). The latest recorded
   complete response wins, else the latest response; errors are not
   replayed. Reported usage and latency come back with ``source = recorded``.
+  Only records made live are indexed (the recorder's ``client_source`` marker, or
+  for records without one the result's ``source``): a file holding fake,
+  replayed or any other non-live result is skipped (counted in
+  ``skipped_non_live``), so simulated answers can never be relabelled
+  ``recorded`` (and then read as measured).
 
 Implements ``ports.ModelClient``. Built by: wiring for evaluation runs.
 Privacy: references and recordings are content; they stay in memory.
@@ -82,6 +87,16 @@ def input_digest(parts: Sequence[InputPart], attachments: Sequence[object]) -> s
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def _made_live(record: Mapping[str, object], result: ModelResponse) -> bool:
+    """A record counts only if it was made live: the recorder's own
+    ``client_source`` marker when present, else the result's ``source`` (older
+    or hand-written records). Anything else (fake, replayed, logged) is not."""
+    marker = record.get("client_source")
+    if marker is not None:
+        return marker == AnswerSource.LIVE.value
+    return result.source == AnswerSource.LIVE
+
+
 class ReplayModelClient:
     def __init__(
         self,
@@ -90,6 +105,7 @@ class ReplayModelClient:
         references: Mapping[Identifier, Sequence[LoggedAnswer]] | None = None,
         label_models: Mapping[str, str] | None = None,
         recorded: Mapping[tuple[str, str], ModelResponse] | None = None,
+        skipped_non_live: int = 0,
     ) -> None:
         if source not in (AnswerSource.LOGGED, AnswerSource.RECORDED):
             raise ValueError("replay sources are logged or recorded")
@@ -97,6 +113,7 @@ class ReplayModelClient:
         self._references = dict(references or {})
         self._labels = dict(label_models or {})
         self._recorded = dict(recorded or {})
+        self._skipped_non_live = skipped_non_live
 
     @classmethod
     def logged(
@@ -113,10 +130,14 @@ class ReplayModelClient:
         """Index every ``*.jsonl`` recording under ``directory`` (sorted by
         name, then line order: later records win)."""
         index: dict[tuple[str, str], ModelResponse] = {}
+        skipped = 0
         for path in sorted(Path(directory).glob("*.jsonl")):
             for record in read_records(path):
                 result = _RESULT.validate_python(record["result"])
                 if not isinstance(result, ModelResponse):
+                    continue
+                if not _made_live(record, result):
+                    skipped += 1  # never relabel simulated answers as recorded
                     continue
                 inv = ModelInvocation.model_validate(record["invocation"])
                 key = (inv.model_id, input_digest(inv.parts, inv.attachments))
@@ -128,11 +149,17 @@ class ReplayModelClient:
                     or old.finish_reason != FinishReason.COMPLETE
                 ):
                     index[key] = result
-        return cls(AnswerSource.RECORDED, recorded=index)
+        return cls(AnswerSource.RECORDED, recorded=index, skipped_non_live=skipped)
 
     @property
     def source(self) -> AnswerSource:
         return self._source
+
+    @property
+    def skipped_non_live(self) -> int:
+        """Recorded responses skipped on load because their original source was
+        not ``live``."""
+        return self._skipped_non_live
 
     @property
     def size(self) -> int:

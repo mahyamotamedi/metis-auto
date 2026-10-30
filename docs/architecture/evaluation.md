@@ -1,6 +1,7 @@
 # Offline Evaluation Flow (Stage 3)
 
 Status: structure **decided** ([ADR-0014](../adr/0014-counterfactual-answers-via-model-client.md)); runner, strategy loading, EXP-IDs, and the comparison format **decided** in Stage 8 ([ADR-0022](../adr/0022-experiment-runner-and-run-tracking.md), [framework.md](../experiments/framework.md)). Last updated 2026-10-18.
+See also the research-backed evaluation spec, the source for baselines, metrics, sampling, judging and reporting: [experiments/evaluation_framework.md](../experiments/evaluation_framework.md) and [e6_logging_and_status.md](../experiments/e6_logging_and_status.md).
 Index: [architecture README](README.md). Components: CMP-21 (replay), CMP-22 (baselines), CMP-23 (metrics), CMP-24 (runner), CMP-18 (data sources). Requirements: FR-EVAL-*, [ADR-0002](../adr/0002-configurable-baselines.md), [ADR-0006](../adr/0006-evaluation-metric-definitions.md).
 
 ---

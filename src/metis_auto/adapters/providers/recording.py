@@ -13,8 +13,10 @@ owner's own or synthetic messages are sent live (ADR-0018). Only ``live``
 results are written. A failed write is logged (without content) and never
 raised: the call is already paid, and the pipeline must still charge it.
 
-One line per call: ``{"v": 1, "time": ISO-UTC, "run_id", "invocation": …,
-"result": …}`` (the contracts' JSON form).
+One line per call: ``{"v": 1, "time": ISO-UTC, "run_id", "client_source",
+"invocation": …, "result": …}`` (the contracts' JSON form). ``client_source`` is
+the recording client's source (always ``live``, since only live results are
+written); the replay loader uses it to refuse any record not made live.
 Status: writing done (Stage 7.5). TODO(Stage 8): the replay client's lookup by
 case ID × model × composition fingerprint over these files.
 """
@@ -73,6 +75,7 @@ class RecordingModelClient:
             "v": RECORD_FORMAT,
             "time": self._now().isoformat(),
             "run_id": self._run_id,
+            "client_source": self.source.value,
             "invocation": invocation.model_dump(mode="json"),
             "result": _RESULT.dump_python(result, mode="json"),
         }
