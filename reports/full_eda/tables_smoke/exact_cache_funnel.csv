@@ -1,0 +1,8 @@
+step,requests
+all AI messages,1473
+has_user_text,1417
+answer_text_and_STOP,1410
+no_attachments,1373
+no_tools,1372
+no_actions,1364
+timestamps_valid,1364

@@ -161,3 +161,19 @@ These were all unanswered as of 2026-10-14: this is sample data and the full dat
 | TODO-12 | Compare local counts with provider-reported usage, per model: chat-template framing (A-56), DeepSeek tokenizer (A-54), the Grok chars/4 error; whether the wrapper reports cached and reasoning tokens; whether `deepseek-v4-flash` (thinking mode) and `grok-4-1-fast` emit hidden reasoning that is billed as output (then add the verified capability) | Accounting fidelity; lower-bound caveats | Stage 7.5 tiny live check (synthetic messages, fractions of a cent), results recorded with dates; then update `tokenizers.toml` and the catalogue (configuration only). **Mostly resolved 2026-10-18 [live check](../references/metis_wrapper_live_check.md):** framing checked (OpenAI exact for two of three; DeepSeek fixed and exact), DeepSeek tokenizer confirmed for content, cached and reasoning fields reported by OpenAI and DeepSeek (not Grok), DeepSeek hidden reasoning verified and added to the catalogue. **Still open:** the Grok overhead and reasoning (Q-33), and a real provider-cache hit (Q-33). **Probe 2026-10-18 [probe](../references/metis_wrapper_live_check.md#4-follow-up-probe-2026-10-18-owner-decisions-q-32-q-33-b-q-34):** a real provider-cache hit is reported (and priced) for OpenAI, DeepSeek, and MiMo; gpt-5-nano's best-effort cache did not hit in one pair. Still open: whether Metis bills the discount (Q-36). The Grok items are moot (Grok disabled, Q-32). |
 | TODO-13 | Switch `mimo-v2.5` to Xiaomi's new ID once Metis lists it (A-60, Q-35) | A valid fifth test model after 2026-10-21 | Re-check the Metis pricing page after 2026-10-21; then a new catalogue row and a new dated price file (configuration only), with the source and check date. Until then `mimo-v2.5` stays (owner, 2026-10-18). **Owner, 2026-10-19 (Q-42):** if the new ID is not listed on 2026-10-21, set `mimo-v2.5` `enabled = false` instead; procedure in demo_quickstart.md. |
 | TODO-14 | `requirements-compress.lock` (extra `compress`: torch, transformers, llmlingua) was resolved on macOS arm64; torch's Linux dependencies differ | LLMLingua-2 in Docker or on Linux machines | Re-lock on Linux (or per platform) when a container needs compression; until then the images run without it (compression off). |
+
+## Changes recorded by the full-dataset EDA (2026-10-30)
+
+The EDA ran on `poriniki/metis@30f578f2`. Existing rows above are **not edited**; these are the changes the evidence implies. Evidence: [`docs/full_eda/`](../full_eda/full_eda_report.md).
+
+| Item | Change | Evidence |
+|---|---|---|
+| A-01, A-08 (sample representativeness) | refuted for structure, language share and cost concentration | report §2, §5 |
+| A-14 (4,019-char RAG plateau) | not reproduced as a per-request cap; chunks cap near 2,500 chars | report §3, F-5 |
+| A-16 (`input.items`, `default`/`workflow`) | `input` holds widget definitions; `workflow` bots carry no token billing | findings §9, U-09 |
+| A-06 (naive timestamps) | still open; `created_at` begins 2024, messages 2026-03 | Q-06 |
+| Q-09 | answered in part (see above) | findings §9 |
+| Q-22 | no traffic-source field; each bot has one owner `user_id`; five user IDs produce 97% of requests | findings §9 |
+| New unknown | what the per-call fee covers (37.6% of recorded cost) | `metis_questions.md` item 2 |
+| New unknown | whether `provider_model` is a per-message log or a bot setting | `metis_questions.md` item 1 |
+| New constraint | dataset licence: educational use only, no redistribution | `metis_questions.md` item 5 |

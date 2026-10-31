@@ -81,3 +81,7 @@ extend-exclude = ["experiments/sample_eda", "tests/test_sample_eda_helpers.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+# Full-dataset EDA scripts carry long metric descriptions (claims-ledger text).
+[tool.ruff.lint.per-file-ignores]
+"scripts/full_eda_*.py" = ["E501"]

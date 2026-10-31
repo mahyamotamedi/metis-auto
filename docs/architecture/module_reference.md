@@ -152,9 +152,22 @@ Every stage emits its event through `application.events.EventRecorder` → `Even
 | `wiring/wrapper_check.py` | 20 | The tiny live wrapper check: `plan` (pre-call estimates, no call) and `run` (one synthetic message per test model, one attempt each; reported vs counted tokens, finish reason, cached and reasoning reporting, reported model; content-free); the follow-up probe `probe_plan` / `probe_run` (provider cache, MiMo, DeepSeek thinking off) | called by `scripts/live_wrapper_check.py`, tests | `contracts`, `domain.context`, `ports`, `settings` | `LoadedSettings` → plan rows; results dict | `MAX_TOTAL_ESTIMATE` (0.05 USD) | composition | Stage 7.5 |
 | `wiring/walking_skeleton.py` | 20 | Settings from `config/profiles/walking_skeleton.toml` (synthetic catalogue, empty prices); fakes; demo requests | called by `scripts/run_walking_skeleton.py`, tests; calls `wiring.from_settings`, `wiring.pipeline` | `adapters.providers`, `adapters.sinks`, `adapters.stores`, `application.pipeline`, `contracts`, `ports`, `settings` | key → `RequestPipeline` | `config/profiles/walking_skeleton.toml` | composition | provisional |
 
+## `analysis` — dataset analysis (CMP-25, full-dataset EDA)
+
+Content-free feature extraction and replay used by the full-dataset EDA. Written from requirements; nothing from `experiments/sample_eda/` (ADR-0008). Scripts `scripts/full_eda_*.py` call these modules; the layer reads data only as pandas frames.
+
+| Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
+|---|---|---|---|---|---|---|---|---|
+| `analysis/text_features.py` | 25 | Script counts, heuristic language label (not ground truth), safe normalisation, JSON check, local grouping hash | called by `analysis.ingest`, `scripts/full_eda_review_sets.py` | — | text → derived features | none | pure | provisional |
+| `analysis/billing.py` | 25 | Parse the logged `billing` JSON into per-message token and cost sums; missing stays unknown | called by `analysis.ingest` | — | JSON text → aggregates | none | pure | provisional |
+| `analysis/ingest.py` | 25 | One message or bot row → flat content-free features (attachments, RAG, input, tools, actions, billing) | called by `scripts/full_eda_ingest.py`; calls `analysis.text_features`, `analysis.billing` | — | row → feature dict | none | pure | provisional |
+| `analysis/pairing.py` | 25 | Pair AI messages with the preceding USER message by order and flag pairing quality (FR-REQ-03) | called by `analysis.requests_table` | — | message frame → pair frame | none | pure | provisional |
+| `analysis/requests_table.py` | 25 | Order messages, chain logged history, join pairs with session, bot and billing | called by `scripts/full_eda_requests.py`; calls `analysis.pairing` | — | feature frames → request frame | none | pure | provisional |
+| `analysis/cache_replay.py` | 25 | Chronological exact-cache replay (TTL, LRU capacity, no future answers) and duplicate-group metrics; candidate hits only | called by `scripts/full_eda_analyze.py` | — | request frame → hit series | TTL, capacity | pure | provisional |
+| `analysis/stats.py` | 25 | Descriptive statistics, session-clustered bootstrap, Spearman, claims ledger | called by `scripts/full_eda_analyze.py` | — | arrays → numbers, ledger CSV | seed | pure | provisional |
+
 ## Not yet populated
 
-- `analysis` (CMP-25): future, with the full-dataset EDA.
 - `scripts/run_walking_skeleton.py`: the walking-skeleton entry point. Outside the package; loads settings, calls `wiring`, prints content-free metadata and the config hash.
 - `scripts/show_budget.py`: prints the live budget (cumulative spend vs caps) and why live calls are blocked. Outside the package; calls `settings` and `wiring.from_settings`. Makes no calls.
 - `scripts/fetch_tokenizer_assets.py` (Stage 7): downloads the tokenizer files once (network, explicit) and checks their sha256; `--check` verifies only. Calls `settings`, `adapters.tokenizers`, `wiring.tokenizers`.

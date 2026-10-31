@@ -74,5 +74,9 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 - [data_overview.md](sample_eda/data_overview.md) · [eda_questions.md](sample_eda/eda_questions.md) · [eda_methodology.md](sample_eda/eda_methodology.md) · [eda_results.md](sample_eda/eda_results.md)
 - Notebook: `experiments/sample_eda/`. Outputs: `reports/sample_eda/`.
 
+### Full-dataset EDA (2026-10-30)
+- [full_eda_report.md](full_eda/full_eda_report.md) (short report) · [eda_findings.md](full_eda/eda_findings.md) · [data_dictionary.md](full_eda/data_dictionary.md) · [experiment_plan.md](full_eda/experiment_plan.md) · [metis_questions.md](full_eda/metis_questions.md) · [checklist_status.md](full_eda/checklist_status.md)
+- Notebook and README: `experiments/full_eda/`. Outputs: `reports/full_eda/`.
+
 ## Agent conventions
 - [AGENTS.md](../AGENTS.md), [CLAUDE.md](../CLAUDE.md), and [agents/](agents/): issue tracker, triage labels, domain-doc layout.
