@@ -22,10 +22,10 @@ service = build_accounting_service(load_settings())
 result = service.account(request, "gpt-4o-mini", answer_text)
 
 # Brief §5: an estimate, never a call.
-premium = service.premium_estimate(request, answer_text, "gpt-5.4")
+premium = service.premium_estimate(request, answer_text, "gpt-5.5")
 
 # Brief §6: the savings decomposition of a served response.
-parts = service.decompose(request, final_response, premium_model_id="gpt-5.4")
+parts = service.decompose(request, final_response, premium_model_id="gpt-5.5")
 ```
 
 Provider-reported usage, when an adapter has it (Stage 7.5), is passed as `usage=` and wins over local counts. Inside the pipeline the same domain functions price every attempt, the avoided cost of a cache hit, and the spend guard's pre-call estimate.
@@ -125,7 +125,7 @@ Every computed `Cost` carries `caveats` (`CostCaveat`), shown with the figure:
 
 ## 6. Premium-baseline estimate (brief §5)
 
-`AccountingService.premium_estimate` → `domain.accounting.baseline_estimate`. **No premium API call ever:** `gpt-5.4` is disabled in the catalogue, and nothing in this path calls a model.
+`AccountingService.premium_estimate` → `domain.accounting.baseline_estimate`. **No premium API call ever:** the premium model (`gpt-5.5` since ADR-0026) is disabled in the catalogue, and nothing in this path calls a model.
 - **Input:** the full, uncompressed request (instructions, history, every retrieved item, message), counted with the premium model's tokenizer, plus its chat framing. No provider cache.
 - **Output:** the answer actually served (by the cheap model, or from cache), re-counted with the premium tokenizer. Assumption: the same answer length.
 - **Labelled** `basis = baseline_estimate`, `baseline = "premium"`, with caveats: always `answer_length_assumed`; `reasoning_not_counted` (gpt-5.4 supports reasoning, so the estimate is a lower bound, though its default effort is "none" per OpenAI's page); `template_overhead_approximated`; the tier caveat when it applies.

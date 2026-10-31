@@ -13,8 +13,8 @@ from metis_auto.evaluation.grouping import (
 )
 
 FP = Fingerprinter(ex.SYNTHETIC_TEST_KEY)
-ARABIC = "كتاب يك ١٢"
-PERSIAN = "کتاب یک ۱۲"
+ARABIC = "[SYNTHETIC] كتاب يك ١٢"
+PERSIAN = "[SYNTHETIC] کتاب یک ۱۲"
 
 
 def item(i, session, text):

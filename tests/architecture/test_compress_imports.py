@@ -32,7 +32,9 @@ def test_compression_libraries_only_in_the_adapter():
 
 
 def test_the_adapter_is_not_imported_eagerly():
-    init = (SRC / "adapters" / "compressors" / "__init__.py").read_text(encoding="utf-8")
+    init = (SRC / "adapters" / "compressors" / "__init__.py").read_text(
+        encoding="utf-8"
+    )
     assert "llmlingua2" not in init.split('"""', 2)[-1]
     tree = ast.parse((SRC / "wiring" / "compression.py").read_text(encoding="utf-8"))
     top_level = {

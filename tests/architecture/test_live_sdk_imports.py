@@ -23,7 +23,8 @@ def test_live_libraries_only_in_the_adapter():
     offenders = [
         path.relative_to(SRC).as_posix()
         for path in SRC.rglob("*.py")
-        if path not in ALLOWED and _roots(ast.parse(path.read_text(encoding="utf-8"))) & LIVE_LIBRARIES
+        if path not in ALLOWED
+        and _roots(ast.parse(path.read_text(encoding="utf-8"))) & LIVE_LIBRARIES
     ]
     assert offenders == []
 
