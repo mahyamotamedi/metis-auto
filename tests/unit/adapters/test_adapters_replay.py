@@ -2,6 +2,8 @@
 
 import json
 
+import pytest
+
 from metis_auto.adapters.providers import ReplayModelClient
 from metis_auto.adapters.providers.fake import FakeModelClient
 from metis_auto.adapters.providers.recording import RecordingModelClient
@@ -127,3 +129,74 @@ def test_recorded_skips_errors_and_prefers_complete(tmp_path):
     (tmp_path / "a.jsonl").write_text("\n".join(json.dumps(x) for x in lines) + "\n")
     got = ReplayModelClient.recorded_from(tmp_path).invoke(inv())
     assert got.text == "[SYNTHETIC] full"
+
+
+# --- provenance: only records made live are ever replayed as recorded ---------
+
+
+def _record(source, *, marker=None, text="[SYNTHETIC] a"):
+    line = {
+        "v": 1,
+        "time": "t",
+        "run_id": "r",
+        "invocation": inv(case=None).model_dump(mode="json"),
+        "result": {
+            "outcome": "response",
+            "text": text,
+            "finish_reason": "complete",
+            "source": source,
+        },
+    }
+    if marker is not None:
+        line["client_source"] = marker
+    return json.dumps(line)
+
+
+@pytest.mark.parametrize(
+    "source, marker",
+    [
+        ("fake", None),
+        ("fake", "fake"),
+        ("recorded", None),
+        ("logged", None),
+        ("live", "fake"),
+    ],
+)
+def test_non_live_records_are_skipped_not_relabelled_as_recorded(
+    tmp_path, source, marker
+):
+    (tmp_path / "x.jsonl").write_text(_record(source, marker=marker) + "\n")
+    client = ReplayModelClient.recorded_from(tmp_path)
+    assert (client.size, client.skipped_non_live) == (0, 1)
+    assert client.invoke(inv()).reason == NoAnswerReason.NOT_RECORDED
+
+
+@pytest.mark.parametrize(
+    "source, marker", [("live", None), ("live", "live"), ("fake", "live")]
+)
+def test_records_made_live_are_still_replayed(tmp_path, source, marker):
+    """``("fake", "live")`` is the recorder's own marker around a stand-in client
+    (the existing recorder tests do this); the marker, not the stand-in's result
+    source, says the record was made live."""
+    (tmp_path / "x.jsonl").write_text(_record(source, marker=marker) + "\n")
+    client = ReplayModelClient.recorded_from(tmp_path)
+    assert (client.size, client.skipped_non_live) == (1, 0)
+    hit = client.invoke(inv())
+    assert isinstance(hit, ModelResponse) and hit.source == AnswerSource.RECORDED
+
+
+def test_live_and_non_live_records_in_one_directory_keep_only_the_live_ones(tmp_path):
+    lines = [
+        _record("fake", text="[SYNTHETIC] simulated"),
+        _record("live", text="[SYNTHETIC] real"),
+    ]
+    (tmp_path / "mixed.jsonl").write_text("\n".join(lines) + "\n")
+    client = ReplayModelClient.recorded_from(tmp_path)
+    assert client.skipped_non_live == 1
+    assert client.invoke(inv()).text == "[SYNTHETIC] real"
+
+
+def test_the_recorder_marks_what_it_writes_as_live(tmp_path):
+    path = tmp_path / "live-run.jsonl"
+    RecordingModelClient(_Live(), path, run_id="run-x").invoke(inv(case=None))
+    assert json.loads(path.read_text())["client_source"] == "live"

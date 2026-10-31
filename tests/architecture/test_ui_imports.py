@@ -28,7 +28,7 @@ def _roots(tree: ast.AST) -> set[str]:
 
 def test_ui_libraries_only_in_the_demo_page():
     offenders = [
-        str(path.relative_to(REPO))
+        path.relative_to(REPO).as_posix()
         for folder in ("src", "scripts", "tests")
         for path in (REPO / folder).rglob("*.py")
         if path not in ALLOWED

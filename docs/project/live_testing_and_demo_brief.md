@@ -53,6 +53,8 @@ Notes:
 
 **Premium baseline (never called):** `gpt-5.4`: input 2.875, output 17.25, cached 0.2875 $/1M for ≤270K context; long-context prices 5.75 / 25.875 / 0.575.
 
+> **Superseded 2026-10-30 by [ADR-0026](../adr/0026-premium-baseline-gpt-5-5.md):** the premium baseline is now `gpt-5.5` (still never called): input 5.5, output 33.0, cached 0.55 $/1M for ≤270K context; long-context prices 11.0 / 49.5 / 1.1 (Metis pricing page saved 2026-10-18). The text above is the historical decision.
+
 Prices are **Metis's user prices in USD** (≈10–15% above provider list prices), from the Metis pricing page saved 2026-10-18. The price schema must support: cached input, cache writes, and **context-length price tiers** (≤270K vs long context).
 
 ## 5. Premium baseline method (no API call)

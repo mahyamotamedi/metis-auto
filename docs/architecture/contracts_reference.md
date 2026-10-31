@@ -633,6 +633,8 @@ Outcome of one tier's lookup (FR-XCACHE-06). One per tier tried.
 | `threshold` | `float \| None` |  | operational | Threshold in force (semantic tier). |
 | `embedder` | `EmbedderRef \| None` |  | operational | Embedder (semantic tier). |
 | `candidates_considered` | `NonNegInt \| None` |  | derived | Index results examined (semantic tier). |
+| `key_schema_version` | `Version \| None` |  | operational | Key schema version looked up (Stage E6). Not populated by any production code yet: always None until the cache lookup fills it. |
+| `entry_age_ms` | `NonNegFloat \| None` |  | operational | Age of the matched entry on a hit (Stage E6). Not populated by any production code yet: always None until the cache lookup fills it. |
 | `not_evaluated` | `tuple[Name, ...]` |  | operational | Configured checks that are no-ops, e.g. time_sensitivity (TODO-07). |
 
 ### `CacheStoreDecision`
@@ -734,6 +736,7 @@ One call to a model. Built by the pipeline from a ``ContextPlan``.
 | `timeout_ms` | `PosInt \| None` |  | operational | Per-attempt timeout. |
 | `case_id` | `Identifier \| None` |  | reference | Replay case, for replay-client lookup. |
 | `composition_fingerprint` | `Fingerprint \| None` |  | fingerprint | Ordered-parts fingerprint (replay lookup). |
+| `effort` | `Name \| None` |  | operational | Reasoning effort or thinking-budget label requested (None = the provider default). Stage E6: not yet applied by the live adapter. |
 
 ### `ModelResponse`
 
@@ -745,6 +748,7 @@ One call to a model. Built by the pipeline from a ``ContextPlan``.
 | `usage` | `TokenUsage \| None` |  | derived | Provider-reported usage, if any. |
 | `provider_latency_ms` | `NonNegFloat \| None` |  | operational | Latency as measured or recorded. |
 | `provider_model_version` | `str \| None` |  | operational | Model version the provider reported. |
+| `time_to_first_token_ms` | `NonNegFloat \| None` |  | operational | Time to the first streamed token, if the client measured it (Stage E6: no adapter measures it yet). |
 | `source` | `AnswerSource` | yes | operational | Which client kind answered. |
 
 ### `ModelError`
@@ -812,6 +816,8 @@ Content-free summary of one finished attempt.
 | `usage` | `TokenUsage \| None` |  | derived | Usage, best fidelity. |
 | `cost` | `Cost \| None` |  | operational | Charged cost. |
 | `duration_ms` | `NonNegFloat \| None` |  | operational | model_call span duration. |
+| `effort` | `Name \| None` |  | operational | Effort label requested (Stage E6). Not populated by any production code yet: always None until a producer fills it. |
+| `time_to_first_token_ms` | `NonNegFloat \| None` |  | operational | Time to first token (Stage E6). Not populated by any production code yet: always None until an adapter measures it. |
 | `verdicts` | `tuple[DetectorVerdict, ...]` |  | derived | Detector verdicts on a response. |
 | `unsatisfactory` | `bool \| None` |  | derived | Combined verdict; None if not a response. |
 

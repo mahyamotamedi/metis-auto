@@ -1,0 +1,5332 @@
+{
+  "kind": "ESTIMATE: full-prompt input token counts and input-only uncached cost lower bounds on the sample; not billed tokens, not measured costs",
+  "generated_on": "2026-10-30",
+  "sample_sha256": "e0f56a2f2340b2ac70bf273e05ee2e9b56126cd3874c0c58659f46b4983549e1",
+  "exclusions": [
+    {
+      "reason": "no_preceding_user",
+      "count": 6
+    }
+  ],
+  "tokenizers": [
+    {
+      "ref": "openai-o200k-base",
+      "counted_with": "tiktoken-o200k_base@0.14.0",
+      "fidelity": "exact_local"
+    },
+    {
+      "ref": "deepseek-v4",
+      "counted_with": "hf-deepseek-v4-8f9f37ca37fd@0.23.2",
+      "fidelity": "exact_local"
+    },
+    {
+      "ref": "mimo-v2",
+      "counted_with": "hf-mimo-v2-633518aad78f@0.23.2",
+      "fidelity": "exact_local"
+    },
+    {
+      "ref": "grok-approx",
+      "counted_with": "approx-chars-div-4@1",
+      "fidelity": "approximation"
+    },
+    {
+      "ref": "approx-chars-div-4",
+      "counted_with": "approx-chars-div-4@1",
+      "fidelity": "approximation"
+    }
+  ],
+  "price_table_version": "prices-metis-2026-10-18-s75-g55",
+  "min_n": null,
+  "report": {
+    "cases": 465,
+    "models": [
+      "gpt-5-nano",
+      "gpt-4.1-nano",
+      "gpt-4o-mini",
+      "deepseek-v4-flash",
+      "grok-4-1-fast",
+      "mimo-v2.5",
+      "gpt-5.4",
+      "gpt-5.5"
+    ],
+    "slices": [
+      {
+        "dimension": "language",
+        "value": "fa",
+        "n": 421,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": "primary slice",
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 421,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4051.5724465558196,
+            "tokens_median": 1385.0,
+            "tokens_p90": 4716.0,
+            "tokens_p95": 29559.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3331550737381428,
+            "instruction_share_of_input_mean": 0.5582434810149179,
+            "input_cost_usd_total": "0.093814160",
+            "input_cost_usd_mean": "0.0002228364845605700712589073634",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 421,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4051.5724465558196,
+            "tokens_median": 1385.0,
+            "tokens_p90": 4716.0,
+            "tokens_p95": 29559.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3331550737381428,
+            "instruction_share_of_input_mean": 0.5582434810149179,
+            "input_cost_usd_total": "0.18762832",
+            "input_cost_usd_mean": "0.0004456729691211401425178147268",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 421,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4051.5724465558196,
+            "tokens_median": 1385.0,
+            "tokens_p90": 4716.0,
+            "tokens_p95": 29559.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3331550737381428,
+            "instruction_share_of_input_mean": 0.5582434810149179,
+            "input_cost_usd_total": "0.281442480",
+            "input_cost_usd_mean": "0.0006685094536817102137767220903",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 421,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4453.29216152019,
+            "tokens_median": 1518.0,
+            "tokens_p90": 5452.0,
+            "tokens_p95": 31899.0,
+            "tokens_max": 92480,
+            "tokens_per_char": 0.3661879179057922,
+            "instruction_share_of_input_mean": 0.5423805917868768,
+            "input_cost_usd_total": "0.309347940",
+            "input_cost_usd_mean": "0.0007347932066508313539192399050",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 421,
+            "content_fidelity": "approximation",
+            "tokens_mean": 3043.627078384798,
+            "tokens_median": 1215.0,
+            "tokens_p90": 3316.0,
+            "tokens_p95": 19807.0,
+            "tokens_max": 68353,
+            "tokens_per_char": 0.2502731512533316,
+            "instruction_share_of_input_mean": 0.616415879071246,
+            "input_cost_usd_total": "0.28190074",
+            "input_cost_usd_mean": "0.0006695979572446555819477434679",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 421,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5611.878859857482,
+            "tokens_median": 1843.0,
+            "tokens_p90": 7743.0,
+            "tokens_p95": 39594.0,
+            "tokens_max": 117733,
+            "tokens_per_char": 0.46145686397751196,
+            "instruction_share_of_input_mean": 0.5329798893362176,
+            "input_cost_usd_total": "0.363840554",
+            "input_cost_usd_mean": "0.0008642293444180522565320665083",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 421,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4051.5724465558196,
+            "tokens_median": 1385.0,
+            "tokens_p90": 4716.0,
+            "tokens_p95": 29559.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3331550737381428,
+            "instruction_share_of_input_mean": 0.5582434810149179,
+            "input_cost_usd_total": "4.903922000",
+            "input_cost_usd_mean": "0.01164827078384798099762470309",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 421,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4051.5724465558196,
+            "tokens_median": 1385.0,
+            "tokens_p90": 4716.0,
+            "tokens_p95": 29559.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3331550737381428,
+            "instruction_share_of_input_mean": 0.5582434810149179,
+            "input_cost_usd_total": "9.3814160",
+            "input_cost_usd_mean": "0.02228364845605700712589073634",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 368,
+          "distinct_instruction_texts": 72,
+          "cases_sharing_instructions": 364,
+          "share_sharing": 0.9891304347826086
+        }
+      },
+      {
+        "dimension": "language",
+        "value": "en",
+        "n": 23,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": "separate slice, never pooled into Persian",
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 23,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1954.4782608695652,
+            "tokens_median": 1143.0,
+            "tokens_p90": 4131.6,
+            "tokens_p95": 4176.1,
+            "tokens_max": 4437,
+            "tokens_per_char": 0.2958290557793045,
+            "instruction_share_of_input_mean": 0.3849191430863322,
+            "input_cost_usd_total": "0.002472415",
+            "input_cost_usd_mean": "0.0001074963043478260869565217391",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 23,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1954.4782608695652,
+            "tokens_median": 1143.0,
+            "tokens_p90": 4131.6,
+            "tokens_p95": 4176.1,
+            "tokens_max": 4437,
+            "tokens_per_char": 0.2958290557793045,
+            "instruction_share_of_input_mean": 0.3849191430863322,
+            "input_cost_usd_total": "0.00494483",
+            "input_cost_usd_mean": "0.0002149926086956521739130434783",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 23,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1954.4782608695652,
+            "tokens_median": 1143.0,
+            "tokens_p90": 4131.6,
+            "tokens_p95": 4176.1,
+            "tokens_max": 4437,
+            "tokens_per_char": 0.2958290557793045,
+            "instruction_share_of_input_mean": 0.3849191430863322,
+            "input_cost_usd_total": "0.007417245",
+            "input_cost_usd_mean": "0.0003224889130434782608695652174",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 23,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2186.608695652174,
+            "tokens_median": 1319.0,
+            "tokens_p90": 4713.4,
+            "tokens_p95": 4765.4,
+            "tokens_max": 5093,
+            "tokens_per_char": 0.33096422648661455,
+            "instruction_share_of_input_mean": 0.38290262520169493,
+            "input_cost_usd_total": "0.008298180",
+            "input_cost_usd_mean": "0.0003607904347826086956521739130",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 23,
+            "content_fidelity": "approximation",
+            "tokens_mean": 1653.5217391304348,
+            "tokens_median": 915.0,
+            "tokens_p90": 3295.0,
+            "tokens_p95": 3378.2000000000003,
+            "tokens_max": 3536,
+            "tokens_per_char": 0.25027639579878386,
+            "instruction_share_of_input_mean": 0.3799906985751213,
+            "input_cost_usd_total": "0.00836682",
+            "input_cost_usd_mean": "0.0003637747826086956521739130435",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 23,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2717.391304347826,
+            "tokens_median": 1905.0,
+            "tokens_p90": 6098.200000000001,
+            "tokens_p95": 6173.0,
+            "tokens_max": 6525,
+            "tokens_per_char": 0.4113032719997894,
+            "instruction_share_of_input_mean": 0.4008614745657582,
+            "input_cost_usd_total": "0.009625000",
+            "input_cost_usd_mean": "0.0004184782608695652173913043478",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 23,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1954.4782608695652,
+            "tokens_median": 1143.0,
+            "tokens_p90": 4131.6,
+            "tokens_p95": 4176.1,
+            "tokens_max": 4437,
+            "tokens_per_char": 0.2958290557793045,
+            "instruction_share_of_input_mean": 0.3849191430863322,
+            "input_cost_usd_total": "0.129239875",
+            "input_cost_usd_mean": "0.005619125",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 23,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1954.4782608695652,
+            "tokens_median": 1143.0,
+            "tokens_p90": 4131.6,
+            "tokens_p95": 4176.1,
+            "tokens_max": 4437,
+            "tokens_per_char": 0.2958290557793045,
+            "instruction_share_of_input_mean": 0.3849191430863322,
+            "input_cost_usd_total": "0.2472415",
+            "input_cost_usd_mean": "0.01074963043478260869565217391",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 13,
+          "distinct_instruction_texts": 7,
+          "cases_sharing_instructions": 8,
+          "share_sharing": 0.6153846153846154
+        }
+      },
+      {
+        "dimension": "language",
+        "value": "mixed",
+        "n": 19,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": "separate slice, never pooled into Persian",
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 19,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2316.1052631578946,
+            "tokens_median": 2026.0,
+            "tokens_p90": 3935.9999999999995,
+            "tokens_p95": null,
+            "tokens_max": 4920,
+            "tokens_per_char": 0.3445856530965413,
+            "instruction_share_of_input_mean": 0.48323297903137225,
+            "input_cost_usd_total": "0.002420330",
+            "input_cost_usd_mean": "0.0001273857894736842105263157895",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 19,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2316.1052631578946,
+            "tokens_median": 2026.0,
+            "tokens_p90": 3935.9999999999995,
+            "tokens_p95": null,
+            "tokens_max": 4920,
+            "tokens_per_char": 0.3445856530965413,
+            "instruction_share_of_input_mean": 0.48323297903137225,
+            "input_cost_usd_total": "0.00484066",
+            "input_cost_usd_mean": "0.0002547715789473684210526315789",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 19,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2316.1052631578946,
+            "tokens_median": 2026.0,
+            "tokens_p90": 3935.9999999999995,
+            "tokens_p95": null,
+            "tokens_max": 4920,
+            "tokens_per_char": 0.3445856530965413,
+            "instruction_share_of_input_mean": 0.48323297903137225,
+            "input_cost_usd_total": "0.007260990",
+            "input_cost_usd_mean": "0.0003821573684210526315789473684",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 19,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2612.0,
+            "tokens_median": 2167.0,
+            "tokens_p90": 4503.599999999999,
+            "tokens_p95": null,
+            "tokens_max": 5557,
+            "tokens_per_char": 0.38860829868370567,
+            "instruction_share_of_input_mean": 0.4813675169212747,
+            "input_cost_usd_total": "0.008188620",
+            "input_cost_usd_mean": "0.000430980",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 19,
+            "content_fidelity": "approximation",
+            "tokens_mean": 1683.2631578947369,
+            "tokens_median": 1531.0,
+            "tokens_p90": 2719.4,
+            "tokens_p95": null,
+            "tokens_max": 3310,
+            "tokens_per_char": 0.2504326309442709,
+            "instruction_share_of_input_mean": 0.5010966665159432,
+            "input_cost_usd_total": "0.00703604",
+            "input_cost_usd_mean": "0.0003703178947368421052631578947",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 19,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3435.0526315789475,
+            "tokens_median": 3044.0,
+            "tokens_p90": 5723.0,
+            "tokens_p95": null,
+            "tokens_max": 7059,
+            "tokens_per_char": 0.511060474367106,
+            "instruction_share_of_input_mean": 0.4897146746589123,
+            "input_cost_usd_total": "0.010050964",
+            "input_cost_usd_mean": "0.0005289981052631578947368421053",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 19,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2316.1052631578946,
+            "tokens_median": 2026.0,
+            "tokens_p90": 3935.9999999999995,
+            "tokens_p95": null,
+            "tokens_max": 4920,
+            "tokens_per_char": 0.3445856530965413,
+            "instruction_share_of_input_mean": 0.48323297903137225,
+            "input_cost_usd_total": "0.126517250",
+            "input_cost_usd_mean": "0.006658802631578947368421052632",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 19,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2316.1052631578946,
+            "tokens_median": 2026.0,
+            "tokens_p90": 3935.9999999999995,
+            "tokens_p95": null,
+            "tokens_max": 4920,
+            "tokens_per_char": 0.3445856530965413,
+            "instruction_share_of_input_mean": 0.48323297903137225,
+            "input_cost_usd_total": "0.2420330",
+            "input_cost_usd_mean": "0.01273857894736842105263157895",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 17,
+          "distinct_instruction_texts": 8,
+          "cases_sharing_instructions": 12,
+          "share_sharing": 0.7058823529411765
+        }
+      },
+      {
+        "dimension": "language",
+        "value": "undetermined",
+        "n": 2,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": "separate slice, never pooled into Persian",
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 2,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1538.5,
+            "tokens_median": 1538.5,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 1860,
+            "tokens_per_char": 0.26369011911903334,
+            "instruction_share_of_input_mean": 0.7707384631696133,
+            "input_cost_usd_total": "0.000169235",
+            "input_cost_usd_mean": "0.0000846175",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 2,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1538.5,
+            "tokens_median": 1538.5,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 1860,
+            "tokens_per_char": 0.26369011911903334,
+            "instruction_share_of_input_mean": 0.7707384631696133,
+            "input_cost_usd_total": "0.00033847",
+            "input_cost_usd_mean": "0.000169235",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 2,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1538.5,
+            "tokens_median": 1538.5,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 1860,
+            "tokens_per_char": 0.26369011911903334,
+            "instruction_share_of_input_mean": 0.7707384631696133,
+            "input_cost_usd_total": "0.000507705",
+            "input_cost_usd_mean": "0.0002538525",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 2,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1619.0,
+            "tokens_median": 1619.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 1960,
+            "tokens_per_char": 0.277487359670923,
+            "instruction_share_of_input_mean": 0.7594475583660694,
+            "input_cost_usd_total": "0.00053427",
+            "input_cost_usd_mean": "0.000267135",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 2,
+            "content_fidelity": "approximation",
+            "tokens_mean": 1461.0,
+            "tokens_median": 1461.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 1639,
+            "tokens_per_char": 0.25040706144485386,
+            "instruction_share_of_input_mean": 0.8656904933668182,
+            "input_cost_usd_total": "0.00064284",
+            "input_cost_usd_mean": "0.00032142",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 2,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1753.5,
+            "tokens_median": 1753.5,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 2215,
+            "tokens_per_char": 0.3005398920215957,
+            "instruction_share_of_input_mean": 0.726085687928492,
+            "input_cost_usd_total": "0.000540078",
+            "input_cost_usd_mean": "0.000270039",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 2,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1538.5,
+            "tokens_median": 1538.5,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 1860,
+            "tokens_per_char": 0.26369011911903334,
+            "instruction_share_of_input_mean": 0.7707384631696133,
+            "input_cost_usd_total": "0.008846375",
+            "input_cost_usd_mean": "0.0044231875",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 2,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1538.5,
+            "tokens_median": 1538.5,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 1860,
+            "tokens_per_char": 0.26369011911903334,
+            "instruction_share_of_input_mean": 0.7707384631696133,
+            "input_cost_usd_total": "0.0169235",
+            "input_cost_usd_mean": "0.00846175",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 2,
+          "distinct_instruction_texts": 1,
+          "cases_sharing_instructions": 2,
+          "share_sharing": 1.0
+        }
+      },
+      {
+        "dimension": "category",
+        "value": "category_1",
+        "n": 145,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 145,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1395.9103448275862,
+            "tokens_median": 1233.0,
+            "tokens_p90": 2172.9999999999995,
+            "tokens_p95": 2534.1999999999994,
+            "tokens_max": 11121,
+            "tokens_per_char": 0.2781110537076527,
+            "instruction_share_of_input_mean": 0.6796375456381315,
+            "input_cost_usd_total": "0.011132385",
+            "input_cost_usd_mean": "0.00007677506896551724137931034483",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 145,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1395.9103448275862,
+            "tokens_median": 1233.0,
+            "tokens_p90": 2172.9999999999995,
+            "tokens_p95": 2534.1999999999994,
+            "tokens_max": 11121,
+            "tokens_per_char": 0.2781110537076527,
+            "instruction_share_of_input_mean": 0.6796375456381315,
+            "input_cost_usd_total": "0.02226477",
+            "input_cost_usd_mean": "0.0001535501379310344827586206897",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 145,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1395.9103448275862,
+            "tokens_median": 1233.0,
+            "tokens_p90": 2172.9999999999995,
+            "tokens_p95": 2534.1999999999994,
+            "tokens_max": 11121,
+            "tokens_per_char": 0.2781110537076527,
+            "instruction_share_of_input_mean": 0.6796375456381315,
+            "input_cost_usd_total": "0.033397155",
+            "input_cost_usd_mean": "0.0002303252068965517241379310345",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 145,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1491.151724137931,
+            "tokens_median": 1317.0,
+            "tokens_p90": 2337.3999999999996,
+            "tokens_p95": 2755.9999999999986,
+            "tokens_max": 11770,
+            "tokens_per_char": 0.29708625541363465,
+            "instruction_share_of_input_mean": 0.658947493663024,
+            "input_cost_usd_total": "0.035675805",
+            "input_cost_usd_mean": "0.0002460400344827586206896551724",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 145,
+            "content_fidelity": "approximation",
+            "tokens_mean": 1258.2206896551725,
+            "tokens_median": 1180.0,
+            "tokens_p90": 1761.6,
+            "tokens_p95": 1876.2,
+            "tokens_max": 7095,
+            "tokens_per_char": 0.2506787653615319,
+            "instruction_share_of_input_mean": 0.774527285468057,
+            "input_cost_usd_total": "0.04013724",
+            "input_cost_usd_mean": "0.0002768085517241379310344827586",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 145,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1699.7862068965517,
+            "tokens_median": 1437.0,
+            "tokens_p90": 2928.7999999999993,
+            "tokens_p95": 3280.9999999999995,
+            "tokens_max": 13954,
+            "tokens_per_char": 0.3386530767032339,
+            "instruction_share_of_input_mean": 0.6243438340908933,
+            "input_cost_usd_total": "0.037956226",
+            "input_cost_usd_mean": "0.0002617670758620689655172413793",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 145,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1395.9103448275862,
+            "tokens_median": 1233.0,
+            "tokens_p90": 2172.9999999999995,
+            "tokens_p95": 2534.1999999999994,
+            "tokens_max": 11121,
+            "tokens_per_char": 0.2781110537076527,
+            "instruction_share_of_input_mean": 0.6796375456381315,
+            "input_cost_usd_total": "0.581920125",
+            "input_cost_usd_mean": "0.004013242241379310344827586207",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 145,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1395.9103448275862,
+            "tokens_median": 1233.0,
+            "tokens_p90": 2172.9999999999995,
+            "tokens_p95": 2534.1999999999994,
+            "tokens_max": 11121,
+            "tokens_per_char": 0.2781110537076527,
+            "instruction_share_of_input_mean": 0.6796375456381315,
+            "input_cost_usd_total": "1.1132385",
+            "input_cost_usd_mean": "0.007677506896551724137931034483",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 139,
+          "distinct_instruction_texts": 24,
+          "cases_sharing_instructions": 137,
+          "share_sharing": 0.9856115107913669
+        }
+      },
+      {
+        "dimension": "category",
+        "value": "category_2",
+        "n": 139,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 139,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1635.4460431654677,
+            "tokens_median": 746.0,
+            "tokens_p90": 4164.800000000002,
+            "tokens_p95": 5516.9,
+            "tokens_max": 11644,
+            "tokens_per_char": 0.31657791097321175,
+            "instruction_share_of_input_mean": 0.23234007640674303,
+            "input_cost_usd_total": "0.012502985",
+            "input_cost_usd_mean": "0.00008994953237410071942446043165",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 139,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1635.4460431654677,
+            "tokens_median": 746.0,
+            "tokens_p90": 4164.800000000002,
+            "tokens_p95": 5516.9,
+            "tokens_max": 11644,
+            "tokens_per_char": 0.31657791097321175,
+            "instruction_share_of_input_mean": 0.23234007640674303,
+            "input_cost_usd_total": "0.02500597",
+            "input_cost_usd_mean": "0.0001798990647482014388489208633",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 139,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1635.4460431654677,
+            "tokens_median": 746.0,
+            "tokens_p90": 4164.800000000002,
+            "tokens_p95": 5516.9,
+            "tokens_max": 11644,
+            "tokens_per_char": 0.31657791097321175,
+            "instruction_share_of_input_mean": 0.23234007640674303,
+            "input_cost_usd_total": "0.037508955",
+            "input_cost_usd_mean": "0.0002698485971223021582733812950",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 139,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1859.3812949640287,
+            "tokens_median": 850.0,
+            "tokens_p90": 4912.800000000002,
+            "tokens_p95": 6606.5,
+            "tokens_max": 13182,
+            "tokens_per_char": 0.3599256903169024,
+            "instruction_share_of_input_mean": 0.21130751603350292,
+            "input_cost_usd_total": "0.042644910",
+            "input_cost_usd_mean": "0.0003067979136690647482014388489",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 139,
+            "content_fidelity": "approximation",
+            "tokens_mean": 1295.158273381295,
+            "tokens_median": 572.0,
+            "tokens_p90": 3170.4000000000005,
+            "tokens_p95": 3904.3999999999996,
+            "tokens_max": 9707,
+            "tokens_per_char": 0.2507074460085005,
+            "instruction_share_of_input_mean": 0.2852840087272839,
+            "input_cost_usd_total": "0.03960594",
+            "input_cost_usd_mean": "0.0002849348201438848920863309353",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 139,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2437.4964028776976,
+            "tokens_median": 1097.0,
+            "tokens_p90": 6939.800000000003,
+            "tokens_p95": 9133.300000000001,
+            "tokens_max": 17402,
+            "tokens_per_char": 0.47183306502375794,
+            "instruction_share_of_input_mean": 0.20886113142598522,
+            "input_cost_usd_total": "0.052177048",
+            "input_cost_usd_mean": "0.0003753744460431654676258992806",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 139,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1635.4460431654677,
+            "tokens_median": 746.0,
+            "tokens_p90": 4164.800000000002,
+            "tokens_p95": 5516.9,
+            "tokens_max": 11644,
+            "tokens_per_char": 0.31657791097321175,
+            "instruction_share_of_input_mean": 0.23234007640674303,
+            "input_cost_usd_total": "0.653565125",
+            "input_cost_usd_mean": "0.004701907374100719424460431655",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 139,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1635.4460431654677,
+            "tokens_median": 746.0,
+            "tokens_p90": 4164.800000000002,
+            "tokens_p95": 5516.9,
+            "tokens_max": 11644,
+            "tokens_per_char": 0.31657791097321175,
+            "instruction_share_of_input_mean": 0.23234007640674303,
+            "input_cost_usd_total": "1.2502985",
+            "input_cost_usd_mean": "0.008994953237410071942446043165",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 91,
+          "distinct_instruction_texts": 19,
+          "cases_sharing_instructions": 90,
+          "share_sharing": 0.989010989010989
+        }
+      },
+      {
+        "dimension": "category",
+        "value": "category_3",
+        "n": 95,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 95,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4424.494736842105,
+            "tokens_median": 1821.0,
+            "tokens_p90": 3861.000000000001,
+            "tokens_p95": 4254.999999999999,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.31913672342121746,
+            "instruction_share_of_input_mean": 0.6631159286473788,
+            "input_cost_usd_total": "0.023117985",
+            "input_cost_usd_mean": "0.0002433472105263157894736842105",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 95,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4424.494736842105,
+            "tokens_median": 1821.0,
+            "tokens_p90": 3861.000000000001,
+            "tokens_p95": 4254.999999999999,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.31913672342121746,
+            "instruction_share_of_input_mean": 0.6631159286473788,
+            "input_cost_usd_total": "0.04623597",
+            "input_cost_usd_mean": "0.0004866944210526315789473684211",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 95,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4424.494736842105,
+            "tokens_median": 1821.0,
+            "tokens_p90": 3861.000000000001,
+            "tokens_p95": 4254.999999999999,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.31913672342121746,
+            "instruction_share_of_input_mean": 0.6631159286473788,
+            "input_cost_usd_total": "0.069353955",
+            "input_cost_usd_mean": "0.0007300416315789473684210526316",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 95,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4832.631578947368,
+            "tokens_median": 2057.0,
+            "tokens_p90": 4410.600000000001,
+            "tokens_p95": 4864.799999999999,
+            "tokens_max": 90990,
+            "tokens_per_char": 0.34857544179336786,
+            "instruction_share_of_input_mean": 0.6565438777192907,
+            "input_cost_usd_total": "0.075751500",
+            "input_cost_usd_mean": "0.0007973842105263157894736842105",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 95,
+            "content_fidelity": "approximation",
+            "tokens_mean": 3468.8842105263157,
+            "tokens_median": 1387.0,
+            "tokens_p90": 2916.4000000000024,
+            "tokens_p95": 3343.3999999999996,
+            "tokens_max": 68353,
+            "tokens_per_char": 0.25020898582085305,
+            "instruction_share_of_input_mean": 0.6879786907965547,
+            "input_cost_usd_total": "0.07249968",
+            "input_cost_usd_mean": "0.0007631545263157894736842105263",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 95,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 6060.221052631579,
+            "tokens_median": 3044.0,
+            "tokens_p90": 5645.4,
+            "tokens_p95": 6279.999999999998,
+            "tokens_max": 106010,
+            "tokens_per_char": 0.43712089288764877,
+            "instruction_share_of_input_mean": 0.66580712374864,
+            "input_cost_usd_total": "0.088661034",
+            "input_cost_usd_mean": "0.0009332740421052631578947368421",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 95,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4424.494736842105,
+            "tokens_median": 1821.0,
+            "tokens_p90": 3861.000000000001,
+            "tokens_p95": 4254.999999999999,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.31913672342121746,
+            "instruction_share_of_input_mean": 0.6631159286473788,
+            "input_cost_usd_total": "1.208440125",
+            "input_cost_usd_mean": "0.01272042236842105263157894737",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 95,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4424.494736842105,
+            "tokens_median": 1821.0,
+            "tokens_p90": 3861.000000000001,
+            "tokens_p95": 4254.999999999999,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.31913672342121746,
+            "instruction_share_of_input_mean": 0.6631159286473788,
+            "input_cost_usd_total": "2.3117985",
+            "input_cost_usd_mean": "0.02433472105263157894736842105",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 88,
+          "distinct_instruction_texts": 11,
+          "cases_sharing_instructions": 87,
+          "share_sharing": 0.9886363636363636
+        }
+      },
+      {
+        "dimension": "category",
+        "value": "category_4",
+        "n": 86,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 86,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 11019.616279069767,
+            "tokens_median": 2322.0,
+            "tokens_p90": 33456.0,
+            "tokens_p95": 38007.75,
+            "tokens_max": 82530,
+            "tokens_per_char": 0.35785229790243644,
+            "instruction_share_of_input_mean": 0.7064862949608608,
+            "input_cost_usd_total": "0.052122785",
+            "input_cost_usd_mean": "0.0006060788953488372093023255814",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 86,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 11019.616279069767,
+            "tokens_median": 2322.0,
+            "tokens_p90": 33456.0,
+            "tokens_p95": 38007.75,
+            "tokens_max": 82530,
+            "tokens_per_char": 0.35785229790243644,
+            "instruction_share_of_input_mean": 0.7064862949608608,
+            "input_cost_usd_total": "0.10424557",
+            "input_cost_usd_mean": "0.001212157790697674418604651163",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 86,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 11019.616279069767,
+            "tokens_median": 2322.0,
+            "tokens_p90": 33456.0,
+            "tokens_p95": 38007.75,
+            "tokens_max": 82530,
+            "tokens_per_char": 0.35785229790243644,
+            "instruction_share_of_input_mean": 0.7064862949608608,
+            "input_cost_usd_total": "0.156368355",
+            "input_cost_usd_mean": "0.001818236686046511627906976744",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 86,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 12142.127906976744,
+            "tokens_median": 2711.5,
+            "tokens_p90": 36729.5,
+            "tokens_p95": 40968.5,
+            "tokens_max": 92480,
+            "tokens_per_char": 0.3943048707775625,
+            "instruction_share_of_input_mean": 0.7037566019421221,
+            "input_cost_usd_total": "0.172296795",
+            "input_cost_usd_mean": "0.002003451104651162790697674419",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 86,
+            "content_fidelity": "approximation",
+            "tokens_mean": 7701.03488372093,
+            "tokens_median": 1765.5,
+            "tokens_p90": 23762.0,
+            "tokens_p95": 24597.25,
+            "tokens_max": 58334,
+            "tokens_per_char": 0.25008430053963676,
+            "instruction_share_of_input_mean": 0.7230718555247145,
+            "input_cost_usd_total": "0.14570358",
+            "input_cost_usd_mean": "0.001694227674418604651162790698",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 86,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 15498.511627906977,
+            "tokens_median": 3856.0,
+            "tokens_p90": 46508.0,
+            "tokens_p95": 50335.5,
+            "tokens_max": 117733,
+            "tokens_per_char": 0.5033004652483534,
+            "instruction_share_of_input_mean": 0.7156728785165596,
+            "input_cost_usd_total": "0.205262288",
+            "input_cost_usd_mean": "0.002386770790697674418604651163",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 86,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 11019.616279069767,
+            "tokens_median": 2322.0,
+            "tokens_p90": 33456.0,
+            "tokens_p95": 38007.75,
+            "tokens_max": 82530,
+            "tokens_per_char": 0.35785229790243644,
+            "instruction_share_of_input_mean": 0.7064862949608608,
+            "input_cost_usd_total": "2.724600125",
+            "input_cost_usd_mean": "0.03168139680232558139534883721",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 86,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 11019.616279069767,
+            "tokens_median": 2322.0,
+            "tokens_p90": 33456.0,
+            "tokens_p95": 38007.75,
+            "tokens_max": 82530,
+            "tokens_per_char": 0.35785229790243644,
+            "instruction_share_of_input_mean": 0.7064862949608608,
+            "input_cost_usd_total": "5.2122785",
+            "input_cost_usd_mean": "0.06060788953488372093023255814",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 82,
+          "distinct_instruction_texts": 23,
+          "cases_sharing_instructions": 81,
+          "share_sharing": 0.9878048780487805
+        }
+      },
+      {
+        "dimension": "instructions",
+        "value": "no",
+        "n": 7,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 7,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 186.85714285714286,
+            "tokens_median": 35.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 961,
+            "tokens_per_char": 0.33607399794450155,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.000071940",
+            "input_cost_usd_mean": "0.00001027714285714285714285714286",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 7,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 186.85714285714286,
+            "tokens_median": 35.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 961,
+            "tokens_per_char": 0.33607399794450155,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.00014388",
+            "input_cost_usd_mean": "0.00002055428571428571428571428571",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 7,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 186.85714285714286,
+            "tokens_median": 35.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 961,
+            "tokens_per_char": 0.33607399794450155,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.000215820",
+            "input_cost_usd_mean": "0.00003083142857142857142857142857",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 7,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 241.42857142857142,
+            "tokens_median": 59.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 1193,
+            "tokens_per_char": 0.434224049331963,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.000278850",
+            "input_cost_usd_mean": "0.00003983571428571428571428571429",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 7,
+            "content_fidelity": "approximation",
+            "tokens_mean": 140.28571428571428,
+            "tokens_median": 19.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 787,
+            "tokens_per_char": 0.2523124357656732,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.00021604",
+            "input_cost_usd_mean": "0.00003086285714285714285714285714",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 7,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 327.14285714285717,
+            "tokens_median": 53.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 1780,
+            "tokens_per_char": 0.5883864337101747,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.000352660",
+            "input_cost_usd_mean": "0.000050380",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 7,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 186.85714285714286,
+            "tokens_median": 35.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 961,
+            "tokens_per_char": 0.33607399794450155,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.003760500",
+            "input_cost_usd_mean": "0.0005372142857142857142857142857",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 7,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 186.85714285714286,
+            "tokens_median": 35.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 961,
+            "tokens_per_char": 0.33607399794450155,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.0071940",
+            "input_cost_usd_mean": "0.001027714285714285714285714286",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 0,
+          "distinct_instruction_texts": 0,
+          "cases_sharing_instructions": 0,
+          "share_sharing": null
+        }
+      },
+      {
+        "dimension": "instructions",
+        "value": "unknown",
+        "n": 58,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 58,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1026.4137931034484,
+            "tokens_median": 541.5,
+            "tokens_p90": 2542.1000000000004,
+            "tokens_p95": 2742.8,
+            "tokens_max": 10353,
+            "tokens_per_char": 0.3115569999842997,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.003274260",
+            "input_cost_usd_mean": "0.00005645275862068965517241379310",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 58,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1026.4137931034484,
+            "tokens_median": 541.5,
+            "tokens_p90": 2542.1000000000004,
+            "tokens_p95": 2742.8,
+            "tokens_max": 10353,
+            "tokens_per_char": 0.3115569999842997,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.00654852",
+            "input_cost_usd_mean": "0.0001129055172413793103448275862",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 58,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1026.4137931034484,
+            "tokens_median": 541.5,
+            "tokens_p90": 2542.1000000000004,
+            "tokens_p95": 2742.8,
+            "tokens_max": 10353,
+            "tokens_per_char": 0.3115569999842997,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.009822780",
+            "input_cost_usd_mean": "0.0001693582758620689655172413793",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 58,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1118.655172413793,
+            "tokens_median": 599.5,
+            "tokens_p90": 2699.2000000000003,
+            "tokens_p95": 2794.35,
+            "tokens_max": 11718,
+            "tokens_per_char": 0.3395558904955542,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.010705530",
+            "input_cost_usd_mean": "0.0001845781034482758620689655172",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 58,
+            "content_fidelity": "approximation",
+            "tokens_mean": 827.6896551724138,
+            "tokens_median": 368.5,
+            "tokens_p90": 1944.6000000000001,
+            "tokens_p95": 2683.8,
+            "tokens_max": 8711,
+            "tokens_per_char": 0.2512363996043521,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.01056132",
+            "input_cost_usd_mean": "0.0001820917241379310344827586207",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 58,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1391.6379310344828,
+            "tokens_median": 762.0,
+            "tokens_p90": 2920.5000000000005,
+            "tokens_p95": 3418.5999999999995,
+            "tokens_max": 15603,
+            "tokens_per_char": 0.42241690609643134,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.012430110",
+            "input_cost_usd_mean": "0.0002143122413793103448275862069",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 58,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1026.4137931034484,
+            "tokens_median": 541.5,
+            "tokens_p90": 2542.1000000000004,
+            "tokens_p95": 2742.8,
+            "tokens_max": 10353,
+            "tokens_per_char": 0.3115569999842997,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.171154500",
+            "input_cost_usd_mean": "0.002950939655172413793103448276",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 58,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1026.4137931034484,
+            "tokens_median": 541.5,
+            "tokens_p90": 2542.1000000000004,
+            "tokens_p95": 2742.8,
+            "tokens_max": 10353,
+            "tokens_per_char": 0.3115569999842997,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.3274260",
+            "input_cost_usd_mean": "0.005645275862068965517241379310",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 0,
+          "distinct_instruction_texts": 0,
+          "cases_sharing_instructions": 0,
+          "share_sharing": null
+        }
+      },
+      {
+        "dimension": "instructions",
+        "value": "yes",
+        "n": 400,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 400,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4342.27,
+            "tokens_median": 1557.0,
+            "tokens_p90": 4931.800000000003,
+            "tokens_p95": 29603.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3329811636170533,
+            "instruction_share_of_input_mean": 0.6364913733155034,
+            "input_cost_usd_total": "0.095529940",
+            "input_cost_usd_mean": "0.00023882485",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 400,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4342.27,
+            "tokens_median": 1557.0,
+            "tokens_p90": 4931.800000000003,
+            "tokens_p95": 29603.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3329811636170533,
+            "instruction_share_of_input_mean": 0.6364913733155034,
+            "input_cost_usd_total": "0.19105988",
+            "input_cost_usd_mean": "0.0004776497",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 400,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4342.27,
+            "tokens_median": 1557.0,
+            "tokens_p90": 4931.800000000003,
+            "tokens_p95": 29603.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3329811636170533,
+            "instruction_share_of_input_mean": 0.6364913733155034,
+            "input_cost_usd_total": "0.286589820",
+            "input_cost_usd_mean": "0.00071647455",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 400,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4778.555,
+            "tokens_median": 1715.5,
+            "tokens_p90": 5694.300000000008,
+            "tokens_p95": 31940.8,
+            "tokens_max": 92480,
+            "tokens_per_char": 0.3664370949545026,
+            "instruction_share_of_input_mean": 0.6195346686503762,
+            "input_cost_usd_total": "0.315384630",
+            "input_cost_usd_mean": "0.000788461575",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 400,
+            "content_fidelity": "approximation",
+            "tokens_mean": 3263.285,
+            "tokens_median": 1329.5,
+            "tokens_p90": 3531.5,
+            "tokens_p95": 19834.45,
+            "tokens_max": 68353,
+            "tokens_per_char": 0.25024064291581954,
+            "instruction_share_of_input_mean": 0.6987577220168971,
+            "input_cost_usd_total": "0.28716908",
+            "input_cost_usd_mean": "0.0007179227",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 400,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 6027.1725,
+            "tokens_median": 2090.5,
+            "tokens_p90": 7950.000000000008,
+            "tokens_p95": 39646.35,
+            "tokens_max": 117733,
+            "tokens_per_char": 0.4621856568962096,
+            "instruction_share_of_input_mean": 0.610902743799841,
+            "input_cost_usd_total": "0.371273826",
+            "input_cost_usd_mean": "0.000928184565",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 400,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4342.27,
+            "tokens_median": 1557.0,
+            "tokens_p90": 4931.800000000003,
+            "tokens_p95": 29603.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3329811636170533,
+            "instruction_share_of_input_mean": 0.6364913733155034,
+            "input_cost_usd_total": "4.993610500",
+            "input_cost_usd_mean": "0.01248402625",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 400,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4342.27,
+            "tokens_median": 1557.0,
+            "tokens_p90": 4931.800000000003,
+            "tokens_p95": 29603.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3329811636170533,
+            "instruction_share_of_input_mean": 0.6364913733155034,
+            "input_cost_usd_total": "9.5529940",
+            "input_cost_usd_mean": "0.023882485",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 400,
+          "distinct_instruction_texts": 77,
+          "cases_sharing_instructions": 395,
+          "share_sharing": 0.9875
+        }
+      },
+      {
+        "dimension": "length_bucket",
+        "value": "0",
+        "n": 359,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 359,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4322.362116991643,
+            "tokens_median": 1301.0,
+            "tokens_p90": 5389.4,
+            "tokens_p95": 29624.1,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33418135229771645,
+            "instruction_share_of_input_mean": 0.5619228849837639,
+            "input_cost_usd_total": "0.085345040",
+            "input_cost_usd_mean": "0.0002377299164345403899721448468",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 359,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4322.362116991643,
+            "tokens_median": 1301.0,
+            "tokens_p90": 5389.4,
+            "tokens_p95": 29624.1,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33418135229771645,
+            "instruction_share_of_input_mean": 0.5619228849837639,
+            "input_cost_usd_total": "0.17069008",
+            "input_cost_usd_mean": "0.0004754598328690807799442896936",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 359,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4322.362116991643,
+            "tokens_median": 1301.0,
+            "tokens_p90": 5389.4,
+            "tokens_p95": 29624.1,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33418135229771645,
+            "instruction_share_of_input_mean": 0.5619228849837639,
+            "input_cost_usd_total": "0.256035120",
+            "input_cost_usd_mean": "0.0007131897493036211699164345404",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 359,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4738.554317548746,
+            "tokens_median": 1414.0,
+            "tokens_p90": 6235.399999999999,
+            "tokens_p95": 31957.8,
+            "tokens_max": 92480,
+            "tokens_per_char": 0.3663590525073271,
+            "instruction_share_of_input_mean": 0.5458107525757238,
+            "input_cost_usd_total": "0.280688265",
+            "input_cost_usd_mean": "0.0007818614623955431754874651811",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 359,
+            "content_fidelity": "approximation",
+            "tokens_mean": 3236.724233983287,
+            "tokens_median": 1162.0,
+            "tokens_p90": 3802.5999999999995,
+            "tokens_p95": 19844.0,
+            "tokens_max": 68353,
+            "tokens_per_char": 0.2502457804900793,
+            "instruction_share_of_input_mean": 0.6175642044491321,
+            "input_cost_usd_total": "0.25563648",
+            "input_cost_usd_mean": "0.0007120793314763231197771587744",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 359,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5929.626740947076,
+            "tokens_median": 1778.0,
+            "tokens_p90": 8907.999999999998,
+            "tokens_p95": 39675.200000000004,
+            "tokens_max": 117733,
+            "tokens_per_char": 0.4584462451955702,
+            "instruction_share_of_input_mean": 0.5394195894680894,
+            "input_cost_usd_total": "0.327825344",
+            "input_cost_usd_mean": "0.0009131625181058495821727019499",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 359,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4322.362116991643,
+            "tokens_median": 1301.0,
+            "tokens_p90": 5389.4,
+            "tokens_p95": 29624.1,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33418135229771645,
+            "instruction_share_of_input_mean": 0.5619228849837639,
+            "input_cost_usd_total": "4.461218000",
+            "input_cost_usd_mean": "0.01242679108635097493036211699",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 359,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4322.362116991643,
+            "tokens_median": 1301.0,
+            "tokens_p90": 5389.4,
+            "tokens_p95": 29624.1,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33418135229771645,
+            "instruction_share_of_input_mean": 0.5619228849837639,
+            "input_cost_usd_total": "8.5345040",
+            "input_cost_usd_mean": "0.02377299164345403899721448468",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 305,
+          "distinct_instruction_texts": 73,
+          "cases_sharing_instructions": 293,
+          "share_sharing": 0.9606557377049181
+        }
+      },
+      {
+        "dimension": "length_bucket",
+        "value": "1",
+        "n": 81,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 81,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2067.358024691358,
+            "tokens_median": 1773.0,
+            "tokens_p90": 2773.0,
+            "tokens_p95": 3285.0,
+            "tokens_max": 33104,
+            "tokens_per_char": 0.3186603235014272,
+            "instruction_share_of_input_mean": 0.4936559189445091,
+            "input_cost_usd_total": "0.009210080",
+            "input_cost_usd_mean": "0.0001137046913580246913580246914",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 81,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2067.358024691358,
+            "tokens_median": 1773.0,
+            "tokens_p90": 2773.0,
+            "tokens_p95": 3285.0,
+            "tokens_max": 33104,
+            "tokens_per_char": 0.3186603235014272,
+            "instruction_share_of_input_mean": 0.4936559189445091,
+            "input_cost_usd_total": "0.01842016",
+            "input_cost_usd_mean": "0.0002274093827160493827160493827",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 81,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2067.358024691358,
+            "tokens_median": 1773.0,
+            "tokens_p90": 2773.0,
+            "tokens_p95": 3285.0,
+            "tokens_max": 33104,
+            "tokens_per_char": 0.3186603235014272,
+            "instruction_share_of_input_mean": 0.4936559189445091,
+            "input_cost_usd_total": "0.027630240",
+            "input_cost_usd_mean": "0.0003411140740740740740740740741",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 81,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2315.0246913580245,
+            "tokens_median": 1973.0,
+            "tokens_p90": 3082.0,
+            "tokens_p95": 3837.0,
+            "tokens_max": 36367,
+            "tokens_per_char": 0.35683539486203614,
+            "instruction_share_of_input_mean": 0.481103414063729,
+            "input_cost_usd_total": "0.030940305",
+            "input_cost_usd_mean": "0.0003819790740740740740740740741",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 81,
+            "content_fidelity": "approximation",
+            "tokens_mean": 1625.8765432098764,
+            "tokens_median": 1379.0,
+            "tokens_p90": 2126.0,
+            "tokens_p95": 2620.0,
+            "tokens_max": 23523,
+            "tokens_per_char": 0.25061084681255946,
+            "instruction_share_of_input_mean": 0.5596537315053706,
+            "input_cost_usd_total": "0.02897312",
+            "input_cost_usd_mean": "0.0003576928395061728395061728395",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 81,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3076.962962962963,
+            "tokens_median": 2696.0,
+            "tokens_p90": 4453.0,
+            "tokens_p95": 5771.0,
+            "tokens_max": 45943,
+            "tokens_per_char": 0.47427973358705994,
+            "instruction_share_of_input_mean": 0.46117692353656947,
+            "input_cost_usd_total": "0.038382036",
+            "input_cost_usd_mean": "0.0004738522962962962962962962963",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 81,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2067.358024691358,
+            "tokens_median": 1773.0,
+            "tokens_p90": 2773.0,
+            "tokens_p95": 3285.0,
+            "tokens_max": 33104,
+            "tokens_per_char": 0.3186603235014272,
+            "instruction_share_of_input_mean": 0.4936559189445091,
+            "input_cost_usd_total": "0.481436000",
+            "input_cost_usd_mean": "0.005943654320987654320987654321",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 81,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2067.358024691358,
+            "tokens_median": 1773.0,
+            "tokens_p90": 2773.0,
+            "tokens_p95": 3285.0,
+            "tokens_max": 33104,
+            "tokens_per_char": 0.3186603235014272,
+            "instruction_share_of_input_mean": 0.4936559189445091,
+            "input_cost_usd_total": "0.9210080",
+            "input_cost_usd_mean": "0.01137046913580246913580246914",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 73,
+          "distinct_instruction_texts": 31,
+          "cases_sharing_instructions": 55,
+          "share_sharing": 0.7534246575342466
+        }
+      },
+      {
+        "dimension": "length_bucket",
+        "value": "2",
+        "n": 20,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 20,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2518.3,
+            "tokens_median": 2954.5,
+            "tokens_p90": 4203.000000000001,
+            "tokens_p95": 4461.150000000001,
+            "tokens_max": 4920,
+            "tokens_per_char": 0.3296268905803124,
+            "instruction_share_of_input_mean": 0.516327247599934,
+            "input_cost_usd_total": "0.002770130",
+            "input_cost_usd_mean": "0.0001385065",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 20,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2518.3,
+            "tokens_median": 2954.5,
+            "tokens_p90": 4203.000000000001,
+            "tokens_p95": 4461.150000000001,
+            "tokens_max": 4920,
+            "tokens_per_char": 0.3296268905803124,
+            "instruction_share_of_input_mean": 0.516327247599934,
+            "input_cost_usd_total": "0.00554026",
+            "input_cost_usd_mean": "0.000277013",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 20,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2518.3,
+            "tokens_median": 2954.5,
+            "tokens_p90": 4203.000000000001,
+            "tokens_p95": 4461.150000000001,
+            "tokens_max": 4920,
+            "tokens_per_char": 0.3296268905803124,
+            "instruction_share_of_input_mean": 0.516327247599934,
+            "input_cost_usd_total": "0.008310390",
+            "input_cost_usd_mean": "0.0004155195",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 20,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2849.6,
+            "tokens_median": 3297.0,
+            "tokens_p90": 4799.6,
+            "tokens_p95": 5116.200000000001,
+            "tokens_max": 5557,
+            "tokens_per_char": 0.3729916163275457,
+            "instruction_share_of_input_mean": 0.5159958731237538,
+            "input_cost_usd_total": "0.009403680",
+            "input_cost_usd_mean": "0.000470184",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 20,
+            "content_fidelity": "approximation",
+            "tokens_mean": 1911.4,
+            "tokens_median": 2052.0,
+            "tokens_p90": 3331.7999999999997,
+            "tokens_p95": 3391.6,
+            "tokens_max": 3536,
+            "tokens_per_char": 0.2501881581444662,
+            "instruction_share_of_input_mean": 0.5080291179186813,
+            "input_cost_usd_total": "0.00841016",
+            "input_cost_usd_mean": "0.000420508",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 20,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3655.55,
+            "tokens_median": 3997.5,
+            "tokens_p90": 6210.0,
+            "tokens_p95": 6551.700000000001,
+            "tokens_max": 7059,
+            "tokens_per_char": 0.478484525219736,
+            "instruction_share_of_input_mean": 0.531680153961689,
+            "input_cost_usd_total": "0.011259094",
+            "input_cost_usd_mean": "0.0005629547",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 20,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2518.3,
+            "tokens_median": 2954.5,
+            "tokens_p90": 4203.000000000001,
+            "tokens_p95": 4461.150000000001,
+            "tokens_max": 4920,
+            "tokens_per_char": 0.3296268905803124,
+            "instruction_share_of_input_mean": 0.516327247599934,
+            "input_cost_usd_total": "0.144802250",
+            "input_cost_usd_mean": "0.0072401125",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 20,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 2518.3,
+            "tokens_median": 2954.5,
+            "tokens_p90": 4203.000000000001,
+            "tokens_p95": 4461.150000000001,
+            "tokens_max": 4920,
+            "tokens_per_char": 0.3296268905803124,
+            "instruction_share_of_input_mean": 0.516327247599934,
+            "input_cost_usd_total": "0.2770130",
+            "input_cost_usd_mean": "0.01385065",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 17,
+          "distinct_instruction_texts": 6,
+          "cases_sharing_instructions": 15,
+          "share_sharing": 0.8823529411764706
+        }
+      },
+      {
+        "dimension": "length_bucket",
+        "value": "3",
+        "n": 5,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 5,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5639.6,
+            "tokens_median": 3986.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 10515,
+            "tokens_per_char": 0.31492774017735486,
+            "instruction_share_of_input_mean": 0.51071184610525,
+            "input_cost_usd_total": "0.001550890",
+            "input_cost_usd_mean": "0.000310178",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 5,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5639.6,
+            "tokens_median": 3986.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 10515,
+            "tokens_per_char": 0.31492774017735486,
+            "instruction_share_of_input_mean": 0.51071184610525,
+            "input_cost_usd_total": "0.00310178",
+            "input_cost_usd_mean": "0.000620356",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 5,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5639.6,
+            "tokens_median": 3986.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 10515,
+            "tokens_per_char": 0.31492774017735486,
+            "instruction_share_of_input_mean": 0.51071184610525,
+            "input_cost_usd_total": "0.004652670",
+            "input_cost_usd_mean": "0.000930534",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 5,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 6468.8,
+            "tokens_median": 4563.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 12053,
+            "tokens_per_char": 0.36123210257097543,
+            "instruction_share_of_input_mean": 0.515702656765707,
+            "input_cost_usd_total": "0.005336760",
+            "input_cost_usd_mean": "0.001067352",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 5,
+            "content_fidelity": "approximation",
+            "tokens_mean": 4478.8,
+            "tokens_median": 3171.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 8430,
+            "tokens_per_char": 0.2501061002032657,
+            "instruction_share_of_input_mean": 0.4610009598423644,
+            "input_cost_usd_total": "0.00492668",
+            "input_cost_usd_mean": "0.000985336",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 5,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 8558.6,
+            "tokens_median": 5871.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 16255,
+            "tokens_per_char": 0.47793115772074424,
+            "instruction_share_of_input_mean": 0.5441062030392768,
+            "input_cost_usd_total": "0.006590122",
+            "input_cost_usd_mean": "0.0013180244",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 5,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5639.6,
+            "tokens_median": 3986.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 10515,
+            "tokens_per_char": 0.31492774017735486,
+            "instruction_share_of_input_mean": 0.51071184610525,
+            "input_cost_usd_total": "0.081069250",
+            "input_cost_usd_mean": "0.016213850",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 5,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5639.6,
+            "tokens_median": 3986.0,
+            "tokens_p90": null,
+            "tokens_p95": null,
+            "tokens_max": 10515,
+            "tokens_per_char": 0.31492774017735486,
+            "instruction_share_of_input_mean": 0.51071184610525,
+            "input_cost_usd_total": "0.1550890",
+            "input_cost_usd_mean": "0.0310178",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 5,
+          "distinct_instruction_texts": 2,
+          "cases_sharing_instructions": 5,
+          "share_sharing": 1.0
+        }
+      },
+      {
+        "dimension": "retrieved",
+        "value": "no",
+        "n": 363,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 363,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3692.443526170799,
+            "tokens_median": 1264.0,
+            "tokens_p90": 4879.600000000002,
+            "tokens_p95": 28712.49999999981,
+            "tokens_max": 82530,
+            "tokens_per_char": 0.33680188759843804,
+            "instruction_share_of_input_mean": 0.5807257316242731,
+            "input_cost_usd_total": "0.073719635",
+            "input_cost_usd_mean": "0.0002030843939393939393939393939",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 363,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3692.443526170799,
+            "tokens_median": 1264.0,
+            "tokens_p90": 4879.600000000002,
+            "tokens_p95": 28712.49999999981,
+            "tokens_max": 82530,
+            "tokens_per_char": 0.33680188759843804,
+            "instruction_share_of_input_mean": 0.5807257316242731,
+            "input_cost_usd_total": "0.14743927",
+            "input_cost_usd_mean": "0.0004061687878787878787878787879",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 363,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3692.443526170799,
+            "tokens_median": 1264.0,
+            "tokens_p90": 4879.600000000002,
+            "tokens_p95": 28712.49999999981,
+            "tokens_max": 82530,
+            "tokens_per_char": 0.33680188759843804,
+            "instruction_share_of_input_mean": 0.5807257316242731,
+            "input_cost_usd_total": "0.221158905",
+            "input_cost_usd_mean": "0.0006092531818181818181818181818",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 363,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4068.137741046832,
+            "tokens_median": 1365.0,
+            "tokens_p90": 5636.200000000002,
+            "tokens_p95": 31056.199999999808,
+            "tokens_max": 92480,
+            "tokens_per_char": 0.3710703929481413,
+            "instruction_share_of_input_mean": 0.5617331280082598,
+            "input_cost_usd_total": "0.243661110",
+            "input_cost_usd_mean": "0.0006712427272727272727272727273",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 363,
+            "content_fidelity": "approximation",
+            "tokens_mean": 2743.931129476584,
+            "tokens_median": 1139.0,
+            "tokens_p90": 3507.800000000001,
+            "tokens_p95": 19447.09999999992,
+            "tokens_max": 58334,
+            "tokens_per_char": 0.2502844464099948,
+            "instruction_share_of_input_mean": 0.6451548055050244,
+            "input_cost_usd_total": "0.21913034",
+            "input_cost_usd_mean": "0.0006036648484848484848484848485",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 363,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5103.556473829201,
+            "tokens_median": 1689.0,
+            "tokens_p90": 7880.600000000002,
+            "tokens_p95": 38581.79999999977,
+            "tokens_max": 117733,
+            "tokens_per_char": 0.46551489323208517,
+            "instruction_share_of_input_mean": 0.5502889696708033,
+            "input_cost_usd_total": "0.285299014",
+            "input_cost_usd_mean": "0.0007859476969696969696969696970",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 363,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3692.443526170799,
+            "tokens_median": 1264.0,
+            "tokens_p90": 4879.600000000002,
+            "tokens_p95": 28712.49999999981,
+            "tokens_max": 82530,
+            "tokens_per_char": 0.33680188759843804,
+            "instruction_share_of_input_mean": 0.5807257316242731,
+            "input_cost_usd_total": "3.853526375",
+            "input_cost_usd_mean": "0.01061577513774104683195592287",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 363,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3692.443526170799,
+            "tokens_median": 1264.0,
+            "tokens_p90": 4879.600000000002,
+            "tokens_p95": 28712.49999999981,
+            "tokens_max": 82530,
+            "tokens_per_char": 0.33680188759843804,
+            "instruction_share_of_input_mean": 0.5807257316242731,
+            "input_cost_usd_total": "7.3719635",
+            "input_cost_usd_mean": "0.02030843939393939393939393939",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 329,
+          "distinct_instruction_texts": 68,
+          "cases_sharing_instructions": 320,
+          "share_sharing": 0.9726443768996961
+        }
+      },
+      {
+        "dimension": "retrieved",
+        "value": "unknown",
+        "n": 31,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 31,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1041.774193548387,
+            "tokens_median": 260.0,
+            "tokens_p90": 2741.0,
+            "tokens_p95": 2759.0,
+            "tokens_max": 10353,
+            "tokens_per_char": 0.3020171886543659,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.001776225",
+            "input_cost_usd_mean": "0.00005729758064516129032258064516",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 31,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1041.774193548387,
+            "tokens_median": 260.0,
+            "tokens_p90": 2741.0,
+            "tokens_p95": 2759.0,
+            "tokens_max": 10353,
+            "tokens_per_char": 0.3020171886543659,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.00355245",
+            "input_cost_usd_mean": "0.0001145951612903225806451612903",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 31,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1041.774193548387,
+            "tokens_median": 260.0,
+            "tokens_p90": 2741.0,
+            "tokens_p95": 2759.0,
+            "tokens_max": 10353,
+            "tokens_per_char": 0.3020171886543659,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.005328675",
+            "input_cost_usd_mean": "0.0001718927419354838709677419355",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 31,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1149.9032258064517,
+            "tokens_median": 327.0,
+            "tokens_p90": 2793.0,
+            "tokens_p95": 2806.5,
+            "tokens_max": 11718,
+            "tokens_per_char": 0.33336450608336216,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.005881755",
+            "input_cost_usd_mean": "0.0001897340322580645161290322581",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 31,
+            "content_fidelity": "approximation",
+            "tokens_mean": 864.9032258064516,
+            "tokens_median": 192.0,
+            "tokens_p90": 2682.0,
+            "tokens_p95": 2700.0,
+            "tokens_max": 8711,
+            "tokens_per_char": 0.25074113213193555,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.00589864",
+            "input_cost_usd_mean": "0.0001902787096774193548387096774",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 31,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1423.2903225806451,
+            "tokens_median": 439.0,
+            "tokens_p90": 2825.0,
+            "tokens_p95": 3477.0,
+            "tokens_max": 15603,
+            "tokens_per_char": 0.41262122303167464,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.006794788",
+            "input_cost_usd_mean": "0.0002191867096774193548387096774",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 31,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1041.774193548387,
+            "tokens_median": 260.0,
+            "tokens_p90": 2741.0,
+            "tokens_p95": 2759.0,
+            "tokens_max": 10353,
+            "tokens_per_char": 0.3020171886543659,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.092848125",
+            "input_cost_usd_mean": "0.002995100806451612903225806452",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 31,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 1041.774193548387,
+            "tokens_median": 260.0,
+            "tokens_p90": 2741.0,
+            "tokens_p95": 2759.0,
+            "tokens_max": 10353,
+            "tokens_per_char": 0.3020171886543659,
+            "instruction_share_of_input_mean": 0.0,
+            "input_cost_usd_total": "0.1776225",
+            "input_cost_usd_mean": "0.005729758064516129032258064516",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 0,
+          "distinct_instruction_texts": 0,
+          "cases_sharing_instructions": 0,
+          "share_sharing": null
+        }
+      },
+      {
+        "dimension": "retrieved",
+        "value": "yes",
+        "n": 71,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 71,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5987.267605633803,
+            "tokens_median": 2163.0,
+            "tokens_p90": 3199.0,
+            "tokens_p95": 12149.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3209204183857196,
+            "instruction_share_of_input_mean": 0.6168043485435245,
+            "input_cost_usd_total": "0.023380280",
+            "input_cost_usd_mean": "0.0003292997183098591549295774648",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 71,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5987.267605633803,
+            "tokens_median": 2163.0,
+            "tokens_p90": 3199.0,
+            "tokens_p95": 12149.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3209204183857196,
+            "instruction_share_of_input_mean": 0.6168043485435245,
+            "input_cost_usd_total": "0.04676056",
+            "input_cost_usd_mean": "0.0006585994366197183098591549296",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 71,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5987.267605633803,
+            "tokens_median": 2163.0,
+            "tokens_p90": 3199.0,
+            "tokens_p95": 12149.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3209204183857196,
+            "instruction_share_of_input_mean": 0.6168043485435245,
+            "input_cost_usd_total": "0.070140840",
+            "input_cost_usd_mean": "0.0009878991549295774647887323944",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 71,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 6557.929577464789,
+            "tokens_median": 2468.0,
+            "tokens_p90": 3627.0,
+            "tokens_p95": 13305.5,
+            "tokens_max": 90990,
+            "tokens_per_char": 0.35150817407322127,
+            "instruction_share_of_input_mean": 0.6183766477908763,
+            "input_cost_usd_total": "0.076826145",
+            "input_cost_usd_mean": "0.001082058380281690140845070423",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 71,
+            "content_fidelity": "approximation",
+            "tokens_mean": 4668.211267605634,
+            "tokens_median": 1636.0,
+            "tokens_p90": 2455.0,
+            "tokens_p95": 8493.0,
+            "tokens_max": 68353,
+            "tokens_per_char": 0.250218365336343,
+            "instruction_share_of_input_mean": 0.6381956958934507,
+            "input_cost_usd_total": "0.07291746",
+            "input_cost_usd_mean": "0.001027006478873239436619718310",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 71,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 8410.718309859154,
+            "tokens_median": 3699.0,
+            "tokens_p90": 5448.0,
+            "tokens_p95": 17086.0,
+            "tokens_max": 106010,
+            "tokens_per_char": 0.45081853972663755,
+            "instruction_share_of_input_mean": 0.628256359569504,
+            "input_cost_usd_total": "0.091962794",
+            "input_cost_usd_mean": "0.001295250619718309859154929577",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 71,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5987.267605633803,
+            "tokens_median": 2163.0,
+            "tokens_p90": 3199.0,
+            "tokens_p95": 12149.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3209204183857196,
+            "instruction_share_of_input_mean": 0.6168043485435245,
+            "input_cost_usd_total": "1.222151000",
+            "input_cost_usd_mean": "0.01721339436619718309859154930",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 71,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5987.267605633803,
+            "tokens_median": 2163.0,
+            "tokens_p90": 3199.0,
+            "tokens_p95": 12149.0,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.3209204183857196,
+            "instruction_share_of_input_mean": 0.6168043485435245,
+            "input_cost_usd_total": "2.3380280",
+            "input_cost_usd_mean": "0.03292997183098591549295774648",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 71,
+          "distinct_instruction_texts": 19,
+          "cases_sharing_instructions": 65,
+          "share_sharing": 0.9154929577464789
+        }
+      },
+      {
+        "dimension": "turn_depth",
+        "value": "first",
+        "n": 100,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 100,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4318.95,
+            "tokens_median": 870.5,
+            "tokens_p90": 3835.7000000000016,
+            "tokens_p95": 21517.249999999978,
+            "tokens_max": 85419,
+            "tokens_per_char": 0.33299871162933786,
+            "instruction_share_of_input_mean": 0.789456407325384,
+            "input_cost_usd_total": "0.023754225",
+            "input_cost_usd_mean": "0.00023754225",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 100,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4318.95,
+            "tokens_median": 870.5,
+            "tokens_p90": 3835.7000000000016,
+            "tokens_p95": 21517.249999999978,
+            "tokens_max": 85419,
+            "tokens_per_char": 0.33299871162933786,
+            "instruction_share_of_input_mean": 0.789456407325384,
+            "input_cost_usd_total": "0.04750845",
+            "input_cost_usd_mean": "0.0004750845",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 100,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4318.95,
+            "tokens_median": 870.5,
+            "tokens_p90": 3835.7000000000016,
+            "tokens_p95": 21517.249999999978,
+            "tokens_max": 85419,
+            "tokens_per_char": 0.33299871162933786,
+            "instruction_share_of_input_mean": 0.789456407325384,
+            "input_cost_usd_total": "0.071262675",
+            "input_cost_usd_mean": "0.00071262675",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 100,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4744.47,
+            "tokens_median": 928.0,
+            "tokens_p90": 4363.200000000002,
+            "tokens_p95": 23892.399999999976,
+            "tokens_max": 92456,
+            "tokens_per_char": 0.3658070589759188,
+            "instruction_share_of_input_mean": 0.7638952953628454,
+            "input_cost_usd_total": "0.078283755",
+            "input_cost_usd_mean": "0.00078283755",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 100,
+            "content_fidelity": "approximation",
+            "tokens_mean": 3243.41,
+            "tokens_median": 915.0,
+            "tokens_p90": 3086.400000000001,
+            "tokens_p95": 16387.94999999999,
+            "tokens_max": 68250,
+            "tokens_per_char": 0.2500726684230451,
+            "instruction_share_of_input_mean": 0.8254668383628878,
+            "input_cost_usd_total": "0.07135502",
+            "input_cost_usd_mean": "0.0007135502",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 100,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5905.32,
+            "tokens_median": 1308.5,
+            "tokens_p90": 5781.000000000001,
+            "tokens_p95": 29978.099999999973,
+            "tokens_max": 117691,
+            "tokens_per_char": 0.45531065461720127,
+            "instruction_share_of_input_mean": 0.7874829865787173,
+            "input_cost_usd_total": "0.090941928",
+            "input_cost_usd_mean": "0.00090941928",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 100,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4318.95,
+            "tokens_median": 870.5,
+            "tokens_p90": 3835.7000000000016,
+            "tokens_p95": 21517.249999999978,
+            "tokens_max": 85419,
+            "tokens_per_char": 0.33299871162933786,
+            "instruction_share_of_input_mean": 0.789456407325384,
+            "input_cost_usd_total": "1.241698125",
+            "input_cost_usd_mean": "0.01241698125",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 100,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4318.95,
+            "tokens_median": 870.5,
+            "tokens_p90": 3835.7000000000016,
+            "tokens_p95": 21517.249999999978,
+            "tokens_max": 85419,
+            "tokens_per_char": 0.33299871162933786,
+            "instruction_share_of_input_mean": 0.789456407325384,
+            "input_cost_usd_total": "2.3754225",
+            "input_cost_usd_mean": "0.023754225",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 93,
+          "distinct_instruction_texts": 77,
+          "cases_sharing_instructions": 26,
+          "share_sharing": 0.27956989247311825
+        }
+      },
+      {
+        "dimension": "turn_depth",
+        "value": "later",
+        "n": 365,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": null,
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 365,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3742.06301369863,
+            "tokens_median": 1503.0,
+            "tokens_p90": 4173.4,
+            "tokens_p95": 18601.6000000001,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33198354292758847,
+            "instruction_share_of_input_mean": 0.4812353660100355,
+            "input_cost_usd_total": "0.075121915",
+            "input_cost_usd_mean": "0.0002058134657534246575342465753",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 365,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3742.06301369863,
+            "tokens_median": 1503.0,
+            "tokens_p90": 4173.4,
+            "tokens_p95": 18601.6000000001,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33198354292758847,
+            "instruction_share_of_input_mean": 0.4812353660100355,
+            "input_cost_usd_total": "0.15024383",
+            "input_cost_usd_mean": "0.0004116269315068493150684931507",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 365,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3742.06301369863,
+            "tokens_median": 1503.0,
+            "tokens_p90": 4173.4,
+            "tokens_p95": 18601.6000000001,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33198354292758847,
+            "instruction_share_of_input_mean": 0.4812353660100355,
+            "input_cost_usd_total": "0.225365745",
+            "input_cost_usd_mean": "0.0006174403972602739726027397260",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 365,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4119.306849315069,
+            "tokens_median": 1667.0,
+            "tokens_p90": 4773.6,
+            "tokens_p95": 20265.2000000001,
+            "tokens_max": 92480,
+            "tokens_per_char": 0.36545137728448585,
+            "instruction_share_of_input_mean": 0.46965572033935876,
+            "input_cost_usd_total": "0.248085255",
+            "input_cost_usd_mean": "0.0006796856301369863013698630137",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 365,
+            "content_fidelity": "approximation",
+            "tokens_mean": 2821.8109589041096,
+            "tokens_median": 1323.0,
+            "tokens_p90": 3313.6000000000004,
+            "tokens_p95": 13079.000000000047,
+            "tokens_max": 68353,
+            "tokens_per_char": 0.25034180241742116,
+            "instruction_share_of_input_mean": 0.539606588960192,
+            "input_cost_usd_total": "0.22659142",
+            "input_cost_usd_mean": "0.0006207984109589041095890410959",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 365,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5214.635616438356,
+            "tokens_median": 2046.0,
+            "tokens_p90": 6524.6,
+            "tokens_p95": 25357.200000000114,
+            "tokens_max": 117733,
+            "tokens_per_char": 0.4626253488207604,
+            "instruction_share_of_input_mean": 0.4537336955125059,
+            "input_cost_usd_total": "0.293114668",
+            "input_cost_usd_mean": "0.0008030538849315068493150684932",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 365,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3742.06301369863,
+            "tokens_median": 1503.0,
+            "tokens_p90": 4173.4,
+            "tokens_p95": 18601.6000000001,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33198354292758847,
+            "instruction_share_of_input_mean": 0.4812353660100355,
+            "input_cost_usd_total": "3.926827375",
+            "input_cost_usd_mean": "0.01075843116438356164383561644",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 365,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3742.06301369863,
+            "tokens_median": 1503.0,
+            "tokens_p90": 4173.4,
+            "tokens_p95": 18601.6000000001,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33198354292758847,
+            "instruction_share_of_input_mean": 0.4812353660100355,
+            "input_cost_usd_total": "7.5121915",
+            "input_cost_usd_mean": "0.02058134657534246575342465753",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 307,
+          "distinct_instruction_texts": 72,
+          "cases_sharing_instructions": 288,
+          "share_sharing": 0.9381107491856677
+        }
+      },
+      {
+        "dimension": "all",
+        "value": "all",
+        "n": 465,
+        "label": "descriptive",
+        "label_reason": "min_n_unset",
+        "note": "dominated_by_persian",
+        "models": {
+          "gpt-5-nano": {
+            "model_id": "gpt-5-nano",
+            "n": 465,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3866.1247311827956,
+            "tokens_median": 1416.0,
+            "tokens_p90": 4150.4000000000015,
+            "tokens_p95": 20627.399999999983,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33222686402994084,
+            "instruction_share_of_input_mean": 0.5475194609165621,
+            "input_cost_usd_total": "0.098876140",
+            "input_cost_usd_mean": "0.0002126368602150537634408602151",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4.1-nano": {
+            "model_id": "gpt-4.1-nano",
+            "n": 465,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3866.1247311827956,
+            "tokens_median": 1416.0,
+            "tokens_p90": 4150.4000000000015,
+            "tokens_p95": 20627.399999999983,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33222686402994084,
+            "instruction_share_of_input_mean": 0.5475194609165621,
+            "input_cost_usd_total": "0.19775228",
+            "input_cost_usd_mean": "0.0004252737204301075268817204301",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-4o-mini": {
+            "model_id": "gpt-4o-mini",
+            "n": 465,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3866.1247311827956,
+            "tokens_median": 1416.0,
+            "tokens_p90": 4150.4000000000015,
+            "tokens_p95": 20627.399999999983,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33222686402994084,
+            "instruction_share_of_input_mean": 0.5475194609165621,
+            "input_cost_usd_total": "0.296628420",
+            "input_cost_usd_mean": "0.0006379105806451612903225806452",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "deepseek-v4-flash": {
+            "model_id": "deepseek-v4-flash",
+            "n": 465,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 4253.750537634409,
+            "tokens_median": 1534.0,
+            "tokens_p90": 4760.6,
+            "tokens_p95": 22347.199999999983,
+            "tokens_max": 92480,
+            "tokens_per_char": 0.3655366289880666,
+            "instruction_share_of_input_mean": 0.532933048301399,
+            "input_cost_usd_total": "0.326369010",
+            "input_cost_usd_mean": "0.0007018688387096774193548387097",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "grok-4-1-fast": {
+            "model_id": "grok-4-1-fast",
+            "n": 465,
+            "content_fidelity": "approximation",
+            "tokens_mean": 2912.4774193548387,
+            "tokens_median": 1247.0,
+            "tokens_p90": 3254.4000000000033,
+            "tokens_p95": 14133.199999999988,
+            "tokens_max": 68353,
+            "tokens_per_char": 0.2502772949320355,
+            "instruction_share_of_input_mean": 0.6010819114123847,
+            "input_cost_usd_total": "0.29794644",
+            "input_cost_usd_mean": "0.0006407450322580645161290322581",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "mimo-v2.5": {
+            "model_id": "mimo-v2.5",
+            "n": 465,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 5363.169892473118,
+            "tokens_median": 1908.0,
+            "tokens_p90": 6402.400000000007,
+            "tokens_p95": 27830.799999999974,
+            "tokens_max": 117733,
+            "tokens_per_char": 0.46087212351553425,
+            "instruction_share_of_input_mean": 0.5255077366020137,
+            "input_cost_usd_total": "0.384056596",
+            "input_cost_usd_mean": "0.0008259281634408602150537634409",
+            "cases_in_long_tier": null,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.4": {
+            "model_id": "gpt-5.4",
+            "n": 465,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3866.1247311827956,
+            "tokens_median": 1416.0,
+            "tokens_p90": 4150.4000000000015,
+            "tokens_p95": 20627.399999999983,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33222686402994084,
+            "instruction_share_of_input_mean": 0.5475194609165621,
+            "input_cost_usd_total": "5.168525500",
+            "input_cost_usd_mean": "0.01111510860215053763440860215",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          },
+          "gpt-5.5": {
+            "model_id": "gpt-5.5",
+            "n": 465,
+            "content_fidelity": "exact_local",
+            "tokens_mean": 3866.1247311827956,
+            "tokens_median": 1416.0,
+            "tokens_p90": 4150.4000000000015,
+            "tokens_p95": 20627.399999999983,
+            "tokens_max": 85591,
+            "tokens_per_char": 0.33222686402994084,
+            "instruction_share_of_input_mean": 0.5475194609165621,
+            "input_cost_usd_total": "9.8876140",
+            "input_cost_usd_mean": "0.02126368602150537634408602151",
+            "cases_in_long_tier": 0,
+            "cost_label": "lower_bound_input_only_uncached",
+            "provenance": "estimated"
+          }
+        },
+        "exact_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "gpt-4o-mini",
+          "deepseek-v4-flash",
+          "mimo-v2.5",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "reference_ranking": [
+          "gpt-5-nano",
+          "gpt-4.1-nano",
+          "mimo-v2.5",
+          "deepseek-v4-flash",
+          "gpt-4o-mini",
+          "gpt-5.4",
+          "gpt-5.5"
+        ],
+        "flipped_pairs": [
+          [
+            "deepseek-v4-flash",
+            "gpt-4o-mini"
+          ],
+          [
+            "deepseek-v4-flash",
+            "mimo-v2.5"
+          ],
+          [
+            "gpt-4o-mini",
+            "mimo-v2.5"
+          ]
+        ],
+        "excluded_from_ranking": [
+          "grok-4-1-fast"
+        ],
+        "instruction_reuse": {
+          "cases_with_instructions": 400,
+          "distinct_instruction_texts": 77,
+          "cases_sharing_instructions": 395,
+          "share_sharing": 0.9875
+        }
+      }
+    ],
+    "length_buckets": {
+      "fa": {
+        "n": 421,
+        "char_bounds": [
+          80,
+          400,
+          2000
+        ],
+        "per_tokenizer": [
+          {
+            "ref": "gpt-5-nano",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 342,
+                "tokens_median": 8.0,
+                "tokens_p95": 25,
+                "tokens_per_char": 0.3765340061933708
+              },
+              {
+                "bucket": 1,
+                "n": 74,
+                "tokens_median": 44.5,
+                "tokens_p95": 102,
+                "tokens_per_char": 0.36093592907412486
+              },
+              {
+                "bucket": 2,
+                "n": 3,
+                "tokens_median": 345,
+                "tokens_p95": 492,
+                "tokens_per_char": 0.342080889163322
+              },
+              {
+                "bucket": 3,
+                "n": 2,
+                "tokens_median": 1504.5,
+                "tokens_p95": 1505,
+                "tokens_per_char": 0.33131468839462674
+              }
+            ],
+            "token_bounds": [
+              29,
+              271,
+              1504
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0332541567695962
+          },
+          {
+            "ref": "gpt-4.1-nano",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 342,
+                "tokens_median": 8.0,
+                "tokens_p95": 25,
+                "tokens_per_char": 0.3765340061933708
+              },
+              {
+                "bucket": 1,
+                "n": 74,
+                "tokens_median": 44.5,
+                "tokens_p95": 102,
+                "tokens_per_char": 0.36093592907412486
+              },
+              {
+                "bucket": 2,
+                "n": 3,
+                "tokens_median": 345,
+                "tokens_p95": 492,
+                "tokens_per_char": 0.342080889163322
+              },
+              {
+                "bucket": 3,
+                "n": 2,
+                "tokens_median": 1504.5,
+                "tokens_p95": 1505,
+                "tokens_per_char": 0.33131468839462674
+              }
+            ],
+            "token_bounds": [
+              29,
+              271,
+              1504
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0332541567695962
+          },
+          {
+            "ref": "gpt-4o-mini",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 342,
+                "tokens_median": 8.0,
+                "tokens_p95": 25,
+                "tokens_per_char": 0.3765340061933708
+              },
+              {
+                "bucket": 1,
+                "n": 74,
+                "tokens_median": 44.5,
+                "tokens_p95": 102,
+                "tokens_per_char": 0.36093592907412486
+              },
+              {
+                "bucket": 2,
+                "n": 3,
+                "tokens_median": 345,
+                "tokens_p95": 492,
+                "tokens_per_char": 0.342080889163322
+              },
+              {
+                "bucket": 3,
+                "n": 2,
+                "tokens_median": 1504.5,
+                "tokens_p95": 1505,
+                "tokens_per_char": 0.33131468839462674
+              }
+            ],
+            "token_bounds": [
+              29,
+              271,
+              1504
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0332541567695962
+          },
+          {
+            "ref": "deepseek-v4-flash",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 342,
+                "tokens_median": 8.5,
+                "tokens_p95": 29,
+                "tokens_per_char": 0.42218144282601217
+              },
+              {
+                "bucket": 1,
+                "n": 74,
+                "tokens_median": 51.0,
+                "tokens_p95": 105,
+                "tokens_per_char": 0.40581299698382234
+              },
+              {
+                "bucket": 2,
+                "n": 3,
+                "tokens_median": 380,
+                "tokens_p95": 566,
+                "tokens_per_char": 0.3843778944118555
+              },
+              {
+                "bucket": 3,
+                "n": 2,
+                "tokens_median": 1765.5,
+                "tokens_p95": 1802,
+                "tokens_per_char": 0.388791015194891
+              }
+            ],
+            "token_bounds": [
+              31,
+              299,
+              1729
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.030878859857482184
+          },
+          {
+            "ref": "grok-4-1-fast",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 342,
+                "tokens_median": 5.0,
+                "tokens_p95": 17,
+                "tokens_per_char": 0.2628741828191306
+              },
+              {
+                "bucket": 1,
+                "n": 74,
+                "tokens_median": 31.0,
+                "tokens_p95": 71,
+                "tokens_per_char": 0.2524449319075039
+              },
+              {
+                "bucket": 2,
+                "n": 3,
+                "tokens_median": 258,
+                "tokens_p95": 364,
+                "tokens_per_char": 0.2503859215807348
+              },
+              {
+                "bucket": 3,
+                "n": 2,
+                "tokens_median": 1135.5,
+                "tokens_p95": 1167,
+                "tokens_per_char": 0.2500550539528738
+              }
+            ],
+            "token_bounds": [
+              20,
+              189,
+              1104
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.011876484560570071
+          },
+          {
+            "ref": "mimo-v2.5",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 342,
+                "tokens_median": 11.0,
+                "tokens_p95": 40,
+                "tokens_per_char": 0.577130404862943
+              },
+              {
+                "bucket": 1,
+                "n": 74,
+                "tokens_median": 71.5,
+                "tokens_p95": 161,
+                "tokens_per_char": 0.5739877524906316
+              },
+              {
+                "bucket": 2,
+                "n": 3,
+                "tokens_median": 595,
+                "tokens_p95": 805,
+                "tokens_per_char": 0.5634455078728002
+              },
+              {
+                "bucket": 3,
+                "n": 2,
+                "tokens_median": 2545.5,
+                "tokens_p95": 2620,
+                "tokens_per_char": 0.560559348161198
+              }
+            ],
+            "token_bounds": [
+              46,
+              425,
+              2471
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.030878859857482184
+          },
+          {
+            "ref": "gpt-5.4",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 342,
+                "tokens_median": 8.0,
+                "tokens_p95": 25,
+                "tokens_per_char": 0.3765340061933708
+              },
+              {
+                "bucket": 1,
+                "n": 74,
+                "tokens_median": 44.5,
+                "tokens_p95": 102,
+                "tokens_per_char": 0.36093592907412486
+              },
+              {
+                "bucket": 2,
+                "n": 3,
+                "tokens_median": 345,
+                "tokens_p95": 492,
+                "tokens_per_char": 0.342080889163322
+              },
+              {
+                "bucket": 3,
+                "n": 2,
+                "tokens_median": 1504.5,
+                "tokens_p95": 1505,
+                "tokens_per_char": 0.33131468839462674
+              }
+            ],
+            "token_bounds": [
+              29,
+              271,
+              1504
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0332541567695962
+          },
+          {
+            "ref": "gpt-5.5",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 342,
+                "tokens_median": 8.0,
+                "tokens_p95": 25,
+                "tokens_per_char": 0.3765340061933708
+              },
+              {
+                "bucket": 1,
+                "n": 74,
+                "tokens_median": 44.5,
+                "tokens_p95": 102,
+                "tokens_per_char": 0.36093592907412486
+              },
+              {
+                "bucket": 2,
+                "n": 3,
+                "tokens_median": 345,
+                "tokens_p95": 492,
+                "tokens_per_char": 0.342080889163322
+              },
+              {
+                "bucket": 3,
+                "n": 2,
+                "tokens_median": 1504.5,
+                "tokens_p95": 1505,
+                "tokens_per_char": 0.33131468839462674
+              }
+            ],
+            "token_bounds": [
+              29,
+              271,
+              1504
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0332541567695962
+          }
+        ],
+        "provenance": "estimated"
+      },
+      "en": {
+        "n": 23,
+        "char_bounds": [
+          80,
+          400,
+          2000
+        ],
+        "per_tokenizer": [
+          {
+            "ref": "gpt-5-nano",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 10,
+                "tokens_median": 3.0,
+                "tokens_p95": 9,
+                "tokens_per_char": 0.22162162162162163
+              },
+              {
+                "bucket": 1,
+                "n": 5,
+                "tokens_median": 53,
+                "tokens_p95": 68,
+                "tokens_per_char": 0.17391304347826086
+              },
+              {
+                "bucket": 2,
+                "n": 5,
+                "tokens_median": 83,
+                "tokens_p95": 415,
+                "tokens_per_char": 0.20151474168244524
+              },
+              {
+                "bucket": 3,
+                "n": 3,
+                "tokens_median": 945,
+                "tokens_p95": 1112,
+                "tokens_per_char": 0.23503325942350334
+              }
+            ],
+            "token_bounds": [
+              45,
+              79,
+              911
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-4.1-nano",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 10,
+                "tokens_median": 3.0,
+                "tokens_p95": 9,
+                "tokens_per_char": 0.22162162162162163
+              },
+              {
+                "bucket": 1,
+                "n": 5,
+                "tokens_median": 53,
+                "tokens_p95": 68,
+                "tokens_per_char": 0.17391304347826086
+              },
+              {
+                "bucket": 2,
+                "n": 5,
+                "tokens_median": 83,
+                "tokens_p95": 415,
+                "tokens_per_char": 0.20151474168244524
+              },
+              {
+                "bucket": 3,
+                "n": 3,
+                "tokens_median": 945,
+                "tokens_p95": 1112,
+                "tokens_per_char": 0.23503325942350334
+              }
+            ],
+            "token_bounds": [
+              45,
+              79,
+              911
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-4o-mini",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 10,
+                "tokens_median": 3.0,
+                "tokens_p95": 9,
+                "tokens_per_char": 0.22162162162162163
+              },
+              {
+                "bucket": 1,
+                "n": 5,
+                "tokens_median": 53,
+                "tokens_p95": 68,
+                "tokens_per_char": 0.17391304347826086
+              },
+              {
+                "bucket": 2,
+                "n": 5,
+                "tokens_median": 83,
+                "tokens_p95": 415,
+                "tokens_per_char": 0.20151474168244524
+              },
+              {
+                "bucket": 3,
+                "n": 3,
+                "tokens_median": 945,
+                "tokens_p95": 1112,
+                "tokens_per_char": 0.23503325942350334
+              }
+            ],
+            "token_bounds": [
+              45,
+              79,
+              911
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "deepseek-v4-flash",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 10,
+                "tokens_median": 4.0,
+                "tokens_p95": 9,
+                "tokens_per_char": 0.24864864864864866
+              },
+              {
+                "bucket": 1,
+                "n": 5,
+                "tokens_median": 55,
+                "tokens_p95": 69,
+                "tokens_per_char": 0.17519181585677748
+              },
+              {
+                "bucket": 2,
+                "n": 5,
+                "tokens_median": 89,
+                "tokens_p95": 431,
+                "tokens_per_char": 0.20962942926697323
+              },
+              {
+                "bucket": 3,
+                "n": 3,
+                "tokens_median": 1003,
+                "tokens_p95": 1225,
+                "tokens_per_char": 0.2538010769718087
+              }
+            ],
+            "token_bounds": [
+              45,
+              77,
+              977
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "grok-4-1-fast",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 10,
+                "tokens_median": 2.0,
+                "tokens_p95": 12,
+                "tokens_per_char": 0.2702702702702703
+              },
+              {
+                "bucket": 1,
+                "n": 5,
+                "tokens_median": 72,
+                "tokens_p95": 100,
+                "tokens_per_char": 0.25127877237851665
+              },
+              {
+                "bucket": 2,
+                "n": 5,
+                "tokens_median": 110,
+                "tokens_p95": 488,
+                "tokens_per_char": 0.25047335677576416
+              },
+              {
+                "bucket": 3,
+                "n": 3,
+                "tokens_median": 1043,
+                "tokens_p95": 1137,
+                "tokens_per_char": 0.25007918910357935
+              }
+            ],
+            "token_bounds": [
+              68,
+              106,
+              978
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "mimo-v2.5",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 10,
+                "tokens_median": 3.0,
+                "tokens_p95": 9,
+                "tokens_per_char": 0.22162162162162163
+              },
+              {
+                "bucket": 1,
+                "n": 5,
+                "tokens_median": 53,
+                "tokens_p95": 67,
+                "tokens_per_char": 0.17263427109974425
+              },
+              {
+                "bucket": 2,
+                "n": 5,
+                "tokens_median": 85,
+                "tokens_p95": 434,
+                "tokens_per_char": 0.20800649175006763
+              },
+              {
+                "bucket": 3,
+                "n": 3,
+                "tokens_median": 1023,
+                "tokens_p95": 1257,
+                "tokens_per_char": 0.2583940449794108
+              }
+            ],
+            "token_bounds": [
+              45,
+              79,
+              983
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-5.4",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 10,
+                "tokens_median": 3.0,
+                "tokens_p95": 9,
+                "tokens_per_char": 0.22162162162162163
+              },
+              {
+                "bucket": 1,
+                "n": 5,
+                "tokens_median": 53,
+                "tokens_p95": 68,
+                "tokens_per_char": 0.17391304347826086
+              },
+              {
+                "bucket": 2,
+                "n": 5,
+                "tokens_median": 83,
+                "tokens_p95": 415,
+                "tokens_per_char": 0.20151474168244524
+              },
+              {
+                "bucket": 3,
+                "n": 3,
+                "tokens_median": 945,
+                "tokens_p95": 1112,
+                "tokens_per_char": 0.23503325942350334
+              }
+            ],
+            "token_bounds": [
+              45,
+              79,
+              911
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-5.5",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 10,
+                "tokens_median": 3.0,
+                "tokens_p95": 9,
+                "tokens_per_char": 0.22162162162162163
+              },
+              {
+                "bucket": 1,
+                "n": 5,
+                "tokens_median": 53,
+                "tokens_p95": 68,
+                "tokens_per_char": 0.17391304347826086
+              },
+              {
+                "bucket": 2,
+                "n": 5,
+                "tokens_median": 83,
+                "tokens_p95": 415,
+                "tokens_per_char": 0.20151474168244524
+              },
+              {
+                "bucket": 3,
+                "n": 3,
+                "tokens_median": 945,
+                "tokens_p95": 1112,
+                "tokens_per_char": 0.23503325942350334
+              }
+            ],
+            "token_bounds": [
+              45,
+              79,
+              911
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          }
+        ],
+        "provenance": "estimated"
+      },
+      "mixed": {
+        "n": 19,
+        "char_bounds": [
+          80,
+          400,
+          2000
+        ],
+        "per_tokenizer": [
+          {
+            "ref": "gpt-5-nano",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 5,
+                "tokens_median": 8,
+                "tokens_p95": 13,
+                "tokens_per_char": 0.3939393939393939
+              },
+              {
+                "bucket": 1,
+                "n": 2,
+                "tokens_median": 36.5,
+                "tokens_p95": 40,
+                "tokens_per_char": 0.3686868686868687
+              },
+              {
+                "bucket": 2,
+                "n": 12,
+                "tokens_median": 428.0,
+                "tokens_p95": 568,
+                "tokens_per_char": 0.31035590389310036
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              33,
+              180,
+              569
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-4.1-nano",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 5,
+                "tokens_median": 8,
+                "tokens_p95": 13,
+                "tokens_per_char": 0.3939393939393939
+              },
+              {
+                "bucket": 1,
+                "n": 2,
+                "tokens_median": 36.5,
+                "tokens_p95": 40,
+                "tokens_per_char": 0.3686868686868687
+              },
+              {
+                "bucket": 2,
+                "n": 12,
+                "tokens_median": 428.0,
+                "tokens_p95": 568,
+                "tokens_per_char": 0.31035590389310036
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              33,
+              180,
+              569
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-4o-mini",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 5,
+                "tokens_median": 8,
+                "tokens_p95": 13,
+                "tokens_per_char": 0.3939393939393939
+              },
+              {
+                "bucket": 1,
+                "n": 2,
+                "tokens_median": 36.5,
+                "tokens_p95": 40,
+                "tokens_per_char": 0.3686868686868687
+              },
+              {
+                "bucket": 2,
+                "n": 12,
+                "tokens_median": 428.0,
+                "tokens_p95": 568,
+                "tokens_per_char": 0.31035590389310036
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              33,
+              180,
+              569
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "deepseek-v4-flash",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 5,
+                "tokens_median": 8,
+                "tokens_p95": 15,
+                "tokens_per_char": 0.41414141414141414
+              },
+              {
+                "bucket": 1,
+                "n": 2,
+                "tokens_median": 40.0,
+                "tokens_p95": 41,
+                "tokens_per_char": 0.40404040404040403
+              },
+              {
+                "bucket": 2,
+                "n": 12,
+                "tokens_median": 475.5,
+                "tokens_p95": 619,
+                "tokens_per_char": 0.33688808942567133
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              39,
+              198,
+              620
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "grok-4-1-fast",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 5,
+                "tokens_median": 6,
+                "tokens_p95": 9,
+                "tokens_per_char": 0.2727272727272727
+              },
+              {
+                "bucket": 1,
+                "n": 2,
+                "tokens_median": 25.0,
+                "tokens_p95": 26,
+                "tokens_per_char": 0.25252525252525254
+              },
+              {
+                "bucket": 2,
+                "n": 12,
+                "tokens_median": 357.5,
+                "tokens_p95": 450,
+                "tokens_per_char": 0.2503533341899011
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              24,
+              110,
+              482
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "mimo-v2.5",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 5,
+                "tokens_median": 10,
+                "tokens_p95": 20,
+                "tokens_per_char": 0.5656565656565656
+              },
+              {
+                "bucket": 1,
+                "n": 2,
+                "tokens_median": 52.5,
+                "tokens_p95": 55,
+                "tokens_per_char": 0.5303030303030303
+              },
+              {
+                "bucket": 2,
+                "n": 12,
+                "tokens_median": 535.5,
+                "tokens_p95": 718,
+                "tokens_per_char": 0.40466401130669405
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              50,
+              266,
+              719
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-5.4",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 5,
+                "tokens_median": 8,
+                "tokens_p95": 13,
+                "tokens_per_char": 0.3939393939393939
+              },
+              {
+                "bucket": 1,
+                "n": 2,
+                "tokens_median": 36.5,
+                "tokens_p95": 40,
+                "tokens_per_char": 0.3686868686868687
+              },
+              {
+                "bucket": 2,
+                "n": 12,
+                "tokens_median": 428.0,
+                "tokens_p95": 568,
+                "tokens_per_char": 0.31035590389310036
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              33,
+              180,
+              569
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-5.5",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 5,
+                "tokens_median": 8,
+                "tokens_p95": 13,
+                "tokens_per_char": 0.3939393939393939
+              },
+              {
+                "bucket": 1,
+                "n": 2,
+                "tokens_median": 36.5,
+                "tokens_p95": 40,
+                "tokens_per_char": 0.3686868686868687
+              },
+              {
+                "bucket": 2,
+                "n": 12,
+                "tokens_median": 428.0,
+                "tokens_p95": 568,
+                "tokens_per_char": 0.31035590389310036
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              33,
+              180,
+              569
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          }
+        ],
+        "provenance": "estimated"
+      },
+      "undetermined": {
+        "n": 2,
+        "char_bounds": [
+          80,
+          400,
+          2000
+        ],
+        "per_tokenizer": [
+          {
+            "ref": "gpt-5-nano",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 2,
+                "tokens_median": 4.0,
+                "tokens_p95": 4,
+                "tokens_per_char": 2.0
+              },
+              {
+                "bucket": 1,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 2,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              5,
+              5,
+              5
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-4.1-nano",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 2,
+                "tokens_median": 4.0,
+                "tokens_p95": 4,
+                "tokens_per_char": 2.0
+              },
+              {
+                "bucket": 1,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 2,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              5,
+              5,
+              5
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-4o-mini",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 2,
+                "tokens_median": 4.0,
+                "tokens_p95": 4,
+                "tokens_per_char": 2.0
+              },
+              {
+                "bucket": 1,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 2,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              5,
+              5,
+              5
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "deepseek-v4-flash",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 2,
+                "tokens_median": 4.0,
+                "tokens_p95": 4,
+                "tokens_per_char": 2.0
+              },
+              {
+                "bucket": 1,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 2,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              5,
+              5,
+              5
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "grok-4-1-fast",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 2,
+                "tokens_median": 1.0,
+                "tokens_p95": 1,
+                "tokens_per_char": 0.5
+              },
+              {
+                "bucket": 1,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 2,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              2,
+              2,
+              2
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "mimo-v2.5",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 2,
+                "tokens_median": 2.0,
+                "tokens_p95": 2,
+                "tokens_per_char": 1.0
+              },
+              {
+                "bucket": 1,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 2,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              3,
+              3,
+              3
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-5.4",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 2,
+                "tokens_median": 4.0,
+                "tokens_p95": 4,
+                "tokens_per_char": 2.0
+              },
+              {
+                "bucket": 1,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 2,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              5,
+              5,
+              5
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          },
+          {
+            "ref": "gpt-5.5",
+            "buckets": [
+              {
+                "bucket": 0,
+                "n": 2,
+                "tokens_median": 4.0,
+                "tokens_p95": 4,
+                "tokens_per_char": 2.0
+              },
+              {
+                "bucket": 1,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 2,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              },
+              {
+                "bucket": 3,
+                "n": 0,
+                "tokens_median": null,
+                "tokens_p95": null,
+                "tokens_per_char": null
+              }
+            ],
+            "token_bounds": [
+              5,
+              5,
+              5
+            ],
+            "bounds_source": "rank_matched",
+            "bucket_change_share": 0.0
+          }
+        ],
+        "provenance": "estimated"
+      }
+    },
+    "price_age": {
+      "version": "prices-metis-2026-10-18-s75-g55",
+      "checked_on": "2026-10-18",
+      "newest_checked_on": "2026-10-18",
+      "effective_from": null,
+      "as_of": "2026-10-30",
+      "age_days": 12,
+      "max_age_days": null,
+      "state": "not_evaluated",
+      "reason": "max_age_unset",
+      "consequence": "max_age_days is unset, so staleness is not judged: every cost is computed from this table as it is and carries its version and check date, and nothing warns when prices may have changed."
+    },
+    "scenario_status": {
+      "no_output_scenarios_configured": 8,
+      "no_cache_scenarios_configured": 8
+    },
+    "assumptions": [
+      "assumed input: instructions, history, retrieved, message; no compression, attachments or structured input (A-16)",
+      "component order for prefix reasoning follows request_roles (A-55)",
+      "language is the placeholder detector (A-43), not validated",
+      "token counts are local estimates, not billed tokens; template framing is an approximation",
+      "costs are input-only, uncached lower bounds; no output, reasoning or cache scenario is set (E2)",
+      "sample-derived values are provisional (ADR-0008); no real recorded usage exists"
+    ]
+  }
+}

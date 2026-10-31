@@ -22,10 +22,10 @@ service = build_accounting_service(load_settings())
 result = service.account(request, "gpt-4o-mini", answer_text)
 
 # Brief §5: an estimate, never a call.
-premium = service.premium_estimate(request, answer_text, "gpt-5.4")
+premium = service.premium_estimate(request, answer_text, "gpt-5.5")
 
 # Brief §6: the savings decomposition of a served response.
-parts = service.decompose(request, final_response, premium_model_id="gpt-5.4")
+parts = service.decompose(request, final_response, premium_model_id="gpt-5.5")
 ```
 
 Provider-reported usage, when an adapter has it (Stage 7.5), is passed as `usage=` and wins over local counts. Inside the pipeline the same domain functions price every attempt, the avoided cost of a cache hit, and the spend guard's pre-call estimate.
@@ -41,6 +41,7 @@ Research checked on **2026-10-18**; re-verify at the next library upgrade or cat
 | `gpt-4o-mini` | `openai-o200k-base` | same | **exact_local** | same file: prefix `"gpt-4o-"` → `o200k_base`; also the OpenAI cookbook's example model. |
 | `gpt-5.4` (premium, never called) | `openai-o200k-base` | same | **exact_local** (by family mapping, A-53; accepted by the owner, Q-31, 2026-10-18) | tiktoken's `"gpt-5"` prefix covers `gpt-5.4`. OpenAI's gpt-5.4 model page names no tokenizer, and the claim can't be checked with a call (the model is never called). The premium cost is still labelled an estimate (§6). |
 | `deepseek-v4-flash` | `deepseek-v4` | Hugging Face `tokenizers` 0.23.2, the model's `tokenizer.json` | **exact_local** (A-54) | `deepseek-ai/DeepSeek-V4-Flash` on Hugging Face, MIT licence, revision `60d8d707…`, last modified 2026-06-22. The wrapper actually serves `deepseek-flash` (DeepSeek-V4.1-Flash-1017, A-58, [live check](../references/metis_wrapper_live_check.md)); its `tokenizer.json` (revision `1bae0e10…`) has the same vocabulary and merges, so content counts are unchanged. |
+| `gpt-5.5` (premium baseline since 2026-10-30, never called) | `openai-o200k-base` | same | **exact_local** (by family mapping, A-53, as for gpt-5.4; `tiktoken.encoding_name_for_model('gpt-5.5')` returned `o200k_base` on 2026-10-30) | unconfirmable by a call while the model is never called; confirm from provider-reported usage when it is first sampled (E4) |
 | `grok-4-1-fast` | `grok-approx` | characters ÷ 4 | **approximation** | No public Grok 4 tokenizer found (Hugging Face `xai-org` has Grok-1 and Grok-2 only; docs.x.ai names none). Grok-2's `tokenizer.tok.json` exists but belongs to another model generation in a custom format: not used. A `tokenize-text` API endpoint is described by third-party mirrors but was not found on docs.x.ai or in the Metis wrapper docs: not used. |
 | walking-skeleton models, unknown models | `approx-chars-div-4` | characters ÷ 4 | **approximation** | The sample EDA's heuristic. |
 
@@ -124,7 +125,7 @@ Every computed `Cost` carries `caveats` (`CostCaveat`), shown with the figure:
 
 ## 6. Premium-baseline estimate (brief §5)
 
-`AccountingService.premium_estimate` → `domain.accounting.baseline_estimate`. **No premium API call ever:** `gpt-5.4` is disabled in the catalogue, and nothing in this path calls a model.
+`AccountingService.premium_estimate` → `domain.accounting.baseline_estimate`. **No premium API call ever:** the premium model (`gpt-5.5` since ADR-0026) is disabled in the catalogue, and nothing in this path calls a model.
 - **Input:** the full, uncompressed request (instructions, history, every retrieved item, message), counted with the premium model's tokenizer, plus its chat framing. No provider cache.
 - **Output:** the answer actually served (by the cheap model, or from cache), re-counted with the premium tokenizer. Assumption: the same answer length.
 - **Labelled** `basis = baseline_estimate`, `baseline = "premium"`, with caveats: always `answer_length_assumed`; `reasoning_not_counted` (gpt-5.4 supports reasoning, so the estimate is a lower bound, though its default effort is "none" per OpenAI's page); `template_overhead_approximated`; the tier caveat when it applies.

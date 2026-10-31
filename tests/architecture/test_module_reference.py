@@ -52,7 +52,7 @@ def documented() -> dict[str, set[str]]:
 
 def modules() -> dict[str, Path]:
     return {
-        str(p.relative_to(SRC)): p
+        p.relative_to(SRC).as_posix(): p
         for p in SRC.rglob("*.py")
         if p.name != "__init__.py" and p.relative_to(SRC).parts[0] != "contracts"
     }

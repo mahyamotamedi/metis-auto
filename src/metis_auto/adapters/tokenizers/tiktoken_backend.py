@@ -1,7 +1,7 @@
 """tiktoken tokenizer (CMP-12): exact local counts for OpenAI models.
 
 Responsibility: count tokens with a named tiktoken encoding (``o200k_base``
-for gpt-5-nano, gpt-4.1-nano, gpt-4o-mini, gpt-5.4; token_accounting.md §2),
+for gpt-5-nano, gpt-4.1-nano, gpt-4o-mini, gpt-5.4, gpt-5.5; token_accounting.md §2),
 loaded **offline** from a pre-fetched, sha256-checked file. tiktoken reads its
 cache directory (``TIKTOKEN_CACHE_DIR``) for files named by the sha1 of their
 URL; the asset is stored in that layout, its hash is checked first, and the

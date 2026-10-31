@@ -26,16 +26,16 @@
 # whose [model_options] set thinking = "disabled" (wiring.from_settings);
 # "-lc" adds the evidence of the Demo A live check (same day; no count changed).
 
-version = "tokenizers-2026-10-19-demo-lc"
+version = "tokenizers-2026-10-30-g55"
 
-# --- OpenAI: gpt-5-nano, gpt-4.1-nano, gpt-4o-mini, gpt-5.4 -----------------
+# --- OpenAI: gpt-5-nano, gpt-4.1-nano, gpt-4o-mini, gpt-5.4, gpt-5.5 -----------------
 [[tokenizers]]
 ref = "openai-o200k-base"
 backend = "tiktoken"
 encoding = "o200k_base"
 fidelity = "exact_local"
 library = "tiktoken==0.14.0"
-evidence = { source = "tiktoken 0.14.0 (OpenAI's tokenizer library) tiktoken/model.py maps 'gpt-5' (MODEL_TO_ENCODING and prefix), 'gpt-4.1-' and 'gpt-4o-' to o200k_base; encoding_name_for_model() returns o200k_base for all four model IDs. OpenAI's gpt-5.4 model page names no tokenizer: for gpt-5.4 this rests on tiktoken's gpt-5 family mapping (A-53).", checked_on = 2026-10-18 }
+evidence = { source = "tiktoken 0.14.0 (OpenAI's tokenizer library) tiktoken/model.py maps 'gpt-5' (MODEL_TO_ENCODING and prefix), 'gpt-4.1-' and 'gpt-4o-' to o200k_base; encoding_name_for_model() returns o200k_base for all four model IDs and, checked 2026-10-30 with tiktoken 0.14.0, for gpt-5.5 (the 'gpt-5' prefix; unconfirmable by a call because gpt-5.5 is never called, as for gpt-5.4, A-53). OpenAI's gpt-5.4 model page names no tokenizer: for gpt-5.4 this rests on tiktoken's gpt-5 family mapping (A-53).", checked_on = 2026-10-18 }
 
 [tokenizers.asset]
 # tiktoken's own cache layout: the file name is sha1 of the URL, which lets
