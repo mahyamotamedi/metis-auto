@@ -102,7 +102,7 @@ class ReferenceSettings(ContractModel):
     the config hash by each file's version ID, not by its path."""
 
     catalogue: str = "reference/catalogue-metis-test.toml"
-    prices: str = "reference/prices-metis-2026-10-18.toml"
+    prices: str = "reference/prices-metis-2026-10-18-g55.toml"
     endpoints: str | None = "reference/endpoints-metis.toml"
     baselines: str | None = "reference/baselines.toml"
     tokenizers: str | None = "reference/tokenizers.toml"

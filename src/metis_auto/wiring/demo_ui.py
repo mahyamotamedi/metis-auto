@@ -55,7 +55,7 @@ SAVING_TERMS = frozenset(
     }
 )
 PREMIUM_CAVEATS = (
-    "The premium figure is an estimate for gpt-5.4, never a call: it assumes the "
+    "The premium figure is an estimate for gpt-5.5, never a call: it assumes the "
     "premium answer has the same length, and hidden reasoning is not counted "
     "(a lower bound)."
 )
@@ -416,7 +416,7 @@ def detail_sections(report: TurnReport) -> list[tuple[str, list[tuple[str, str]]
             [
                 ("cost", report.cost),
                 ("cost caveats", ", ".join(report.cost_caveats) or "-"),
-                ("premium estimate (gpt-5.4, never called)", report.premium_estimate),
+                ("premium estimate (gpt-5.5, never called)", report.premium_estimate),
                 ("premium caveats", ", ".join(report.premium_caveats) or "-"),
             ],
         )

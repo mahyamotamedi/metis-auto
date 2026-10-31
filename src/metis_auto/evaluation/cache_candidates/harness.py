@@ -63,14 +63,21 @@ from metis_auto.contracts import (
     ScopeKind,
 )
 from metis_auto.contracts.events import CacheLookedUp
-from metis_auto.domain.caching import TREATMENTS, normalise
+from metis_auto.domain.caching import ALL_TREATMENTS, TREATMENTS, normalise
 
 from .index import CandidateIndex, CandidateItem, IndexFactory
 
 KEY_SCHEMA = "ks-1"
 NOT_EVALUATED = ("time_sensitivity",)
 SCOPES = (ScopeKind.SESSION, ScopeKind.GLOBAL)
-SHORT = {"literal": "lit", "whitespace": "ws", "nfkc_casefold_ws": "nfkc"}
+SHORT = {
+    "literal": "lit",
+    "whitespace": "ws",
+    "nfkc_casefold_ws": "nfkc",
+    "persian_fold_v1": "pf1",
+    "persian_fold_zwnj_space_v1": "pf1z",
+    "persian_fold_marks_v1": "pf1m",
+}
 
 BASES: dict[str, tuple[tuple[ComponentName, ...], bool]] = {
     "msg_only": ((ComponentName.MESSAGE,), False),
@@ -130,7 +137,9 @@ class KeyVariantSpec:
 
 
 def variants(params: Mapping[str, Any]) -> tuple[KeyVariantSpec, ...]:
-    """Every combination named by the strategy parameters (default: all)."""
+    """Every combination named by the strategy parameters (default: all, with
+    the three default treatments; the Persian folding treatments are opt-in by
+    name in ``message_treatments``)."""
     bases = params.get("bases", list(BASES))
     treatments = params.get("message_treatments", list(TREATMENTS))
     modes = params.get("unknown_modes", ["strict", "wildcard"])
@@ -138,8 +147,8 @@ def variants(params: Mapping[str, Any]) -> tuple[KeyVariantSpec, ...]:
         if b not in BASES:
             raise ValueError(f"unknown base composition {b!r}; known: {list(BASES)}")
     for t in treatments:
-        if t not in TREATMENTS:
-            raise ValueError(f"unknown treatment {t!r}; known: {TREATMENTS}")
+        if t not in ALL_TREATMENTS:
+            raise ValueError(f"unknown treatment {t!r}; known: {ALL_TREATMENTS}")
     for m in modes:
         if m not in ("strict", "wildcard"):
             raise ValueError("unknown_modes are strict and wildcard")

@@ -84,6 +84,18 @@ class AttemptRecord(ContractModel):
     duration_ms: NonNegFloat | None = field(
         Privacy.OPERATIONAL, "model_call span duration.", default=None
     )
+    effort: Name | None = field(
+        Privacy.OPERATIONAL,
+        "Effort label requested (Stage E6). Not populated by any production "
+        "code yet: always None until a producer fills it.",
+        default=None,
+    )
+    time_to_first_token_ms: NonNegFloat | None = field(
+        Privacy.OPERATIONAL,
+        "Time to first token (Stage E6). Not populated by any production code "
+        "yet: always None until an adapter measures it.",
+        default=None,
+    )
     verdicts: tuple[DetectorVerdict, ...] = field(
         Privacy.DERIVED, "Detector verdicts on a response.", default=()
     )

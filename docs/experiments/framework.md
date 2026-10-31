@@ -3,6 +3,8 @@
 Status: **decided** (config shape, EXP-ID naming, runner kinds, candidate loading, run files, comparison format; [ADR-0022](../adr/0022-experiment-runner-and-run-tracking.md)); metric coverage **provisional** (judge scores and agreement need a judge and a Persian-capable embedder, not built). Last updated 2026-10-18.
 Architecture: [evaluation.md](../architecture/evaluation.md) (flow, replay rules, counterfactual sources, baselines). Code: `evaluation/runner`, `evaluation/cache_candidates`, `evaluation/metrics`, `evaluation/baselines`, `wiring/experiments.py`, `scripts/run_experiment.py`. Plans: [caching](caching_plan.md), [routing](routing_plan.md), [context](context_plan.md).
 
+Evaluation framework (Stages E0-E6, offline): [evaluation_framework.md](evaluation_framework.md) (spec), [e6_logging_and_status.md](e6_logging_and_status.md) (status, logging fields, spec section 9). No new EXP-ID was created by the E stages, so the experiment plans are unchanged.
+
 This document answers: **how does an experiment declare what it tests, how is a run recorded, and how do results from different strategies end up side by side?**
 
 ---

@@ -59,6 +59,12 @@ class ModelInvocation(ContractModel):
     composition_fingerprint: Fingerprint | None = field(
         Privacy.FINGERPRINT, "Ordered-parts fingerprint (replay lookup).", default=None
     )
+    effort: Name | None = field(
+        Privacy.OPERATIONAL,
+        "Reasoning effort or thinking-budget label requested (None = the "
+        "provider default). Stage E6: not yet applied by the live adapter.",
+        default=None,
+    )
 
 
 class AnswerSource(StrEnum):
@@ -109,6 +115,12 @@ class ModelResponse(ContractModel):
     )
     provider_model_version: str | None = field(
         Privacy.OPERATIONAL, "Model version the provider reported.", default=None
+    )
+    time_to_first_token_ms: NonNegFloat | None = field(
+        Privacy.OPERATIONAL,
+        "Time to the first streamed token, if the client measured it (Stage E6: "
+        "no adapter measures it yet).",
+        default=None,
     )
     source: AnswerSource = field(Privacy.OPERATIONAL, "Which client kind answered.")
 

@@ -8,7 +8,7 @@ The progression is a chain of **replaceable stages**: each adds one thing behind
 | Stage | Adds | Swap point | Status |
 |---|---|---|---|
 | C1 | exact candidates: treatments × key compositions × unknown handling × scopes | `CandidateIndex` (`exact`) | **done** (sample) |
-| C1b | Persian folding, history windows, first-turn-only, producing-tier rule | treatment / variant config | planned |
+| C1b | Persian folding, history windows, first-turn-only, producing-tier rule | treatment / variant config | planned; **Persian folding treatments implemented (Stage E0, ADR-0025), not yet run on data** |
 | C2 | semantic tier: embedder, similarity, threshold from measured curves, false-hit analysis, verifier | `CandidateIndex` (`semantic`), `Embedder`, `VectorIndex` | planned |
 | C3 | persistent store (PostgreSQL) behind the same ports | `CacheStore`, `VectorIndex` adapters | planned (after the full EDA) |
 | C4 | curated shared cache with simulated rebuilds; traffic-source scope (ADR-0016, proposed) | builder + `CandidateIndex` (`curated`) | planned |

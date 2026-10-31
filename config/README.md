@@ -5,7 +5,7 @@ Versioned configuration **data**, not code ([ADR-0019](../docs/adr/0019-configur
 | Path | What | Layer |
 |---|---|---|
 | `defaults.toml` | Application defaults: paths, logging, live switch (off), budget caps and the 20 USD ceiling, reference-file choice, experiment defaults, embedding and database placeholders, policy selection (`[pipeline.*]`) | 2 (defaults) |
-| `reference/catalogue-metis-test.toml` | Five Metis test models plus the premium baseline `gpt-5.4` (disabled, never called) | reference data |
+| `reference/catalogue-metis-test.toml` | Five Metis test models plus `gpt-5.4` and the premium baseline `gpt-5.5` (both disabled, never called) | reference data |
 | `reference/prices-metis-2026-10-18.toml` | Metis user prices, USD per 1M tokens, with source and check date; context tiers for `gpt-5.4` (Stage 7) | reference data |
 | `reference/tokenizers.toml` | How each `tokenizer_ref` is counted: backend, pinned file (URL, sha256), fidelity, evidence, chat template (Stage 7, [token_accounting.md](../docs/architecture/token_accounting.md)) | reference data |
 | `reference/endpoints-metis.toml` | Base URL and wire format per model family (Gemini deferred) | reference data |

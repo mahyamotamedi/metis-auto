@@ -43,6 +43,8 @@ def test_todo_10_values(loaded):
         e = entries[model_id]
         assert (e.context_window.value, e.max_output_tokens.value) == (window, output)
     # No first- or second-party source on 2026-10-18 (Q-32): unknown.
+    gpt55 = entries["gpt-5.5"]  # premium baseline (2026-10-30): limits unsourced
+    assert gpt55.context_window.value is None and gpt55.max_output_tokens.value is None
     grok = entries["grok-4-1-fast"]
     assert grok.context_window.value is None and grok.max_output_tokens.value is None
     assert grok.enabled is False  # Q-32: replaced by mimo-v2.5
