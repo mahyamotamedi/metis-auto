@@ -14,6 +14,11 @@ reasoning_effort = "medium"
 # `max_completion_tokens`: reasoning tokens count against it and are billed as
 # output. Owner decision 2026-11-01: 8192.
 max_output_tokens = 8192
+# Prompt layout, part of the settings hash and the manifest. Owner decision
+# 2026-11-01: "dataset_positions" = the dataset's recorded component positions,
+# as Metis sent it (the retrieved chunks come after the target message).
+# "pass_through" = the project's own order (instructions, history, retrieved, user).
+layout = "dataset_positions"
 
 [model_limits]
 # First-party values, https://developers.openai.com/api/docs/models/gpt-5.5 ,

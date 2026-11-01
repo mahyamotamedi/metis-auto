@@ -9,6 +9,7 @@ counts, rates and cost only.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import tomllib
 from collections.abc import Callable, Mapping
@@ -22,7 +23,7 @@ from metis_auto.adapters.system import SystemClock
 from metis_auto.analysis.request_features import language_group
 from metis_auto.analysis.text_features import language_label
 from metis_auto.application.pipeline.spend_guard import SpendGuard
-from metis_auto.contracts import AnswerSource, CostEstimate, CostStatus
+from metis_auto.contracts import AnswerSource, CostEstimate, CostStatus, PartRole
 from metis_auto.data_access.postgres import golden_answers as db
 from metis_auto.domain.accounting.cost import pre_call_estimate
 from metis_auto.domain.accounting.overhead import template_overhead, with_overhead
@@ -33,6 +34,7 @@ from metis_auto.evaluation.golden_answers.config import (
     SettingsError,
     parse_settings,
 )
+from metis_auto.evaluation.golden_answers.estimate import cache_scenarios, sharing
 from metis_auto.evaluation.golden_answers.request import (
     build_request,
     prompt_fingerprint,
@@ -42,6 +44,7 @@ from metis_auto.evaluation.golden_answers.runner import (
     RunReport,
     Spend,
     Task,
+    order_for_caching,
     run_answers,
     select_pilot,
 )
@@ -60,6 +63,8 @@ from metis_auto.wiring.live import build_live_client, live_overrides
 from metis_auto.wiring.tokenizers import build_tokenizers
 
 CONFIG_PATH = "config/evaluation/golden_answers.toml"
+SCOPES = {"pilot": "pilot", "run": "full"}
+"""CLI command → the scope ``GoldenAnswers.run`` takes."""
 
 
 class RunRefused(RuntimeError):
@@ -171,11 +176,13 @@ class GoldenAnswers:
             inputs = db.request_inputs(conn, self.settings.dataset_id)
         out = []
         for item in inputs:
-            built = build_request(item["rows"], item["kinds"])
+            built = build_request(item["rows"], item["kinds"], self.settings.layout)
             content = sum_counts(tokenizer.count(p.text) for p in built.parts)
             assert content is not None
             overhead = template_overhead(template, [p.role for p in built.parts])
             stratum = item["stratum"]
+            lead = built.parts[0]
+            has_prefix = lead.role == PartRole.INSTRUCTIONS
             out.append(
                 Task(
                     record_id=item["record_id"],
@@ -183,8 +190,16 @@ class GoldenAnswers:
                     caveats=tuple(
                         dict.fromkeys((*built.caveats, *stratum.get("caveats", ())))
                     ),
-                    fingerprint=prompt_fingerprint(built.parts),
+                    fingerprint=prompt_fingerprint(built.parts, self.settings.layout),
                     input_tokens=with_overhead(content, overhead),
+                    content_tokens=content,
+                    bot_id=item.get("bot_id"),
+                    prefix_tokens=tokenizer.count(lead.text).tokens
+                    if has_prefix
+                    else 0,
+                    prefix_key=hashlib.sha256(lead.text.encode()).hexdigest()
+                    if has_prefix
+                    else None,
                     strata={
                         k: stratum[k]
                         for k in STRATUM_KEYS
@@ -199,9 +214,11 @@ class GoldenAnswers:
         return select_pilot(tasks, pilot["size"], pilot["seed"])
 
     # ---------------------------------------------------------------------- plan
-    def plan(self) -> dict[str, Any]:
+    def plan(self, run_id: str | None = None) -> dict[str, Any]:
         """What a run would do, with no call and no content: counts, IDs, cost
-        bounds and the settings the owner must change."""
+        bounds and the settings the owner must change. With ``run_id``, also the
+        rest of that run: who shares instructions and what prompt caching could
+        save."""
         loaded = self.loaded()
         entry = self._entry(loaded)
         tasks = self.tasks(loaded)
@@ -231,12 +248,41 @@ class GoldenAnswers:
 
         lower, ceiling, unpriced = bounds(tasks)
         p_lower, p_ceiling, _ = bounds(pilot)
+        pilot_detail = []
+        for t in pilot:
+            c = t.content_tokens
+            assert c is not None
+            low = pre_call_estimate(entry, t.input_tokens, 0, prices).cost
+            high = pre_call_estimate(
+                entry, t.input_tokens, s.max_output_tokens, prices
+            ).cost
+            pilot_detail.append(
+                {
+                    "record_id": t.record_id,
+                    "content_tokens": c.tokens,
+                    "content_count": f"{c.fidelity.value} ({c.method})",
+                    "framing_overhead_tokens": t.input_tokens.tokens - c.tokens,
+                    "input_tokens_estimated": t.input_tokens.tokens,
+                    "cost_usd_input_only": str(low.amount.amount),
+                    "cost_usd_ceiling": str(high.amount.amount),
+                    "caveats": list(t.caveats),
+                }
+            )
         sizes = sorted(t.input_tokens.tokens for t in tasks)
         permission = live_permission(self.loaded(live=True))
         budget = loaded.settings.budget
         return {
             "settings": s.manifest(),
             "records": len(tasks),
+            "content_tokens": {
+                "total": sum(t.content_tokens.tokens for t in tasks),
+                "counts": sorted(
+                    {
+                        f"{t.content_tokens.fidelity.value} ({t.content_tokens.method})"
+                        for t in tasks
+                    }
+                ),
+            },
             "input_tokens": {
                 "total": sum(sizes),
                 "median": sizes[len(sizes) // 2] if sizes else None,
@@ -252,7 +298,10 @@ class GoldenAnswers:
                 "pilot_ceiling_every_call_at_max_output": str(p_ceiling),
             },
             "caveats": _count(c for t in tasks for c in t.caveats),
-            "pilot_ids": [t.record_id for t in pilot],
+            "pilot": pilot_detail,
+            "full_run": self._full_run(tasks, entry, prices, run_id)
+            if run_id
+            else None,
             "approvals": {
                 "golden_answers.real_data_approved": (
                     loaded.settings.golden_answers.real_data_approved
@@ -262,6 +311,32 @@ class GoldenAnswers:
                 "budget_lifetime_cap": str(budget.lifetime_cap),
             },
         }
+
+    def _full_run(self, tasks, entry, prices, run_id: str) -> dict[str, Any]:
+        """The records of ``run_id`` not yet stored, in the order a full run
+        would take them, with sharing counts and cache scenarios."""
+        with self.engine.connect() as conn:
+            stored = db.stored_status(conn, run_id)
+            n, mean_out = db.output_stats(conn, run_id)
+        remaining = [t for t in tasks if t.record_id not in stored]
+        ordered = order_for_caching(remaining)
+        out: dict[str, Any] = {
+            "run_id": run_id,
+            "remaining_records": len(remaining),
+            "sharing_among_remaining": sharing(remaining),
+            "sharing_among_all": sharing(tasks),
+            "order_changes_settings_hash": False,
+        }
+        if mean_out is None:
+            out["scenarios"] = "no answered records yet: no output assumption"
+            return out
+        per_record = round(mean_out)
+        out["output_tokens_per_record_assumed"] = {
+            "value": per_record,
+            "from": f"mean of the {n} answered records of {run_id}",
+        }
+        out["scenarios"] = cache_scenarios(ordered, entry, prices, per_record)
+        return out
 
     # ----------------------------------------------------------------- live run
     def check_live(self, loaded: LoadedSettings) -> None:
@@ -296,11 +371,12 @@ class GoldenAnswers:
         scope: str,
         client: ModelClient | None = None,
         loaded: LoadedSettings | None = None,
+        retry_failed: frozenset[str] = frozenset(),
     ) -> RunReport:
         """``scope``: ``pilot`` answers the pilot records only; ``full`` answers
         every record not yet answered in this run. ``client`` is for tests; a
         live run builds the recording live client after ``check_live``."""
-        if scope not in ("pilot", "full"):
+        if scope not in SCOPES.values():
             raise ValueError("scope is 'pilot' or 'full'")
         live = client is None
         loaded = loaded or self.loaded(live=live)
@@ -313,7 +389,8 @@ class GoldenAnswers:
             ordered, limit = first, None
         else:
             ids = {t.record_id for t in first}
-            ordered = [*first, *(t for t in tasks if t.record_id not in ids)]
+            rest = [t for t in tasks if t.record_id not in ids]
+            ordered = [*first, *order_for_caching(rest)]
             limit = None
         if client is None:
             client = build_live_client(
@@ -353,6 +430,7 @@ class GoldenAnswers:
             backup=backup,
             limit=limit,
             halt_after_failed_records=self.raw["retry"]["halt_after_failed_records"],
+            retry_failed=retry_failed,
         )
         self.summary(run_id, planned=len(ordered))
         return report

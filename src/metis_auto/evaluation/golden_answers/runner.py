@@ -51,7 +51,17 @@ class Task:
     caveats: tuple[str, ...]
     fingerprint: str
     input_tokens: TokenCount
+    """Billed input as estimated: counted content plus chat framing."""
     strata: Mapping[str, str]
+    content_tokens: TokenCount | None = None
+    """The counted content alone (exact when the tokenizer is), for reports."""
+    bot_id: str | None = None
+    """Opaque ID of the record's bot; used only to order and to report sharing."""
+    prefix_tokens: int = 0
+    """Tokens of the leading instruction part (the part provider prompt caching
+    can reuse between records with identical instructions); 0 when none."""
+    prefix_key: str | None = None
+    """Hash of the leading instruction text; equal keys = identical instructions."""
 
 
 @dataclass(frozen=True)
@@ -136,8 +146,13 @@ def run_answers(
     backup: Callable[[AnswerRow], None] = lambda row: None,
     limit: int | None = None,
     halt_after_failed_records: int = 5,
+    retry_failed: frozenset[str] = frozenset(),
 ) -> RunReport:
-    """Answer ``tasks`` in the given order, at most ``limit`` new records."""
+    """Answer ``tasks`` in the given order, at most ``limit`` new records.
+    ``retry_failed``: error classes of stored failures to try again even though
+    they are not retryable by themselves (for example ``auth`` after the provider
+    rejected calls for lack of credit and the cause was fixed). An answered
+    record is never tried again."""
     report = RunReport()
     stored = store.terminal(run_id)
     consecutive_failed = 0
@@ -145,7 +160,8 @@ def run_answers(
     for task in tasks:
         status = stored.get(task.record_id)
         if status is not None and (
-            status[0] == "answered" or status[1] not in RETRYABLE
+            status[0] == "answered"
+            or (status[1] not in RETRYABLE and status[1] not in retry_failed)
         ):
             report.skipped += 1
             continue
@@ -319,3 +335,19 @@ def select_pilot(tasks: Sequence[Task], size: int, seed: str) -> list[Task]:
         seen |= set(best.strata.items())
         pool.remove(best)
     return picked
+
+
+def order_for_caching(tasks: Sequence[Task]) -> list[Task]:
+    """Records with identical leading instructions back to back, so a provider's
+    automatic prompt cache can reuse that prefix. Only the order changes: every
+    call stays independent (its own parts, no shared conversation), and the order
+    is not a setting, so it does not change the settings hash. Larger groups come
+    first; groups, and records inside a group, keep a deterministic order."""
+    groups: dict[str, list[Task]] = {}
+    for t in tasks:
+        groups.setdefault(t.prefix_key or f"~{t.record_id}", []).append(t)
+    ordered = sorted(
+        groups.values(),
+        key=lambda g: (-len(g), g[0].bot_id or "", g[0].record_id),
+    )
+    return [t for g in ordered for t in g]

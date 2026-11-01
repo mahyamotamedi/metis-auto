@@ -20,8 +20,10 @@ def request_inputs(conn: Connection, dataset_id: str) -> list[dict[str, Any]]:
     component kind, the stratum (labels) and nothing else."""
     records = conn.execute(
         text(
-            """SELECT record_id, stratum FROM eval.dataset_record
-               WHERE dataset_id = :d ORDER BY selection_rank, record_id COLLATE "C" """
+            """SELECT x.record_id, x.stratum, q.bot_id FROM eval.dataset_record x
+               JOIN eval.request q USING (request_id)
+               WHERE x.dataset_id = :d
+               ORDER BY x.selection_rank, x.record_id COLLATE "C" """
         ),
         {"d": dataset_id},
     ).all()
@@ -49,6 +51,7 @@ def request_inputs(conn: Connection, dataset_id: str) -> list[dict[str, Any]]:
     return [
         {
             "record_id": rec.record_id,
+            "bot_id": rec.bot_id,
             "stratum": rec.stratum,
             "rows": rows[rec.record_id],
             "kinds": sorted(kinds[rec.record_id]),
@@ -150,3 +153,15 @@ def answers_for(
         {"r": run_id, "ids": list(record_ids)},
     )
     return {r.record_id: r.answer for r in rows}
+
+
+def output_stats(conn: Connection, run_id: str) -> tuple[int, float | None]:
+    """(answered records, mean output tokens per answered record) of a run."""
+    row = conn.execute(
+        text(
+            "SELECT count(*), avg(output_tokens) FROM eval.golden_answer "
+            "WHERE run_id = :r AND status = 'answered' AND output_tokens IS NOT NULL"
+        ),
+        {"r": run_id},
+    ).one()
+    return row[0], None if row[1] is None else float(row[1])
