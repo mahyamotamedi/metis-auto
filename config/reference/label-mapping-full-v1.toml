@@ -1,0 +1,324 @@
+# Logged model labels of the full dataset (revision 30f578f2, bot.provider_model of bots
+# used in sessions) -> catalogue models. New file; label-mapping-sample-v1.toml is unchanged.
+#
+# Labels are bot configuration, not billing entities and not proof of the model that
+# served a message (the bot record is a single snapshot; see docs/full_eda). Mapping
+# says only which catalogue/price row a label could be repriced with.
+#
+# fidelity: exact_id | alias (an alias applied at log time is unverified)
+# unmapped: not_in_catalogue (a real model without a catalogue row) | not_a_model
+#           (names no model) | not_a_text_model (image generation)
+# Counts are requests (AI messages) on bots with that label, counted 2026-10-30.
+
+version = "label-mapping-full-v1-2026-10-30"
+dataset = "poriniki/metis@30f578f283b903cdbd06cd1b5f7f962f76452ded"
+
+[[labels]]
+label = "default"
+requests = 103561
+unmapped = "not_a_model"
+
+[[labels]]
+label = "gemini-2.5-flash-lite"
+requests = 91358
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-4o-mini"
+requests = 65294
+model_id = "gpt-4o-mini"
+fidelity = "exact_id"
+
+[[labels]]
+label = "gemini-2.5-flash"
+requests = 43800
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "deepseek-v4-flash"
+requests = 26965
+model_id = "deepseek-v4-flash"
+fidelity = "exact_id"
+
+[[labels]]
+label = "gpt-5.4-nano"
+requests = 2927
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-4.1-mini"
+requests = 2738
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "grok-4-1-fast"
+requests = 2476
+model_id = "grok-4-1-fast"
+fidelity = "exact_id"
+
+[[labels]]
+label = "gpt-5.1"
+requests = 1797
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-5.2"
+requests = 1743
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gemini-2.0-flash"
+requests = 1467
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-5-mini"
+requests = 817
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-4.1-nano"
+requests = 558
+model_id = "gpt-4.1-nano"
+fidelity = "exact_id"
+
+[[labels]]
+label = "gpt-5.4-mini"
+requests = 395
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-6-luna"
+requests = 391
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-5.6-luna"
+requests = 377
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-4.1"
+requests = 366
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gemini-3.1-flash-lite"
+requests = 290
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-4o"
+requests = 271
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-5"
+requests = 228
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "claude-4-sonnet"
+requests = 129
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "claude-4-opus"
+requests = 118
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "Flux-Schnell"
+requests = 90
+unmapped = "not_a_text_model"
+
+[[labels]]
+label = "gpt-5.6-terra"
+requests = 90
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "dalle"
+requests = 79
+unmapped = "not_a_text_model"
+
+[[labels]]
+label = "gemini-3-flash-preview"
+requests = 75
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "o3-mini"
+requests = 70
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gemini-3.5-flash-lite"
+requests = 67
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-5.4"
+requests = 63
+model_id = "gpt-5.4"
+fidelity = "exact_id"
+
+[[labels]]
+label = "claude-opus-4-5"
+requests = 62
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-5.5"
+requests = 57
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "claude-sonnet-5"
+requests = 50
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "metis-gpt"
+requests = 43
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "claude-sonnet-4-6"
+requests = 30
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-image-1"
+requests = 27
+unmapped = "not_a_text_model"
+
+[[labels]]
+label = "grok-3-beta"
+requests = 26
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-5.6-sol"
+requests = 24
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "grok-4-fast"
+requests = 22
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "grok-4-0709"
+requests = 20
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "deepseek-v4-pro"
+requests = 17
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "deepseek-chat"
+requests = 14
+model_id = "deepseek-v4-flash"
+fidelity = "alias"
+
+[[labels]]
+label = "gpt-5-nano"
+requests = 11
+model_id = "gpt-5-nano"
+fidelity = "exact_id"
+
+[[labels]]
+label = "command-r"
+requests = 10
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "mimo-v2.5"
+requests = 10
+model_id = "mimo-v2.5"
+fidelity = "exact_id"
+
+[[labels]]
+label = "gpt-4o-mini-2024-07-18"
+requests = 7
+model_id = "gpt-4o-mini"
+fidelity = "alias"
+
+[[labels]]
+label = "gpt-4o"
+requests = 7
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "Flux-Pro"
+requests = 7
+unmapped = "not_a_text_model"
+
+[[labels]]
+label = "grok-3-mini-beta"
+requests = 6
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "deepseek-reasoner"
+requests = 5
+model_id = "deepseek-v4-flash"
+fidelity = "alias"
+
+[[labels]]
+label = "gemini-2.5-pro"
+requests = 4
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gemini-3.1-flash-lite-preview"
+requests = 3
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "claude-opus-4-6"
+requests = 3
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gpt-4o-mini-search-preview"
+requests = 3
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "claude-haiku-4-5"
+requests = 2
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "claude-opus-5"
+requests = 2
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "deepseek-v4.1-flash"
+requests = 2
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "metis-gpt-mini"
+requests = 2
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "claude-opus-4-7"
+requests = 1
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "gemini-3-pro-preview"
+requests = 1
+unmapped = "not_in_catalogue"
+
+[[labels]]
+label = "google/gemma3-27b"
+requests = 1
+unmapped = "not_in_catalogue"

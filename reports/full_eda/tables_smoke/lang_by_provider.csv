@@ -1,0 +1,8 @@
+bot_provider_name,(no user text),arabic_script_other,en,fa,fa_en_mixed,other,short_uncertain,structured
+anthropic,0,0,0,2,0,0,0,0
+deepseek,0,1,0,21,2,0,1,1
+google,1,19,32,584,15,1,64,1
+grok,0,0,0,2,0,0,2,0
+imagination,0,0,0,1,0,0,0,0
+openai_chat_completion,6,6,28,163,20,0,61,1
+workflow,49,36,17,288,3,0,44,1

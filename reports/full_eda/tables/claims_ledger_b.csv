@@ -1,0 +1,4 @@
+claim_id,metric,value,numerator,denominator,unit,coverage,evidence_class,ci_low,ci_high,source_table,note
+sem.sample_size,"sampled distinct first-turn (bot,text) requests with >=4 words",40366.0,,,requests,seeded sample (seed 20261030) from 47819 eligible distinct first-turn requests,heuristic label,,,,
+sem.candidate_pairs,same-bot candidate pairs with estimated word-bigram Jaccard >= 0.8 (non-identical texts),3002.0,,,pairs,sample,heuristic label,,,,lexical candidates; not validated as safe reuse
+sem.requests_in_near_pairs,sampled distinct requests with a same-bot lexical near-duplicate partner,0.012089382153297329,488,40366,share of sampled distinct requests,sample,heuristic label,,,,sampled; validity and recall unmeasured; embedding-based semantic matching not run
