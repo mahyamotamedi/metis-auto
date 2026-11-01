@@ -48,6 +48,8 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 | [0025](adr/0025-persian-folding-treatments-and-evaluation-groups.md) | Persian folding as versioned measurement treatments (`persian_fold_v1`, `_zwnj_space_v1`, `_marks_v1`; none a default); keyed duplicate groups and leakage-safe splits for evaluation; serving path unchanged | decided (structure) for measurement only; which treatment serving may use is open |
 | [0027](adr/0027-local-postgresql-foundation.md) | Local PostgreSQL for source data and evaluation datasets (not a production schema; our choice, not a claim about Metis): four schemas, Alembic, reproducible ingestion. |
 | [0028](adr/0028-evaluation-dataset-golden-v1.md) | The 300-request evaluation dataset golden-v1: components with availability stages, separate reference, controlled selection, human-only complexity, team fingerprint. |
+| [0029](adr/0029-evaluation-dataset-golden-v2.md) | golden-v2: golden-v1 without the 23 attachment records, each replaced inside its cell (reserves, then pool); derived from a pinned golden-v1, own fingerprint, ID mapping, media caveat. |
+| [0030](adr/0030-golden-answers-gpt-5-5.md) | gpt-5.5 reference answers for golden-v2: independent calls, effort `medium`, 8192 output tokens, approval flag, table `eval.golden_answer`, failures recorded not replaced, content-free summary. |
 | [0026](adr/0026-premium-baseline-gpt-5-5.md) | Premium baseline becomes `gpt-5.5` (estimate and sampling only, never routed): new price file `-g55`, catalogue entry disabled with unknown limits, tokenizer by family mapping | decided (owner, 2026-10-30) |
 
 ## Guides

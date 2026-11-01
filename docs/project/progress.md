@@ -981,3 +981,25 @@ Run on branch `golden-dataset` under the owner's task, checkpoints C0 to C6 auth
 - **C5.** Rule labels, import commands, validation (V-10 pending human review), exports, quality report.
 - **C6.** Docs, SQL examples, fingerprint, guide followed from a clean copy (fresh venv, empty database, different hash seeds): `verify` PASS, shareable export byte-identical. Not run: `hf download`, Windows.
 - **Pending:** human review; approval of the quotas; whether to retire the EDA proposal.
+
+---
+
+## golden-v2: the 300 records without attachment images (2026-11-01)
+
+Under the owner's task. Status: **awaiting review**; nothing committed. Decision: [ADR-0029](../adr/0029-evaluation-dataset-golden-v2.md); guide: [golden_v2.md](../evaluation/golden_v2.md).
+
+- golden-v1 is untouched (its regenerated exports are byte-identical; `verify` PASS). golden-v2 is derived from the pinned golden-v1: the 23 attachment records are replaced inside their cell (16 from reserves, 7 from the pool; 5 of the 7 because remaining v1 reserves were at the per-bot cap), 277 records unchanged, 133 reserves left. Own config, fingerprint and ID mapping; `verify` PASS for both. V-01 to V-09, V-11, V-12 pass; V-10 pending human review.
+- The `attachment_dependent` coverage minimum is dropped (golden-v2 does not cover attachment-dependent requests; use golden-v1). 16 `media_generation` records carry the caveat `text_model_cannot_fulfil_media`.
+- New: `selection.derive_without`, `evaluation/golden/mapping.py`, `--config` and `carry-labels` in the CLI scripts, per-dataset report folders in `wiring.golden`. 21 new unit tests; the unit and architecture suites pass.
+- **Next (owner-directed):** gpt-5.5 reference answers for golden-v2. No live call has been made.
+
+---
+
+## Golden answers from gpt-5.5 for golden-v2 (2026-11-01)
+
+Under the owner's task. Status: **built and tested offline; awaiting review; no live call made**. Decision: [ADR-0030](../adr/0030-golden-answers-gpt-5-5.md); guide: [golden_answers.md](../evaluation/golden_answers.md).
+
+- **Built:** `eval.golden_answer` (migration 0006); `evaluation/golden_answers/` (settings, request builder, loop with resume and retries, pilot selection, content-free summary); `wiring/golden_answers.py` and `scripts/golden_answers.py` (`plan`, `pilot`, `run`, `summary`, `runs`); typed `reasoning_effort` option on the OpenAI endpoint; setting `golden_answers.real_data_approved` (default false, runtime layer only). 56 new tests; the full suite passes (1,155 offline). A dry run with a fake client against the real database proved resume (0 calls on a rerun), the local backup, the summary and that `verify` of golden-v1 and golden-v2 still passes with the table filled; its synthetic rows were removed.
+- **Plan (no call):** 300 records, none over the context window, about 1.44 M input tokens (approximate: tokenizer files not fetched), input-only cost at least 7.9 USD, ceiling 89 USD; pilot of 10 records bounded at 0.58 to 3.28 USD. The full run most likely exceeds the 10 USD cap: the owner decides after the pilot.
+- **Pending (owner):** set the pilot caps and `real_data_approved` in `config/local.toml`, type "run", then decide on the full run after the pilot; fetch the tokenizer files for exact counts; the 30-item human spot-check.
+

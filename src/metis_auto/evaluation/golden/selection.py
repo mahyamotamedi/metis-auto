@@ -359,3 +359,98 @@ def plan_swaps(
         if reviewed_intent[record] != cell_intent and queue[cell_intent]:
             swaps.append((record, queue[cell_intent].pop(0)))
     return swaps
+
+
+def derive_without(
+    candidates: Iterable[Candidate],
+    cfg: GoldenConfig,
+    *,
+    base_primary: Iterable[tuple[str, str]],
+    base_reserves: Iterable[str],
+    remove: frozenset[str],
+    exclude: frozenset[str] = frozenset(),
+) -> Selection:
+    """A dataset derived from another one by dropping some records (ADR-0029).
+
+    ``base_primary`` is (request_id, rationale code) and ``base_reserves`` the
+    request ids in reserve-rank order, both from the base dataset. Every request
+    in ``remove`` leaves the set and is replaced inside its own primary-intent ×
+    cohort cell: first by the next unused base reserve of that cell, then, if the
+    cell has none left, by the next candidate of the base's distinct pool in
+    seeded order. The same checks as the base selection apply (one record per
+    session, exact and near family, the per-bot and cohort caps). Requests in
+    ``remove`` or ``exclude`` are never chosen; the rest of the set is unchanged.
+    """
+    seed = cfg.seed
+    cands = list(candidates)
+    by_id = {c.request_id: c for c in cands}
+    pool = distinct_pool(cands, seed)
+    banned = remove | exclude
+    state = _State(cfg, pool)
+    codes = dict(base_primary)
+    kept = [rid for rid, _ in base_primary if rid not in remove]
+    for rid in kept:
+        state.add(by_id[rid])
+    chosen: dict[str, tuple[Candidate, str]] = {
+        rid: (by_id[rid], codes[rid]) for rid in kept
+    }
+    queue: dict[tuple[str, str], list[Candidate]] = defaultdict(list)
+    reserve_ids = list(base_reserves)
+    for rid in reserve_ids:
+        if rid not in banned:
+            queue[by_id[rid].cell].append(by_id[rid])
+    cell_pool: dict[tuple[str, str], list[Candidate]] = defaultdict(list)
+    for c in pool:
+        if c.request_id not in banned:
+            cell_pool[c.cell].append(c)
+
+    out = Selection(pool_size=len(pool))
+    out.joint = dict(Counter(by_id[rid].cell for rid, _ in base_primary))
+    used: set[str] = set()
+    for rid, _ in base_primary:
+        if rid not in remove:
+            continue
+        cell = by_id[rid].cell
+        pick, rule = None, ""
+        for source, label in (
+            (queue[cell], "reserve"),
+            (cell_pool[cell], "pool"),
+        ):
+            pick = next(
+                (
+                    c
+                    for c in source
+                    if c.request_id not in chosen
+                    and c.request_id not in used
+                    and state.allowed(c)
+                ),
+                None,
+            )
+            if pick is not None:
+                rule = label
+                break
+        if pick is None:
+            out.moves.append({"removed": rid, "cell": list(cell), "unfilled": 1})
+            continue
+        state.add(pick)
+        used.add(pick.request_id)
+        chosen[pick.request_id] = (pick, f"attachment_replacement_{rule}")
+        out.moves.append(
+            {
+                "removed": rid,
+                "replacement": pick.request_id,
+                "cell": list(cell),
+                "rule": rule,
+            }
+        )
+
+    out.primary = sorted(
+        chosen.values(),
+        key=lambda t: (seeded_rank(seed, t[0].request_id), t[0].request_id),
+    )
+    out.reserves = [
+        (by_id[rid], "|".join(by_id[rid].cell))
+        for rid in reserve_ids
+        if rid not in banned and rid not in used
+    ]
+    return out

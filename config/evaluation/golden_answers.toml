@@ -1,0 +1,36 @@
+# Reference answers ("golden answers") of one strong model for a dataset's records
+# (ADR-0030). A proposal: nothing here is approved until the owner runs it.
+# The settings below are the same for every record. Changing any of them changes
+# the settings hash recorded with each answer.
+
+[run]
+dataset_id = "golden-v2"
+dataset_config = "config/evaluation/golden_v2.toml"
+model_id = "gpt-5.5"
+# Chat Completions `reasoning_effort`; gpt-5.5 accepts none, low, medium (its
+# default), high, xhigh (OpenAI model page, checked 2026-11-01). Owner decision
+# 2026-11-01: medium.
+reasoning_effort = "medium"
+# `max_completion_tokens`: reasoning tokens count against it and are billed as
+# output. Owner decision 2026-11-01: 8192.
+max_output_tokens = 8192
+
+[model_limits]
+# First-party values, https://developers.openai.com/api/docs/models/gpt-5.5 ,
+# checked 2026-11-01 (re-verify: the Metis wrapper may impose its own). The
+# catalogue entry stays disabled with unknown limits (ADR-0026): these are used
+# only here, for the fit check.
+context_window = 1050000
+max_output_tokens = 128000
+source = "https://developers.openai.com/api/docs/models/gpt-5.5"
+checked_on = 2026-11-01
+
+[retry]
+# Only timeout, rate limit, server error and connection errors are retried.
+max_attempts = 3
+backoff_seconds = [5, 20]
+halt_after_failed_records = 5
+
+[pilot]
+size = 10
+seed = "golden-answers-pilot-1"

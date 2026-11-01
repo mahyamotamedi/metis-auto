@@ -197,3 +197,10 @@ The EDA ran on `poriniki/metis@30f578f2`. Existing rows above are **not edited**
 | Q-46 (data owner): why do 257 bots have an owner absent from `users`? | open | ADR-0027 |
 | Q-47 (owner): who reviews the 300 records, and what agreement is enough? | open | ADR-0028 |
 | Q-48 (data owner): what database does Metis run in production? | open | ADR-0027 |
+| A-81 (current, provisional): replacing an attachment record by a same-cell reserve or pool candidate keeps the intent and cohort quotas exact and lets the other margins move (at most 6 records) | decided here (owner, option A) | [ADR-0029](../adr/0029-evaluation-dataset-golden-v2.md) |
+| A-82 (current, provisional): the golden-v2 caveat `text_model_cannot_fulfil_media` follows the rule intent `media_generation`, a proposal that review may change | open until review | ADR-0029 |
+| A-83 (current): golden-v1 stays the dataset for attachment-dependent requests; golden-v2 does not cover them | decided here (owner) | ADR-0029 |
+| A-84 (current, provisional): golden answers send the request in the project's pass-through order (instructions, history, retrieved, user), not the dataset's position numbers; history is sent in full and bot configuration is not sent | decided here | [ADR-0030](../adr/0030-golden-answers-gpt-5-5.md) |
+| A-85 (current, provisional): in a golden-answer run an error response other than a timeout is assumed unbilled (not charged to the ledger); a timeout is charged at its pre-call estimate | open until the dashboard check (Q-36) | ADR-0030, ADR-0021 point 5 |
+| A-86 (current, provisional): `gpt-5.5` has context window 1,050,000, output limit 128,000 and efforts none, low, medium (default), high, xhigh (OpenAI model page, checked 2026-11-01); the Metis wrapper's own limits are not verified. Partly answers A-74 and Q-45; TODO-15 stays open for Metis-side billing and limits | re-verify with the first pilot | ADR-0030 |
+| A-87 (current): the language-mismatch rate is a script-based proxy (Persian and English requests only), not a judgement of answer quality | decided here | ADR-0030 |

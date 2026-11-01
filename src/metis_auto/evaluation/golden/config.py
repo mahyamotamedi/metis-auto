@@ -68,7 +68,24 @@ def parse_config(raw: Mapping[str, Any], sha256: str) -> GoldenConfig:
             raise ConfigError(f"{key}: quota {quota} is below the floor {floor}")
     if raw["cohorts"]["remaining"] not in raw["quotas"]["cohort"]:
         raise ConfigError("the remaining-accounts cohort has no quota")
+    if "derive" in raw:
+        _check_derive(raw["derive"], raw["coverage"])
     return GoldenConfig(raw=raw, sha256=sha256)
+
+
+DERIVE_KEYS = {"base_dataset", "base_fingerprint", "exclude"}
+DERIVE_RULES = {"attachments"}
+
+
+def _check_derive(derive: Mapping[str, Any], coverage: Mapping[str, Any]) -> None:
+    if set(derive) != DERIVE_KEYS:
+        raise ConfigError(f"[derive] needs exactly {sorted(DERIVE_KEYS)}")
+    if derive["exclude"] not in DERIVE_RULES:
+        raise ConfigError(f"[derive] exclude must be one of {sorted(DERIVE_RULES)}")
+    if derive["exclude"] == "attachments" and "attachment_dependent" in coverage:
+        raise ConfigError(
+            "a dataset without attachment records cannot require attachment_dependent"
+        )
 
 
 def percentile(sorted_values: list[int], q: float) -> int:
