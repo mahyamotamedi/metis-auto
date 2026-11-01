@@ -12,6 +12,8 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 MANIFEST_SCHEMA_VERSION = "golden-candidate-0.1"
+# Shareable golden-v1 export (wiring.golden). golden-candidate-0.1 stays readable.
+GOLDEN_V1_SCHEMA_VERSION = "golden-v1-0.2"
 STATUS_PROPOSED = "proposed_candidate"
 
 MANIFEST_FIELDS = (

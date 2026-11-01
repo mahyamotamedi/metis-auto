@@ -3,7 +3,7 @@
 #   docker compose run --rm app                         # full test suite (offline)
 #   docker compose run --rm app python -m pytest tests/integration -q   # smoke test
 #   docker compose run --rm app python scripts/run_walking_skeleton.py
-#   docker compose --profile db up -d postgres          # optional, not yet used
+#   docker compose --profile db up -d postgres          # needs METIS_DB_PASSWORD (ADR-0027)
 #
 # Needs Docker Compose v2.24+ (for `required: false` on env_file).
 
@@ -25,19 +25,38 @@ services:
       # lifetime total is shared (ADR-0018). Never delete it.
       - ./data/spend:/app/data/spend
 
-  # Optional future database (Stage 9). Not required by anything yet; starts
-  # only with `--profile db`. Needs METIS_DB_PASSWORD in .env.
+  # Local PostgreSQL for the source tables and the evaluation dataset (ADR-0027).
+  # Our engineering choice, not a claim about Metis's production database. Starts
+  # only with `--profile db` and refuses to start without METIS_DB_PASSWORD. Bound
+  # to this computer only: the data licence forbids sharing the contents.
   postgres:
     image: postgres:17
     profiles: ["db"]
     environment:
       POSTGRES_DB: metis
       POSTGRES_USER: metis
+      # `:-` here, not `:?`: Compose interpolates every service, so `:?` would
+      # break the app service too. The entrypoint below does the refusing.
       POSTGRES_PASSWORD: ${METIS_DB_PASSWORD:-}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+    entrypoint:
+      - sh
+      - -c
+      - |
+        if [ -z "$$POSTGRES_PASSWORD" ]; then
+          echo "Refusing to start: set METIS_DB_PASSWORD" >&2
+          exit 1
+        fi
+        exec docker-entrypoint.sh postgres
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metis -d metis"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
 volumes:
   pgdata: {}

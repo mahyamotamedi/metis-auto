@@ -1,0 +1,13 @@
+primary_intent,long,medium,short,very_long,very_short,total
+advice_recommendation,5,9,5,1,2,22
+ambiguous_context_dependent,3,5,8,0,8,24
+bot_service_support,11,11,11,5,4,42
+coding,7,6,2,5,2,22
+conversational_smalltalk,8,7,7,1,12,35
+factual_qa,10,16,10,3,6,45
+math_reasoning,3,5,6,5,2,21
+media_generation,5,3,3,5,0,16
+other_unclassified,0,6,1,1,0,8
+summarization_extraction_structured,6,4,4,1,2,17
+translation,0,10,7,1,5,23
+writing_creative,7,8,6,2,2,25

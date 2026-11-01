@@ -1,0 +1,187 @@
+# Expected source files for the PostgreSQL ingestion (ADR-0027). Content-free.
+# Ingestion refuses unknown or missing columns, another revision, or a file whose
+# sha256 differs, unless an explicit, logged flag says otherwise.
+
+[source]
+repo = "poriniki/metis"
+revision = "30f578f283b903cdbd06cd1b5f7f962f76452ded"
+raw_dir = "data/full_data/raw"
+batch_rows = 5000
+# Facts verified from the footers and the raw JSON on 2026-11-01 (ADR-0027).
+known_bot_owners_missing_from_users = 257
+# Rough on-disk need, measured on the first full load; see team_setup.md.
+min_free_disk_gb = 20
+
+[tables.users]
+pattern = "data/users.parquet"
+columns = [["user_id", "large_string"], ["activated", "bool"], ["owner_user_id", "large_string"], ["username_anon", "large_string"]]
+expected_rows = 448
+
+[[tables.users.files]]
+path = "data/users.parquet"
+sha256 = "8a9cae8b39574305fde3cfe262fbba88f96d1de185636b0eb95cdfd030dab6d0"
+
+[tables.chat_bot]
+pattern = "data/chat_bot.parquet"
+columns = [["bot_id", "large_string"], ["created_at", "timestamp[us]"], ["updated_at", "timestamp[us]"], ["deleted_at", "timestamp[us]"], ["user_id", "large_string"], ["instructions", "large_string"], ["provider_args", "large_string"], ["corpus_ids", "large_string"], ["summarizer_provider_name", "large_string"], ["summarizer_provider_model", "large_string"], ["summarizer_provider_args", "large_string"], ["functions", "large_string"], ["description", "large_string"], ["enabled", "bool"], ["provider_name", "large_string"], ["provider_model", "large_string"], ["auto_generate_headline", "bool"], ["public", "bool"], ["memory_enabled", "bool"], ["google_search_enabled", "bool"], ["async_webhook", "large_string"], ["bot_type", "large_string"], ["rag_top_k", "int64"], ["rag_reranking", "large_string"], ["independent_function_call", "bool"], ["summarizer_mode", "large_string"], ["rag_source_urls_enabled", "bool"]]
+expected_rows = 1830
+
+[[tables.chat_bot.files]]
+path = "data/chat_bot.parquet"
+sha256 = "e43498a8fd1d46d152f3fe6bbfd3fe3b5542a69b849e75e1376906ef17f1a6c8"
+
+[tables.chat_session]
+pattern = "data/chat_session.parquet"
+columns = [["session_id", "large_string"], ["user_id", "large_string"], ["created_at", "timestamp[us]"], ["bot_id", "large_string"], ["last_update_date", "timestamp[us]"], ["dialogue_length", "int64"], ["headline", "large_string"]]
+expected_rows = 80179
+
+[[tables.chat_session.files]]
+path = "data/chat_session.parquet"
+sha256 = "dba8dcebd992d624c6f78225f2aa42fa495974fb82a179137f4cd12701f51468"
+
+[tables.chat_message]
+pattern = "data/chat_message-*.parquet"
+columns = [["message_id", "large_string"], ["session_id", "large_string"], ["type", "large_string"], ["timestamp", "timestamp[us]"], ["content", "large_string"], ["finish_reason", "large_string"], ["attachments", "large_string"], ["citations", "large_string"], ["tool_calls", "large_string"], ["rag", "large_string"], ["billing", "large_string"], ["input", "large_string"], ["actions", "large_string"], ["google_search_query", "large_string"]]
+expected_rows = 710640
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00000-of-00013.parquet"
+sha256 = "5d0ade0ff7c7cc5d261fd50374b9b90d46bf3a38c1018f2f2880a15a1a11ef65"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00001-of-00013.parquet"
+sha256 = "a56977613061d7f16baa22f76a5370887ebedd7888e0b6a6fb07c1445bef7bcc"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00002-of-00013.parquet"
+sha256 = "31661ef146d6cdee759312825ed9b9048a62431ddfc71f41efc704b0fb1f6d96"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00003-of-00013.parquet"
+sha256 = "90eebd37fcf0d94186b3be824755dfe7cc11d0edb4c4dd472bc07bf59e68a6f1"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00004-of-00013.parquet"
+sha256 = "d77458411ca63530e521d566e562b404fddb8d125b5195bd00daf7c76467ed75"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00005-of-00013.parquet"
+sha256 = "510ee95f018370b939eb7e2c6ef59b11a7748e0ddd3358e070509d8a480297a6"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00006-of-00013.parquet"
+sha256 = "3ae8b60624e555bf879cd95758738bdfb3e0ef2f4531c18acdd1ec47e3d3b9ae"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00007-of-00013.parquet"
+sha256 = "44bdce0419e0f69b740ff5be40f28cea58394f8fb52fcecc404b27fa2c8b4c30"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00008-of-00013.parquet"
+sha256 = "a491d4e7fe9cb953d96a97ccb1aadf9d2f4a54afeac3077c32d334ada8324b25"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00009-of-00013.parquet"
+sha256 = "dc96d6a1a30433c747c7bcb06045a931a5d4d4b1892c04236be22b4c321eea25"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00010-of-00013.parquet"
+sha256 = "4a4faa338b112eafc2d4b4f1fe176afde09bdf52fd677fd716eef75c3a15cbc2"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00011-of-00013.parquet"
+sha256 = "9d9f8e1704c3b400212b8178c2ac4cbcd915fb7c8ffc25af219f6825791f01b1"
+
+[[tables.chat_message.files]]
+path = "data/chat_message-00012-of-00013.parquet"
+sha256 = "0c8d67ce425593125406f2d7008c78cf43063cd18b3593f0f5fb21350922cf4d"
+
+[tables.rag_query]
+pattern = "data/derived/chat_message_rag.parquet"
+columns = [["message_id", "large_string"], ["query", "large_string"]]
+expected_rows = 192245
+
+[[tables.rag_query.files]]
+path = "data/derived/chat_message_rag.parquet"
+sha256 = "868f5f1937e91199ef2afbc6eb3e259e669f1c4d890bd558ea7a7f90856ae938"
+
+[tables.rag_chunk]
+pattern = "data/derived/chat_message_rag_chunks-*.parquet"
+columns = [["message_id", "large_string"], ["chunk_id", "large_string"], ["content", "large_string"], ["corpusId", "large_string"], ["reference", "double"], ["relevancy", "double"], ["reference.page", "double"], ["reference.type", "large_string"], ["reference.downloadUrl", "large_string"], ["reference.url", "large_string"], ["__index_level_0__", "int64"]]
+expected_rows = 994031
+
+[[tables.rag_chunk.files]]
+path = "data/derived/chat_message_rag_chunks-00000-of-00010.parquet"
+sha256 = "c95a404a92cddd6f649482aed33a1b02f2691d27d9c7e3f2d2c3a541dba65459"
+
+[[tables.rag_chunk.files]]
+path = "data/derived/chat_message_rag_chunks-00001-of-00010.parquet"
+sha256 = "b000d4289948ad32f39b525962911a16d61f38a127546ab9937c366ab3ee70ed"
+
+[[tables.rag_chunk.files]]
+path = "data/derived/chat_message_rag_chunks-00002-of-00010.parquet"
+sha256 = "8282cc02286c473161c7b3ae62a5096049e3bcd131c0e31136bb3ea2c996b4e7"
+
+[[tables.rag_chunk.files]]
+path = "data/derived/chat_message_rag_chunks-00003-of-00010.parquet"
+sha256 = "f26d0da2cab9bce5fd7a7408d560e5abfde04fdc2eea006652d16f38743e4ab4"
+
+[[tables.rag_chunk.files]]
+path = "data/derived/chat_message_rag_chunks-00004-of-00010.parquet"
+sha256 = "28e5e3498dcff6b23111d509ac9cbe4ac8228c7b1f50167080f116c2394bf78f"
+
+[[tables.rag_chunk.files]]
+path = "data/derived/chat_message_rag_chunks-00005-of-00010.parquet"
+sha256 = "4b788b2a5bf4c366bfe38e38a1cd72c1e9aec2f77a11bbe6161ca7762c9b7e34"
+
+[[tables.rag_chunk.files]]
+path = "data/derived/chat_message_rag_chunks-00006-of-00010.parquet"
+sha256 = "f5ae26255680bff9829bd2316fbff307aa9a8797035ed5c6e351e9fcc5bc0225"
+
+[[tables.rag_chunk.files]]
+path = "data/derived/chat_message_rag_chunks-00007-of-00010.parquet"
+sha256 = "07e5a7d8a9ff90abc1dd8e5a98ce9f2e057ccd69b8b08fdd14e6e0ae3234ac0c"
+
+[[tables.rag_chunk.files]]
+path = "data/derived/chat_message_rag_chunks-00008-of-00010.parquet"
+sha256 = "5e91e55b5ebb63b11fd2e39e95ae1f96ea4cd4aca0bb3cfd108852aafb170387"
+
+[[tables.rag_chunk.files]]
+path = "data/derived/chat_message_rag_chunks-00009-of-00010.parquet"
+sha256 = "0251a3d70219505341a50f1b78142df2a042e5d0c33be0e295f704d2d27faf3a"
+
+[tables.billing_item]
+pattern = "data/derived/chat_message_billing.parquet"
+columns = [["message_id", "large_string"], ["callCount", "int64"], ["fixedCost", "double"], ["totalCost", "double"], ["usageCost", "double"], ["isNotEmpty", "bool"], ["fixedIncome", "double"], ["inputTokens", "int64"], ["totalIncome", "double"], ["usageIncome", "double"], ["outputTokens", "int64"], ["webSearchCalls", "double"], ["billableSeconds", "double"], ["providerKeyName", "large_string"], ["audioInputTokens", "double"], ["audioOutputTokens", "double"], ["cachedInputTokens", "double"], ["groundingSearchQueries", "double"], ["costBreakdown.input_tokens", "double"], ["costBreakdown.output_tokens", "double"], ["incomeBreakdown.input_tokens", "double"], ["incomeBreakdown.output_tokens", "double"], ["costBreakdown.per_call", "double"], ["incomeBreakdown.per_call", "double"], ["costBreakdown.cached_input_tokens", "double"], ["incomeBreakdown.cached_input_tokens", "double"], ["providerAccount", "large_string"], ["cacheWriteTokens", "double"], ["costBreakdown.cache_write_tokens", "double"], ["incomeBreakdown.cache_write_tokens", "double"]]
+expected_rows = 350529
+
+[[tables.billing_item.files]]
+path = "data/derived/chat_message_billing.parquet"
+sha256 = "2b999935b143ab0c3a8b686c3e5800798931cbdf2eac76919bdfa19ed1fd6aac"
+
+[tables.input_item]
+pattern = "data/derived/chat_message_input.parquet"
+columns = [["message_id", "large_string"], ["items", "large_string"]]
+expected_rows = 70375
+
+[[tables.input_item.files]]
+path = "data/derived/chat_message_input.parquet"
+sha256 = "54abe59a915d6f0ce272ff60c989f881e5c76425d1cf5a871918bd950ca18239"
+
+[tables.tool_call]
+pattern = "data/derived/chat_message_tool_calls.parquet"
+columns = [["message_id", "large_string"], ["call.id", "large_string"], ["call.name", "large_string"], ["call.parameters.query", "large_string"], ["result.outputs", "large_string"], ["result.isSuccess", "bool"], ["result.startedAt", "large_string"], ["result.completedAt", "large_string"], ["call.parameters.city", "large_string"], ["call.parameters.imo", "double"], ["call.parameters.mmsi", "double"], ["result.outputs.body", "large_string"], ["result.outputs.status", "double"], ["result.outputs.headers.Date", "large_string"], ["result.outputs.headers.Vary", "large_string"], ["result.outputs.headers.Allow", "large_string"], ["result.outputs.headers.Server", "large_string"], ["result.outputs.headers.X-ZRK-CS", "large_string"], ["result.outputs.headers.X-ZRK-SN", "large_string"], ["result.outputs.headers.X-ZRK-US", "large_string"], ["result.outputs.headers.Connection", "large_string"], ["result.outputs.headers.Content-Type", "large_string"], ["result.outputs.headers.Cache-Control", "large_string"], ["result.outputs.headers.Referrer-Policy", "large_string"], ["result.outputs.headers.X-Frame-Options", "large_string"], ["result.outputs.headers.Transfer-Encoding", "large_string"], ["result.outputs.headers.Access-Control-Max-Age", "large_string"], ["result.outputs.headers.X-Content-Type-Options", "large_string"], ["result.outputs.headers.Content-Security-Policy", "large_string"], ["result.outputs.headers.Strict-Transport-Security", "large_string"], ["result.outputs.headers.Access-Control-Allow-Origin", "large_string"], ["result.outputs.headers.Access-Control-Allow-Headers", "large_string"], ["result.outputs.headers.Access-Control-Allow-Methods", "large_string"], ["result.outputs.headers.Access-Control-Expose-Headers", "large_string"], ["result.outputs.status_text", "large_string"], ["call.parameters.id", "double"], ["call.parameters.data", "large_string"]]
+expected_rows = 439
+
+[[tables.tool_call.files]]
+path = "data/derived/chat_message_tool_calls.parquet"
+sha256 = "e9228f86a976a60cfe003866083707c78174fdbb95adb3cad87590aa25ab87da"
+
+[tables.action]
+pattern = "data/derived/chat_message_actions.parquet"
+columns = [["message_id", "large_string"], ["type", "large_string"], ["reason", "null"]]
+expected_rows = 3635
+
+[[tables.action.files]]
+path = "data/derived/chat_message_actions.parquet"
+sha256 = "444713270b6e99257fd01f016d5554db1c45b1acbc20432b9434f2451b113ff1"

@@ -55,6 +55,16 @@ compress = [
 ui = [
     "streamlit>=1.65,<1.66",
 ]
+# PostgreSQL foundation and the evaluation dataset (ADR-0027): SQLAlchemy Core,
+# Alembic, psycopg and pyarrow, imported only in data_access/postgres and the
+# Alembic env.py (tested). Never in the runtime lock or the dev lock: its own lock,
+# requirements-db.lock (= the dev lock + this extra).
+db = [
+    "sqlalchemy>=2.0,<2.1",
+    "alembic>=1.13,<2",
+    "psycopg[binary]>=3.2,<4",
+    "pyarrow>=20,<26",
+]
 # Needed only by the frozen sample-EDA tests (tests/test_sample_eda_helpers.py).
 eda = [
     "numpy>=2",
@@ -71,6 +81,7 @@ pythonpath = ["tests"]
 filterwarnings = ["error"]
 markers = [
     "network: needs network or API keys; skipped unless --run-network is given (ADR-0003)",
+    "postgres: needs a local PostgreSQL server; skipped unless --run-postgres is given (ADR-0027)",
 ]
 
 [tool.ruff]
@@ -85,3 +96,5 @@ select = ["E", "F", "I", "UP", "B"]
 # Full-dataset EDA scripts carry long metric descriptions (claims-ledger text).
 [tool.ruff.lint.per-file-ignores]
 "scripts/full_eda_*.py" = ["E501"]
+# Report sentences and long generated migration lines.
+"src/metis_auto/wiring/golden.py" = ["E501"]

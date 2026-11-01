@@ -1,0 +1,6 @@
+bot_class,False,True,total
+blank_no_config,20,0,20
+instruction_only,130,0,130
+instruction_rag,25,70,95
+rag_only,3,2,5
+workflow_unknown_config,38,12,50

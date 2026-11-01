@@ -16,9 +16,40 @@ predecessor; their count is kept.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from dataclasses import dataclass
+
 import pandas as pd
 
 CONVERSATIONAL = ("USER", "AI")
+
+
+@dataclass(frozen=True)
+class Pair:
+    ai_message_id: str
+    user_message_id: str | None
+    pair_flag: str
+    n_skipped_user: int
+
+
+def pair_ordered(types: Sequence[str], ids: Sequence[str]) -> list[Pair]:
+    """Pairs for one session's USER/AI messages, already in order."""
+    out: list[Pair] = []
+    for i, t in enumerate(types):
+        if t != "AI":
+            continue
+        user, flag, skipped = None, "no_preceding_user", 0
+        if i > 0 and types[i - 1] == "USER":
+            user = ids[i - 1]
+            j = i - 2
+            while j >= 0 and types[j] == "USER":
+                j -= 1
+            skipped = (i - 2) - j
+            flag = "consecutive_user" if skipped else "clean"
+        elif i > 0:
+            flag = "multiple_answers"
+        out.append(Pair(ids[i], user, flag, skipped))
+    return out
 
 
 def pair_session_messages(msgs: pd.DataFrame) -> pd.DataFrame:
@@ -34,27 +65,14 @@ def pair_session_messages(msgs: pd.DataFrame) -> pd.DataFrame:
         "session_id", sort=False
     ):
         convo = g[g["type"].isin(CONVERSATIONAL)]
-        types = convo["type"].tolist()
-        ids = convo["message_id"].tolist()
-        for i, t in enumerate(types):
-            if t != "AI":
-                continue
-            row = {
-                "session_id": sid,
-                "ai_message_id": ids[i],
-                "user_message_id": None,
-                "pair_flag": "no_preceding_user",
-                "n_skipped_user": 0,
-            }
-            if i > 0 and types[i - 1] == "USER":
-                row["user_message_id"] = ids[i - 1]
-                j = i - 2
-                while j >= 0 and types[j] == "USER":
-                    j -= 1
-                skipped = (i - 2) - j
-                row["n_skipped_user"] = skipped
-                row["pair_flag"] = "consecutive_user" if skipped else "clean"
-            elif i > 0:
-                row["pair_flag"] = "multiple_answers"
-            rows.append(row)
+        for pair in pair_ordered(convo["type"].tolist(), convo["message_id"].tolist()):
+            rows.append(
+                {
+                    "session_id": sid,
+                    "ai_message_id": pair.ai_message_id,
+                    "user_message_id": pair.user_message_id,
+                    "pair_flag": pair.pair_flag,
+                    "n_skipped_user": pair.n_skipped_user,
+                }
+            )
     return pd.DataFrame(rows)

@@ -1,0 +1,50 @@
+margin,key,population_n,quota,achieved,shortfall,basis,redistribution_note
+bot_class,blank_no_config,504,20,20,0,deterministic,
+bot_class,instruction_only,183799,130,130,0,deterministic,
+bot_class,instruction_rag,50969,95,95,0,deterministic,
+bot_class,rag_only,24,5,5,0,deterministic,
+bot_class,workflow_unknown_config,94373,50,50,0,deterministic,
+cohort,Remaining accounts,10113,75,75,0,deterministic,
+cohort,User A,133618,60,60,0,deterministic,
+cohort,User B,99824,55,55,0,deterministic,
+cohort,User C,43857,45,45,0,deterministic,
+cohort,User D,31981,36,36,0,deterministic,
+cohort,User E,10276,29,29,0,deterministic,
+complexity_proxy,average,96374,110,110,0,rule_proxy,
+complexity_proxy,complex,93880,90,90,0,rule_proxy,
+complexity_proxy,simple,139415,100,100,0,rule_proxy,
+coverage,after_widget,59836,20,22,0,rule_proposal,minimum met
+coverage,attachment_dependent,6375,15,23,0,rule_proposal,minimum met
+coverage,format_or_structured,1864,15,26,0,rule_proposal,minimum met
+coverage,history_distant,50537,20,56,0,rule_proposal,minimum met
+coverage,history_recent,97186,40,122,0,rule_proposal,minimum met
+coverage,instruction_dependent,52257,40,60,0,rule_proposal,minimum met
+coverage,pure_greeting,14476,10,11,0,rule_proposal,minimum met
+coverage,time_sensitive,15981,15,67,0,rule_proposal,minimum met
+language_group,english,19074,45,45,0,deterministic,
+language_group,finglish,28,5,5,0,deterministic,
+language_group,mixed,11727,40,40,0,deterministic,
+language_group,other,6572,5,5,0,deterministic,
+language_group,other_arabic_script,12159,15,15,0,deterministic,
+language_group,persian,279195,170,170,0,deterministic,
+language_group,structured,914,20,20,0,deterministic,
+position,first,69866,90,90,0,deterministic,
+position,late,138221,100,100,0,deterministic,
+position,middle,121582,110,110,0,deterministic,
+primary_intent,advice_recommendation,5257,22,22,0,rule_proposal,
+primary_intent,ambiguous_context_dependent,61955,24,24,0,rule_proposal,
+primary_intent,bot_service_support,56011,42,42,0,rule_proposal,
+primary_intent,coding,5695,22,22,0,rule_proposal,
+primary_intent,conversational_smalltalk,31688,35,35,0,rule_proposal,
+primary_intent,factual_qa,63793,45,45,0,rule_proposal,
+primary_intent,math_reasoning,3978,21,21,0,rule_proposal,
+primary_intent,media_generation,265,16,16,0,rule_proposal,
+primary_intent,other_unclassified,83966,8,8,0,rule_proposal,
+primary_intent,summarization_extraction_structured,1488,17,17,0,rule_proposal,
+primary_intent,translation,6298,23,23,0,rule_proposal,
+primary_intent,writing_creative,9275,25,25,0,rule_proposal,
+target_length,long,29588,65,65,0,deterministic,
+target_length,medium,129765,90,90,0,deterministic,
+target_length,short,81772,70,70,0,deterministic,
+target_length,very_long,3295,30,30,0,deterministic,
+target_length,very_short,85249,45,45,0,deterministic,

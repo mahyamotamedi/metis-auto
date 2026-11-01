@@ -21,6 +21,8 @@ The project explores:
 - `tests/` — automated tests, all offline by default
 - `docs/` — documentation; start at [`docs/README.md`](docs/README.md)
 
+Evaluation dataset and local PostgreSQL: [`docs/evaluation/golden_v1.md`](docs/evaluation/golden_v1.md); teammate setup: [`docs/guides/team_setup.md`](docs/guides/team_setup.md).
+
 Where new files go and what each package may import: [`docs/architecture/repository_structure.md`](docs/architecture/repository_structure.md).
 
 ## Development Setup

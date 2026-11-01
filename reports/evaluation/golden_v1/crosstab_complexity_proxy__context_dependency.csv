@@ -1,0 +1,4 @@
+complexity_proxy,instruction,multiple,rag,recent_history,self_contained,total
+average,5,26,14,7,58,110
+complex,2,28,8,7,45,90
+simple,1,52,3,16,28,100

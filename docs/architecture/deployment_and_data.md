@@ -66,9 +66,9 @@ What this view commits to now: the gateway is a **separate adapter layer** over 
 
 ---
 
-## 4. Future database integration (extension point, not a schema)
+## 4. Database integration
 
-No persistent schema is designed before the full dataset is inspected (FR-DATA-05, NG-02). What exists now is the set of ports a database would sit behind:
+**Since 2026-11-01** a local PostgreSQL holds the source tables and evaluation datasets ([ADR-0027](../adr/0027-local-postgresql-foundation.md), [golden_v1.md](../evaluation/golden_v1.md)): `data_access/postgres`, `infra/db`. It is our engineering choice, not a claim about Metis, and no serving code reads it. Serving storage is still an extension point: the ports below are what a production database would sit behind.
 
 | Port | Adapter now | Possible persistent adapter | What decides it |
 |---|---|---|---|
