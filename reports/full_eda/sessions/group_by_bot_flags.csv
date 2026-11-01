@@ -1,0 +1,14 @@
+group,public,bot_type,workflow,sessions,bots
+a_direct_llm_inferred,False,STANDARD,False,356,27
+a_direct_llm_inferred,True,STANDARD,False,3,2
+b_instruction_only,False,STANDARD,False,40900,336
+b_instruction_only,True,STANDARD,False,1354,9
+c_rag_only,False,STANDARD,False,9,3
+d_instruction_and_rag,False,DRAFT,True,1,1
+d_instruction_and_rag,False,STANDARD,False,15053,202
+d_instruction_and_rag,True,STANDARD,False,119,9
+d_instruction_and_rag,True,STANDARD,True,1,1
+e_unknown_or_ambiguous,False,DRAFT,True,9,8
+e_unknown_or_ambiguous,False,STANDARD,False,361,52
+e_unknown_or_ambiguous,False,STANDARD,True,22011,26
+e_unknown_or_ambiguous,True,DRAFT,True,2,2

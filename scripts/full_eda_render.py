@@ -29,10 +29,36 @@ PAIRS = [
         Path("docs/full_eda/templates/eda_findings.tmpl.md"),
         Path("docs/full_eda/eda_findings.md"),
     ),
+    (
+        Path("docs/full_eda/templates/session_config_report.tmpl.md"),
+        Path("docs/full_eda/session_config_report.md"),
+    ),
 ]
+TABLES = Path("reports/full_eda/sessions")
+TAB_RE = re.compile(r"\{\{table:(\w+)(?::([\w,]+))?\}\}")
 PH = re.compile(r"\{\{([\w.+\-]+)(?::(\w+))?\}\}")
 # Literals that may appear in templates because they are cited constants, not results.
 ALLOWED = [
+    r"\b97%",
+    r"Cohorts: 60\b",
+    r"\b20261101\b",
+    r"\bat least 0\.8\b",
+    r"\bexactly 300\b",
+    r"\bsamples reserved\b",
+    r"\b60 samples\b",
+    r"\bfloor of 12\b",
+    r"\bfixed at 12\b",
+    r"\bat most 25\b",
+    r"\bat most 30\b",
+    r"\b5 owners\b",
+    r"\b2 or more owners\b",
+    r"\b2 nulls\b",
+    r"\b4,000\b",
+    r"\bp50\b",
+    r"\bp90\b",
+    r"\bat most two\b",
+    r"\bat most 15\b",
+    r"\bup to 30\b",
     r"F-\d",
     r"H-\d",
     r"U-\d+",
@@ -132,8 +158,30 @@ def fmt(row: pd.Series, f: str | None) -> str:
     }[f]
 
 
+def md_table(name: str, cols: str | None) -> str:
+    """A committed feature-only CSV as a Markdown table, numbers untouched by hand."""
+    df = pd.read_csv(TABLES / f"{name}.csv")
+    if cols:
+        df = df[cols.split(",")]
+
+    def cell(v: object) -> str:
+        if pd.isna(v):
+            return ""
+        if isinstance(v, float):
+            return f"{v:,.0f}" if v == int(v) else f"{v:.3f}"
+        return f"{v:,}" if isinstance(v, int) else str(v)
+
+    lines = ["| " + " | ".join(df.columns) + " |", "|" + "---|" * len(df.columns)]
+    lines += [
+        "| " + " | ".join(cell(v) for v in row) + " |"
+        for row in df.itertuples(index=False)
+    ]
+    return "\n".join(lines)
+
+
 def render(text: str, led: pd.DataFrame) -> str:
     idx = led.set_index("claim_id")
+    text = TAB_RE.sub(lambda m: md_table(m.group(1), m.group(2)), text)
 
     def sub(m: re.Match) -> str:
         cid, f = m.group(1), m.group(2)
@@ -145,7 +193,7 @@ def render(text: str, led: pd.DataFrame) -> str:
 
 
 def hand_typed_numbers(tmpl: str) -> list[str]:
-    t = PH.sub("", tmpl)
+    t = TAB_RE.sub("", PH.sub("", tmpl))
     t = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", t)  # image refs
     t = re.sub(r"\]\([^)]*\)", "]", t)  # link targets
     t = re.sub(r"`[^`]*`", "", t)  # code spans

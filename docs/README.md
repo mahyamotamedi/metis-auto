@@ -46,6 +46,8 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 | [0023](adr/0023-demo-backend-components.md) | Demo A backend: detectors, rule-based routing on effective cost (hidden reasoning counted), sticky routing v1 with `Turn.producer` (A-64, schema 0.5; coding intent, schema 0.6), labelled demo cache settings (bot-level scope, seed), EXPERIMENTAL LLMLingua-2 (extra `compress`), DeepSeek thinking templates; promoted as **placeholders**, serving defaults unchanged | decided for the demo (Demo milestone A) |
 | [0024](adr/0024-demo-ui-streamlit.md) | Demo B UI: a thin Streamlit page over `ChatSession` (view model `wiring/demo_ui.py`, no logic in the page), extra `ui` with its own lock `requirements-ui.lock`, localhost only, no usage statistics, SYNTHETIC presets as configuration, right-to-left by CSS | decided for the demo (Demo milestone B) |
 | [0025](adr/0025-persian-folding-treatments-and-evaluation-groups.md) | Persian folding as versioned measurement treatments (`persian_fold_v1`, `_zwnj_space_v1`, `_marks_v1`; none a default); keyed duplicate groups and leakage-safe splits for evaluation; serving path unchanged | decided (structure) for measurement only; which treatment serving may use is open |
+| [0027](adr/0027-local-postgresql-foundation.md) | Local PostgreSQL for source data and evaluation datasets (not a production schema; our choice, not a claim about Metis): four schemas, Alembic, reproducible ingestion. |
+| [0028](adr/0028-evaluation-dataset-golden-v1.md) | The 300-request evaluation dataset golden-v1: components with availability stages, separate reference, controlled selection, human-only complexity, team fingerprint. |
 | [0026](adr/0026-premium-baseline-gpt-5-5.md) | Premium baseline becomes `gpt-5.5` (estimate and sampling only, never routed): new price file `-g55`, catalogue entry disabled with unknown limits, tokenizer by family mapping | decided (owner, 2026-10-30) |
 
 ## Guides
@@ -78,7 +80,8 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 - Notebook: `experiments/sample_eda/`. Outputs: `reports/sample_eda/`.
 
 ### Full-dataset EDA (2026-10-30)
-- [full_eda_report.md](full_eda/full_eda_report.md) (short report) · [eda_findings.md](full_eda/eda_findings.md) · [data_dictionary.md](full_eda/data_dictionary.md) · [experiment_plan.md](full_eda/experiment_plan.md) · [metis_questions.md](full_eda/metis_questions.md) · [checklist_status.md](full_eda/checklist_status.md)
+- Evaluation dataset: [golden_v1.md](evaluation/golden_v1.md) · [annotation_rubric_v1.md](evaluation/annotation_rubric_v1.md) · [example_queries.sql](evaluation/example_queries.sql) · teammate guide [team_setup.md](guides/team_setup.md). Outputs: `reports/evaluation/golden_v1/`.
+- [full_eda_report.md](full_eda/full_eda_report.md) (short report) · [eda_findings.md](full_eda/eda_findings.md) · [data_dictionary.md](full_eda/data_dictionary.md) · [experiment_plan.md](full_eda/experiment_plan.md) · [metis_questions.md](full_eda/metis_questions.md) · [checklist_status.md](full_eda/checklist_status.md) · [session_config_report.md](full_eda/session_config_report.md) (sessions, shared configurations, top five, golden-set proposal)
 - Notebook and README: `experiments/full_eda/`. Outputs: `reports/full_eda/`.
 
 ## Agent conventions

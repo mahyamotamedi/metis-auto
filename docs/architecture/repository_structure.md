@@ -59,7 +59,7 @@ No existing file or directory was moved, renamed, or deleted in this stage.
 **Deferred homes (ADR-0005; documented here, not created).**
 - Future network gateway (FR-API-03, NG-03): `src/metis_auto/gateway/`, an external-API adapter layer over `application` that has the same import rights as `wiring` (§3).
 - Dashboard (FR-FIN-02, NG-05): a separate consumer of events. It reads event sinks and aggregates and never touches the request path. Its location is decided when Action 3 returns.
-- `infra/`: created only when infrastructure files exist beyond the root `Dockerfile` and `compose.yaml`, for example PostgreSQL init scripts in Stage 9.
+- `infra/db/`: Alembic configuration and migrations for the local PostgreSQL (ADR-0027).
 - `scripts/`: thin command-line wrappers. Created in Stage 5 for `run_walking_skeleton.py`; Stage 6 adds `show_budget.py`. A script contains no logic. It parses arguments, calls `wiring`, and writes outputs.
 
 ---
@@ -151,7 +151,7 @@ What the rules buy:
 ### 3.3 Third-party dependencies (provisional)
 
 - `contracts`, `ports`, `domain`: standard library plus **pydantic v2**, the contract-modelling library chosen in Stage 4 ([ADR-0017](../adr/0017-contract-modelling-with-pydantic.md)). Nothing that does I/O or network.
-- Provider SDKs, tokenizer libraries, embedding libraries, and DB drivers are imported **only** in `adapters` (or `data_access` for DB drivers).
+- Provider SDKs, tokenizer libraries, embedding libraries, and DB drivers are imported **only** in `adapters` (or `data_access` for DB drivers). `sqlalchemy`, `psycopg`, `alembic` and `pyarrow` are imported only in `data_access/postgres` and the Alembic `env.py`; `wiring` may name `sqlalchemy` for engines and `text` (ADR-0027, `tests/architecture/test_db_imports.py`).
 - Heavy analysis libraries (pandas and similar) are allowed in `analysis`, `evaluation`, and `experiments/`, but not in `domain` or `application`, to protect the overhead budget (QA-LAT, ≤ 100 ms p95).
 
 ### 3.4 Enforcement

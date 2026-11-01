@@ -66,8 +66,8 @@ seed = 0
 backend = "fake"
 
 [database]
-# Future PostgreSQL (Stage 9). Nothing reads this yet. The password is the
-# secret METIS_DB_PASSWORD, never set here.
+# Local PostgreSQL (ADR-0027), read by the ingestion and dataset scripts. Serving
+# never reads it. The password is the secret METIS_DB_PASSWORD, never set here.
 enabled = false
 host = "localhost"
 port = 5432

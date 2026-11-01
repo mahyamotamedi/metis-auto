@@ -9,6 +9,9 @@ hf-xet==1.6.0           # 1.7.0 released 2026-10-06
 openai==3.24.0          # 3.25.0 and later released 2026-10-05 or later
 truststore==0.10.4      # 0.10.5 released 2026-10-12 (pulled in by openai via httpx2)
 #
+# requirements-db.lock (extra `db`, 2026-11-01) needed no pin here: it used pip
+# --uploaded-prior-to=2026-10-18 (see that lock's header).
+#
 # Added 2026-10-19 (Demo milestone) for requirements-compress.lock (extra
 # `compress`): cutoff 2026-10-05, checked on PyPI 2026-10-19.
 typer==0.27.2           # 0.27.3 released 2026-10-06 (pulled in by transformers)

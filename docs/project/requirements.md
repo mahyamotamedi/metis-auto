@@ -191,7 +191,7 @@ Feature extraction is shared by routing, caching, context handling, and evaluati
 | FR-DATA-02 | Data access goes through an interface. Nothing outside the data layer depends on storage location or format. | MP§5 Stage 9 | current | decided |
 | FR-DATA-03 | Synthetic fixtures model the domain generically: multilingual with Persian well represented, multi-turn, and optional RAG, attachments, and instructions. They do **not** reproduce sample-specific quirks. They contain no real content and are clearly labelled synthetic. | CLAUDE.md, MP§5 Stage 9, ADR-0008 | current | decided |
 | FR-DATA-04 | Onboarding the full dataset needs changes only in the data layer and configuration. | MP§5 Stage 9 | future | decided |
-| FR-DATA-05 | No final persistent schema is designed before the full dataset is inspected. | MP§1 | current | decided |
+| FR-DATA-05 | No final persistent schema is designed before the full dataset is inspected. **Met 2026-11-01:** the full EDA is done; a local (not production) schema exists under [ADR-0027](../adr/0027-local-postgresql-foundation.md). | MP§1 | current | decided |
 | FR-DATA-06 | Contracts and data interfaces are not shaped around sample quirks. Sample-specific handling lives in a sample loader/adapter. | ADR-0008 | current | decided |
 | FR-DATA-07 | Full-dataset onboarding begins with a full EDA in its own home, separate from the sample EDA. It uses re-implemented, tested analysis code, and re-checks every sample signal and the data-owner questions. | ADR-0008 | future | decided |
 | FR-DATA-08 | No system code imports, copies, or builds on the sample-EDA helpers. Needed analysis logic (language detection, normalisation, pairing, near-duplicates, size estimates) is re-implemented with tests. | ADR-0008 | current | decided |
@@ -240,7 +240,7 @@ Recorded in [ADR-0005](../adr/0005-current-phase-scope.md). Each can be revisite
 | ID | Non-goal | Why / when it may return |
 |---|---|---|
 | NG-01 | Production deployment, or integration with production Metis systems, data, or code. | No access (MP§1). Later, by agreement. |
-| NG-02 | A final persistent database schema. | Needs the full dataset (MP§1, FR-DATA-05). |
+| NG-02 | A final **production** database schema. A local PostgreSQL for source data and evaluation datasets is in scope since 2026-11-01 ([ADR-0027](../adr/0027-local-postgresql-foundation.md)); no serving code reads it. | What Metis runs in production is unknown. |
 | NG-03 | A network gateway: HTTP server, client authentication, multi-tenancy, client rate limiting. | Online phase (FR-API-03). |
 | NG-04 | Live provider calls by default. | Opt-in only, with a cap (ADR-0003). |
 | NG-05 | Brief Action 3: pricing engine and dashboard UI. | Optional in the brief. Needs verified prices and volumes. Its data enabler (FR-OBS-05) is in scope. |

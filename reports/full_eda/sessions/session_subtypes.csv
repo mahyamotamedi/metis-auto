@@ -1,0 +1,9 @@
+group,subtype,sessions,user_turns,bots,share_all_sessions
+a_direct_llm_inferred,blank_no_rag,359,1107,29,0.004477481634842041
+b_instruction_only,custom_no_rag,42254,203294,345,0.5269958467928011
+c_rag_only,blank_and_rag,9,24,3,0.00011224884321331022
+d_instruction_and_rag,custom_and_rag,15174,53014,213,0.18925154965764102
+e_unknown_or_ambiguous,blank_rag_unknown,166,221,16,0.0020703675526010552
+e_unknown_or_ambiguous,custom_rag_unknown,195,1646,36,0.0024320582696217216
+e_unknown_or_ambiguous,platform_default_no_rag_evidence,15632,47024,36,0.1949637685678295
+e_unknown_or_ambiguous,platform_default_rag_positive,6390,49635,13,0.07969667868145025

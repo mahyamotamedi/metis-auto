@@ -120,7 +120,7 @@ docker build --target runtime -t metis-auto:runtime . && docker run --rm metis-a
 - `runs/` and `data/spend/` are bind-mounted, so the container and native runs share **one** spend ledger.
 - The `dev` image contains the committed sample data (it is in the repository). Don't push it to a registry.
 - The images do **not** contain the tokenizer files (`data/tokenizers/` is git-ignored data), so in the container the exact-tokenizer tests skip and counts use the labelled chars/4 approximation (Stage 10 roadmap: a fetch step in the `dev` image).
-- Optional PostgreSQL (Stage 9; nothing uses it yet): set `METIS_DB_PASSWORD` in `.env`, then `docker compose --profile db up -d postgres`. It listens on `127.0.0.1:5432` only.
+- Optional PostgreSQL for the source data and evaluation datasets ([ADR-0027](../adr/0027-local-postgresql-foundation.md)): set `METIS_DB_PASSWORD` in `.env`, install `requirements-db.lock`, then `docker compose --profile db up -d postgres`. It listens on `127.0.0.1:5432` only and refuses to start without the password. Full steps: [team_setup.md](team_setup.md). Database tests are opt-in: `pytest --run-postgres`.
 - The base image is pinned by digest in the `Dockerfile` (multi-arch, checked 2026-10-18). To update it, pull `python:3.13-slim`, replace the digest, and rerun the commands above.
 - **Verified 2026-10-18** (Docker 29.8.2, Compose v5.5.1, Apple Silicon, linux/arm64): `dev` image smoke test 16/16 and full suite 392/392; `runtime` image runs the walking skeleton with the same config hash as a native run; neither image contains `.env`, `config/local.toml`, or the spend ledger (see progress.md).
 

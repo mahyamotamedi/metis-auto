@@ -1,0 +1,20 @@
+{
+ "schema_version": "golden-candidate-0.1",
+ "fields": [
+  "schema_version",
+  "status",
+  "sample_id",
+  "source",
+  "input_messages",
+  "system_instruction",
+  "rag_context_available",
+  "primary_category",
+  "secondary_tags",
+  "cohort",
+  "selection",
+  "reference_answer",
+  "reference_model",
+  "reference_settings",
+  "review"
+ ]
+}

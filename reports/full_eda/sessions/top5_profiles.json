@@ -1,0 +1,160 @@
+{
+ "User A": {
+  "categories": {
+   "account_service_support": 54036,
+   "unknown_uncertain": 53923,
+   "factual_question": 14197,
+   "conversational_support": 12314,
+   "coding_intent_debugging": 2996
+  },
+  "topics_in_requests": {
+   "finance_trading": 31966,
+   "customer_support": 12048,
+   "sales_commerce": 2654,
+   "education_tutor": 400,
+   "health": 382,
+   "legal": 327
+  },
+  "models_by_request": {
+   "default": 96288,
+   "gemini-2.5-flash": 40597,
+   "grok-4-1-fast": 2491
+  },
+  "months": {
+   "2026-03": 8358,
+   "2026-04": 13411,
+   "2026-05": 18011,
+   "2026-06": 13487,
+   "2026-07": 16191,
+   "2026-08": 18772,
+   "2026-09": 35812,
+   "2026-10": 15334
+  }
+ },
+ "User B": {
+  "categories": {
+   "unknown_uncertain": 51922,
+   "factual_question": 30272,
+   "conversational_support": 7893,
+   "writing_editing": 6511,
+   "translation_language": 5109
+  },
+  "topics_in_requests": {
+   "education_tutor": 2900,
+   "language_learning": 2190,
+   "sales_commerce": 1339,
+   "roleplay_companion": 1187,
+   "health": 1186,
+   "finance_trading": 806
+  },
+  "models_by_request": {
+   "gemini-2.5-flash-lite": 92995,
+   "gpt-4o-mini": 5662,
+   "gemini-2.5-flash": 5409,
+   "gpt-5.1": 1977,
+   "gpt-5.2": 1320
+  },
+  "months": {
+   "2026-03": 23876,
+   "2026-04": 62743,
+   "2026-05": 18260,
+   "2026-06": 3704,
+   "2026-07": 1756,
+   "2026-08": 1224,
+   "2026-09": 525,
+   "2026-10": 36
+  }
+ },
+ "User C": {
+  "categories": {
+   "unknown_uncertain": 30193,
+   "factual_question": 9188,
+   "conversational_support": 7798,
+   "advice_planning": 763,
+   "writing_editing": 471
+  },
+  "topics_in_requests": {
+   "education_tutor": 373,
+   "roleplay_companion": 334,
+   "health": 324,
+   "finance_trading": 99,
+   "language_learning": 61,
+   "sales_commerce": 58
+  },
+  "models_by_request": {
+   "deepseek-v4-flash": 27136,
+   "gpt-4o-mini": 18073,
+   "gemini-2.5-flash-lite": 3993,
+   "deepseek-v4-pro": 20,
+   "deepseek-v4.1-flash": 2
+  },
+  "months": {
+   "2026-03": 4023,
+   "2026-04": 11742,
+   "2026-05": 15400,
+   "2026-06": 7576,
+   "2026-07": 7121,
+   "2026-08": 2802,
+   "2026-09": 509,
+   "2026-10": 51
+  }
+ },
+ "User D": {
+  "categories": {
+   "unknown_uncertain": 12923,
+   "factual_question": 9967,
+   "conversational_support": 3819,
+   "writing_editing": 2721,
+   "translation_language": 1454
+  },
+  "topics_in_requests": {
+   "education_tutor": 575,
+   "language_learning": 505,
+   "health": 386,
+   "sales_commerce": 299,
+   "roleplay_companion": 191,
+   "finance_trading": 179
+  },
+  "models_by_request": {
+   "gpt-4o-mini": 33327
+  },
+  "months": {
+   "2026-03": 10835,
+   "2026-04": 17675,
+   "2026-05": 4766,
+   "2026-06": 5,
+   "2026-07": 41,
+   "2026-08": 5
+  }
+ },
+ "User E": {
+  "categories": {
+   "unknown_uncertain": 3946,
+   "factual_question": 2719,
+   "account_service_support": 1717,
+   "coding_intent_debugging": 1176,
+   "conversational_support": 488
+  },
+  "topics_in_requests": {
+   "customer_support": 541,
+   "finance_trading": 91,
+   "content_writing": 12,
+   "education_tutor": 12,
+   "legal": 5,
+   "sales_commerce": 4
+  },
+  "models_by_request": {
+   "gpt-4o-mini": 10345
+  },
+  "months": {
+   "2026-03": 2147,
+   "2026-04": 2952,
+   "2026-05": 3250,
+   "2026-06": 588,
+   "2026-07": 591,
+   "2026-08": 366,
+   "2026-09": 343,
+   "2026-10": 108
+  }
+ }
+}

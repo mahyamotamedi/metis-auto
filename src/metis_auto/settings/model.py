@@ -247,8 +247,8 @@ class EmbeddingSettings(ContractModel):
 
 
 class DatabaseSettings(ContractModel):
-    """Future PostgreSQL (deployment_and_data.md; Stage 9). Nothing reads it
-    yet. The password is a secret (``METIS_DB_PASSWORD``)."""
+    """Local PostgreSQL (ADR-0027), read only by the ingestion and dataset
+    scripts. The password is a secret (``METIS_DB_PASSWORD``)."""
 
     enabled: bool = False
     host: str = "localhost"

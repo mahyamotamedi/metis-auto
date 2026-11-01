@@ -184,3 +184,16 @@ The EDA ran on `poriniki/metis@30f578f2`. Existing rows above are **not edited**
 | New unknown | what the per-call fee covers (37.6% of recorded cost) | `metis_questions.md` item 2 |
 | New unknown | whether `provider_model` is a per-message log or a bot setting | `metis_questions.md` item 1 |
 | New constraint | dataset licence: educational use only, no redistribution | `metis_questions.md` item 5 |
+
+
+## Changes recorded by the PostgreSQL and golden-v1 work (2026-11-01)
+
+| Item | Status | Source |
+|---|---|---|
+| NG-02, FR-DATA-05 | lifted for local storage only | [ADR-0027](../adr/0027-local-postgresql-foundation.md) |
+| A-78 (current, provisional): rule labels stand in for reviewed labels at selection; reviewed counts may differ | open until review | [ADR-0028](../adr/0028-evaluation-dataset-golden-v1.md) |
+| A-79 (current, provisional): the per-account cap does not apply to the pooled "Remaining accounts" cohort | decided here, configurable | ADR-0028 |
+| A-80 (current, provisional): short messages with too few letters follow their dominant script for language quotas | decided here, configurable | ADR-0028 |
+| Q-46 (data owner): why do 257 bots have an owner absent from `users`? | open | ADR-0027 |
+| Q-47 (owner): who reviews the 300 records, and what agreement is enough? | open | ADR-0028 |
+| Q-48 (data owner): what database does Metis run in production? | open | ADR-0027 |
