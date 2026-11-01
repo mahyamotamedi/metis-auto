@@ -1,0 +1,77 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "golden-v2 shareable record (no text)",
+ "type": "object",
+ "properties": {
+  "schema_version": {
+   "const": "golden-v1-0.2"
+  },
+  "record_id": {
+   "type": "string"
+  },
+  "session_id": {
+   "type": "string"
+  },
+  "target_message_id": {
+   "type": "string"
+  },
+  "reference_message_id": {
+   "type": "string"
+  },
+  "bot_id": {
+   "type": "string"
+  },
+  "owner_cohort": {
+   "type": "string"
+  },
+  "source_revision": {
+   "type": "string"
+  },
+  "selection_rationale": {
+   "type": "string"
+  },
+  "weight_basis": {
+   "type": "string"
+  },
+  "pair_flag": {
+   "type": "string"
+  },
+  "target_timestamp_naive": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "reference_timestamp_naive": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "seed": {
+   "type": "integer"
+  },
+  "stratum": {
+   "type": "object"
+  },
+  "population_weight": {
+   "type": "number"
+  },
+  "config_unknown": {
+   "type": "boolean"
+  },
+  "labels": {
+   "type": "array",
+   "items": {
+    "type": "object"
+   }
+  }
+ },
+ "required": [
+  "schema_version",
+  "record_id",
+  "target_message_id",
+  "labels"
+ ],
+ "additionalProperties": false
+}

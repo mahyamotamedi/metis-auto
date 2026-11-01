@@ -22,10 +22,15 @@
 # (https://mimo.mi.com/docs/en-US/api/chat/openai-api), both checked
 # 2026-10-18; both default to thinking enabled.
 #
-# Version history: "endpoints-metis-2026-10-18" (Stage 6); "-s75" adds
+# reasoning_effort (openai only): the Chat Completions parameter of that name,
+# OpenAI reasoning guide https://developers.openai.com/api/docs/guides/reasoning
+# (checked 2026-11-01). Unset = the model's default; ADR-0030.
+#
+# Version history: "endpoints-metis-2026-10-18" (Stage 6); "-s75-effort"
+# (2026-11-01) lets the openai family take reasoning_effort; "-s75" adds
 # max_tokens_param, request_options, and the MiMo family (Q-32).
 
-version = "endpoints-metis-2026-10-18-s75"
+version = "endpoints-metis-2026-10-18-s75-effort"
 
 [[endpoints]]
 family = "openai"
@@ -34,6 +39,7 @@ api_format = "openai_chat_completions"
 auth_header = "Authorization: Bearer"
 secret = "metis_api_key"
 max_tokens_param = "max_completion_tokens"
+request_options = ["reasoning_effort"]
 status = "enabled"
 evidence = { source = "https://metisai.ir/api/wrapper/openai (saved 2026-10-18)", checked_on = 2026-10-18 }
 

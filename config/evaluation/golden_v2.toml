@@ -1,0 +1,199 @@
+# Evaluation dataset golden-v2: golden-v1 without attachment records (ADR-0029).
+# Status: PROPOSED. Same seed, quotas, caps and rules as config/evaluation/golden_v1.toml
+# (a copy; golden-v1 itself is untouched). Differences, and only these:
+#   - dataset identity (id, version, record prefix);
+#   - [derive]: the set is golden-v1 minus every record with an attachment, each
+#     replaced inside its own primary-intent x cohort cell (reserves first, then the
+#     pool), built from the stored golden-v1 selection, which must match
+#     base_fingerprint;
+#   - [coverage] attachment_dependent is removed: it cannot be met without
+#     attachments. Use golden-v1 for attachment-dependent requests;
+#   - [caveats]: records whose rule intent is media_generation carry a caveat.
+# Each margin must sum to exactly `total` (tested). Changing anything here changes
+# the config sha256, and so the fingerprint.
+
+[dataset]
+dataset_id = "golden-v2"
+name = "golden"
+version = "2"
+record_prefix = "gv2"
+total = 300
+seed = 20261101
+feature_version = "request-features-1"
+rubric_version = "rubric-v1"
+rubric_document = "docs/evaluation/annotation_rubric_v1.md"
+reserve_max = 150
+review_rounds_max = 3
+
+[cohorts]
+# Pseudonyms by descending USER turns (ties by id, "C" order). Same rule as the EDA.
+ranked = ["User A", "User B", "User C", "User D", "User E"]
+remaining = "Remaining accounts"
+
+[derive]
+base_dataset = "golden-v1"
+# The golden-v1 fingerprint this set derives from (reports/evaluation/golden_v1/fingerprint.json).
+base_fingerprint = "65953ba96eadab0bd9cee292283cccd52a3e6707df3cc1d964129ef5eeaa56b4"
+exclude = "attachments"
+
+[caveats.by_intent]
+# Rule intent (a proposal, not ground truth) -> caveat carried on the record's stratum.
+# A text model cannot produce the requested media, so these answers are reported apart.
+media_generation = "text_model_cannot_fulfil_media"
+
+[quotas.primary_intent]
+factual_qa = 45
+bot_service_support = 42
+conversational_smalltalk = 35
+writing_creative = 25
+ambiguous_context_dependent = 24
+translation = 23
+coding = 22
+advice_recommendation = 22
+math_reasoning = 21
+summarization_extraction_structured = 17
+media_generation = 16
+other_unclassified = 8
+
+[quotas.complexity_proxy]
+# Applied to a rule proxy at selection. The rubric's complexity label is set only by
+# human review; achieved counts on reviewed labels are reported separately.
+simple = 100
+average = 110
+complex = 90
+
+[quotas.language_group]
+persian = 170
+english = 45
+mixed = 40
+other_arabic_script = 15
+structured = 20
+finglish = 5
+other = 5
+
+[quotas.target_length]
+very_short = 45
+short = 70
+medium = 90
+long = 65
+very_long = 30
+
+[quotas.position]
+first = 90
+middle = 110
+late = 100
+
+[quotas.bot_class]
+instruction_only = 130
+instruction_rag = 95
+blank_no_config = 20
+workflow_unknown_config = 50
+rag_only = 5
+
+[quotas.cohort]
+"Remaining accounts" = 75
+"User A" = 60
+"User B" = 55
+"User C" = 45
+"User D" = 36
+"User E" = 29
+
+[minimums]
+# Mandatory floors: unmet means a reported failure of V-08, never a fabricated record.
+primary_intent_floor = 12
+primary_intent_floor_exempt = ["other_unclassified"]
+complexity_proxy = 60
+english = 30
+mixed = 30
+first_turn = 60
+instruction_rag_with_retrieval = 60
+workflow_unknown_config = 30
+distinct_bots = 100
+
+[caps]
+# The cap applies to one account. "Remaining accounts" pools 127 accounts, so it is
+# exempt; its quota (75) would otherwise contradict its own cap (ADR-0028).
+single_account_cohort_max = 66
+per_bot = 15
+waive_per_bot_if_cohort_bots_at_most = 2
+
+[coverage]
+# Overlapping counts over rule tags. mandatory = reported as a failure when unmet.
+pure_greeting = { minimum = 10, mandatory = true }
+time_sensitive = { minimum = 15, mandatory = true }
+format_or_structured = { minimum = 15, mandatory = true }
+after_widget = { minimum = 20, mandatory = false }
+history_recent = { minimum = 40, mandatory = true }
+history_distant = { minimum = 20, mandatory = true }
+instruction_dependent = { minimum = 40, mandatory = true }
+
+[buckets]
+# target_length uses these percentiles of eligible target characters.
+length_percentiles = [25, 50, 90, 99]
+length_labels = ["very_short", "short", "medium", "long", "very_long"]
+# User turn index, 1-based: first = 1; middle up to middle_max; late above it.
+middle_max = 5
+distant_history_min_turn = 6
+
+[selection]
+near_duplicate_bigram_jaccard = 0.8
+near_duplicate_rounds_max = 20
+improvement_passes = 3
+new_bot_bonus = 0.05
+bot_load_penalty = 0.02
+weights = { complexity_proxy = 1.0, language_group = 1.5, target_length = 1.0, position = 1.0, bot_class = 1.5, coverage = 1.0 }
+
+[language_groups]
+# language_label → quota group. short_uncertain (too few letters to classify) has no
+# quota in the design; it follows its dominant script instead (ADR-0028). The
+# original label stays on eval.request.
+fa = "persian"
+en = "english"
+fa_en_mixed = "mixed"
+arabic_script_other = "other_arabic_script"
+structured = "structured"
+finglish = "finglish"
+other = "other"
+empty = "other"
+short_uncertain_arabic = "persian"
+short_uncertain_latin = "english"
+short_uncertain_other = "other"
+
+[intent_map]
+# analysis.prompt_labels category → primary intent. unknown_uncertain is handled by
+# rule: follow-up signal on a later turn → ambiguous_context_dependent; else other.
+coding_intent_debugging = "coding"
+account_service_support = "bot_service_support"
+translation_language = "translation"
+summarization_extraction = "summarization_extraction_structured"
+reasoning_math = "math_reasoning"
+writing_editing = "writing_creative"
+advice_planning = "advice_recommendation"
+factual_question = "factual_qa"
+conversational_support = "conversational_smalltalk"
+media_generation = "media_generation"
+
+[rules]
+# Visible word lists for rule proposals. General vocabulary only; heuristic, never
+# ground truth. Matched on persian_fold_v1 text with word boundaries.
+greetings = ["سلام", "درود", "سلام خوبی", "سلام خوبین", "سلام وقت بخیر", "وقت بخیر", "صبح بخیر", "شب بخیر", "خوبی", "چطوری", "خداحافظ", "ممنون", "مرسی", "متشکرم", "hi", "hello", "hey", "thanks", "thank you", "bye"]
+greeting_max_chars = 25
+time_sensitive = ["امروز", "الان", "فردا", "دیروز", "این هفته", "امسال", "اخیر", "جدیدترین", "قیمت", "نرخ", "اخبار", "خبر", "today", "now", "tomorrow", "yesterday", "latest", "current", "price", "news"]
+current_info = ["قیمت", "نرخ", "اخبار", "جدیدترین", "وضعیت فعلی", "آب و هوا", "latest", "news", "price", "weather"]
+structured_output = ["json", "xml", "csv", "yaml", "جیسون"]
+domain_medical = ["پزشک", "دارو", "بیماری", "درمان", "medical", "diagnosis"]
+domain_legal = ["قانون", "حقوقی", "وکیل", "legal", "lawyer"]
+domain_finance = ["سرمایه گذاری", "بورس", "مالیات", "investment", "tax"]
+domain_engineering = ["مهندسی", "مدار", "engineering", "circuit"]
+domain_science = ["فیزیک", "شیمی", "زیست", "physics", "chemistry", "biology"]
+domain_academic = ["پایان نامه", "مقاله علمی", "thesis", "paper"]
+# Complexity proxy (selection only, never the complexity label).
+complex_min_chars_percentile = 90
+complex_min_history_chars = 8000
+average_min_chars_percentile = 50
+
+[review]
+# Unset thresholds mean "report only" (not evaluated).
+double_annotation_share = 0.2
+kappa_minimum = "unset"
+agreement_minimum = "unset"

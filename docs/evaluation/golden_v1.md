@@ -4,6 +4,8 @@ Status: **`annotated_provisional`**. Rule labels only; human review is pending. 
 
 **Limits, stated plainly.** Labels are not ground truth. Historical answers and models are references, not proof of what was best. This is a balanced challenge set, and neither its balanced nor its weighted results equal production performance. PostgreSQL is our choice; we do not know what Metis uses.
 
+**Attachments.** 23 of the 300 records carry an image attachment. [golden-v2](golden_v2.md) replaces them with text-only records; use golden-v1 for attachment-dependent requests.
+
 **Licence.** The data is licensed to Rahnama College for non-commercial education and may not be redistributed. Text stays in your local database and in git-ignored folders. Only ID-and-label files may be committed or shared.
 
 ## What is where

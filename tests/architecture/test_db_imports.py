@@ -9,7 +9,11 @@ SRC = Path(__file__).resolve().parents[2] / "src" / "metis_auto"
 DB_LIBRARIES = {"sqlalchemy", "psycopg", "alembic", "pyarrow"}
 ALLOWED_DIR = SRC / "data_access" / "postgres"
 # Composition passes engines around; it may name the engine type, nothing else.
-COMPOSITION = {SRC / "wiring" / "golden.py", SRC / "wiring" / "db_ingest.py"}
+COMPOSITION = {
+    SRC / "wiring" / "golden.py",
+    SRC / "wiring" / "db_ingest.py",
+    SRC / "wiring" / "golden_answers.py",
+}
 COMPOSITION_ALLOWED = {"sqlalchemy"}
 
 

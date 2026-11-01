@@ -58,9 +58,12 @@ def build_live_client(
     run_id: str,
     *,
     http_client_factory: Callable[[], Any] | None = None,
+    model_options: dict[str, dict[str, Any]] | None = None,
 ) -> ModelClient:
     """recording(OpenAI-compatible live client). Refuses, listing every
-    reason, unless ``live_permission`` allows live calls."""
+    reason, unless ``live_permission`` allows live calls. ``model_options``
+    replaces ``[model_options]`` for this client (a task that sets its own
+    request options, already checked by ``request_options``)."""
     permission = live_permission(loaded)
     if not permission.allowed:
         raise SettingsError("live calls refused: " + "; ".join(permission.reasons))
@@ -95,7 +98,9 @@ def build_live_client(
         catalogue=loaded.reference.catalogue,
         endpoints=routes,
         http_client_factory=http_client_factory,
-        request_options=request_options(loaded),
+        request_options=model_options
+        if model_options is not None
+        else request_options(loaded),
     )
     path = loaded.path(loaded.settings.paths.recorded_dir) / f"live-{run_id}.jsonl"
     return RecordingModelClient(client, path, run_id=run_id)
@@ -123,6 +128,8 @@ def request_options(loaded: LoadedSettings) -> dict[str, dict[str, Any]]:
                 )
             if name == "thinking":
                 body["thinking"] = {"type": value}
+            elif name == "reasoning_effort":
+                body["reasoning_effort"] = value
         if body:
             built[model_id] = body
     return built

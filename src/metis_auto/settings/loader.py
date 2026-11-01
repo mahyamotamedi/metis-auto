@@ -47,7 +47,7 @@ MIN_FINGERPRINT_KEY_BYTES = 32  # ADR-0015 amendment 1
 DEFAULTS_ONLY = {("budget", "lifetime_ceiling")}
 """Keys only ``config/defaults.toml`` may set: raising them is a reviewed
 commit plus a decision record, never a local edit (ADR-0018)."""
-NOT_IN_EXPERIMENT = ("live", "budget", "paths", "dev")
+NOT_IN_EXPERIMENT = ("live", "budget", "paths", "dev", "golden_answers")
 """Sections an experiment file may not set: the runtime decides what this
 machine allows (configuration.md §3 rules 1 and 2)."""
 SECRET_NAMES = {"api_key", "password", "secret", "fingerprint_key", "token"}

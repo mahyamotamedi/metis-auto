@@ -165,6 +165,17 @@ def eligible_requests(conn: Connection) -> list[dict[str, Any]]:
     return [dict(r._mapping) for r in rows]
 
 
+def attachment_request_ids(conn: Connection) -> set[str]:
+    """Eligible requests whose target message carries an attachment."""
+    rows = conn.execute(
+        text(
+            "SELECT request_id FROM eval.request "
+            "WHERE eligible AND attachment_count > 0"
+        )
+    )
+    return {r.request_id for r in rows}
+
+
 def exclusion_counts(conn: Connection) -> dict[str, int]:
     return {
         r.k: r.n
@@ -272,7 +283,7 @@ def billing_items(conn: Connection, message_id: str) -> list[dict[str, Any]]:
 def dataset_state(conn: Connection, dataset_id: str) -> dict[str, Any] | None:
     r = conn.execute(
         text(
-            """SELECT d.status, d.config_sha256,
+            """SELECT d.status, d.config_sha256, d.version,
                       (SELECT count(*) FROM eval.annotation a
                        JOIN eval.dataset_record x USING (record_id)
                        WHERE x.dataset_id = d.dataset_id AND a.method = 'human')
