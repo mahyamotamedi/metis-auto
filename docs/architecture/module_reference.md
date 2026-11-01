@@ -150,6 +150,13 @@ Every stage emits its event through `application.events.EventRecorder` → `Even
 | `evaluation/runner/runner.py` | 24 | Run one experiment (`pipeline_replay` or `cache_candidates`): admit pairing flags, order cases, per-case baseline events, run, aggregate from the events; write manifest, events, results, extras under `runs/<EXP-ID>/<run-id>/` | called by `scripts/run_experiment.py` via `wiring.experiments`; gets a pipeline or index factory | `application.accounting`, `application.events`, `application.measurement`, `application.pipeline`, `contracts`, `evaluation.baselines`, `evaluation.cache_candidates`, `evaluation.metrics`, `evaluation.replay`, `ports`, `settings` | `ReplayCase`s → `EvaluationResult` (+ files) | `[experiment]` | evaluation | provisional (Stage 8, minimal) |
 | `evaluation/runner/compare.py` | 24 | The comparison format: one row per run × key variant × scope × baseline, one column per metric, cells with n and interval or state and reason | called by scripts | `contracts` | (`RunManifest`, `EvaluationResult`)s → rows, Markdown | — | evaluation | provisional |
 
+### `evaluation/golden` — golden-set design (proposal only)
+
+| Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
+|---|---|---|---|---|---|---|---|---|
+| `evaluation/golden/allocation.py` | 21 | Exact-total margin quotas and a joint table with both margins exact | called by `scripts/full_eda_sessions.py`; calls `evaluation.sampling` | `evaluation.sampling` | populations → integer quotas | floors, totals | pure | provisional |
+| `evaluation/golden/manifest.py` | 21 | Candidate manifest entries and a leakage validator; target answer and later turns excluded | called by `scripts/full_eda_sessions.py` | — | session messages → entry | none | pure | provisional |
+
 ## `settings` — configuration loading (CMP-19, Stage 6)
 
 | Module | CMP | Responsibility | Called by / calls | Imports (checked) | In → out | Config | Kind | Status |
@@ -188,6 +195,8 @@ Content-free feature extraction and replay used by the full-dataset EDA. Written
 | `analysis/pairing.py` | 25 | Pair AI messages with the preceding USER message by order and flag pairing quality (FR-REQ-03) | called by `analysis.requests_table` | — | message frame → pair frame | none | pure | provisional |
 | `analysis/requests_table.py` | 25 | Order messages, chain logged history, join pairs with session, bot and billing | called by `scripts/full_eda_requests.py`; calls `analysis.pairing` | — | feature frames → request frame | none | pure | provisional |
 | `analysis/cache_replay.py` | 25 | Chronological exact-cache replay (TTL, LRU capacity, no future answers) and duplicate-group metrics; candidate hits only | called by `scripts/full_eda_analyze.py` | — | request frame → hit series | TTL, capacity | pure | provisional |
+| `analysis/session_config.py` | 25 | Instruction and RAG evidence states, mutually exclusive session classes, strict configuration fingerprints | called by `scripts/full_eda_sessions.py` | — | bot and session fields → classes, hashes | placeholder rule | pure | provisional |
+| `analysis/prompt_labels.py` | 25 | Local heuristic prompt categories with precedence, secondary tags, keyword bot tags | called by `scripts/full_eda_sessions.py` | — | text → labels | word lists | pure | provisional |
 | `analysis/stats.py` | 25 | Descriptive statistics, session-clustered bootstrap, Spearman, claims ledger | called by `scripts/full_eda_analyze.py` | — | arrays → numbers, ledger CSV | seed | pure | provisional |
 
 ## Not yet populated

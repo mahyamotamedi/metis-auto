@@ -20,4 +20,12 @@ Prioritised by the decision each one blocks. P0 blocks a design decision now; P1
 | 14 | P2 | Why do bots without RAG configuration log retrieved chunks on a small share of requests? | RAG-presence as a cache-key component |
 | 15 | P2 | Persian-capable reviewers for the review sets in `reports/full_eda/review/` (language labels, history dependence, cache-pair validity, answer quality). | label validation; semantic-cache precision |
 
+**Added 2026-11-01** (from [`session_config_report.md`](session_config_report.md)):
+
+| # | Priority | Question or request | Decision it blocks |
+|---|---|---|---|
+| 16 | P0 | `session.user_id` equals the bot's owner on every session. Is there a sender ID? Who is actually chatting? Are the five largest accounts organisations, service accounts, or something else? | any per-person analysis; cross-user caching |
+| 17 | P0 | What does a `workflow` bot do, and can its instructions, model and retrieval configuration be exported? Every session has a `bot_id`: how does a direct LLM conversation appear in this data, if at all? | classifying over a quarter of sessions; routing scope |
+| 18 | P1 | Can the chatbot name and an instruction and model history be exported? | bot purpose; configuration change analysis |
+
 **Security note for the owner:** the execution prompt contained a literal Hugging Face access token. It should be rotated and kept out of shared files.

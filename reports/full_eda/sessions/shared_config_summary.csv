@@ -1,0 +1,11 @@
+scope,kind,unique_configurations,bots,repeated_groups,bots_in_repeated_groups,extra_bots_beyond_one_per_group,cross_owner_groups,same_owner_groups,sessions_in_repeated_groups,share_of_chatbot_sessions
+all_bots,all,1290,1563,39,312,273,12,27,3533,0.061510872782352836
+all_bots,instruction_only,671,706,21,56,35,10,11,3531,0.06147605202221564
+all_bots,rag_only,9,9,0,0,0,0,0,0,0.0
+all_bots,both,505,506,1,2,1,0,1,2,3.482076013719379e-05
+all_bots,instruction_rag_unknown,105,342,17,254,237,2,15,0,0.0
+used_bots,all,570,592,11,33,22,5,6,3509,0.061093023660706514
+used_bots,instruction_only,325,346,10,31,21,5,5,3507,0.06105820290056932
+used_bots,rag_only,1,1,0,0,0,0,0,0,0.0
+used_bots,both,208,209,1,2,1,0,1,2,3.482076013719379e-05
+used_bots,instruction_rag_unknown,36,36,0,0,0,0,0,0,0.0

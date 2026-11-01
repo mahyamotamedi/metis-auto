@@ -78,7 +78,7 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 - Notebook: `experiments/sample_eda/`. Outputs: `reports/sample_eda/`.
 
 ### Full-dataset EDA (2026-10-30)
-- [full_eda_report.md](full_eda/full_eda_report.md) (short report) · [eda_findings.md](full_eda/eda_findings.md) · [data_dictionary.md](full_eda/data_dictionary.md) · [experiment_plan.md](full_eda/experiment_plan.md) · [metis_questions.md](full_eda/metis_questions.md) · [checklist_status.md](full_eda/checklist_status.md)
+- [full_eda_report.md](full_eda/full_eda_report.md) (short report) · [eda_findings.md](full_eda/eda_findings.md) · [data_dictionary.md](full_eda/data_dictionary.md) · [experiment_plan.md](full_eda/experiment_plan.md) · [metis_questions.md](full_eda/metis_questions.md) · [checklist_status.md](full_eda/checklist_status.md) · [session_config_report.md](full_eda/session_config_report.md) (sessions, shared configurations, top five, golden-set proposal)
 - Notebook and README: `experiments/full_eda/`. Outputs: `reports/full_eda/`.
 
 ## Agent conventions

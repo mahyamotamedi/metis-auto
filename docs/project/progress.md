@@ -956,3 +956,12 @@ Three fixes from the audit; nothing committed. (1) **Provenance:** `RecordingMod
 ### Merge-review fixes (2026-10-31)
 
 Applied after the pre-merge review of `evaluation-framework-e0-e6`; nothing committed. (1) **Lint:** the two Windows-commit architecture tests reformatted (`ruff check` and `ruff format --check` clean). (2) **ADR index:** ADR-0025 and ADR-0026 rows in `docs/README.md`. (3) **Register:** A-74…A-77, Q-45, TODO-15 (open `gpt-5.5` items); Q-05 marked superseded. (4) **Stale premium references:** demo quickstart, `token_accounting.md` examples and `config/README.md` now say `gpt-5.5`; the brief keeps its historical text with a superseded note. (5) **Nits:** `tiktoken_backend.py` docstring lists gpt-5.5; the grouping test strings are tagged `[SYNTHETIC]`. Not changed: the gpt-4.1-nano 404 and the mimo-v2.5 retirement (TODO-13), which this branch does not touch.
+
+
+---
+
+## Session and configuration analysis, golden-set proposal (2026-11-01)
+
+Run on `full-eda` under the owner's task. Status: **awaiting review**; nothing committed. Report: [session_config_report.md](../full_eda/session_config_report.md). Code: `scripts/full_eda_sessions.py`, `analysis/session_config.py`, `analysis/prompt_labels.py`, `evaluation/golden/`; tests in `tests/unit/analysis/test_session_analysis.py`. Run locally with no paid calls and no raw prompts sent anywhere; only aggregate frequent single words (at least five accounts) were viewed to steer the rules.
+
+Measured: 71.6% of sessions inferred chatbot, 0.4% inferred direct, 27.9% unclassifiable (mostly `workflow`); top five owner accounts hold 96.75% of user turns; identical instruction and RAG is almost absent. Not done: human label review (44.4% of requests are `unknown`), golden set not approved, no reference answers.

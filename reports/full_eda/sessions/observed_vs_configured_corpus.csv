@@ -1,0 +1,6 @@
+relation,bots
+configured_empty,4
+configured_null,14
+disjoint,5
+partial_overlap,52
+subset_of_configured,117
