@@ -1,5 +1,5 @@
 # CI: lint, format check and the default offline test run, which includes the
-# architecture rules (tests/architecture). ADR-XXXX (ci-github-actions); QA-TEST,
+# architecture rules (tests/architecture). ADR-0035; QA-TEST,
 # QA-REPL. The commands are the local setup of ADR-0001 and the local development
 # guide, in the same order.
 #

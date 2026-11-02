@@ -269,7 +269,7 @@ def _popular_question(load: Loader, m: re.Match, sprint: dict, req, rows):
     )
 
 
-RERANKER_DIR = ROOT / "experiments" / "context" / "exp-ctx-002-reranker-cut"
+RERANKER_DIR = ROOT / "experiments" / "context" / "exp-ctx-003-reranker-cut"
 CURVE = OUT_DIR / "context.reranker_cut.curve.csv"
 
 
@@ -331,7 +331,7 @@ TARGETS = (
     Target(
         pattern=r"^cache\.popular_question\.(?P<variant>first_turn|all_turns)"
         r"(?:\.ttl(?P<ttl>[0-9.]+)h)?$",
-        experiment=ROOT / "experiments" / "caching" / "exp-cache-002-popular-question",
+        experiment=ROOT / "experiments" / "caching" / "exp-cache-003-popular-question",
         build=_popular_question,
         caveat=(
             "on a one-row frame the nightly window is empty, so this times "

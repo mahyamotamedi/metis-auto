@@ -19,12 +19,16 @@ Columns are the real names in ``requests.parquet`` (``a_timestamp``,
   1. A whole session takes the period of its earliest timed request
      (``a_timestamp``, then ``a_order``); a session with no time is ``unknown``.
   2. A duplicate family is ``(bot_id, u_h_norm)`` over rows with user text. A
-     family with rows on both sides goes to the side holding more of its rows;
-     its rows on the other side become ``excluded``. A tie is broken by a seeded
-     hash of the family, which is the only use of ``seed`` (owner decision
-     2026-11-02: no held-out split here).
+     family with rows on both sides keeps its ``report`` rows; its ``tune``
+     rows become ``excluded`` (owner decision 2026-11-02, report side keeps).
+     Step 2 never relabels a ``report`` row, so the report side is exactly the
+     report sessions of step 1. ``seed`` does not change the result (no ties,
+     no held-out split).
   So no session and no family is on both sides. ``excluded`` rows are in
-  neither side of the fit; callers report their count by period (FR-EVAL-08).
+  neither side of the fit; all of them come from tune sessions, and callers
+  report their count (FR-EVAL-08). Decision record:
+  ADR-0036,
+  ``docs/adr/0036-replay-scope-split-and-baselines.md``.
 - ``bot_sufficiency``: a bot with fewer than ``min_n`` requests is
   ``insufficient``; a bot with one request always is.
 - ``cap_tenant_share`` downsamples the largest tenants (``user_id``; a missing
@@ -100,7 +104,11 @@ def scope(req: pd.DataFrame, ctx: ReplayContext) -> pd.DataFrame:
 def split_by_session(req: pd.DataFrame, *, seed: int) -> pd.Series:
     """Split label per row: ``tune``, ``report``, ``unknown`` or ``excluded``.
 
-    Needs ``period`` (from ``scope``). See the module docstring for the rules.
+    Needs ``period`` (from ``scope``). See the module docstring for the rules: a
+    duplicate family with rows on both sides keeps its ``report`` rows, and its
+    ``tune`` rows become ``excluded``; no ``report`` row is relabelled.
+    ``seed`` is checked but does not change the result (the rule has no ties);
+    it stays for the plan's shared interface.
     """
     if isinstance(seed, bool) or not isinstance(seed, int):
         raise TypeError("seed must be an int")
@@ -113,33 +121,14 @@ def split_by_session(req: pd.DataFrame, *, seed: int) -> pd.Series:
 
     on_side = split.isin(SIDES) & req["u_h_norm"].notna()
     family = _family(req.loc[on_side])
-    sides = pd.crosstab(family, split[on_side])
-    for side in SIDES:
-        if side not in sides:
-            sides[side] = 0
-    both = sides[(sides["tune"] > 0) & (sides["report"] > 0)]
-    if not both.empty:
-        keep = pd.Series(
-            [
-                _winner(key, int(row["tune"]), int(row["report"]), seed)
-                for key, row in both.iterrows()
-            ],
-            index=both.index,
-        )
-        winner = family.map(keep)
-        lose = winner.notna() & (split[on_side] != winner)
-        split[lose[lose].index] = EXCLUDED
+    in_report = set(family[split[on_side] == "report"])
+    lose = (split[on_side] == "tune") & family.isin(in_report)
+    split[lose[lose].index] = EXCLUDED
     return split.rename("split")
 
 
 def _family(req: pd.DataFrame) -> pd.Series:
     return req["bot_id"].astype(str) + "\x1f" + req["u_h_norm"].astype(str)
-
-
-def _winner(key: str, n_tune: int, n_report: int, seed: int) -> str:
-    if n_tune != n_report:
-        return "tune" if n_tune > n_report else "report"
-    return "tune" if _unit(seed, key) < 0.5 else "report"
 
 
 def _unit(seed: int, key: str) -> float:

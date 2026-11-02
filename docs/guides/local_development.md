@@ -52,7 +52,7 @@ Everything runs offline with fakes. No `.env` is needed: without `METIS_FINGERPR
 
 Lint and format: `.venv/bin/ruff check . && .venv/bin/ruff format --check .`
 
-CI (`.github/workflows/ci.yml`, [ADR-XXXX (ci-github-actions)](../adr/draft-ci-github-actions.md)) runs the setup above (with `requirements-db.lock`, the dev lock plus the `db` extra) and these three commands on every push and pull request, on Linux and macOS, with no secrets and without the opt-in tests.
+CI (`.github/workflows/ci.yml`, [ADR-0035](../adr/0035-ci-github-actions.md)) runs the setup above (with `requirements-db.lock`, the dev lock plus the `db` extra) and these three commands on every push and pull request, on Linux and macOS, with no secrets and without the opt-in tests.
 
 ## 3. Configuration in practice
 

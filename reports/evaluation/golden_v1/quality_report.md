@@ -209,5 +209,5 @@ See `validation.md`.
 
 - D-01 source row counts reconcile: pass (10 tables).
 - D-02 no silent drops: pass (26 checks, 0 failed).
-- D-03 re-ingest is a no-op: not yet run.
+- D-03 re-ingest is a no-op: pass.
 - D-04 referential integrity: pass (FKs enforced; orphan checks).

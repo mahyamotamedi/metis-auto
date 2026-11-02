@@ -30,3 +30,6 @@ data/compressors/
 
 # Streamlit secrets file (Demo B): never used; the key lives only in .env.
 .streamlit/secrets.toml
+
+# Local planning notes (superpowers plans), never committed
+docs/superpowers/

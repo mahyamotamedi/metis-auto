@@ -1,4 +1,4 @@
-"""Run the popular-question cache (exp-cache-002) on the full data (R-A1 phase 2).
+"""Run the popular-question cache (exp-cache-003) on the full data (R-A1 phase 2).
 
 Reads ``data/derived/full_eda/requests.parquet`` (local, git-ignored), applies C's
 ``replay_scope.scope`` and ``levers.with_blocks``, then:
@@ -65,7 +65,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REQUESTS = ROOT / "data" / "derived" / "full_eda" / "requests.parquet"
 RAW_MESSAGES = ROOT / "data" / "full_data" / "raw" / "data"
 SPRINT = ROOT / "config" / "evaluation" / "sprint.toml"
-EXPERIMENT_DIR = ROOT / "experiments" / "caching" / "exp-cache-002-popular-question"
+EXPERIMENT_DIR = ROOT / "experiments" / "caching" / "exp-cache-003-popular-question"
 OUT_DIR = ROOT / "reports" / "levers"
 SHEET = ROOT / "data" / "derived" / "review" / "k1_popular_question.csv"
 

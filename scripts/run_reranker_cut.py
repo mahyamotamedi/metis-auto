@@ -1,4 +1,4 @@
-"""Run the reranker cut (exp-ctx-002) on the full data: a token-sizing curve (R-A2).
+"""Run the reranker cut (exp-ctx-003) on the full data: a token-sizing curve (R-A2).
 
 Reads ``data/derived/full_eda/requests.parquet`` and the derived chunk table
 ``data/derived/full_eda/chunks/`` (no text; local, git-ignored), applies C's
@@ -58,7 +58,7 @@ REQUESTS = ROOT / "data" / "derived" / "full_eda" / "requests.parquet"
 CHUNKS = ROOT / "data" / "derived" / "full_eda" / "chunks"
 RAW = ROOT / "data" / "full_data" / "raw" / "data"
 SPRINT = ROOT / "config" / "evaluation" / "sprint.toml"
-EXPERIMENT_DIR = ROOT / "experiments" / "context" / "exp-ctx-002-reranker-cut"
+EXPERIMENT_DIR = ROOT / "experiments" / "context" / "exp-ctx-003-reranker-cut"
 CONFIG = EXPERIMENT_DIR / "config.toml"
 OUT_DIR = ROOT / "reports" / "levers"
 CURVE_NAME = "context.reranker_cut.curve.csv"

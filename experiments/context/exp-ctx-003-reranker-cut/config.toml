@@ -1,0 +1,31 @@
+# exp-ctx-003 reranker cut (final plan R-A2). Read by scripts/run_reranker_cut.py
+# and scripts/measure_lever_overhead.py, not by scripts/run_experiment.py.
+# Every value here is hashed into the result manifests (config_hash).
+
+[reranker_cut]
+# EDA claims ledger, recon.t0rag.coef_rag: OLS billed input tokens per retrieved
+# chunk character at turn 0 (8,495 single-call requests with RAG, no memory;
+# R^2 0.95). Evidence class: hypothetical reconstruction. Checked 2026-11-02.
+tokens_per_char = 0.3384048487819899
+tokens_per_char_source = "reports/full_eda/tables/claims_ledger.csv recon.t0rag.coef_rag"
+
+# Minimum unique chunks kept per request (owner, R-A2 brief: 3 by default).
+floor = 3
+
+# Curve: top_k over unique chunks; "none" rows (no top_k) are added by the script.
+top_k_grid = [3, 5, 8, 10, 12]
+
+# Thresholds: these quantiles of the unique-chunk scores of eligible TUNE
+# requests (per scorer); the report period never sets a threshold.
+threshold_quantiles = [0.10, 0.25, 0.50]
+
+# Headline rule (written before any result): on the TUNE period, the point that
+# removes the most input tokens while keeping at least this share of the score
+# mass (sum of unique-chunk scores) of the eligible requests; ties go to the
+# larger top_k, then the lower threshold. If no point qualifies, the gentlest
+# point (largest top_k, no threshold) is the headline and says so.
+min_score_mass_kept = 0.90
+
+# Lexical scorer: seeded sample of eligible requests per period (text in memory
+# only). Seed: [split] seed in config/evaluation/sprint.toml.
+lexical_sample = 2000

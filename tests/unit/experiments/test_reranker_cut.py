@@ -1,4 +1,4 @@
-"""exp-ctx-002 reranker cut (final plan R-A2), a context step version.
+"""exp-ctx-003 reranker cut (final plan R-A2), a context step version.
 
 Every frame here is [SYNTHETIC]: ``m-1``-style labels stand in for message IDs,
 ``h-1`` for text fingerprints, and ``text ...`` strings for chunk and question
@@ -20,7 +20,7 @@ from metis_auto.settings import StrategySettings, StrategySlot
 from metis_auto.wiring.experiments import load_candidate
 
 ROOT = Path(__file__).resolve().parents[3]
-EXP = ROOT / "experiments" / "context" / "exp-ctx-002-reranker-cut"
+EXP = ROOT / "experiments" / "context" / "exp-ctx-003-reranker-cut"
 SLOPE = 0.5  # [SYNTHETIC] tokens per chunk character, easy arithmetic
 
 
