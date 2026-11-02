@@ -1,0 +1,130 @@
+{
+  "blocked_share_of_user_messages": {
+    "any": 0.355762,
+    "category": 0.354738,
+    "category_only": 0.35221,
+    "code": 0.003552,
+    "code_only": 0.001024
+  },
+  "evidence": "simulation; quality not proven; intent labels heuristic, unreviewed (A-78)",
+  "label_state_unknown_share_of_user_messages": 0.0,
+  "llm_rows": {
+    "not_simple_by_history_only": 0.313843,
+    "not_simple_by_history_only_of_rules_simple": 0.407241,
+    "not_simple_by_unknown_history_only_sensitivity": 0.01554,
+    "own_blocked": 0.353593,
+    "own_unknown": 0.463935,
+    "prior_blocked": 0.621623,
+    "rules_simple": 0.770655
+  },
+  "llm_rows_with_skipped_user_messages": 0.02498,
+  "llm_rows_without_user_message": 0.006096,
+  "max_input_tokens": 16000,
+  "max_u_chars": 200,
+  "naive_timestamps": "Q-06",
+  "primary_category_share_of_user_messages": {
+    "account_service_support": 0.044161,
+    "advice_planning": 0.022677,
+    "coding_intent_debugging": 0.015755,
+    "conversational_support": 0.08876,
+    "factual_question": 0.266425,
+    "media_generation": 0.001197,
+    "reasoning_math": 0.017861,
+    "summarization_extraction": 0.0072,
+    "translation_language": 0.030675,
+    "unknown_uncertain": 0.460647,
+    "writing_editing": 0.044642
+  },
+  "requests_llm": 209331,
+  "split": "tune (split_by_session tune rows inside the tune period)",
+  "user_messages_llm": 208055,
+  "user_messages_with_flags": 208055,
+  "versions": {
+    "primary": {
+      "moved_share_llm": 0.38753,
+      "n_moved": 81122,
+      "reasons_llm": {
+        "attachments": 2676,
+        "attachments_unknown": 1262,
+        "functions": 2277,
+        "incumbent_unpriced": 88,
+        "moved": 81122,
+        "no_cheaper_candidate": 80110,
+        "no_eligible_candidate": 11,
+        "not_simple": 41279,
+        "unknown_tokens": 506
+      },
+      "simple_share_llm": 0.770655,
+      "todays_models": {
+        "baseline": 225.436153,
+        "ci95_session_clustered": [
+          0.204143,
+          0.340666
+        ],
+        "saving": 61.251049,
+        "saving_share": 0.2717,
+        "saving_share_top_tenant": 0.764136
+      },
+      "version": "route.small_classifier.rules"
+    },
+    "strict": {
+      "moved_share_llm": 0.107992,
+      "n_moved": 22606,
+      "reasons_llm": {
+        "attachments": 2676,
+        "attachments_unknown": 1262,
+        "content_blocked": 51715,
+        "functions": 2277,
+        "history_blocked": 65697,
+        "incumbent_unpriced": 75,
+        "moved": 22606,
+        "no_cheaper_candidate": 21227,
+        "no_eligible_candidate": 11,
+        "not_simple": 41279,
+        "unknown_tokens": 506
+      },
+      "simple_share_llm": 0.209759,
+      "todays_models": {
+        "baseline": 225.436153,
+        "ci95_session_clustered": [
+          0.047567,
+          0.09712
+        ],
+        "saving": 15.455365,
+        "saving_share": 0.068558,
+        "saving_share_top_tenant": 0.663587
+      },
+      "version": "route.small_classifier.strict"
+    },
+    "strict_unknown_blocked": {
+      "moved_share_llm": 0.033841,
+      "n_moved": 7084,
+      "reasons_llm": {
+        "attachments": 2676,
+        "attachments_unknown": 1262,
+        "content_blocked": 51715,
+        "functions": 2277,
+        "history_blocked": 17566,
+        "incumbent_unpriced": 73,
+        "label_unknown": 80960,
+        "moved": 7084,
+        "no_cheaper_candidate": 3922,
+        "no_eligible_candidate": 11,
+        "not_simple": 41279,
+        "unknown_tokens": 506
+      },
+      "simple_share_llm": 0.052926,
+      "todays_models": {
+        "baseline": 225.436153,
+        "ci95_session_clustered": [
+          0.009209,
+          0.012999
+        ],
+        "saving": 2.477095,
+        "saving_share": 0.010988,
+        "saving_share_top_tenant": 0.417076
+      },
+      "version": "route.small_classifier.strict_unknown_blocked"
+    }
+  }
+}

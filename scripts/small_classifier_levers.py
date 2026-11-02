@@ -1,4 +1,5 @@
-"""Checks and lever results of EXP-ROUTE-012 small classifier, rules mode (R-C3).
+"""Checks and lever results of EXP-ROUTE-012 small classifier, rules and strict
+modes (R-C3; ADR-0046 Amendment 1).
 
 Reads ``requests.parquet``, scopes it and splits it by session
 (``replay_scope``). Eligibility and candidate cost come from
@@ -17,11 +18,19 @@ recorded units).
    (default ``report``, read once) and writes one ``LeverResult`` per version
    and baseline to ``--levers-dir`` (default ``reports/levers/``). Run it on a
    clean tree, so the manifest carries the code commit.
+3. ``--strict``: the same for the strict versions (``STRICT_VERSIONS``, primary
+   candidates, same frozen thresholds). Needs the flags table from
+   ``scripts/derive_turn_intent_flags.py`` (``--flags``); the intent columns
+   are computed on the whole scoped table before the split filter, so every
+   earlier turn of a session counts. ``--strict --checks-only`` writes
+   ``reports/routing/exp-route-012/strict_tune_checks.json`` (aggregates).
 
 No IDs, hashes or text are written or printed.
 
     .venv/bin/python scripts/small_classifier_levers.py --checks-only
     .venv/bin/python scripts/small_classifier_levers.py
+    .venv/bin/python scripts/small_classifier_levers.py --strict --checks-only
+    .venv/bin/python scripts/small_classifier_levers.py --strict
 """
 
 from __future__ import annotations
@@ -54,6 +63,7 @@ from metis_auto.analysis.replay_scope import (
     scope,
     split_by_session,
 )
+from metis_auto.analysis.stats import cluster_bootstrap_ratio
 from metis_auto.wiring.experiments import code_version
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,6 +71,8 @@ EXP = ROOT / "experiments/routing/exp-route-012-small-classifier"
 DERIVED = ROOT / "data/derived/full_eda"
 TABLES = ROOT / "reports/full_eda/tables"
 CHECKS = ROOT / "reports/routing/exp-route-012/tune_checks.json"
+STRICT_CHECKS = ROOT / "reports/routing/exp-route-012/strict_tune_checks.json"
+FLAGS = ROOT / "data/derived/routing/turn_intent_flags.parquet"
 RATES_VERSION = "full-eda-implied-unit-rates"
 MAX_U_CHARS = 200
 """EDA rule feature (``scripts/full_eda_analyze.py``, claim
@@ -75,8 +87,11 @@ CHECK_FOLDS = 5
 VERSIONS: Mapping[str, bool] = {"primary": False, "with_reasoning_models": True}
 """Candidate set name -> include_reasoning_models. The primary drives the
 decision; the secondary is a lower bound on candidate cost."""
+STRICT_VERSIONS = ("strict", "strict_unknown_blocked")
+"""Strict modes (ADR-0046 Amendment 1), primary candidates only."""
 REQ_COLUMNS = [
     "session_id",
+    "user_message_id",
     "turn",
     "a_order",
     "a_timestamp",
@@ -99,6 +114,7 @@ REQ_COLUMNS = [
     "a_bill_outputTokens",
     "a_bill_totalCost",
     "a_n_per_call_only_items",
+    "n_skipped_user",
 ]
 
 
@@ -119,9 +135,24 @@ def make_versions(
     max_u_chars: float,
     max_input_tokens: float,
     cached_separately: frozenset[str],
+    strict: bool = False,
 ) -> dict[str, Any]:
+    """``rules`` per candidate set (``VERSIONS``), or with ``strict`` the
+    ``STRICT_VERSIONS`` on the primary candidates."""
     v = _version()
     sets = v.candidate_sets(rules, catalogue)
+    if strict:
+        return {
+            mode: v.SmallClassifier(
+                mode,
+                rules=rules,
+                candidates=sets["primary"],
+                cached_separately=cached_separately,
+                max_u_chars=max_u_chars,
+                max_input_tokens=max_input_tokens,
+            )
+            for mode in STRICT_VERSIONS
+        }
     return {
         name: v.SmallClassifier(
             "rules",
@@ -153,9 +184,12 @@ def write_levers(
     min_n: int | None,
     tenant_cap: float,
     config_extra: Mapping[str, object] = {},
+    strict: bool = False,
 ) -> list[Path]:
     """Apply both versions to ``req`` (scoped, one split, with blocks) and write
-    one ``LeverResult`` per version and baseline into ``out_dir``."""
+    one ``LeverResult`` per version and baseline into ``out_dir``. With
+    ``strict``, the strict versions instead; ``req`` must already carry the
+    intent columns (``version.intent_columns`` on the whole table)."""
     v = _version()
     sep = cached_separately
     cheap = best_single_cheap_model(req, ctx, cached_separately=sep)
@@ -165,6 +199,7 @@ def write_levers(
         max_u_chars=max_u_chars,
         max_input_tokens=max_input_tokens,
         cached_separately=sep,
+        strict=strict,
     )
     out_dir.mkdir(parents=True, exist_ok=True)
     paths = []
@@ -184,7 +219,7 @@ def write_levers(
             config = {
                 "version": version.name,
                 "mode": version.mode,
-                "candidate_set": set_name,
+                "candidate_set": "primary" if strict else set_name,
                 "candidates": list(version.candidates),
                 "max_u_chars": max_u_chars,
                 "max_input_tokens": max_input_tokens,
@@ -195,6 +230,8 @@ def write_levers(
                 "min_n": min_n,
                 "tenant_cap": tenant_cap,
             } | dict(config_extra)
+            if strict:
+                config["content_rule"] = version.mode
             run_ctx = ctx
             if key == "as_logged":
                 run_ctx = dataclasses.replace(
@@ -356,6 +393,136 @@ def checks(
     return result
 
 
+def _share(n: int, d: int) -> float | None:
+    return _f(n / d) if d else None
+
+
+def strict_checks(
+    req: pd.DataFrame,
+    flags: pd.DataFrame,
+    *,
+    ctx: ReplayContext,
+    rules: Mapping[str, Any],
+    premium_model: str,
+    cached_separately: frozenset[str],
+    n_boot: int = 1000,
+) -> dict[str, Any]:
+    """Free checks of the strict modes on one split (aggregates, LLM rows).
+    ``req`` already carries the intent columns (computed on the whole table)."""
+    v = _version()
+    sep = cached_separately
+    llm = req["llm_request"].astype(bool)
+    n_llm = int(llm.sum())
+    f = flags.drop_duplicates("message_id").set_index("message_id")
+    mids = pd.Series(req.loc[llm, "user_message_id"].dropna().unique())
+    own = f.reindex(mids[mids.isin(f.index)])
+    n_msg = len(own)
+    cat, code = own["blocked_by_category"], own["has_code"]
+    versions = make_versions(
+        rules, ctx.catalogue, max_u_chars=MAX_U_CHARS,
+        max_input_tokens=MAX_INPUT_TOKENS, cached_separately=sep,
+    ) | make_versions(
+        rules, ctx.catalogue, max_u_chars=MAX_U_CHARS,
+        max_input_tokens=MAX_INPUT_TOKENS, cached_separately=sep, strict=True,
+    )  # fmt: skip
+    rule = versions["primary"].base_simple(req) & llm
+    own_b = req[v.OWN_BLOCKED].astype(bool)
+    own_u = req[v.OWN_UNKNOWN].astype(bool)
+    prior_b = req[v.PRIOR_BLOCKED].astype(bool)
+    prior_u = req[v.PRIOR_UNKNOWN].astype(bool)
+    hist_only = rule & ~own_b & prior_b
+    hist_only_sens = rule & ~own_b & ~own_u & ~prior_b & prior_u
+    result: dict[str, Any] = {
+        "requests_llm": n_llm,
+        "user_messages_llm": int(mids.size),
+        "user_messages_with_flags": n_msg,
+        "llm_rows_without_user_message": _share(
+            int(req.loc[llm, "user_message_id"].isna().sum()), n_llm
+        ),
+        "llm_rows_with_skipped_user_messages": _share(
+            int((pd.to_numeric(req.loc[llm, "n_skipped_user"]) > 0).sum()), n_llm
+        ),
+        "primary_category_share_of_user_messages": {
+            str(k): _f(n / n_msg)
+            for k, n in own["primary_category"].value_counts().sort_index().items()
+        },
+        "label_state_unknown_share_of_user_messages": _share(
+            int(own["label_state"].ne("ok").sum()), n_msg
+        ),
+        "blocked_share_of_user_messages": {
+            "category": _share(int(cat.sum()), n_msg),
+            "code": _share(int(code.sum()), n_msg),
+            "category_only": _share(int((cat & ~code).sum()), n_msg),
+            "code_only": _share(int((code & ~cat).sum()), n_msg),
+            "any": _share(int((cat | code).sum()), n_msg),
+        },
+        "llm_rows": {
+            "own_blocked": _share(int((own_b & llm).sum()), n_llm),
+            "own_unknown": _share(int((own_u & llm).sum()), n_llm),
+            "prior_blocked": _share(int((prior_b & llm).sum()), n_llm),
+            "rules_simple": _share(int(rule.sum()), n_llm),
+            "not_simple_by_history_only": _share(int(hist_only.sum()), n_llm),
+            "not_simple_by_history_only_of_rules_simple": _share(
+                int(hist_only.sum()), int(rule.sum())
+            ),
+            "not_simple_by_unknown_history_only_sensitivity": _share(
+                int(hist_only_sens.sum()), n_llm
+            ),
+        },
+        "versions": {},
+    }
+    cheap = best_single_cheap_model(req, ctx, cached_separately=sep)
+    for name in ("primary", *STRICT_VERSIONS):
+        version = versions[name]
+        out = combine(req, None, None, version, ctx)
+        moved = out[v.MOVED].fillna(False).astype(bool) & llm
+        before, after = v.baseline_frames(
+            req,
+            out,
+            ctx,
+            baseline="todays_models",
+            premium_model=premium_model,
+            cached_separately=sep,
+            cheap_model=cheap,
+            rates={},
+        )
+        cols = ["block_fees", "block_token_cost"]
+        known = before[cols].notna().all(axis=1) & llm
+        base = before.loc[known, cols].sum(axis=1)
+        save = base - after.loc[known, cols].sum(axis=1)
+        total, saved = math.fsum(base), math.fsum(save)
+        _, lo, hi = cluster_bootstrap_ratio(
+            save.to_numpy(dtype=float),
+            base.to_numpy(dtype=float),
+            req.loc[known, "session_id"].astype(str).to_numpy(),
+            n_boot=n_boot,
+            seed=ctx.seed,
+        )
+        by_tenant = save.groupby(req.loc[known, "user_id"]).sum()
+        result["versions"][name] = {
+            "version": version.name,
+            "simple_share_llm": _share(
+                int((out[v.SIMPLE].fillna(False).astype(bool) & llm).sum()), n_llm
+            ),
+            "moved_share_llm": _share(int(moved.sum()), n_llm),
+            "n_moved": int(moved.sum()),
+            "todays_models": {
+                "baseline": _f(total),
+                "saving": _f(saved),
+                "saving_share": _f(saved / total) if total else None,
+                "ci95_session_clustered": [_f(lo), _f(hi)],
+                "saving_share_top_tenant": _f(by_tenant.max() / saved)
+                if saved > 0
+                else None,
+            },
+            "reasons_llm": {
+                str(r): int(n)
+                for r, n in out.loc[llm, v.REASON].value_counts().sort_index().items()
+            },
+        }
+    return result
+
+
 def load_rates(path: Path) -> dict[str, dict[str, float]]:
     """Implied recorded-unit rates per 1M tokens by logged model (NaN = none)."""
     t = pd.read_csv(path).set_index("model")
@@ -382,8 +549,12 @@ def main() -> int:
     ap.add_argument("--checks-only", action="store_true")
     ap.add_argument("--split", default="report", choices=("tune", "report"))
     ap.add_argument("--levers-dir", type=Path, default=ROOT / "reports/levers")
-    ap.add_argument("--checks", type=Path, default=CHECKS)
+    ap.add_argument("--checks", type=Path, default=None)
+    ap.add_argument("--strict", action="store_true")
+    ap.add_argument("--flags", type=Path, default=FLAGS)
     args = ap.parse_args()
+    if args.checks is None:
+        args.checks = STRICT_CHECKS if args.strict else CHECKS
     sprint = tomllib.loads((ROOT / "config/evaluation/sprint.toml").read_text())
     base = sprint["baselines"]
     rules = sprint["routing"]
@@ -396,6 +567,37 @@ def main() -> int:
     )
     rates = load_rates(TABLES / "implied_unit_rates.csv")
     req, sep = _load(ctx)
+    flags = None
+    if args.strict:
+        if not args.flags.exists():
+            raise SystemExit(
+                f"{args.flags} missing: run scripts/derive_turn_intent_flags.py"
+            )
+        flags = pd.read_parquet(args.flags)
+        # Whole scoped table: earlier turns outside the split or period count.
+        req = _version().intent_columns(req, flags)
+    if args.checks_only and args.strict:
+        tune = req[(req["split"] == "tune") & (req["period"] == "tune")]
+        summary = strict_checks(
+            tune,
+            flags,
+            ctx=ctx,
+            rules=rules,
+            premium_model=base["premium_model"],
+            cached_separately=sep,
+        )
+        summary |= {
+            "split": "tune (split_by_session tune rows inside the tune period)",
+            "max_u_chars": MAX_U_CHARS,
+            "max_input_tokens": MAX_INPUT_TOKENS,
+            "naive_timestamps": "Q-06",
+            "evidence": "simulation; quality not proven; intent labels heuristic, "
+            "unreviewed (A-78)",
+        }
+        args.checks.parent.mkdir(parents=True, exist_ok=True)
+        args.checks.write_text(json.dumps(summary, sort_keys=True, indent=2) + "\n")
+        print(json.dumps(summary, sort_keys=True, indent=2))
+        return 0
     if args.checks_only:
         tune = req[(req["split"] == "tune") & (req["period"] == "tune")]
         summary = checks(
@@ -438,6 +640,7 @@ def main() -> int:
         min_n=ctx.min_n,
         tenant_cap=sprint["sample"]["tenant_cap"],
         config_extra={"split": args.split, "sprint": sprint["version"]},
+        strict=args.strict,
     )
     print(f"wrote {len(paths)} lever results to {args.levers_dir}")
     return 0

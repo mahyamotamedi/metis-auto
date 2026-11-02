@@ -1,7 +1,7 @@
 """EXP-ROUTE-012: small classifier, a routing ``StepVersion`` (final plan R-C3;
 FR-ROUTE-01..05, FR-REQ-06, H-5; ADR-0045, ADR-0046).
 
-**Two modes** (owner decision 2026-11-03), ``SmallClassifier(mode, ...)``:
+**Modes** (owner decisions 2026-11-03), ``SmallClassifier(mode, ...)``:
 
 - ``"rules"``: a transparent threshold rule. A request is *simple* only if its
   user message is short (``u_n_chars <= max_u_chars``), it has no RAG
@@ -15,6 +15,16 @@ FR-ROUTE-01..05, FR-REQ-06, H-5; ADR-0045, ADR-0046).
   ``benchmark:<name>``; None refuses). Never labels from logged answers or
   cost. ``nested_cv`` chooses the L2 strength in session- and family-grouped
   nested cross-validation. No real labels exist yet (P-1..P-3 not run).
+- ``"strict"`` and ``"strict_unknown_blocked"`` (ADR-0046 Amendment 1): the
+  ``rules`` test with the same frozen thresholds, and also no *blocked* user
+  message in this request or any earlier request of its session (sticky; later
+  turns never count, FR-REQ-06). A message is blocked if its rule label
+  (``analysis.prompt_labels.primary_category``, primary or a secondary tag) is
+  coding, math or factual, or the code detector
+  (``domain.features.detectors.detect_code``) fires (``flags_table``). The
+  sensitivity variant also blocks unknown labels (``unknown_uncertain``, empty
+  or unreadable text, no flags row). The labels are heuristic (A-78). The
+  frame needs ``intent_columns`` first.
 
 **Features** come only from information available before generation
 (FR-REQ-06): ``FEATURES``. ``feature_matrix`` refuses any other column, so an
@@ -29,7 +39,8 @@ cheaper than the incumbent (the logged model at list price,
 ``baselines_full.model_row_costs``) and is another model. Never upward;
 everything else keeps its incumbent; fees never change. ``route_reason``
 records why: routing_base's first failing reason, ``no_eligible_candidate``,
-``not_simple``, ``incumbent_unpriced``, ``no_cheaper_candidate`` or
+``not_simple``, ``content_blocked``, ``label_unknown``, ``history_blocked``
+(strict modes), ``incumbent_unpriced``, ``no_cheaper_candidate`` or
 ``moved``.
 
 **Reasoning models** (owner decision 2026-11-03): a candidate whose catalogue
@@ -65,6 +76,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from metis_auto.analysis import prompt_labels
 from metis_auto.analysis.baselines_full import (
     REPRICED_KEYS,
     model_row_costs,
@@ -87,10 +99,14 @@ from metis_auto.analysis.routing_base import (
     eligibility_frame,
 )
 from metis_auto.analysis.stats import cluster_bootstrap_ratio
+from metis_auto.domain.features.detectors import CodeConfig, detect_code
 
 VERSION_PREFIX = "route.small_classifier"
 EVIDENCE = "simulation"
-MODES = ("rules", "logistic")
+STRICT_MODES = ("strict", "strict_unknown_blocked")
+MODES = ("rules", "logistic", *STRICT_MODES)
+RULE_MODES = ("rules", *STRICT_MODES)
+"""Modes that use the frozen thresholds."""
 REASONING_CAPABILITY = "hidden_reasoning_billed_as_output"
 OVER_8K_TOKENS = 8000
 TOP_BOTS = 20
@@ -128,6 +144,26 @@ INPUT_TOKENS = "route_input_tokens"
 OVER_8K = "route_over_8k"
 MOVED_B = "route_moved_in_baseline"
 SAVING_UNKNOWN = "route_saving_unknown"
+
+BLOCKING_CATEGORIES = frozenset(
+    {prompt_labels.CODING, prompt_labels.MATH, prompt_labels.FACTUAL}
+)
+FLAG_COLUMNS = (
+    "message_id",
+    "primary_category",
+    "blocked_by_category",
+    "has_code",
+    "label_state",
+)
+OWN_BLOCKED = "intent_blocked"
+OWN_UNKNOWN = "intent_unknown"
+PRIOR_BLOCKED = "intent_prior_blocked"
+PRIOR_UNKNOWN = "intent_prior_unknown"
+INTENT_COLUMNS = (OWN_BLOCKED, OWN_UNKNOWN, PRIOR_BLOCKED, PRIOR_UNKNOWN)
+INTENT_ASSUMPTION = (
+    "intent labels heuristic, unreviewed (A-78); Persian word lists pending "
+    "review (K-2/K-3)."
+)
 
 
 # --- candidates ------------------------------------------------------------------
@@ -437,6 +473,78 @@ def least_aggressive(
     return min(near, key=lambda k: (table[k]["moved_share"], k))
 
 
+# --- intent flags (strict modes) ---------------------------------------------------
+
+
+def turn_flags(text: object) -> dict[str, Any]:
+    """Flags of one user message (no text kept). Empty or non-string text has
+    ``label_state`` ``unknown`` and blocks nothing by itself."""
+    if not isinstance(text, str) or not text.strip():
+        return {
+            "primary_category": prompt_labels.UNKNOWN,
+            "blocked_by_category": False,
+            "has_code": False,
+            "label_state": "unknown",
+        }
+    primary, secondary = prompt_labels.primary_category(text)
+    return {
+        "primary_category": primary,
+        "blocked_by_category": bool(BLOCKING_CATEGORIES & {primary, *secondary}),
+        "has_code": bool(detect_code(text, CodeConfig())),
+        "label_state": "ok",
+    }
+
+
+def flags_table(message_ids: Sequence[Any], texts: Sequence[object]) -> pd.DataFrame:
+    """One row of ``FLAG_COLUMNS`` per message; the texts are not kept."""
+    rows = [turn_flags(t) for t in texts]
+    out = pd.DataFrame(rows, columns=list(FLAG_COLUMNS[1:]))
+    out.insert(0, "message_id", list(message_ids))
+    return out.astype({"blocked_by_category": bool, "has_code": bool})
+
+
+def intent_columns(req: pd.DataFrame, flags: pd.DataFrame) -> pd.DataFrame:
+    """``req`` plus ``INTENT_COLUMNS``. Pass the whole requests frame (before
+    any split or period filter), so every earlier turn of a session is seen.
+
+    Own flags join on ``user_message_id``; no user message or no flags row is
+    unknown. ``PRIOR_*``: any request of the same session strictly earlier by
+    (``turn``, ``a_order``) has the flag; requests tied on that key never see
+    each other. Later turns never count (FR-REQ-06)."""
+    f = flags.drop_duplicates("message_id").set_index("message_id")
+    mid = req["user_message_id"]
+    known = mid.isin(f.index)
+    joined = f.reindex(mid.where(known))
+    joined.index = req.index
+    blocked = (
+        joined["blocked_by_category"].fillna(False).astype(bool)
+        | joined["has_code"].fillna(False).astype(bool)
+    ) & known
+    unknown = (
+        ~known
+        | joined["label_state"].ne("ok")
+        | joined["primary_category"].eq(prompt_labels.UNKNOWN)
+    )
+    out = req.copy()
+    out[OWN_BLOCKED] = blocked.astype(bool)
+    out[OWN_UNKNOWN] = unknown.astype(bool)
+    keys = ["session_id", "turn", "a_order"]
+    order = req[keys].sort_values(keys, kind="stable").index
+    for own, prior in ((OWN_BLOCKED, PRIOR_BLOCKED), (OWN_UNKNOWN, PRIOR_UNKNOWN)):
+        s = req.loc[order, keys].assign(flag=out.loc[order, own].astype(int))
+        by_session = s.groupby("session_id", sort=False, dropna=False)
+        upto = by_session["flag"].cummax()
+        before = upto.groupby(s["session_id"], sort=False, dropna=False).shift(1)
+        # A tie on (turn, a_order) takes the value before its first row.
+        first = (
+            before.fillna(0)
+            .groupby([s[k] for k in keys], sort=False, dropna=False)
+            .transform("first")
+        )
+        out[prior] = first.reindex(req.index).fillna(0).astype(bool)
+    return out
+
+
 # --- the version -----------------------------------------------------------------
 
 
@@ -481,8 +589,8 @@ class SmallClassifier:
     ) -> None:
         if mode not in MODES:
             raise ValueError(f"mode must be one of {MODES}, not {mode!r}")
-        if mode == "rules" and (max_u_chars is None or max_input_tokens is None):
-            raise ValueError("rules mode needs max_u_chars and max_input_tokens")
+        if mode in RULE_MODES and (max_u_chars is None or max_input_tokens is None):
+            raise ValueError(f"{mode} mode needs max_u_chars and max_input_tokens")
         if mode == "logistic":
             if model is None:
                 raise ValueError(
@@ -504,7 +612,11 @@ class SmallClassifier:
         self.name = f"{VERSION_PREFIX}.{mode}{suffix}"
 
     def simple(self, req: pd.DataFrame) -> pd.Series:
-        if self.mode == "rules":
+        return self.base_simple(req) & ~self.blocks(req).any(axis=1)
+
+    def base_simple(self, req: pd.DataFrame) -> pd.Series:
+        """The threshold rule or the logistic model, before any content rule."""
+        if self.mode in RULE_MODES:
             return rule_simple(
                 req,
                 max_u_chars=self.max_u_chars,
@@ -513,6 +625,26 @@ class SmallClassifier:
             )
         p = self.model.proba(req, cached_separately=self.cached_separately)
         return (p >= self.model.threshold).astype(bool)
+
+    def blocks(self, req: pd.DataFrame) -> pd.DataFrame:
+        """Why the content rule blocks a row: ``content_blocked``,
+        ``label_unknown``, ``history_blocked`` (bool columns; all False outside
+        the strict modes)."""
+        none = pd.Series(False, index=req.index)
+        if self.mode not in STRICT_MODES:
+            return pd.DataFrame({k: none for k in ("content", "unknown", "history")})
+        missing = [c for c in INTENT_COLUMNS if c not in req]
+        if missing:
+            raise ValueError(
+                f"{self.name} needs {missing}: run intent_columns on the frame first"
+            )
+        sens = self.mode == "strict_unknown_blocked"
+        own = req[OWN_BLOCKED].astype(bool)
+        unknown = req[OWN_UNKNOWN].astype(bool) & sens
+        history = req[PRIOR_BLOCKED].astype(bool)
+        if sens:
+            history = history | req[PRIOR_UNKNOWN].astype(bool)
+        return pd.DataFrame({"content": own, "unknown": unknown, "history": history})
 
     def apply(self, req: pd.DataFrame, ctx: ReplayContext) -> pd.DataFrame:
         hidden = reasoning_models(ctx.catalogue) & set(self.candidates)
@@ -523,7 +655,9 @@ class SmallClassifier:
             )
         sep = self.cached_separately
         out = req.copy()
-        simple = self.simple(req)
+        base_simple = self.base_simple(req)
+        blocks = self.blocks(req)
+        simple = base_simple & ~blocks.any(axis=1)
         elig = eligibility_frame(req, ctx, rules=self.rules, cached_separately=sep)
         costs = candidate_costs(
             req, ctx, self.candidates, rules=self.rules, cached_separately=sep
@@ -558,7 +692,10 @@ class SmallClassifier:
             [
                 ~any_ours & reason_base.notna(),
                 ~any_ours,
-                ~simple,
+                ~base_simple,
+                blocks["content"],
+                blocks["unknown"],
+                blocks["history"],
                 inc_cost.isna(),
                 ~moved,
             ],
@@ -566,6 +703,9 @@ class SmallClassifier:
                 reason_base.astype(object),
                 "no_eligible_candidate",
                 "not_simple",
+                "content_blocked",
+                "label_unknown",
+                "history_blocked",
                 "incumbent_unpriced",
                 "no_cheaper_candidate",
             ],
@@ -703,7 +843,7 @@ def _fsum(values: pd.Series) -> float:
 
 def assumptions(baseline: str, version: SmallClassifier) -> tuple[str, ...]:
     """The authored assumptions of one result (``LeverResult.assumptions``)."""
-    if version.mode == "rules":
+    if version.mode in RULE_MODES:
         how = (
             f"Rule: simple = u_n_chars <= {version.max_u_chars:g}, no RAG query, no "
             "attachment (unknown = not simple), no configured function, effective "
@@ -719,6 +859,21 @@ def assumptions(baseline: str, version: SmallClassifier) -> tuple[str, ...]:
             f"quality not proven: labels {version.model.labels_source}; only "
             "benchmark judgements (P-3) could support quality."
         )
+    extra: tuple[str, ...] = ()
+    if version.mode in STRICT_MODES:
+        unknown = (
+            "unknown labels (unknown_uncertain, empty or unreadable text, no "
+            "flags row) block too."
+            if version.mode == "strict_unknown_blocked"
+            else "unknown labels do not block."
+        )
+        strict = (
+            "Strict rule (ADR-0046 Amendment 1): not simple if this or an earlier "
+            "user message of the session is labelled coding, math or factual "
+            "(primary or secondary tag) or holds code; later turns never count; "
+            f"{unknown}"
+        )
+        extra = (INTENT_ASSUMPTION, strict)
     if version.include_reasoning_models:
         cands = (
             "lower bound on candidate cost, hidden reasoning not counted: candidates "
@@ -740,6 +895,7 @@ def assumptions(baseline: str, version: SmallClassifier) -> tuple[str, ...]:
     )
     return (
         quality,
+        *extra,
         how,
         cands,
         "Cost simulation: logged tokens assumed model-independent (tokenizers "

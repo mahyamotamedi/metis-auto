@@ -32,3 +32,31 @@ No quality labels exist (P-1..P-3 have not run), so a routing version can only s
 - With P-3 labels, the logistic mode trains on them through `nested_cv` and the routing decision rule (within 10 points, lower 95% bound) can be applied; until then no routing result can pass it.
 - Overhead (FR-ROUTE-04) is not measured; `overhead_ms_*` stay `None`.
 - Guarding tests: `test_labels_only_from_declared_source`, `test_session_grouped_nested_cv`, `test_small_n_insufficient_or_wide_interval`, `test_quality_not_proven_in_assumptions_without_labels`, `test_never_routes_upward`, `test_fee_block_unchanged_by_routing`, `test_uses_routing_base_eligibility`, `test_reasoning_models_excluded_in_primary`, `test_answer_derived_features_refused`, `test_unknown_routed_rate_is_unknown_saving`, `test_least_aggressive_threshold`, `test_write_levers_on_synthetic`.
+
+## Amendment 1 (2026-11-03): strict content rules
+
+- Status: points 1 to 6 **decided** by the project owner, 2026-11-03 (Pipeline C). Point 7 (how history is computed) is the agent's reading, **provisional**.
+- Relates to: FR-REQ-06, FR-ROUTE-01..03, H-5; A-78 (rule labels are heuristic), ADR-0028 (labels are never ground truth); K-2/K-3 (Persian word-list review). Code: `version.py` (`turn_flags`, `flags_table`, `intent_columns`, modes `strict` and `strict_unknown_blocked`), `scripts/derive_turn_intent_flags.py`, `scripts/small_classifier_levers.py --strict`.
+
+**Context.** The `rules` mode moves a request on size and features alone. A short coding, math or factual question can be short and still need a stronger model, and a later turn of such a conversation inherits that need. No quality labels exist, so the owner chose a stricter, conservative rule from the existing local labels.
+
+**Decision.**
+1. **Derived table:** `scripts/derive_turn_intent_flags.py` reads the raw USER messages in memory only, applies `prompt_labels.primary_category` (with its secondary tags) and the domain code detector to each, and writes only `message_id`, `primary_category`, `blocked_by_category`, `has_code`, `label_state` to git-ignored `data/derived/routing/turn_intent_flags.parquet`. No text is stored or printed. Empty or unreadable text gives `label_state` `unknown`.
+2. **Blocked message:** its primary category or any secondary tag is `coding_intent_debugging`, `reasoning_math` or `factual_question`, or the code detector fires.
+3. **Sticky history:** a request is not simple if its own user message is blocked or any earlier user message of the same session is blocked. Only earlier turns; never look ahead (FR-REQ-06).
+4. **Unknown:** the primary variant does not block `unknown_uncertain` or `label_state` `unknown`; a sensitivity variant blocks them too. A request whose own label is unknown stays on its incumbent in the sensitivity variant.
+5. **Everything else is R-C3:** the same frozen thresholds (not re-tuned), routing base eligibility, reasoning-billed candidates excluded, never upward, fees unchanged, the same per-baseline pricing (points 3 to 6). Implemented as two modes of the same version; the `rules` results do not change.
+6. **Version ids** `route.small_classifier.strict` and `route.small_classifier.strict_unknown_blocked`; cost simulations, `correctness_state` `unmeasured`, assumptions "quality not proven" and "intent labels heuristic, unreviewed (A-78); Persian word lists pending review (K-2/K-3)".
+7. **History computation (agent, provisional):** earlier = strictly earlier by (`turn`, `a_order`) within `session_id` (requests tied on that key never see each other); computed on the whole scoped table before the split and period filter. A request without a user message, or a message without a flags row, has an unknown label. User messages skipped by pairing (`n_skipped_user`) have no request row, so the history rule does not see them (2.5% of tune LLM rows have one).
+
+**Alternatives considered.**
+- *Own message only, no history:* misses follow-ups ("and the second one?") of a blocked conversation. Rejected by the owner (point 3).
+- *Block `unknown_uncertain` in the primary:* 46% of tune user messages have no rule match; blocking them makes the primary nearly empty. Kept as the sensitivity variant.
+- *A copy of the version for the strict rule:* two copies of the routing and pricing code drift. Rejected (point 5).
+- *Recompute flags inside the replay from raw text:* would read raw text in every replay. Rejected: one local derived table without text.
+
+**Consequences.**
+- Tune split (LLM rows, `todays_models`, primary candidates): moved share 0.388 → 0.108 (`strict`) → 0.034 (`strict_unknown_blocked`); saving share 0.272 → 0.069 [0.048, 0.097] → 0.011 [0.009, 0.013]. History alone makes 0.314 of LLM rows not simple.
+- Most blocks come from `factual_question` (0.266 of user messages as primary), whose rule matches a trailing question mark and common question words: the strict result depends on unreviewed word lists (A-78, K-2/K-3).
+- The flags table must be derived locally before `--strict`; it holds no text and is git-ignored.
+- Guarding tests: `test_coding_message_blocks_routing`, `test_math_and_factual_block_routing`, `test_code_detector_blocks_routing`, `test_blocked_earlier_turn_blocks_later_turns`, `test_later_blocked_turn_does_not_affect_earlier_turns`, `test_unknown_not_blocked_in_primary_blocked_in_sensitivity`, `test_rules_mode_results_unchanged`, `test_flags_table_has_no_text_column`, `test_write_strict_levers_on_synthetic`, `test_strict_checks_on_synthetic`.

@@ -4,7 +4,7 @@
 - **Hypothesis (H-5):** requests that are short, without retrieval, attachments or tools and with a small input can move to a cheaper eligible model; the rule finds how much of the `token_cost` block that would remove. **Not tested here: whether they keep quality.**
 - **Evidence class:** *simulation*. **Cost simulation; quality not proven: no labels (P-1..P-3 not run).** `correctness_state` is `unmeasured`. The routing decision rule (acceptable rate within 10 points of the incumbent) **cannot be passed** by this version.
 - **ID:** `exp-route-012`. `routing_plan.md` reserves `-001` to `-008` and `-010`; Pipeline B took `-011` (R-B3) and left `-009` to the plan. No other `exp-route-*` exists on `origin/main` or any remote branch (checked 2026-11-03).
-- **Decision record:** ADR-0046, [draft](../../../docs/adr/0046-small-classifier-routing.md); routing base [ADR-0045](../../../docs/adr/0045-routing-base-eligibility-and-failover.md); pricing [ADR-0036](../../../docs/adr/0036-replay-scope-split-and-baselines.md), [ADR-0038](../../../docs/adr/0038-context-token-saving-conversion.md), [ADR-0041](../../../docs/adr/0041-replay-pricing-for-logged-models.md).
+- **Decision record:** [ADR-0046](../../../docs/adr/0046-small-classifier-routing.md) and its Amendment 1 (strict content rules); routing base [ADR-0045](../../../docs/adr/0045-routing-base-eligibility-and-failover.md); pricing [ADR-0036](../../../docs/adr/0036-replay-scope-split-and-baselines.md), [ADR-0038](../../../docs/adr/0038-context-token-saving-conversion.md), [ADR-0041](../../../docs/adr/0041-replay-pricing-for-logged-models.md).
 
 ## Version (`version.py`, owner decisions 2026-11-03)
 
@@ -57,6 +57,33 @@ Grid on the tune split (LLM rows, primary, `todays_models`): saving share 0.058 
 - `as_logged` moves 134,199 rows (primary), more than `todays_models`: at recorded rates gpt-4.1-nano is cheaper than many incumbents that are cheaper at list price. Its implied rates rest on **447 billed items** (gpt-5-nano 11, mimo-v2.5 10): thin.
 - **Concentration (Review Focus 5):** top bot 0.378, top 5 bots 0.748, top tenant **0.764** of the `todays_models` saving; the largest tenant holds 0.456 of LLM requests, **above the 0.35 cap**: flagged (`tenant_rank:1.over_cap`). Traffic-weighted saving share (per-bot shares weighted by LLM requests) 0.128 vs 0.272 cost-weighted. Over 8,000 input tokens: 0.073.
 
+## Strict content rules (ADR-0046 Amendment 1, owner decisions 2026-11-03)
+
+Two more modes of the same `SmallClassifier`, with the **same frozen thresholds** (not re-tuned), the same routing base eligibility, primary candidates only (reasoning-billed excluded), never upward, fees unchanged and the same per-baseline pricing. The `rules` results do not change (`test_rules_mode_results_unchanged` pins their digests from the R-C3 code).
+
+- **Flags** (`flags_table`, `scripts/derive_turn_intent_flags.py`): every raw `USER` message is read **in memory**, labelled with `analysis.prompt_labels.primary_category` (primary and secondary tags) and the domain code detector (`detect_code`, `CodeConfig()` defaults), and only `message_id`, `primary_category`, `blocked_by_category`, `has_code`, `label_state` are written to git-ignored `data/derived/routing/turn_intent_flags.parquet`. Empty or unreadable text: `label_state` `unknown`.
+- **Blocked:** primary category or any secondary tag is `coding_intent_debugging`, `reasoning_math` or `factual_question`, or the code detector fires.
+- **Sticky history** (`intent_columns`): a request is not simple if its own user message is blocked or any **earlier** request of the same session (by `turn`, `a_order`; ties never see each other) has a blocked user message. Later turns never count (FR-REQ-06). The columns are computed on the whole scoped table before the split and period filter, so earlier turns outside the split still count.
+- **Unknown:** `route.small_classifier.strict` does not block `unknown_uncertain`, `label_state` `unknown`, a request without a user message or a message without a flags row. `route.small_classifier.strict_unknown_blocked` (sensitivity) blocks them, as their own label (`label_unknown`, stays on its incumbent) and in history.
+- **Reasons:** `content_blocked`, `label_unknown`, `history_blocked` after `not_simple` (the threshold rule comes first).
+- **Not seen by the history rule:** user messages skipped by pairing (two or more USER turns before one answer, `n_skipped_user`): 2.5% of tune LLM rows have one. 0.6% of tune LLM rows have no user message (unknown).
+
+### Results, tune split (free checks, 2026-11-03)
+
+`reports/routing/exp-route-012/strict_tune_checks.json`. 209,331 tune LLM rows, 208,055 distinct user messages, all with a flags row; `label_state` unknown 0 (no empty user text in the tune LLM rows). Cost simulation; quality not proven; intent labels heuristic, unreviewed (A-78).
+
+- **Primary category** of user messages: unknown_uncertain 0.461, factual_question 0.266, conversational_support 0.089, writing_editing 0.045, account_service_support 0.044, translation_language 0.031, advice_planning 0.023, reasoning_math 0.018, coding_intent_debugging 0.016, summarization_extraction 0.007, media_generation 0.001.
+- **Blocked user messages:** 0.356 (by category 0.355, by code 0.0036; code only 0.0010). Most blocks are `factual_question`, whose rule includes a trailing `?` and common question words.
+- **History:** 0.622 of LLM rows have a blocked earlier turn. Not simple **because of history only**: 0.314 of LLM rows (0.407 of the rows the threshold rule calls simple). Sensitivity, unknown history only: 0.016.
+
+| Version | moved share (LLM) | `todays_models` saving share [95% session-clustered] | top tenant share of the saving |
+|---|---|---|---|
+| `rules` (R-C3) | 0.388 (81,122) | 0.272 [0.204, 0.341] (61.25 of 225.44 USD) | 0.764 |
+| `strict` | 0.108 (22,606) | 0.069 [0.048, 0.097] (15.46 USD) | 0.664 |
+| `strict_unknown_blocked` | 0.034 (7,084) | 0.011 [0.009, 0.013] (2.48 USD) | 0.417 |
+
+The `rules` interval here uses 1,000 bootstrap draws (the R-C3 table: the `LeverResult` default), so its bounds differ in the third decimal. Writer dry run on tune (scratch, not kept), primary strict: `as_logged` 0.049 (5,645 rows unknown), `premium_gpt_5_5` 0.083, `best_single_cheap` 0; sensitivity: 0.012 (1,008 unknown), 0.017, 0.
+
 ## Comparison (same tune split; not the report split)
 
 - **R-A3 (Pipeline A, per-bot reassignment):** not on `origin/main` (checked 2026-11-03); no comparison.
@@ -70,6 +97,8 @@ Grid on the tune split (LLM rows, primary, `todays_models`): saving share 0.058 
 | Tokens are model-independent; the logged output length holds on the target model | current, provisional |
 | Hidden reasoning is not in list-price cost; the primary set avoids it, the secondary is a lower bound | current, decided (owner) |
 | A short, retrieval-free, small request is answerable by the cheapest eligible model at equal quality | speculative (H-5; no labels) |
+| Strict modes: the rule labels and the code detector find coding, math and factual messages well enough; Persian word lists are placeholders | current, provisional (A-78; K-2/K-3 review pending) |
+| Strict modes: a blocked earlier turn makes later turns of the session unsafe to move | current, decided (owner) |
 | Implied recorded-unit rates of thinly used models (gpt-4.1-nano 447 items) price `as_logged` well enough | current, provisional |
 | `a_rag_n_queries` and the billed input are known before generation (retrieval and prompt assembly precede the call); multi-call input includes later calls | current, provisional |
 | P-3 benchmark labels arrive with a declared source and train the logistic mode | future |
@@ -78,7 +107,8 @@ Grid on the tune split (LLM rows, primary, `todays_models`): saving share 0.058 
 
 | File | What |
 |---|---|
-| `version.py` | `SmallClassifier`, `rule_simple`, `feature_matrix`, `fit_logistic`, `LogisticModel`, `component_folds`, `nested_cv`, `least_aggressive`, `candidate_sets`, `reasoning_models`, `implied_cost`, `baseline_frames`, `assumptions`, `lever_result` |
-| [`scripts/small_classifier_levers.py`](../../../scripts/small_classifier_levers.py) | `--checks-only` (tune checks) and the writer (one `LeverResult` per version and baseline, `reports/levers/route.small_classifier.rules[.with_reasoning_models].<baseline>.json`) |
+| `version.py` | `SmallClassifier` (modes `rules`, `logistic`, `strict`, `strict_unknown_blocked`), `turn_flags`, `flags_table`, `intent_columns`, `rule_simple`, `feature_matrix`, `fit_logistic`, `LogisticModel`, `component_folds`, `nested_cv`, `least_aggressive`, `candidate_sets`, `reasoning_models`, `implied_cost`, `baseline_frames`, `assumptions`, `lever_result` |
+| [`scripts/small_classifier_levers.py`](../../../scripts/small_classifier_levers.py) | `--checks-only` (tune checks) and the writer (one `LeverResult` per version and baseline, `reports/levers/route.small_classifier.rules[.with_reasoning_models].<baseline>.json`); `--strict` for the strict versions (`--strict --checks-only`: `strict_tune_checks.json`; `--strict`: `route.small_classifier.strict[_unknown_blocked].<baseline>.json`) |
+| [`scripts/derive_turn_intent_flags.py`](../../../scripts/derive_turn_intent_flags.py) | the local flags table (text in memory only, git-ignored output) |
 
 Tests: `tests/unit/experiments/test_exp_route_012_small_classifier.py` (synthetic). Overhead: not measured (L-1); `overhead_ms_*` stay `None`, never 0.
