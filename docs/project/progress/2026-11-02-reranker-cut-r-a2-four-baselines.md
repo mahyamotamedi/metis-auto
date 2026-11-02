@@ -10,4 +10,5 @@ Final-plan tasks R-A2 and T-2 (Pipeline A), branch `reranker-overhead-baselines`
 - **Not done, by decision (no code):**
   - **T-2 MLflow tracking** moves to stretch, following the plan's Risks row (MLflow vs the locks; run records stay file-based, ADR-0022). This still needs the team's OK.
   - **R-A2 cut-first (a)**, the real `bge-reranker-v2-m3` run on about 2,000 RAG turns, was not run: there is no approved local GPU run and no licence answer (O-1). R-A2 stays a token-sizing curve, as the plan's "GPU unavailable" fallback allows.
+- **Decision record:** [ADR-XXXX (reranker-cut-and-lever-overhead)](../../adr/draft-reranker-cut-and-lever-overhead.md) records R-A2's cut and headline rules, the L-1 overhead method, the `lever_id` naming, pricing outside `apply`, and the two deferrals above. It is a draft: the merger numbers it with `scripts/adr_finalize.py`.
 - **Open:** price `gemini-2.5-flash` in the sprint catalogue (C and owner) so `todays_models` becomes representative. The score-mass headline rule is a proxy, not quality.
