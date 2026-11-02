@@ -32,14 +32,20 @@ from metis_auto.evaluation.golden_answers.config import (
     SettingsError,
     parse_settings,
 )
+from metis_auto.evaluation.golden_answers.estimate import (
+    GPT_5_5_CACHE_INTERVAL,
+    cache_scenarios,
+    sharing,
+)
 from metis_auto.evaluation.golden_answers.request import (
-    LAYOUT_VERSION,
+    LAYOUTS,
     build_request,
     prompt_fingerprint,
 )
 from metis_auto.evaluation.golden_answers.runner import (
     AnswerRow,
     Task,
+    order_for_caching,
     run_answers,
     select_pilot,
 )
@@ -136,8 +142,29 @@ def view_rows():
     ]
 
 
-def test_parts_follow_the_pass_through_order_and_add_no_system_prompt():
-    built = build_request(view_rows(), {"bot_instruction", "target_user_message"})
+def test_the_default_layout_is_the_datasets_recorded_positions():
+    assert parse_settings(RAW).layout == "dataset_positions"
+    assert LAYOUTS == ("dataset_positions", "pass_through")
+
+
+def test_dataset_positions_send_components_where_the_dataset_records_them():
+    built = build_request(view_rows(), {"bot_instruction"}, "dataset_positions")
+    assert [p.role for p in built.parts] == [
+        PartRole.INSTRUCTIONS,
+        PartRole.USER,
+        PartRole.ASSISTANT,
+        PartRole.USER,  # the target message
+        PartRole.RETRIEVED,  # chunks come after it, as recorded
+        PartRole.RETRIEVED,
+    ]
+    assert built.parts[3].text == "[SYNTHETIC] the question"
+    assert len(built.parts) == 6  # one part per component text, nothing extra
+    # the default argument is the same layout
+    assert build_request(view_rows(), set()).parts == built.parts
+
+
+def test_pass_through_sends_retrieved_before_the_user_message():
+    built = build_request(view_rows(), set(), "pass_through")
     assert [p.role for p in built.parts] == [
         PartRole.INSTRUCTIONS,
         PartRole.USER,
@@ -146,18 +173,33 @@ def test_parts_follow_the_pass_through_order_and_add_no_system_prompt():
         PartRole.RETRIEVED,
         PartRole.USER,
     ]
-    assert built.parts[-1].text == "[SYNTHETIC] the question"
-    assert len(built.parts) == 6  # one part per component text, nothing extra
-    assert LAYOUT_VERSION == "pass_through_v1"
-
-
-def test_the_order_matches_the_projects_pass_through_strategy():
-    # the retrieved chunks sit after the user message in the dataset's positions,
-    # but are sent before it, as domain.context.pass_through does
-    built = build_request(view_rows(), set())
     comps = [p.component for p in built.parts]
     assert comps.index(ComponentName.RETRIEVED) < comps.index(ComponentName.MESSAGE)
-    assert comps[0] == ComponentName.INSTRUCTIONS
+    assert built.parts[-1].text == "[SYNTHETIC] the question"
+
+
+def test_both_layouts_send_the_same_texts_and_the_same_caveats():
+    a = build_request(view_rows(), {"earlier_rag_chunk"}, "dataset_positions")
+    b = build_request(view_rows(), {"earlier_rag_chunk"}, "pass_through")
+    assert sorted(p.text for p in a.parts) == sorted(p.text for p in b.parts)
+    assert a.caveats == b.caveats == ("earlier_rag_not_sent",)
+
+
+def test_an_unknown_layout_is_refused():
+    with pytest.raises(ValueError, match="layout"):
+        build_request(view_rows(), set(), "bot_order")
+    raw = json.loads(json.dumps(RAW, default=str))
+    raw["run"]["layout"] = "bot_order"
+    with pytest.raises(SettingsError, match="layout"):
+        parse_settings(raw)
+
+
+def test_the_layout_is_in_the_settings_hash_and_the_manifest():
+    base = settings()
+    other = settings(layout="pass_through")
+    assert base.settings_hash != other.settings_hash
+    assert base.manifest()["layout"] == "dataset_positions"
+    assert other.manifest()["layout"] == "pass_through"
 
 
 def test_blank_instructions_are_skipped_and_flagged_not_replaced():
@@ -190,9 +232,11 @@ def test_a_record_without_exactly_one_target_is_refused():
 
 def test_the_prompt_fingerprint_is_stable_ordered_and_hides_text():
     parts = build_request(view_rows(), set()).parts
-    assert prompt_fingerprint(parts) == prompt_fingerprint(parts)
-    assert prompt_fingerprint(parts) != prompt_fingerprint(parts[::-1])
-    assert "SYNTHETIC" not in prompt_fingerprint(parts)
+    fp = prompt_fingerprint(parts, "dataset_positions")
+    assert fp == prompt_fingerprint(parts, "dataset_positions")
+    assert fp != prompt_fingerprint(parts[::-1], "dataset_positions")
+    assert fp != prompt_fingerprint(parts, "pass_through")  # layout is part of it
+    assert "SYNTHETIC" not in fp
 
 
 # --- loop --------------------------------------------------------------------------
@@ -205,7 +249,7 @@ def task(i, language="persian", intent="factual_qa", caveats=()):
         record_id=f"gv2-m_{i:03d}",
         parts=parts,
         caveats=tuple(caveats),
-        fingerprint=prompt_fingerprint(parts),
+        fingerprint=prompt_fingerprint(parts, "dataset_positions"),
         input_tokens=TokenCount(
             tokens=1000, fidelity=Fidelity.EXACT_LOCAL, method="test@1"
         ),
@@ -648,3 +692,156 @@ def test_approval_alone_is_not_enough_the_other_keys_are_still_needed():
         answers.check_live(approved)
     assert "real_data_approved" not in str(info.value)
     assert "METIS_API_KEY is not set" in str(info.value)
+
+
+# --- order for prompt caching, and its estimate ------------------------------------
+
+
+def shared(i, bot, key, prefix=3000):
+    t = task(i)
+    return Task(
+        record_id=t.record_id,
+        parts=t.parts,
+        caveats=t.caveats,
+        fingerprint=t.fingerprint,
+        input_tokens=TokenCount(
+            tokens=prefix + 500, fidelity=Fidelity.EXACT_LOCAL, method="test@1"
+        ),
+        strata=t.strata,
+        bot_id=bot,
+        prefix_tokens=prefix if key else 0,
+        prefix_key=key,
+    )
+
+
+def cache_tasks():
+    return [
+        shared(0, "b1", "k1"),
+        shared(1, "b2", "k2"),
+        shared(2, "b1", "k1"),
+        shared(3, "b3", None),
+        shared(4, "b2", "k2"),
+        shared(5, "b1", "k1"),
+        shared(6, "b4", "k4"),
+    ]
+
+
+def test_records_with_identical_instructions_run_back_to_back_largest_group_first():
+    ordered = order_for_caching(cache_tasks())
+    assert [t.record_id[-1] for t in ordered] == ["0", "2", "5", "1", "4", "3", "6"]
+    keys = [t.prefix_key for t in ordered]
+    assert keys[:3] == ["k1"] * 3 and keys[3:5] == ["k2"] * 2
+
+
+def test_the_order_is_deterministic_loses_no_record_and_ignores_input_order():
+    a = order_for_caching(cache_tasks())
+    b = order_for_caching(list(reversed(cache_tasks())))
+    assert sorted(t.record_id for t in a) == sorted(t.record_id for t in cache_tasks())
+    assert len({t.record_id for t in a}) == 7
+    assert {t.prefix_key for t in a[:3]} == {t.prefix_key for t in b[:3]} == {"k1"}
+
+
+def test_ordering_is_not_part_of_the_settings_hash():
+    # the pilot was run with this hash; a different order must never change it
+    assert parse_settings(RAW).settings_hash == (
+        "bcb3a94fe090ef4038f315f35d4aed22af2b8bdc350be52f0192b230900564b0"
+    )
+    assert "order" not in json.dumps(parse_settings(RAW).manifest())
+
+
+def test_each_call_stays_independent_in_the_grouped_order(entry, loaded):
+    ordered = order_for_caching(cache_tasks())
+    report, client, _, _ = go(ordered, entry, loaded)
+    assert report.answered == 7 and len(client.invocations) == 7
+    for inv, t in zip(client.invocations, ordered, strict=True):
+        assert [p.text for p in inv.parts] == [p.text for p in t.parts]
+    assert len({inv.request_id for inv in client.invocations}) == 7
+
+
+def test_sharing_counts_records_bots_and_identical_instructions():
+    out = sharing(cache_tasks())
+    assert out["records"] == 7 and out["bots"] == 4
+    assert out["records_sharing_a_bot"] == 5  # b1 x3 and b2 x2
+    assert out["bots_with_more_than_one_record"] == 2
+    assert out["records_sharing_identical_instructions"] == 5
+    assert out["records_without_instructions"] == 1 and out["largest_bot_group"] == 3
+
+
+def test_cache_scenarios_order_none_above_rule_above_best_case(entry, loaded):
+    ordered = order_for_caching(cache_tasks())
+    out = cache_scenarios(ordered, entry, loaded.reference.prices, 765)
+    none, rule, best = (
+        out["none"],
+        out["documented_rule"],
+        out["best_case"],
+    )
+    assert none["cached_tokens"] == 0
+    # repeats: k1 twice, k2 once; prefix 3000 -> the rule caches one 2,048 block
+    assert best["cached_tokens"] == 3 * 3000
+    assert rule["cached_tokens"] == 3 * GPT_5_5_CACHE_INTERVAL
+    assert (
+        Decimal(none["total_usd"])
+        > Decimal(rule["total_usd"])
+        > Decimal(best["total_usd"])
+    )
+    assert Decimal(none["total_usd_if_output_is_1_5x"]) > Decimal(none["total_usd"])
+    assert out["unpriced_records"] == 0
+
+
+def test_the_first_record_of_a_group_never_reads_the_cache(entry, loaded):
+    one = [shared(0, "b1", "k1")]
+    out = cache_scenarios(one, entry, loaded.reference.prices, 100)
+    assert out["best_case"]["cached_tokens"] == 0
+    assert out["best_case"]["total_usd"] == out["none"]["total_usd"]
+
+
+def test_every_live_cli_command_maps_to_a_scope_the_run_accepts():
+    import importlib.util
+
+    from metis_auto.wiring.golden_answers import SCOPES
+
+    assert SCOPES == {"pilot": "pilot", "run": "full"}
+    spec = importlib.util.spec_from_file_location(
+        "golden_answers_cli", ROOT / "scripts/golden_answers.py"
+    )
+    cli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cli)
+    assert cli.SCOPES is SCOPES  # the script uses the same table
+    answers = GoldenAnswers(engine=object(), log=lambda _m: None)
+    for scope in SCOPES.values():
+        with pytest.raises(
+            RunRefused
+        ):  # refused for lack of approval, not for the scope
+            answers.run(
+                "r",
+                scope=scope,
+                loaded=load_settings(environ={}, dotenv=None, runtime=None),
+            )
+
+
+def test_a_stored_failure_is_retried_only_when_its_class_is_named(entry, loaded):
+    store = MemoryStore()
+    refused = FakeClient({"[SYNTHETIC] question 0": [error(ErrorClass.AUTH)]})
+    go([task(0), task(1)], entry, loaded, client=refused, store=store)
+    assert store.rows["gv2-m_000"].error_class == "auth"
+    # without the flag the failure is terminal and nothing is called again
+    again = FakeClient()
+    report, client, _, _ = go([task(0), task(1)], entry, loaded, store=store)
+    assert client.invocations == [] and report.skipped == 2
+    # naming the class retries only that record, and the answered one is untouched
+    report, client, _, _ = go(
+        [task(0), task(1)], entry, loaded, store=store, retry_failed=frozenset({"auth"})
+    )
+    assert report.answered == 1 and len(client.invocations) == 1
+    assert client.invocations[0].parts[-1].text == "[SYNTHETIC] question 0"
+    assert store.rows["gv2-m_000"].status == "answered" and again.invocations == []
+
+
+def test_other_classes_are_not_retried_by_naming_auth(entry, loaded):
+    store = MemoryStore()
+    fatal = FakeClient({"[SYNTHETIC] question 0": [error(ErrorClass.CONTEXT_OVERFLOW)]})
+    go([task(0)], entry, loaded, client=fatal, store=store)
+    report, client, _, _ = go(
+        [task(0)], entry, loaded, store=store, retry_failed=frozenset({"auth"})
+    )
+    assert client.invocations == [] and report.skipped == 1
