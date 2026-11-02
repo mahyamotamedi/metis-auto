@@ -981,3 +981,14 @@ Run on branch `golden-dataset` under the owner's task, checkpoints C0 to C6 auth
 - **C5.** Rule labels, import commands, validation (V-10 pending human review), exports, quality report.
 - **C6.** Docs, SQL examples, fingerprint, guide followed from a clean copy (fresh venv, empty database, different hash seeds): `verify` PASS, shareable export byte-identical. Not run: `hf download`, Windows.
 - **Pending:** human review; approval of the quotas; whether to retire the EDA proposal.
+
+
+---
+
+## Lever base: StepVersion, combine, LeverResult, Manifest (2026-11-02)
+
+Final-plan tasks S-1 and E-2 (Pipeline A), branch `sprint-saba`. Status: **awaiting review**; nothing committed. Code: `analysis/levers.py`, `analysis/lever_result.py`; tests `tests/unit/analysis/test_levers.py`, `test_lever_manifest.py`; two rows in `module_reference.md`. No model calls, no data rows read.
+
+- **Decided (owner, 2026-11-02):** cost blocks are `fees` (0.002 x per-call items, a proxy) and `token_cost` (recorded total minus fees); input, output and cached costs are not in `requests.parquet`. `created_at` is passed to `build_manifest`. The `all` slice counts every row in `n_requests` but sums cost and hits over LLM rows with known cost. Decision record: [ADR-0029](../adr/0029-lever-result-format-and-manifest.md) (number provisional).
+- **Checked on real data (aggregates only):** blocks sum to `a_bill_totalCost` exactly; 104,084 unknown-cost rows stay NaN; the fee proxy is 35.8% of cost against 37.6% in the billing table (908 messages differ), so it understates fees by about 5%.
+- **Open:** the ADR number on `main`; exact fees and the input/output/cached split need an upstream change to `billing.py` and the ingest.
