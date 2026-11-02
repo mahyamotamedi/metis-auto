@@ -1,0 +1,813 @@
+{
+  "created_at": "2026-11-02T09:30:54.668231+00:00",
+  "evidence": "observed (costBreakdown keys); metadata-derived (usage/fixed split of unbroken items, model labels)",
+  "other_by_model_label": [
+    {
+      "messages": 43799,
+      "model_label": "gemini-2.5-flash",
+      "other": "13.7858681999999987965940",
+      "other_share_of_model_cost": 0.04184671840490683,
+      "share_of_other": 0.23241513466807284
+    },
+    {
+      "messages": 113,
+      "model_label": "claude-4-opus",
+      "other": "12.7606949999999995875",
+      "other_share_of_model_cost": 0.4519523117111077,
+      "share_of_other": 0.21513180046819277
+    },
+    {
+      "messages": 90924,
+      "model_label": "gemini-2.5-flash-lite",
+      "other": "5.795883449999999699044",
+      "other_share_of_model_cost": 0.16435762784595567,
+      "share_of_other": 0.09771245546596802
+    },
+    {
+      "messages": 1749,
+      "model_label": "gpt-5.1",
+      "other": "5.30369260000000035818",
+      "other_share_of_model_cost": 0.36737081906486746,
+      "share_of_other": 0.08941463910608557
+    },
+    {
+      "messages": 65289,
+      "model_label": "gpt-4o-mini",
+      "other": "4.5015219499999997519430",
+      "other_share_of_model_cost": 0.26327397639003947,
+      "share_of_other": 0.0758908916756172
+    },
+    {
+      "messages": 2733,
+      "model_label": "gpt-4.1-mini",
+      "other": "4.161912399999999875549",
+      "other_share_of_model_cost": 0.8897879123851314,
+      "share_of_other": 0.07016543440642514
+    },
+    {
+      "messages": 1737,
+      "model_label": "gpt-5.2",
+      "other": "3.90999974999999996925",
+      "other_share_of_model_cost": 0.2084879135562985,
+      "share_of_other": 0.06591845397509177
+    },
+    {
+      "messages": 2476,
+      "model_label": "grok-4-1-fast",
+      "other": "1.9046633499999999402103",
+      "other_share_of_model_cost": 0.07980539717612915,
+      "share_of_other": 0.03211060649684673
+    },
+    {
+      "messages": 228,
+      "model_label": "gpt-5",
+      "other": "0.82372625000000006020",
+      "other_share_of_model_cost": 0.2867362698491835,
+      "share_of_other": 0.013887152012912518
+    },
+    {
+      "messages": 366,
+      "model_label": "gpt-4.1",
+      "other": "0.797457999999999957811",
+      "other_share_of_model_cost": 0.2747509214513232,
+      "share_of_other": 0.013444297143514838
+    },
+    {
+      "messages": 276,
+      "model_label": "gpt-4o",
+      "other": "0.760097500000000051074",
+      "other_share_of_model_cost": 0.5624169847676321,
+      "share_of_other": 0.012814438688987722
+    },
+    {
+      "messages": 90,
+      "model_label": "gpt-5.6-terra",
+      "other": "0.62392000000000002897",
+      "other_share_of_model_cost": 0.4991593207234642,
+      "share_of_other": 0.010518630289973614
+    },
+    {
+      "messages": 79,
+      "model_label": "dalle",
+      "other": "0.60",
+      "other_share_of_model_cost": 0.189873417721519,
+      "share_of_other": 0.010115364428106437
+    },
+    {
+      "messages": 127,
+      "model_label": "claude-4-sonnet",
+      "other": "0.59303400000000001327",
+      "other_share_of_model_cost": 0.2691092947653302,
+      "share_of_other": 0.009997925047096122
+    },
+    {
+      "messages": 26,
+      "model_label": "grok-3-beta",
+      "other": "0.426581000000000047",
+      "other_share_of_model_cost": 0.2274190203486714,
+      "share_of_other": 0.007191703788510121
+    },
+    {
+      "messages": 395,
+      "model_label": "gpt-5.4-mini",
+      "other": "0.372273750000000017100",
+      "other_share_of_model_cost": 0.1234278990990819,
+      "share_of_other": 0.006276141080446315
+    },
+    {
+      "messages": 817,
+      "model_label": "gpt-5-mini",
+      "other": "0.369493349999999979704",
+      "other_share_of_model_cost": 0.15958863916620583,
+      "share_of_other": 0.006229266481686469
+    },
+    {
+      "messages": 69,
+      "model_label": "o3-mini",
+      "other": "0.35454210000000002176",
+      "other_share_of_model_cost": 0.7053050345638002,
+      "share_of_other": 0.005977204244343592
+    },
+    {
+      "messages": 377,
+      "model_label": "gpt-5.6-luna",
+      "other": "0.28436599999999998266",
+      "other_share_of_model_cost": 0.2619424650485843,
+      "share_of_other": 0.004794109534938191
+    },
+    {
+      "messages": 7,
+      "model_label": "Flux-Pro",
+      "other": "0.220",
+      "other_share_of_model_cost": 0.5714285714285714,
+      "share_of_other": 0.0037089669569723605
+    },
+    {
+      "messages": 26965,
+      "model_label": "deepseek-v4-flash",
+      "other": "0.1954363500000000005325",
+      "other_share_of_model_cost": 0.05574160353722848,
+      "share_of_other": 0.0032948498379149326
+    },
+    {
+      "messages": 29,
+      "model_label": "claude-sonnet-4-6",
+      "other": "0.17879900000000000974",
+      "other_share_of_model_cost": 0.2699179013240453,
+      "share_of_other": 0.003014361740635005
+    },
+    {
+      "messages": 43,
+      "model_label": "metis-gpt",
+      "other": "0.1594092499999999934",
+      "other_share_of_model_cost": 0.695807934980216,
+      "share_of_other": 0.00268747109493521
+    },
+    {
+      "messages": 20,
+      "model_label": "grok-4-0709",
+      "other": "0.1160249999999999895",
+      "other_share_of_model_cost": 0.29047933784981445,
+      "share_of_other": 0.001956058596285082
+    },
+    {
+      "messages": 63,
+      "model_label": "gpt-5.4",
+      "other": "0.11601975000000000097",
+      "other_share_of_model_cost": 0.35334090145979563,
+      "share_of_other": 0.0019559700868463366
+    },
+    {
+      "messages": 90,
+      "model_label": "Flux-Schnell",
+      "other": "0.0527",
+      "other_share_of_model_cost": 0.18888888888888888,
+      "share_of_other": 0.0008884661756020154
+    },
+    {
+      "messages": 3,
+      "model_label": "claude-opus-4-6",
+      "other": "0.044983",
+      "other_share_of_model_cost": 1.0,
+      "share_of_other": 0.0007583657301158531
+    },
+    {
+      "messages": 1467,
+      "model_label": "gemini-2.0-flash",
+      "other": "0.023272999999999998711",
+      "other_share_of_model_cost": 0.09506443492152579,
+      "share_of_other": 0.00039235812722553516
+    },
+    {
+      "messages": 391,
+      "model_label": "gpt-6-luna",
+      "other": "0.014787750000000000243",
+      "other_share_of_model_cost": 0.0549751901114958,
+      "share_of_other": 0.0002493058005362183
+    },
+    {
+      "messages": 14,
+      "model_label": "deepseek-chat",
+      "other": "0.01462760000000000038",
+      "other_share_of_model_cost": 0.899390675053339,
+      "share_of_other": 0.00024660584118094955
+    },
+    {
+      "messages": 5,
+      "model_label": "deepseek-reasoner",
+      "other": "0.0102545799999999963",
+      "other_share_of_model_cost": 0.21663957240716378,
+      "share_of_other": 0.00017288135626195277
+    },
+    {
+      "messages": 10,
+      "model_label": "command-r",
+      "other": "0.008038999999999999768",
+      "other_share_of_model_cost": 0.467448946364609,
+      "share_of_other": 0.00013552902439591274
+    },
+    {
+      "messages": 22,
+      "model_label": "grok-4-fast",
+      "other": "0.007599399999999999746",
+      "other_share_of_model_cost": 1.0,
+      "share_of_other": 0.00012811783405825342
+    },
+    {
+      "messages": 1,
+      "model_label": "gemini-3-pro-preview",
+      "other": "0.006826",
+      "other_share_of_model_cost": 1.0,
+      "share_of_other": 0.00011507912931042423
+    },
+    {
+      "messages": 2,
+      "model_label": "metis-gpt-mini",
+      "other": "0.00547425",
+      "other_share_of_model_cost": 1.0,
+      "share_of_other": 9.22900562009361e-05
+    },
+    {
+      "messages": 75,
+      "model_label": "gemini-3-flash-preview",
+      "other": "0.005454499999999989244",
+      "other_share_of_model_cost": 0.005867227161028993,
+      "share_of_other": 9.195709212184409e-05
+    },
+    {
+      "messages": 558,
+      "model_label": "gpt-4.1-nano",
+      "other": "0.0036955499999999999145",
+      "other_share_of_model_cost": 0.2226174591652636,
+      "share_of_other": 6.230305835381457e-05
+    },
+    {
+      "messages": 276,
+      "model_label": "gemini-3.1-flash-lite",
+      "other": "0.00111069999999999916",
+      "other_share_of_model_cost": 0.007409702794666103,
+      "share_of_other": 1.8725225450496353e-05
+    },
+    {
+      "messages": 2,
+      "model_label": "claude-haiku-4-5",
+      "other": "0.0010980000000000001",
+      "other_share_of_model_cost": 1.0,
+      "share_of_other": 1.851111690343478e-05
+    },
+    {
+      "messages": 1,
+      "model_label": "google/gemma3-27b",
+      "other": "0.00035099999999999997",
+      "other_share_of_model_cost": 1.0,
+      "share_of_other": 5.917488190442265e-06
+    },
+    {
+      "messages": 3,
+      "model_label": "gemini-3.1-flash-lite-preview",
+      "other": "0.00001540",
+      "other_share_of_model_cost": 0.01235310632495087,
+      "share_of_other": 2.5962768698806523e-07
+    },
+    {
+      "messages": 2927,
+      "model_label": "gpt-5.4-nano",
+      "other": "0.000000000000000059836",
+      "other_share_of_model_cost": 3.66119001524782e-17,
+      "share_of_other": 1.008771576533628e-18
+    },
+    {
+      "messages": 62,
+      "model_label": "claude-opus-4-5",
+      "other": "0.0000000000000000142",
+      "other_share_of_model_cost": 1.179617538088355e-17,
+      "share_of_other": 2.3939695813185233e-19
+    },
+    {
+      "messages": 66,
+      "model_label": "gemini-3.5-flash-lite",
+      "other": "0.000000000000000006385",
+      "other_share_of_model_cost": 3.547871679843616e-17,
+      "share_of_other": 1.07644336455766e-19
+    },
+    {
+      "messages": 57,
+      "model_label": "gpt-5.5",
+      "other": "0.00000000000000000457",
+      "other_share_of_model_cost": 1.2994158315479397e-17,
+      "share_of_other": 7.704535906074403e-20
+    },
+    {
+      "messages": 24,
+      "model_label": "gpt-5.6-sol",
+      "other": "0.00000000000000000153",
+      "other_share_of_model_cost": 1.1258182877775501e-17,
+      "share_of_other": 2.5794179291671415e-20
+    },
+    {
+      "messages": 2,
+      "model_label": "claude-opus-5",
+      "other": "0.00000000000000000053",
+      "other_share_of_model_cost": 1.1057215876492984e-16,
+      "share_of_other": 8.935238578160686e-21
+    },
+    {
+      "messages": 10,
+      "model_label": "mimo-v2.5",
+      "other": "0.00000000000000000009",
+      "other_share_of_model_cost": 2.0250156938716276e-17,
+      "share_of_other": 1.5173046642159656e-21
+    },
+    {
+      "messages": 27,
+      "model_label": "gpt-image-1",
+      "other": "0.0",
+      "other_share_of_model_cost": null,
+      "share_of_other": 0.0
+    },
+    {
+      "messages": 2,
+      "model_label": "deepseek-v4.1-flash",
+      "other": "0.000000000000000000",
+      "other_share_of_model_cost": 0.0,
+      "share_of_other": 0.0
+    },
+    {
+      "messages": 3,
+      "model_label": "gpt-4o-mini-search-preview",
+      "other": "0.00000000000000000000",
+      "other_share_of_model_cost": 0.0,
+      "share_of_other": 0.0
+    },
+    {
+      "messages": 2,
+      "model_label": "default",
+      "other": "0.0",
+      "other_share_of_model_cost": null,
+      "share_of_other": 0.0
+    },
+    {
+      "messages": 6,
+      "model_label": "grok-3-mini-beta",
+      "other": "-0.0000000000000000000645",
+      "other_share_of_model_cost": -4.4669136742962016e-17,
+      "share_of_other": -1.087401676021442e-21
+    },
+    {
+      "messages": 7,
+      "model_label": "gpt-4o-mini-2024-07-18",
+      "other": "-0.000000000000000000113",
+      "other_share_of_model_cost": -3.881560868370432e-17,
+      "share_of_other": -1.9050603006267122e-21
+    },
+    {
+      "messages": 11,
+      "model_label": "gpt-5-nano",
+      "other": "-0.00000000000000000042",
+      "other_share_of_model_cost": -3.8037104289589156e-17,
+      "share_of_other": -7.080755099674506e-21
+    },
+    {
+      "messages": 17,
+      "model_label": "deepseek-v4-pro",
+      "other": "-0.000000000000000000983",
+      "other_share_of_model_cost": -1.4473619347757166e-17,
+      "share_of_other": -1.6572338721381047e-20
+    },
+    {
+      "messages": 4,
+      "model_label": "gemini-2.5-pro",
+      "other": "-0.0000000000000000043",
+      "other_share_of_model_cost": -2.2173520690988784e-17,
+      "share_of_other": -7.249344506809613e-20
+    },
+    {
+      "messages": 50,
+      "model_label": "claude-sonnet-5",
+      "other": "-0.0000000000000000082",
+      "other_share_of_model_cost": -8.967923269573586e-18,
+      "share_of_other": -1.3824331385078797e-19
+    },
+    {
+      "messages": 1,
+      "model_label": "claude-opus-4-7",
+      "other": "-0.00000000000000001",
+      "other_share_of_model_cost": -5.692815666628714e-17,
+      "share_of_other": -1.6858940713510729e-19
+    }
+  ],
+  "scope": "all AI messages (reconciles the EDA's all-period split); tune slice by interim split, not the shared implementation",
+  "scopes": {
+    "all_ai_messages": {
+      "blocks": {
+        "breakdown_gap": "-0.0000000000000011570722",
+        "breakdown_other": "0",
+        "cache_write": "0.69223500000000004095",
+        "cached": "2.0338289821999999420730",
+        "fees": "190.7253",
+        "input": "182.2796640419999955373109",
+        "output": "72.3894721700000013600701",
+        "unbroken_fixed": "10.5247",
+        "unbroken_usage": "48.098772729999999294681",
+        "unresolved": "0.000000000000000000000"
+      },
+      "check": {
+        "blocks_minus_total": "0.0000000000000000000000"
+      },
+      "counts": {
+        "breakdown_values_malformed": 0,
+        "items": 350529,
+        "items_empty_breakdown": 1119,
+        "items_no_breakdown": 44806,
+        "items_not_dict": 0,
+        "items_total_unknown": 0,
+        "negative_entries": 0,
+        "unbroken_with_audio": 0,
+        "unbroken_with_cache_write": 0,
+        "unbroken_with_tokens": 40084,
+        "unbroken_with_web_search": 0
+      },
+      "coverage": {
+        "by_state": {
+          "empty_list": 103764,
+          "items": 244995,
+          "null": 320
+        },
+        "messages": 349079,
+        "messages_cost_known": 244995
+      },
+      "lever_blocks": {
+        "fees": "190.7253",
+        "token_cost": "316.0186729241999950180128"
+      },
+      "other_keys": {},
+      "other_share": 0.11705261611246157,
+      "other_total": "59.3157077299999981785588",
+      "shares": {
+        "breakdown_gap": -2.2833467427802594e-18,
+        "breakdown_other": 0.0,
+        "cache_write": 0.001366044860889833,
+        "cached": 0.004013523773087332,
+        "fees": 0.3763740866998514,
+        "input": 0.3597076113015079,
+        "output": 0.14285216211309176,
+        "unbroken_fixed": 0.020769265274664273,
+        "unbroken_usage": 0.09491730597690745,
+        "unresolved": 0.0
+      },
+      "total": "506.7439729241999950180128",
+      "waterfall": [
+        {
+          "amount": "190.7253",
+          "block": "fees",
+          "group": "fees",
+          "label": "per-call fees (costBreakdown.per_call)",
+          "share": 0.3763740866998514
+        },
+        {
+          "amount": "182.2796640419999955373109",
+          "block": "input",
+          "group": "input",
+          "label": "input tokens (costBreakdown.input_tokens)",
+          "share": 0.3597076113015079
+        },
+        {
+          "amount": "72.3894721700000013600701",
+          "block": "output",
+          "group": "output",
+          "label": "output tokens (costBreakdown.output_tokens)",
+          "share": 0.14285216211309176
+        },
+        {
+          "amount": "2.0338289821999999420730",
+          "block": "cached",
+          "group": "cached",
+          "label": "cached input tokens (costBreakdown.cached_input_tokens)",
+          "share": 0.004013523773087332
+        },
+        {
+          "amount": "0.69223500000000004095",
+          "block": "cache_write",
+          "group": "other",
+          "label": "cache writes (costBreakdown.cache_write_tokens)",
+          "share": 0.001366044860889833
+        },
+        {
+          "amount": "0",
+          "block": "breakdown_other",
+          "group": "other",
+          "label": "other costBreakdown keys",
+          "share": 0.0
+        },
+        {
+          "amount": "-0.0000000000000011570722",
+          "block": "breakdown_gap",
+          "group": "other",
+          "label": "total minus breakdown on items that have a breakdown",
+          "share": -2.2833467427802594e-18
+        },
+        {
+          "amount": "48.098772729999999294681",
+          "block": "unbroken_usage",
+          "group": "other",
+          "label": "usage cost of items logged without a costBreakdown",
+          "share": 0.09491730597690745
+        },
+        {
+          "amount": "10.5247",
+          "block": "unbroken_fixed",
+          "group": "other",
+          "label": "fixed cost of items logged without a costBreakdown",
+          "share": 0.020769265274664273
+        },
+        {
+          "amount": "0.000000000000000000000",
+          "block": "unresolved",
+          "group": "other",
+          "label": "items without a breakdown and without a usage/fixed split",
+          "share": 0.0
+        }
+      ]
+    },
+    "not_in_requests": {
+      "blocks": {
+        "breakdown_gap": "0",
+        "breakdown_other": "0",
+        "cache_write": "0",
+        "cached": "0",
+        "fees": "0",
+        "input": "0",
+        "output": "0",
+        "unbroken_fixed": "0",
+        "unbroken_usage": "0",
+        "unresolved": "0"
+      },
+      "check": {
+        "blocks_minus_total": "0"
+      },
+      "counts": {
+        "breakdown_values_malformed": 0,
+        "items": 0,
+        "items_empty_breakdown": 0,
+        "items_no_breakdown": 0,
+        "items_not_dict": 0,
+        "items_total_unknown": 0,
+        "negative_entries": 0,
+        "unbroken_with_audio": 0,
+        "unbroken_with_cache_write": 0,
+        "unbroken_with_tokens": 0,
+        "unbroken_with_web_search": 0
+      },
+      "coverage": {
+        "by_state": {},
+        "messages": 0,
+        "messages_cost_known": 0
+      },
+      "lever_blocks": {
+        "fees": "0",
+        "token_cost": "0"
+      },
+      "other_keys": {},
+      "other_share": null,
+      "other_total": "0",
+      "shares": {
+        "breakdown_gap": null,
+        "breakdown_other": null,
+        "cache_write": null,
+        "cached": null,
+        "fees": null,
+        "input": null,
+        "output": null,
+        "unbroken_fixed": null,
+        "unbroken_usage": null,
+        "unresolved": null
+      },
+      "total": "0",
+      "waterfall": [
+        {
+          "amount": "0",
+          "block": "fees",
+          "group": "fees",
+          "label": "per-call fees (costBreakdown.per_call)",
+          "share": null
+        },
+        {
+          "amount": "0",
+          "block": "input",
+          "group": "input",
+          "label": "input tokens (costBreakdown.input_tokens)",
+          "share": null
+        },
+        {
+          "amount": "0",
+          "block": "output",
+          "group": "output",
+          "label": "output tokens (costBreakdown.output_tokens)",
+          "share": null
+        },
+        {
+          "amount": "0",
+          "block": "cached",
+          "group": "cached",
+          "label": "cached input tokens (costBreakdown.cached_input_tokens)",
+          "share": null
+        },
+        {
+          "amount": "0",
+          "block": "cache_write",
+          "group": "other",
+          "label": "cache writes (costBreakdown.cache_write_tokens)",
+          "share": null
+        },
+        {
+          "amount": "0",
+          "block": "breakdown_other",
+          "group": "other",
+          "label": "other costBreakdown keys",
+          "share": null
+        },
+        {
+          "amount": "0",
+          "block": "breakdown_gap",
+          "group": "other",
+          "label": "total minus breakdown on items that have a breakdown",
+          "share": null
+        },
+        {
+          "amount": "0",
+          "block": "unbroken_usage",
+          "group": "other",
+          "label": "usage cost of items logged without a costBreakdown",
+          "share": null
+        },
+        {
+          "amount": "0",
+          "block": "unbroken_fixed",
+          "group": "other",
+          "label": "fixed cost of items logged without a costBreakdown",
+          "share": null
+        },
+        {
+          "amount": "0",
+          "block": "unresolved",
+          "group": "other",
+          "label": "items without a breakdown and without a usage/fixed split",
+          "share": null
+        }
+      ]
+    },
+    "tune": {
+      "blocks": {
+        "breakdown_gap": "-0.0000000000000006596496",
+        "breakdown_other": "0",
+        "cache_write": "0.0274849999999999991",
+        "cached": "1.8339764571999999467344",
+        "fees": "123.5855",
+        "input": "116.1683853519999973630990",
+        "output": "60.0075779800000006588995",
+        "unbroken_fixed": "10.5247",
+        "unbroken_usage": "48.098772729999999294681",
+        "unresolved": "0.000000000000000000000"
+      },
+      "check": {
+        "blocks_minus_total": "0.0000000000000000000000"
+      },
+      "counts": {
+        "breakdown_values_malformed": 0,
+        "items": 286857,
+        "items_empty_breakdown": 1091,
+        "items_no_breakdown": 44806,
+        "items_not_dict": 0,
+        "items_total_unknown": 0,
+        "negative_entries": 0,
+        "unbroken_with_audio": 0,
+        "unbroken_with_cache_write": 0,
+        "unbroken_with_tokens": 40084,
+        "unbroken_with_web_search": 0
+      },
+      "coverage": {
+        "by_state": {
+          "empty_list": 51451,
+          "items": 224250,
+          "null": 315
+        },
+        "messages": 276016,
+        "messages_cost_known": 224250
+      },
+      "lever_blocks": {
+        "fees": "123.5855",
+        "token_cost": "236.6608975191999966028643"
+      },
+      "other_keys": {},
+      "other_share": 0.16280789519033034,
+      "other_total": "58.6509577299999986341314",
+      "shares": {
+        "breakdown_gap": -1.831106721795442e-18,
+        "breakdown_other": 0.0,
+        "cache_write": 7.629500305699833e-05,
+        "cached": 0.005090894648300417,
+        "fees": 0.34305825360380815,
+        "input": 0.32246924924713116,
+        "output": 0.1665737073104299,
+        "unbroken_fixed": 0.02921528174182246,
+        "unbroken_usage": 0.1335163184454509,
+        "unresolved": 0.0
+      },
+      "total": "360.2463975191999966028643",
+      "waterfall": [
+        {
+          "amount": "123.5855",
+          "block": "fees",
+          "group": "fees",
+          "label": "per-call fees (costBreakdown.per_call)",
+          "share": 0.34305825360380815
+        },
+        {
+          "amount": "116.1683853519999973630990",
+          "block": "input",
+          "group": "input",
+          "label": "input tokens (costBreakdown.input_tokens)",
+          "share": 0.32246924924713116
+        },
+        {
+          "amount": "60.0075779800000006588995",
+          "block": "output",
+          "group": "output",
+          "label": "output tokens (costBreakdown.output_tokens)",
+          "share": 0.1665737073104299
+        },
+        {
+          "amount": "1.8339764571999999467344",
+          "block": "cached",
+          "group": "cached",
+          "label": "cached input tokens (costBreakdown.cached_input_tokens)",
+          "share": 0.005090894648300417
+        },
+        {
+          "amount": "0.0274849999999999991",
+          "block": "cache_write",
+          "group": "other",
+          "label": "cache writes (costBreakdown.cache_write_tokens)",
+          "share": 7.629500305699833e-05
+        },
+        {
+          "amount": "0",
+          "block": "breakdown_other",
+          "group": "other",
+          "label": "other costBreakdown keys",
+          "share": 0.0
+        },
+        {
+          "amount": "-0.0000000000000006596496",
+          "block": "breakdown_gap",
+          "group": "other",
+          "label": "total minus breakdown on items that have a breakdown",
+          "share": -1.831106721795442e-18
+        },
+        {
+          "amount": "48.098772729999999294681",
+          "block": "unbroken_usage",
+          "group": "other",
+          "label": "usage cost of items logged without a costBreakdown",
+          "share": 0.1335163184454509
+        },
+        {
+          "amount": "10.5247",
+          "block": "unbroken_fixed",
+          "group": "other",
+          "label": "fixed cost of items logged without a costBreakdown",
+          "share": 0.02921528174182246
+        },
+        {
+          "amount": "0.000000000000000000000",
+          "block": "unresolved",
+          "group": "other",
+          "label": "items without a breakdown and without a usage/fixed split",
+          "share": 0.0
+        }
+      ]
+    }
+  },
+  "task": "F-2 cost trace (exp-cost-002)",
+  "units": "recorded cost units (unstated currency), Decimal sums"
+}
