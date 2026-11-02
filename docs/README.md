@@ -48,7 +48,8 @@ Every Metis-Auto design document, decision record, and plan is linked from here.
 | [0025](adr/0025-persian-folding-treatments-and-evaluation-groups.md) | Persian folding as versioned measurement treatments (`persian_fold_v1`, `_zwnj_space_v1`, `_marks_v1`; none a default); keyed duplicate groups and leakage-safe splits for evaluation; serving path unchanged | decided (structure) for measurement only; which treatment serving may use is open |
 | [0027](adr/0027-local-postgresql-foundation.md) | Local PostgreSQL for source data and evaluation datasets (not a production schema; our choice, not a claim about Metis): four schemas, Alembic, reproducible ingestion. |
 | [0028](adr/0028-evaluation-dataset-golden-v1.md) | The 300-request evaluation dataset golden-v1: components with availability stages, separate reference, controlled selection, human-only complexity, team fingerprint. |
-| [0029](adr/0029-lever-result-format-and-manifest.md) | Lever results as content-free JSON with a reproducibility manifest; two cost blocks (fees proxy, token-cost residual); combine order; clock and commit passed in. |
+| [0031](adr/0031-full-data-lever-replay.md) | Full-data lever experiments are a separate pandas replay in `analysis/` with candidates in `experiments/`; the Stage 8 runner stays for sample runs; promotion rule unchanged. |
+| [0032](adr/0032-lever-result-and-manifest-format.md) | Lever results as content-free JSON with a reproducibility manifest; two cost blocks (fees proxy, token-cost residual); clock and commit passed in; MLflow only as an exporter. |
 | [0026](adr/0026-premium-baseline-gpt-5-5.md) | Premium baseline becomes `gpt-5.5` (estimate and sampling only, never routed): new price file `-g55`, catalogue entry disabled with unknown limits, tokenizer by family mapping | decided (owner, 2026-10-30) |
 
 ## Guides
