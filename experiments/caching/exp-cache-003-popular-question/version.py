@@ -1,4 +1,4 @@
-"""Popular-question cache, a nightly curated answer cache (exp-cache-002).
+"""Popular-question cache, a nightly curated answer cache (exp-cache-003).
 
 Final plan R-A1; tests H-8 with the ADR-0016 Part 1 design (curated cache, rebuilt
 every night from a rolling window). Traces: H-8, X1, FR-XCACHE-02, FR-XCACHE-04,

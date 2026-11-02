@@ -1,4 +1,4 @@
-"""Popular-question cache, ``exp-cache-002`` (final plan R-A1; H-8, ADR-0016).
+"""Popular-question cache, ``exp-cache-003`` (final plan R-A1; H-8, ADR-0016).
 
 Every frame here is [SYNTHETIC]: invented labels such as ``q-1`` and ``ans-1``
 stand in for grouping hashes; there is no dataset content. The candidate is
@@ -29,7 +29,7 @@ from metis_auto.settings import StrategySettings, StrategySlot
 from metis_auto.wiring.experiments import load_candidate
 
 ROOT = Path(__file__).resolve().parents[3]
-EXPERIMENT_DIR = ROOT / "experiments" / "caching" / "exp-cache-002-popular-question"
+EXPERIMENT_DIR = ROOT / "experiments" / "caching" / "exp-cache-003-popular-question"
 BASE = pd.Timestamp("2026-08-01")  # naive, like the logged times (Q-06)
 NEW_COLUMNS = {"pq_eligible", "pq_admitted_keys_day", "pq_answer_agrees"}
 
