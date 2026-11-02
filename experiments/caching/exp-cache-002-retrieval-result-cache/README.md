@@ -42,30 +42,43 @@ No `config.toml`: sprint step versions run through `scripts/run_pipeline_b_day2.
 - **TTL rule:** the largest TTL in {1, 7, 30, 90} days whose mean agreement on the tune split's hits is ≥ 0.9, with at least half of the hits evaluable.
 - **Guard and shadow:** `CacheGuard.refusal` on the versioned key (`rb1-v1`) before any hit. There is no approval set and no blocklist offline, so blocks are 0 by construction. Shadow rate from `sprint.toml [cache_guard] shadow_rate` (0.01).
 
-## Results, tune period (March–July 2026, naive timestamps, recorded units; interim split)
+## Results, tune split (March–July 2026 by `a_timestamp`, naive timestamps, recorded units; regenerated 2026-11-02 on the shared scope, `code_commit` 91c5b35)
 
-Free checks (LLM lookups, tune):
+Split on the full requests frame (`split_by_session`, ADR-0036): tune 234,759, report 73,063, excluded 41,257 (40,541 tune-period rows, 716 report-period rows). Scored rows here: the 230,762 tune-split rows inside the tune period (209,331 LLM); 3,996 tune-split rows answered in the report period are not read. Cache history: all 271,303 tune-period rows (220,908 LLM, 88,037 lookups); 80,733 lookups belong to scored requests.
 
-| Window | Repeat rate of key within window |
-|---|---|
-| 1 day | 5.1% |
-| 7 days | 7.9% |
-| 30 days | 11.2% |
-| 90 days | 13.2% |
+Free check, repeat rate of a key within the window (user scope; the bot-owner scope gives the same rates):
 
-The user scope and the bot-owner scope give identical rates on tune data (not explained further here). Chunk churn: 171 of 29,370 chunk IDs (0.58%) were seen with more than one content hash. They belong to 2 of 153 bots. No chunk hash is missing.
+| Window | Tune split (decides) | All tune-period rows (comparison only) | Day 2 interim |
+|---|---|---|---|
+| 1 day | 4.8% | 5.3% | 5.1% |
+| 7 days | 7.3% | 8.0% | 7.9% |
+| 30 days | 10.4% | 11.4% | 11.2% |
+| 90 days | 12.1% | 13.2% | 13.2% |
+
+**Frequency bias, measured:** repeat rates on the tune split are 0.4 to 1.1 points lower than on all tune-period rows, as ADR-0036 expects (recurring families that reappear in the report period lose their tune rows). The TTL rule picks **1 day** on both, so the bias does not change the choice here. Chunk churn: 126 of 28,085 chunk IDs (0.45%) were seen with more than one content hash, in 2 of 153 bots; no chunk hash is missing.
+
+`as_logged` results (recorded units; fee block = recorded `costBreakdown.per_call`):
 
 | TTL | Hits | Mean agreement | Share ≥ 0.9 | Fee avoided / fee block | Fee avoided / total cost | Rule |
 |---|---|---|---|---|---|---|
 | none | 0 | — | — | 0 | 0 | ineligible (no version evidence) |
-| 1 day | 2,185 | 0.976 | 0.960 | 3.6% [3.3, 4.0] | 1.24% [1.12, 1.37] | **passes** |
-| 7 days | 3,038 | 0.892 | 0.841 | 5.0% [4.6, 5.4] | 1.72% [1.55, 1.90] | fails |
-| 30 days | 4,224 | 0.729 | 0.640 | 7.0% [6.4, 7.4] | 2.39% [2.17, 2.63] | fails |
-| 90 days | 5,215 | 0.596 | 0.498 | 8.6% [7.9, 9.2] | 2.94% [2.67, 3.22] | fails |
+| 1 day | 1,738 | 0.976 | 0.960 | 3.31% [3.00, 3.62] | 1.09% [0.96, 1.23] | **passes** |
+| 7 days | 2,359 | 0.897 | 0.849 | 4.47% [4.10, 4.83] | 1.48% [1.31, 1.66] | fails |
+| 30 days | 3,272 | 0.739 | 0.652 | 6.19% [5.73, 6.59] | 2.04% [1.82, 2.27] | fails |
+| 90 days | 4,025 | 0.611 | 0.515 | 7.60% [7.05, 8.08] | 2.51% [2.25, 2.78] | fails |
 
-Intervals are 95% session-clustered bootstrap (`analysis.stats.cluster_bootstrap_ratio`). Denominators: 91,807 LLM lookups in 30,359 LLM requests with lookups, out of 224,768 tune LLM requests and 276,016 tune requests. At 1 day, 1,949 requests reuse at least one lookup: 0.71% of all requests, 0.87% of LLM requests. 57,238 lookups have an attributable fee. 34,569 do not (their messages log queries but carry no per-call billing item). On the tune LLM rows, the fee block is 34.3% of recorded cost. The EDA's 37.6% (all periods, all billing items) is the reference. The two differ in period and row scope. Shadow check at 1 day: 22 sampled, 22 agree, 0 unknown. **Tenant concentration:** all fee avoided at 1 day comes from the tenant ranked 4th by requests (11.3% of tune requests). Per-tenant rows are in `reports/caching/exp-cache-002/summary.json`.
+Intervals are 95% session-clustered bootstrap (`analysis.stats.cluster_bootstrap_ratio`). At 1 day, 1,555 requests reuse at least one lookup: 0.67% of scored requests, 0.74% of scored LLM requests. 54,337 tune-period lookups have an attributable fee. On the scored LLM rows the fee block is 33.0% of recorded cost. Shadow check at 1 day: 18 sampled, 18 agree. **Tenant concentration:** all fee avoided comes from the tenant ranked 4th by requests.
 
-Reading: agreement falls quickly with age, even though chunk content barely changes. Over time the *set* of retrieved chunks changes (ranking or corpus additions), not the chunk text. A 1-day backstop passes the agreement rule on tune data and saves about 1.2% of recorded LLM cost. This is measured potential with a single-tenant source. Not yet checked on the report period.
+**Repriced baselines** (`premium_gpt_5_5` 4,466.99, `todays_models` 27.20, `best_single_cheap` 49.81 price-file units over the scored rows): R-B1's saving is **not computed** (empty `saving`, "saving unknown" in the comparison, never ranked). `todays_models` prices only 88,971 of 209,331 scored LLM rows (the price file covers the catalogue models only), so it is incomplete, not small.
+
+**Against the Day 2 interim run** (1 day, agreement 0.976, 3.6% of the fee block, 1.24% of recorded LLM cost):
+- Agreement is unchanged (0.976), and so is the chosen TTL.
+- The saving falls to 3.31% of the fee block and 1.09% of recorded cost, from 2,185 to 1,738 hits. Two causes:
+  1. **Per-row `a_timestamp` period** instead of the session's first user time. Later turns of July sessions answered in August to October leave the tune period: 91,807 → 88,037 lookups, 224,768 → 220,908 LLM rows.
+  2. **The new split.** Scored rows are the tune split only. A duplicate family that recurs in the report period loses its tune rows (ADR-0036; 40,541 tune-period rows excluded), leaving 80,733 scored lookups. These are by construction the recurring questions, so hits fall more than lookups (frequency bias, above). The cache still uses those rows as history.
+- The fee-block share of cost moves from 34.3% to 33.0% with the same row change.
+
+Reading: a 1-day backstop passes the agreement rule and saves about 1.1% of recorded LLM cost on the tune split. This is measured potential, with a single-tenant source, and it is not yet checked on the report period. Agreement falls quickly with age even though chunk text barely changes: over time the *set* of retrieved chunks changes (ranking or corpus additions).
 
 ## Run
 

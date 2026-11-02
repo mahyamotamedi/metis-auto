@@ -1,6 +1,7 @@
 {
-  "created_at": "2026-11-02T09:30:54.668231+00:00",
+  "created_at": "2026-11-02T12:45:29.467784+00:00",
   "evidence": "observed (costBreakdown keys); metadata-derived (usage/fixed split of unbroken items, model labels)",
+  "other_block": "reported inside token_cost (owner decision 3, 2026-11-02: two blocks); its share is in scopes.*.blocks",
   "other_by_model_label": [
     {
       "messages": 43799,
@@ -416,7 +417,7 @@
       "share_of_other": -1.6858940713510729e-19
     }
   ],
-  "scope": "all AI messages (reconciles the EDA's all-period split); tune slice by interim split, not the shared implementation",
+  "scope": "all AI messages (reconciles the EDA's all-period split); tune slice = replay_scope period tune (a_timestamp, per row)",
   "scopes": {
     "all_ai_messages": {
       "blocks": {
@@ -678,13 +679,13 @@
     },
     "tune": {
       "blocks": {
-        "breakdown_gap": "-0.0000000000000006596496",
+        "breakdown_gap": "-0.0000000000000006177539",
         "breakdown_other": "0",
-        "cache_write": "0.0274849999999999991",
-        "cached": "1.8339764571999999467344",
-        "fees": "123.5855",
-        "input": "116.1683853519999973630990",
-        "output": "60.0075779800000006588995",
+        "cache_write": "0",
+        "cached": "1.7476032091999999492228",
+        "fees": "116.7835",
+        "input": "110.8690396799999975265889",
+        "output": "59.3240271000000006228075",
         "unbroken_fixed": "10.5247",
         "unbroken_usage": "48.098772729999999294681",
         "unresolved": "0.000000000000000000000"
@@ -694,7 +695,7 @@
       },
       "counts": {
         "breakdown_values_malformed": 0,
-        "items": 286857,
+        "items": 279841,
         "items_empty_breakdown": 1091,
         "items_no_breakdown": 44806,
         "items_not_dict": 0,
@@ -707,68 +708,68 @@
       },
       "coverage": {
         "by_state": {
-          "empty_list": 51451,
-          "items": 224250,
+          "empty_list": 50593,
+          "items": 220395,
           "null": 315
         },
-        "messages": 276016,
-        "messages_cost_known": 224250
+        "messages": 271303,
+        "messages_cost_known": 220395
       },
       "lever_blocks": {
-        "fees": "123.5855",
-        "token_cost": "236.6608975191999966028643"
+        "fees": "116.7835",
+        "token_cost": "230.5641427191999967755463"
       },
       "other_keys": {},
-      "other_share": 0.16280789519033034,
-      "other_total": "58.6509577299999986341314",
+      "other_share": 0.1687746382012787,
+      "other_total": "58.6234727299999986769271",
       "shares": {
-        "breakdown_gap": -1.831106721795442e-18,
+        "breakdown_gap": -1.778488822218378e-18,
         "breakdown_other": 0.0,
-        "cache_write": 7.629500305699833e-05,
-        "cached": 0.005090894648300417,
-        "fees": 0.34305825360380815,
-        "input": 0.32246924924713116,
-        "output": 0.1665737073104299,
-        "unbroken_fixed": 0.02921528174182246,
-        "unbroken_usage": 0.1335163184454509,
+        "cache_write": 0.0,
+        "cached": 0.005031279888698665,
+        "fees": 0.3362150354203186,
+        "input": 0.3191875402178211,
+        "output": 0.17079150627188294,
+        "unbroken_fixed": 0.030300191236674934,
+        "unbroken_usage": 0.13847444696460376,
         "unresolved": 0.0
       },
-      "total": "360.2463975191999966028643",
+      "total": "347.3476427191999967755463",
       "waterfall": [
         {
-          "amount": "123.5855",
+          "amount": "116.7835",
           "block": "fees",
           "group": "fees",
           "label": "per-call fees (costBreakdown.per_call)",
-          "share": 0.34305825360380815
+          "share": 0.3362150354203186
         },
         {
-          "amount": "116.1683853519999973630990",
+          "amount": "110.8690396799999975265889",
           "block": "input",
           "group": "input",
           "label": "input tokens (costBreakdown.input_tokens)",
-          "share": 0.32246924924713116
+          "share": 0.3191875402178211
         },
         {
-          "amount": "60.0075779800000006588995",
+          "amount": "59.3240271000000006228075",
           "block": "output",
           "group": "output",
           "label": "output tokens (costBreakdown.output_tokens)",
-          "share": 0.1665737073104299
+          "share": 0.17079150627188294
         },
         {
-          "amount": "1.8339764571999999467344",
+          "amount": "1.7476032091999999492228",
           "block": "cached",
           "group": "cached",
           "label": "cached input tokens (costBreakdown.cached_input_tokens)",
-          "share": 0.005090894648300417
+          "share": 0.005031279888698665
         },
         {
-          "amount": "0.0274849999999999991",
+          "amount": "0",
           "block": "cache_write",
           "group": "other",
           "label": "cache writes (costBreakdown.cache_write_tokens)",
-          "share": 7.629500305699833e-05
+          "share": 0.0
         },
         {
           "amount": "0",
@@ -778,25 +779,25 @@
           "share": 0.0
         },
         {
-          "amount": "-0.0000000000000006596496",
+          "amount": "-0.0000000000000006177539",
           "block": "breakdown_gap",
           "group": "other",
           "label": "total minus breakdown on items that have a breakdown",
-          "share": -1.831106721795442e-18
+          "share": -1.778488822218378e-18
         },
         {
           "amount": "48.098772729999999294681",
           "block": "unbroken_usage",
           "group": "other",
           "label": "usage cost of items logged without a costBreakdown",
-          "share": 0.1335163184454509
+          "share": 0.13847444696460376
         },
         {
           "amount": "10.5247",
           "block": "unbroken_fixed",
           "group": "other",
           "label": "fixed cost of items logged without a costBreakdown",
-          "share": 0.02921528174182246
+          "share": 0.030300191236674934
         },
         {
           "amount": "0.000000000000000000000",

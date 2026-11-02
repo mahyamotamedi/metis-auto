@@ -32,22 +32,30 @@ Recorded and price-file units are never mixed; an unknown price stays unknown (`
 - **Skipped:** rows served by an answer cache, and workflow rows. Rows where R-B1 reused retrieval stay eligible.
 - **S-6:** a repeat of the same `(chunk_id, hash)` inside one request is `within_message` and is never counted here. S-6 is not on any branch yet (2026-11-02).
 
-## Results, tune period (March–July 2026, LLM rows, naive timestamps, recorded units)
+## Results, tune period (March–July 2026 by `a_timestamp`, LLM rows, naive timestamps; regenerated 2026-11-02 on the shared scope, `code_commit` 91c5b35)
 
-Data: 224,768 tune LLM requests; 30,341 with chunks; 480,777 chunk rows; no unknown chunk hash. The input rate is unknown for 41,852 requests (mostly March, logged without `costBreakdown`, see F-2), so their drops are not counted. Reference: 68.7% of these chunk rows repeat a chunk already supplied earlier in the session (EDA definition, within-message copies included). The EDA's 61.2% is over all periods and all chunk rows joined to requests. 162,805 rows (33.9%) are within-message copies (EDA §4.3: 33.3%).
+Data: 220,908 tune LLM requests; 29,111 with chunks; 461,387 chunk rows; no unknown chunk hash. The input rate is unknown for 41,847 requests (mostly March, logged without `costBreakdown`, see F-2), so their drops are not counted. The cached-token convention from `baselines_full.cached_reported_separately` equals the EDA table (5 models). Reference: 68.0% of these chunk rows repeat a chunk already supplied earlier in the session (EDA definition, within-message copies included).
 
-| Visible window | Pointer | Ledger | Requests changed | Saved / ordinary input tokens | Saved / token cost | Saved / total cost |
-|---|---|---|---|---|---|---|
-| none (default) | 8 | no | 0 | 0 | 0 | 0 |
-| k ≤ 1 | 8 | no | 17,941 | 5.5% | 5.3% | 3.2% |
-| k ≤ 1 | 8 | yes | 16,352 | 5.0% | 4.9% | 2.9% |
-| k ≤ 3 | 8 | no | 18,583 | 7.5% | 7.2% | 4.3% |
-| k ≤ 3 | 8 | yes | 17,722 | 7.0% | 6.8% | 4.0% |
-| k ≤ 3 | 16 | no | 18,580 | 7.4% | 7.1% | 4.2% |
-| all earlier | 8 | no | 18,799 | 8.7% | 8.4% | 5.0% |
-| all earlier | 8 | yes | 18,331 | 8.2% | 7.9% | 4.7% |
+Recorded columns are shares of recorded units (`as_logged`); repriced columns are the saving as a share of that baseline's `token_cost` in price-file units (before minus after). The two kinds are never added.
 
-Denominators: ordinary input tokens of all tune LLM rows; token cost and total cost (token cost + recorded fees) of the tune LLM rows whose input rate is known. 541 chunk occurrences had the same ID with a changed hash and were kept. The append-only ledger always costs more than plain pointers here. No interval is given: these are scenario totals under assumed visibility, not estimates of a measured quantity.
+| Visible window | Pointer | Ledger | Requests changed | Saved / ordinary input tokens | Saved / token cost (recorded) | Saved / total cost (recorded) | Premium gpt-5.5 | Today's models* | Best single cheap |
+|---|---|---|---|---|---|---|---|---|---|
+| none (default) | 8 | no | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| k ≤ 1 | 8 | no | 16,883 | 5.34% | 5.08% | 3.05% | 3.49% | 2.77% | 3.14% |
+| k ≤ 1 | 8 | yes | 15,469 | 4.88% | 4.67% | 2.81% | 3.19% | 2.15% | 2.87% |
+| k ≤ 3 | 8 | no | 17,465 | 7.23% | 6.86% | 4.13% | 4.72% | 3.90% | 4.24% |
+| k ≤ 3 | 8 | yes | 16,742 | 6.75% | 6.44% | 3.87% | 4.41% | 3.21% | 3.96% |
+| k ≤ 3 | 16 | no | 17,462 | 7.07% | 6.72% | 4.04% | 4.62% | 3.71% | 4.15% |
+| all earlier | 8 | no | 17,652 | 8.30% | 7.86% | 4.73% | 5.42% | 4.94% | 4.87% |
+| all earlier | 8 | yes | 17,281 | 7.80% | 7.42% | 4.46% | 5.09% | 4.16% | 4.58% |
+
+\* `todays_models` is **incomplete, not small**: 130,399 of 220,908 rows have no price for their logged model (the price file covers only the catalogue models; ADR-0036 Consequences), so its shares cover the 90,509 priced rows only.
+
+Repriced shares are lower than the recorded token-cost share because the repriced baselines price every token (input, cached and output) at list prices while the removed tokens are ordinary input only, and recorded `token_cost` also holds F-2's unbroken "other" cost.
+
+**Against the Day 2 interim run** (k ≤ 1 / k ≤ 3 / all: 5.3 / 7.2 / 8.4% of recorded token cost): now 5.08 / 6.86 / 7.86%. Cause: `period` is now per row from `a_timestamp` (shared `replay_scope.scope`) instead of per session from the first user time. That moves 3,860 LLM rows out of the tune period, **all of them later turns** (`turn > 0`) of sessions that began in July and were answered in August to October. Later turns are where cross-turn repeats are, so savings fall more than the 1.7% row change. No split is involved (R-B2 fits nothing), and the frequency bias of ADR-0036 does not apply. The conservative default is still 0.
+
+Denominators: ordinary input tokens of all tune LLM rows; token cost and total cost (token cost + recorded fees) of the tune LLM rows whose input rate is known; for the repriced columns, the baseline's `token_cost` over the rows it can price. The append-only ledger always costs more than plain pointers here. No interval is given: these are scenario totals under assumed visibility, not estimates of a measured quantity.
 
 Reading: under the conservative default nothing is saved. If the model keeps the last 1 to 3 turns' chunks in view, about 5–7% of input-token cost is removable, with the quality impact unknown. Against the whole recorded total, this is a share of a total that also holds F-2's unbroken "other" cost (`../../cost/exp-cost-002-cost-trace/README.md`).
 
