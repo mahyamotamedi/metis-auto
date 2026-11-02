@@ -8,7 +8,9 @@ in ``experiments/``, so it is loaded by file path.
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
+import json
 import sys
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -590,4 +592,341 @@ def test_write_levers_on_synthetic(v, script, tmp_path):
     assert res.slices["routing"]["moved_to:syn-cheap-b"] >= 1
     text = "".join(p.read_text() for p in paths)
     for leaked in ("syn-s1", "bot-syn", "bot-two", "tenant-syn", "tenant-two"):
+        assert leaked not in text
+
+
+# --- strict content rules (Amendment 1, 2026-11-03) ---------------------------
+# Every message text below is SYNTHETIC, written for these tests.
+
+STRICT_MODES = ("strict", "strict_unknown_blocked")
+SAFE = "write a short poem about rain"  # SYNTHETIC: writing, nothing blocking
+
+
+def session(v, *texts, sid: str = "syn-s1", order=None, **over):
+    """SYNTHETIC session: one request per text (turn = position), its user
+    message labelled by ``v.flags_table``. ``order`` permutes the rows."""
+    rows = [
+        {
+            "session_id": sid,
+            "turn": t,
+            "a_order": t,
+            "user_message_id": f"syn-m-{sid}-{t}",
+        }
+        | over
+        for t in range(len(texts))
+    ]
+    if order is not None:
+        rows = [rows[i] for i in order]
+    flags = v.flags_table([f"syn-m-{sid}-{t}" for t in range(len(texts))], list(texts))
+    return rows, flags
+
+
+def build(v, *sessions):
+    rows = [r for s in sessions for r in s[0]]
+    flags = pd.concat([s[1] for s in sessions], ignore_index=True)
+    return v.intent_columns(frame(*rows), flags)
+
+
+def strict_version(v, mode="strict", **kw):
+    kw.setdefault("max_u_chars", 200)
+    kw.setdefault("max_input_tokens", 1000)
+    return v.SmallClassifier(
+        mode, rules=RULES, candidates=PRIMARY, cached_separately=SEP, **kw
+    )
+
+
+def moved(v, req, version) -> list[bool]:
+    return combine(req, None, None, version, CTX)[v.MOVED].tolist()
+
+
+def test_coding_message_blocks_routing(v):
+    flags = v.flags_table(["syn-m1"], ["please debug my python script"])
+    assert flags.loc[0, "primary_category"] == "coding_intent_debugging"
+    assert bool(flags.loc[0, "blocked_by_category"])
+    req = build(v, session(v, "please debug my python script"))
+    assert moved(v, req, rules_version(v)) == [True]  # short and simple
+    for mode in STRICT_MODES:
+        out = combine(req, None, None, strict_version(v, mode), CTX)
+        assert out[v.MOVED].tolist() == [False]
+        assert out[v.REASON].tolist() == ["content_blocked"]
+        assert out[v.ROUTED].tolist() == ["syn-incumbent"]
+
+
+def test_math_and_factual_block_routing(v):
+    texts = {
+        "syn-a": "solve 12 + 7",  # math, primary
+        "syn-b": "what is the capital of france",  # factual, primary
+        "syn-c": "please translate: how are you",  # factual as a secondary tag
+        "syn-d": SAFE,
+    }
+    flags = v.flags_table(list(texts), list(texts.values()))
+    assert flags["primary_category"].tolist() == [
+        "reasoning_math",
+        "factual_question",
+        "translation_language",
+        "writing_editing",
+    ]
+    assert flags["blocked_by_category"].tolist() == [True, True, True, False]
+    req = build(v, *(session(v, t, sid=s) for s, t in texts.items()))
+    for mode in STRICT_MODES:
+        assert moved(v, req, strict_version(v, mode)) == [False, False, False, True]
+
+
+def test_code_detector_blocks_routing(v):
+    code = "x = load(path);\ny = x.parse()"  # SYNTHETIC code, no coding words
+    flags = v.flags_table(["syn-m1"], [code])
+    assert not bool(flags.loc[0, "blocked_by_category"])
+    assert bool(flags.loc[0, "has_code"])
+    req = build(v, session(v, code))
+    for mode in STRICT_MODES:
+        out = combine(req, None, None, strict_version(v, mode), CTX)
+        assert out[v.MOVED].tolist() == [False]
+        assert out[v.REASON].tolist() == ["content_blocked"]
+
+
+def test_blocked_earlier_turn_blocks_later_turns(v):
+    # Rows out of turn order: the version orders by turn, not by row position.
+    blocked = session(
+        v, "debug my python code", "thanks", SAFE, sid="syn-s1", order=(2, 0, 1)
+    )
+    clean = session(v, "thanks", SAFE, sid="syn-s2")
+    req = build(v, blocked, clean)
+    assert req["turn"].tolist() == [2, 0, 1, 0, 1]
+    for mode in STRICT_MODES:
+        out = combine(req, None, None, strict_version(v, mode), CTX)
+        assert out[v.MOVED].tolist() == [False, False, False, True, True]
+        assert out[v.REASON].tolist()[:3] == [
+            "history_blocked",
+            "content_blocked",
+            "history_blocked",
+        ]
+    # Another session's blocked turn never blocks this one.
+    assert not req.loc[req["session_id"].eq("syn-s2"), v.PRIOR_BLOCKED].any()
+
+
+def test_later_blocked_turn_does_not_affect_earlier_turns(v):
+    req = build(v, session(v, "thanks", SAFE, "solve 12 + 7", "thanks"))
+    assert req[v.PRIOR_BLOCKED].tolist() == [False, False, False, True]
+    for mode in STRICT_MODES:
+        assert moved(v, req, strict_version(v, mode)) == [True, True, False, False]
+    # Changing a later message never changes an earlier decision (FR-REQ-06).
+    later = build(v, session(v, "thanks", SAFE, "thanks", "thanks"))
+    out_a = combine(req, None, None, strict_version(v), CTX)
+    out_b = combine(later, None, None, strict_version(v), CTX)
+    assert out_a[v.MOVED].iloc[:2].equals(out_b[v.MOVED].iloc[:2])
+
+
+def test_unknown_not_blocked_in_primary_blocked_in_sensitivity(v):
+    flags = v.flags_table(["syn-m1", "syn-m2", "syn-m3"], ["", None, "zzqx"])
+    assert flags["label_state"].tolist() == ["unknown", "unknown", "ok"]
+    assert (flags["primary_category"] == "unknown_uncertain").all()
+    assert not flags["blocked_by_category"].any() and not flags["has_code"].any()
+    empty = session(v, "", "thanks", sid="syn-s1")
+    vague = session(v, "zzqx", sid="syn-s2")
+    rows, _ = session(v, SAFE, sid="syn-s3")  # its message has no flags row
+    req = build(v, empty, vague, (rows, empty[1].iloc[:0]))
+    assert req[v.OWN_UNKNOWN].tolist() == [True, False, True, True]
+    primary = combine(req, None, None, strict_version(v, "strict"), CTX)
+    assert primary[v.MOVED].tolist() == [True, True, True, True]
+    sens = combine(req, None, None, strict_version(v, "strict_unknown_blocked"), CTX)
+    assert sens[v.MOVED].tolist() == [False, False, False, False]
+    assert sens[v.ROUTED].eq("syn-incumbent").all()
+    assert sens[v.REASON].tolist() == [
+        "label_unknown",
+        "history_blocked",
+        "label_unknown",
+        "label_unknown",
+    ]
+    assert strict_version(v, "strict").name == "route.small_classifier.strict"
+    assert (
+        strict_version(v, "strict_unknown_blocked").name
+        == "route.small_classifier.strict_unknown_blocked"
+    )
+    for mode in STRICT_MODES:
+        for res in results(v, req, strict_version(v, mode)).values():
+            assert res.correctness_state == "unmeasured"
+            text = " ".join(res.assumptions)
+            assert "quality not proven" in text
+            assert "intent labels heuristic, unreviewed (A-78)" in text
+            assert "Persian word lists pending review (K-2/K-3)" in text
+    # A strict version refuses a frame without the intent columns.
+    with pytest.raises(ValueError, match="intent_columns"):
+        combine(frame({}), None, None, strict_version(v), CTX)
+
+
+def _digest(found: dict[str, LeverResult]) -> str:
+    payload = {
+        key: {
+            "lever_id": r.lever_id,
+            "n_eligible": r.n_eligible,
+            "baseline_cost": r.baseline_cost,
+            "saving": r.saving,
+            "ci": [r.ci_low, r.ci_high],
+            "slices": r.slices,
+            "assumptions": r.assumptions,
+        }
+        for key, r in sorted(found.items())
+    }
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, default=str).encode()
+    ).hexdigest()
+
+
+# Digests of the rules-mode results on the frame below, taken from the R-C3
+# code before the strict modes were added (2026-11-03).
+RULES_DIGESTS = {
+    "primary": "1e1adcbf854fe3a1cf4d02df941cb0b0af085b7bc7c92f53fbd016bf33e22867",
+    "with_reasoning_models": (
+        "baabb07a2a76b0f5802fd208aa871d7a4dcb120da76b657ba2bb8c5af9d80c77"
+    ),
+}
+
+
+def test_rules_mode_results_unchanged(v):
+    req = frame(
+        {},
+        {"session_id": "syn-s2", "u_n_chars": 900.0},
+        {"session_id": "syn-s3", "bot_id": "bot-two", "user_id": "tenant-two"},
+        {"session_id": "syn-s3", "turn": 1, "a_bill_cachedInputTokens": 40.0},
+        {"session_id": "syn-s4", "a_bill_inputTokens": 9000.0, "u_n_chars": 20.0},
+        {"session_id": "syn-s5", "u_att_n": NAN},
+        {"session_id": "syn-s6", "bot_provider_model": "syn-cheap-b"},
+    )
+    versions = {
+        "primary": rules_version(v),
+        "with_reasoning_models": rules_version(
+            v, candidates=tuple(RULES["candidates"]), include_reasoning_models=True
+        ),
+    }
+    for name, version in versions.items():
+        assert _digest(results(v, req, version)) == RULES_DIGESTS[name], name
+    # Intent columns (here: everything blocked) never reach the rules mode.
+    texts = ["debug my python code"] * len(req)
+    ids = [f"syn-m{i}" for i in range(len(req))]
+    flagged = v.intent_columns(
+        req.assign(user_message_id=ids), v.flags_table(ids, texts)
+    )
+    for name, version in versions.items():
+        a = combine(req, None, None, version, CTX)
+        b = combine(flagged, None, None, version, CTX)
+        for col in (v.SIMPLE, v.MOVED, v.ROUTED, v.REASON, v.TARGET):
+            assert a[col].equals(b[col]), (name, col)
+        assert _digest(results(v, flagged, version)) == RULES_DIGESTS[name], name
+
+
+def test_flags_table_has_no_text_column(v, tmp_path):
+    texts = ["please debug my python script", "سلام", "", SAFE, None]
+    ids = [f"syn-m{i}" for i in range(len(texts))]
+    flags = v.flags_table(ids, texts)
+    assert list(flags.columns) == [
+        "message_id",
+        "primary_category",
+        "blocked_by_category",
+        "has_code",
+        "label_state",
+    ]
+    assert flags["blocked_by_category"].dtype == bool
+    assert flags["has_code"].dtype == bool
+    values = {str(x) for col in flags.columns for x in flags[col]}
+    for t in texts:
+        if t:
+            assert t not in values
+    # The derive script reads USER rows of SYNTHETIC raw shards and writes
+    # only the flag columns; no text reaches the file.
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    pd.DataFrame(
+        {
+            "message_id": ["syn-m0", "syn-m1", "syn-m2", "syn-m3"],
+            "session_id": ["syn-s1"] * 4,
+            "type": ["USER", "AI", "USER", "USER"],
+            "content": [
+                "please debug my python script",
+                "SYNTHETIC answer text",
+                SAFE,
+                None,
+            ],
+        }
+    ).to_parquet(raw / "chat_message-00000-of-00001.parquet", index=False)
+    derive = _load(
+        "derive_turn_intent_flags_under_test",
+        ROOT / "scripts/derive_turn_intent_flags.py",
+    )
+    try:
+        out = tmp_path / "flags.parquet"
+        table = derive.derive(raw, out)
+    finally:
+        sys.modules.pop("derive_turn_intent_flags_under_test", None)
+    written = pd.read_parquet(out)
+    assert list(written.columns) == list(flags.columns)
+    assert written["message_id"].tolist() == ["syn-m0", "syn-m2", "syn-m3"]
+    assert written["label_state"].tolist() == ["ok", "ok", "unknown"]
+    assert written.equals(table)
+    blob = out.read_bytes()
+    for t in ("debug my python", "poem about rain", "SYNTHETIC answer"):
+        assert t.encode() not in blob
+
+
+def test_write_strict_levers_on_synthetic(v, script, tmp_path):
+    rows, flags = session(v, "thanks", "solve 12 + 7", SAFE)
+    rows2, flags2 = session(v, SAFE, sid="syn-s2", bot_id="bot-two")
+    flags = pd.concat([flags, flags2], ignore_index=True)
+    req = v.intent_columns(frame(*rows, *rows2), flags)
+    paths = script.write_levers(
+        req,
+        ctx=CTX,
+        rules=RULES,
+        rates=RATES,
+        max_u_chars=200,
+        max_input_tokens=10_000,
+        premium_model="syn-premium",
+        out_dir=tmp_path,
+        code_commit="unknown",
+        python_version="3.13.0",
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        cached_separately=SEP,
+        min_n=1,
+        tenant_cap=0.35,
+        strict=True,
+    )
+    assert sorted(p.name for p in paths) == sorted(
+        f"route.small_classifier.{m}.{b}.json"
+        for m in STRICT_MODES
+        for b in ("as_logged", "best_single_cheap", "premium_gpt_5_5", "todays_models")
+    )
+    res = LeverResult.from_json(
+        (tmp_path / "route.small_classifier.strict.todays_models.json").read_text()
+    )
+    assert res.slices["routing"]["n_moved"] == 2  # turn 0 and syn-s2
+    assert res.slices["routing"]["n_reason:history_blocked"] == 1
+    assert res.version == "route.small_classifier.strict"
+    text = "".join(p.read_text() for p in paths)
+    for leaked in ("syn-s1", "syn-m-", "bot-syn", "bot-two", "tenant-syn", "poem"):
+        assert leaked not in text
+
+
+def test_strict_checks_on_synthetic(v, script):
+    rows, flags = session(v, "solve 12 + 7", "thanks", SAFE, n_skipped_user=0)
+    rows2, flags2 = session(v, "", SAFE, sid="syn-s2", user_id="tenant-two")
+    flags = pd.concat([flags, flags2], ignore_index=True)
+    req = v.intent_columns(frame(*rows, *rows2), flags)
+    res = script.strict_checks(
+        req,
+        flags,
+        ctx=CTX,
+        rules=RULES,
+        premium_model="syn-premium",
+        cached_separately=SEP,
+        n_boot=50,
+    )
+    assert res["requests_llm"] == 5 and res["user_messages_with_flags"] == 5
+    assert res["llm_rows"]["not_simple_by_history_only"] == pytest.approx(0.4)
+    assert res["llm_rows"][
+        "not_simple_by_unknown_history_only_sensitivity"
+    ] == pytest.approx(0.2)
+    assert res["blocked_share_of_user_messages"]["category"] == pytest.approx(0.2)
+    moved = {k: r["n_moved"] for k, r in res["versions"].items()}
+    assert moved == {"primary": 5, "strict": 2, "strict_unknown_blocked": 0}
+    text = json.dumps(res)
+    for leaked in ("syn-s", "syn-m-", "tenant-", "bot-syn"):
         assert leaked not in text
