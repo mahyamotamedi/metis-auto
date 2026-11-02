@@ -46,6 +46,9 @@ python scripts/progress_index.py --check     # must print OK
 .venv/bin/python -m pytest                   # includes the same checks
 ```
 
+CI fails while a draft ADR is unnumbered; the merger runs adr_finalize.py on the branch,
+then CI turns green.
+
 Commit what the scripts changed with the merge. `progress.md` is merged line by line
 (`merge=union` in `.gitattributes`), so two branches that both added index lines merge
 without a conflict; the script then puts the index in order.

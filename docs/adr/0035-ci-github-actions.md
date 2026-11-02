@@ -37,3 +37,20 @@ The repository is on GitHub. The suite runs on macOS (two developers) and Linux 
 - A local `.venv` with more locks installed than CI can hide import problems (this is how the `sqlalchemy` one went unseen). CI is the check for the clean install.
 - Bumping an action means checking the new release's date against the release-age rule and replacing the commit pin; `test_ci_workflow.py` refuses a tag pin.
 - Runner minutes and their cost were not checked (unverified); look at the repository's Actions usage after the first week.
+
+## Amendment 1 (2026-11-03): pinned Ubuntu, macOS on main only, ADR-numbering check
+
+- **Decided by:** the project owner, 2026-11-03 (Pipeline C, follow-up to E-1).
+- **Reasons:**
+  - macOS runners queue for a long time. On 2026-11-02 one run on `main` failed with "The job was not acquired by Runner of type hosted even after multiple attempts" (run 41519280471), and PRs waited 10+ minutes for macOS. macOS minutes also count 10x on private repositories.
+  - GitHub annotated the runs: "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026" (actions/runner-images issue 14748). The final demo is on Day 4; the CI image must not change under us.
+  - An unnumbered ADR draft was merged once (PR #19), because CI did not check the numbering.
+- **Change** (`.github/workflows/ci.yml`):
+  1. Linux is pinned: `ubuntu-24.04` instead of `ubuntu-latest`.
+  2. Two jobs instead of a matrix over the OS: `test` (Linux) on every `push` and `pull_request`; `test-macos` (`macos-latest`) only on pushes to `main` (`if: github.event_name == 'push' && github.ref == 'refs/heads/main'`), with the same steps. Each keeps Python 3.13, `fail-fast: false` and the 20-minute timeout. A separate job was preferred over a matrix expression, for readability.
+  3. A new step in the Linux job, after the package install and before the tests, "ADRs numbered and progress index current": `scripts/adr_finalize.py --check` and `scripts/progress_index.py --check` (the merger's checks, [team workflow](../guides/team_workflow.md) §3).
+  4. Everything else is unchanged: pinned action SHAs, the db lock, the tokenizer fetch, the offline tests, read-only permissions. `tests/architecture/test_ci_workflow.py` asserts the new shape.
+- **Consequences:**
+  - PRs get Linux feedback only. A macOS regression is found after the merge, on `main`, and is fixed forward.
+  - A branch that still holds a `docs/adr/draft-*.md` (or a stale progress index) is red until the merger runs `scripts/adr_finalize.py` (and `scripts/progress_index.py`) on it. Draft ADRs therefore block the merge until numbered; the red is expected while a branch is in review.
+  - Moving off `ubuntu-24.04` is a deliberate change of this file, not a label migration.
