@@ -51,6 +51,14 @@ Layout decided in [ADR-0033](../adr/0033-postgres-event-sink-layout.md). It depe
 - Marker and extra: the plan's `services` marker and extra (T-0, Parham) do not exist. The live test uses the existing `postgres` marker (`--run-postgres`) and the `db` extra, which already pins `psycopg[binary]`. **Patch for T-0** (not applied here; `pyproject.toml` and the locks are Parham's): if a `services` marker is added, mark `tests/integration/test_postgres_sink_live.py` with it too, and drop `psycopg[binary]` from the planned `services` extra or keep it equal to the `db` pin.
 - The plan's `test_psycopg_imported_only_in_postgres_sink` conflicts with `tests/architecture/test_db_imports.py`. The sink imports no database library, and psycopg is imported only in `data_access/postgres/event_store.py`.
 
+## Version identity in `compare` (2026-11-02)
+
+`compare` identifies a version by **`(step, version)`**, the same across baselines. `lever_id` names one result file (ADR-0032) and may carry a baseline suffix, as Pipeline B's do since the S-3 switch-over (`rb2.cross-turn.k-1.ptr-8.pointer.best_single_cheap`). Before this, `compare` keyed by `(step, lever_id, version)`, so the 48 Day 2 files gave 152 spurious "baseline missing" rows. Now:
+- a version missing under the chosen baseline gets **one** "baseline missing" row, with a blank `lever_id` and the baselines it does have in `notes`;
+- two results with the same `(step, version)` under one baseline both get status `duplicate version`, no rank, and each other's `lever_id` in `notes` (never merged).
+
+**Who depends on it:** every pipeline whose results go to `reports/levers/` and through `scripts/compare_levers.py` (A: R-A*, C: R-C*, and the plan's final `comparison.md`). Each `version` label must be unique within a step for each baseline. `wiring/lever_view.py` (C) only sorts by `lever_id` and filters by baseline, so it is not affected.
+
 ## Switch-over checklist
 
 When `analysis/lever_result.py` is on `main`:
