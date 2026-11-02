@@ -1,4 +1,4 @@
-# ADR-XXXX (reranker-cut-and-lever-overhead): The reranker cut is a token-sizing curve after S-6's dedup, chosen on tune by score mass, and overhead is an offline per-request estimate of apply
+# ADR-0040: The reranker cut is a token-sizing curve after S-6's dedup, chosen on tune by score mass, and overhead is an offline per-request estimate of apply
 
 - Status: **proposed** by Saba (Pipeline A), 2026-11-02, for team review. Points 1 to 6 are as implemented in #23 and on branch `reranker-overhead-baselines`. The headline rule (point 3) is **provisional** (a proxy, not quality). Point 7 (T-2 to stretch) waits for the team's OK.
 - Date: 2026-11-02
