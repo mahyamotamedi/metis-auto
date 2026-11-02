@@ -23,6 +23,7 @@ from metis_auto.adapters.sinks import (
     JsonLinesEventSink,
     PostgresEventSink,
 )
+from metis_auto.adapters.stores import InMemoryCacheStore, redis_store
 from metis_auto.adapters.system import FileSpendLedger, SystemClock
 from metis_auto.adapters.tokenizers import ApproxCharsTokenizer
 from metis_auto.application.accounting import AccountingService
@@ -271,3 +272,23 @@ def event_sink(loaded: LoadedSettings, path: Path) -> EventSink:
         postgres.close()
         raise
     return FanOutEventSink((jsonl, postgres))
+
+
+def cache_store(loaded: LoadedSettings) -> CacheStore:
+    """The answer-cache store from ``[cache] store`` (T-1).
+
+    ``memory`` (default): a new ``InMemoryCacheStore``, as before. ``redis``:
+    ``RedisCacheStore`` on ``[cache] redis_host`` / ``redis_port`` /
+    ``redis_db``, namespaced by ``redis_namespace`` and the pipeline's cache key
+    schema version. The password comes only from ``METIS_REDIS_PASSWORD`` in the
+    process environment (``adapters.stores.redis_store``).
+    """
+    cfg = loaded.settings.cache
+    if cfg.store == "memory":
+        return InMemoryCacheStore()
+    client = redis_store.redis_client(
+        host=cfg.redis_host, port=cfg.redis_port, db=cfg.redis_db
+    )
+    version = pipeline_config(loaded).cache.key_schema_version
+    namespace = redis_store.redis_namespace(cfg.redis_namespace, version)
+    return redis_store.RedisCacheStore(client, namespace=namespace)
