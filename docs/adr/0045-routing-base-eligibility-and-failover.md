@@ -1,4 +1,4 @@
-# ADR-XXXX (routing-base-eligibility-and-failover): The routing base promotes B's interim eligibility rules, excludes every unknown, avoids long-context price tiers, and replays candidate cost by the baselines' pricing rule
+# ADR-0045: The routing base promotes B's interim eligibility rules, excludes every unknown, avoids long-context price tiers, and replays candidate cost by the baselines' pricing rule
 
 - Status: **decided** by the project owner, 2026-11-03 (Pipeline C, sprint task R-0, taken over from Parham with his agreement), points 1 to 6. Point 7 (unknown attachment count) is the agent's reading of point 4, **provisional** until the owner reviews it.
 - Date: 2026-11-03

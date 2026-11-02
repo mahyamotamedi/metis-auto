@@ -2,8 +2,8 @@
 and the free cost replay of every candidate (final plan R-0, shared by R-A3,
 R-B3, R-C3 and J-3; FR-ROUTE-01, FR-ROUTE-05, FR-FAIL-01..04; Review Focus 3).
 
-Decision record: ADR-XXXX (routing-base-eligibility-and-failover),
-``docs/adr/draft-routing-base-eligibility-and-failover.md``. The rules are
+Decision record: ADR-0045,
+``docs/adr/0045-routing-base-eligibility-and-failover.md``. The rules are
 Pipeline B's interim rules (EXP-ROUTE-011 ``eligibility_interim.py``), promoted
 unchanged in meaning (owner decision 2026-11-03), plus the long-context price
 cliff and the retiring replacement.
