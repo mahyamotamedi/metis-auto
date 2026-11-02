@@ -37,6 +37,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 ## Entries, newest first
 
 <!-- progress-index:start -->
+- 2026-11-02: [Replay pricing for the logged models](progress/2026-11-02-sprint-pipeline-b-replay-pricing-logged-models.md)
 - 2026-11-02: [Sprint Day 3, Pipeline B: kNN router, Redis cache store, B-only combined dry run](progress/2026-11-02-sprint-day-3-pipeline-b-knn-router-redis-store-combined-replay.md)
 - 2026-11-02: [Sprint Day 2, Pipeline C: within-message chunk dedup and stable prompt order](progress/2026-11-02-sprint-day-2-pipeline-c-within-message-chunk-dedup.md)
 - 2026-11-02: [Sprint Day 2, Pipeline C: session memo + greeting skip gate](progress/2026-11-02-sprint-day-2-pipeline-c-session-memo-greeting-gate.md)
@@ -57,6 +58,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-02: [Popular-question cache, R-A1 phase 2: full-data run](progress/2026-11-02-popular-question-cache-r-a1-phase-2.md)
 - 2026-11-02: [Popular-question cache, R-A1 phase 1](progress/2026-11-02-popular-question-cache-r-a1-phase-1.md)
 - 2026-11-02: [Lever base: StepVersion, combine, LeverResult, Manifest](progress/2026-11-02-lever-base-stepversion-combine-leverresult-manifest.md)
+- 2026-11-02: [Gemini native adapter through the Metis wrapper, offline only](progress/2026-11-02-gemini-native-adapter-offline.md)
 - 2026-11-01: [Session and configuration analysis, golden-set proposal](progress/2026-11-01-session-and-configuration-analysis-golden-set-proposal.md)
 - 2026-11-01: [PostgreSQL foundation and evaluation dataset golden-v1](progress/2026-11-01-postgresql-foundation-and-evaluation-dataset-golden-v1.md)
 - 2026-11-01: [golden-v2: the 300 records without attachment images](progress/2026-11-01-golden-v2-the-300-records-without-attachment-images.md)

@@ -50,8 +50,9 @@ min_sessions = 2
 # The four baselines (compare.BASELINES keys). Premium: config/reference/
 # baselines.toml (gpt-5.5 since 2026-10-30, estimate only, never called).
 premium_model = "gpt-5.5"
-catalogue = "config/reference/catalogue-metis-test.toml"
-price_table = "config/reference/prices-metis-2026-10-18-g55.toml"
+# replay pricing for logged models, approved by Pipeline C (owner), 2026-11-02
+catalogue = "config/reference/catalogue-metis-replay.toml"
+price_table = "config/reference/prices-metis-2026-10-18-logged.toml"
 # best_single_cheap: cheapest callable model = enabled in the catalogue and
 # priced in the price table. Cost only; quality not proven.
 

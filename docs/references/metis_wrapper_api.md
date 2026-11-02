@@ -22,7 +22,7 @@ All families use the same Metis API key. The model is chosen per request.
 | OpenAI | `https://api.metisai.ir/openai/v1` | OpenAI API (chat completions; the page says embeddings, batch, audio, and images work too) | `Authorization: Bearer <key>` (via the OpenAI SDK's `api_key`) | enabled in config; adapter in Stage 7.5 |
 | DeepSeek | `https://api.metisai.ir/deepseek/v1` | OpenAI-compatible chat completions; streaming shown | `Authorization: Bearer <key>` | enabled in config; adapter in Stage 7.5 |
 | Grok (xAI) | `https://api.metisai.ir/api/v1/wrapper/grok` (chat path `/chat/completions`) | OpenAI-compatible chat completions | `Authorization: Bearer <key>` | enabled in config; adapter in Stage 7.5 |
-| Gemini | `https://api.metisai.ir` (e.g. `/v1beta/models/<model>:generateContent`) | Google `google-genai` format; **not** OpenAI-compatible | `x-goog-api-key: <key>` | **deferred**: needs a second adapter (Stage 10 roadmap) |
+| Gemini | `https://api.metisai.ir` (e.g. `/v1beta/models/<model>:generateContent`) | Google `google-genai` format; **not** OpenAI-compatible | `x-goog-api-key: <key>` | **deferred**: native adapter written and tested offline (`gemini_native.py`, 2026-11-02, [ADR-0043](../adr/0043-gemini-native-adapter.md)); request/response field names unverified until an owner-approved live check |
 
 ## 2. Notes from the pages
 
