@@ -1,0 +1,146 @@
+{
+  "assumptions": [
+    "cost simulation; quality not proven",
+    "saving = baseline minus routed cost, both from baseline_costs (price-file units, token cost only)",
+    "no quality label: nearest-profile policy over logged models only",
+    "token counts assumed model-independent; logged output length unchanged",
+    "fees and recorded cost blocks unchanged (lookup fee is not on the price list)",
+    "rows: split_by_session tune, LLM; fitted on the same rows, own session and duplicate family never a neighbour",
+    "baselines over the rows whose incumbent and tokens are priced; the others keep their model and are counted in the routing slice",
+    "timestamps are naive (Q-06)",
+    "interim eligibility, not the shared routing base",
+    "k=50 is the grid point, not the default; grid [5, 15, 50] reported in full",
+    "default chosen by session/family-grouped nested CV, 5 outer x 3 inner folds, inside the tune split"
+  ],
+  "baseline": "best_single_cheap",
+  "baseline_cost": {
+    "token_cost": "11.677487289",
+    "total": "11.677487289"
+  },
+  "ci_high": -1.188661330058397,
+  "ci_low": -1.3225151076441073,
+  "correctness_state": "unmeasured",
+  "evidence_class": "simulation",
+  "lever_id": "rb3.knn-router.k-50.tune.best_single_cheap",
+  "manifest": {
+    "code_commit": "5a68fb66790ec19fb07502f4e5382bfdb5152624",
+    "config_hash": "e0f5b30229b033d3fb6726df3791fc13442ad01978ba305a4f2e6bc529462743",
+    "created_at": "2026-11-02T15:17:07.155550Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "python_version": "3.13.5",
+    "seed": 20261102
+  },
+  "n_eligible": 88971,
+  "n_requests": 230762,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
+  "saving": {
+    "token_cost": "-14.560498523",
+    "total": "-14.560498523"
+  },
+  "slices": {
+    "all": {
+      "baseline:token_cost": "11.677487289",
+      "n_cost_known": "88971",
+      "n_requests": "230762",
+      "saving:token_cost": "-14.560498523",
+      "saving_share": "-1.246886266"
+    },
+    "lang:arabic_script_other": {
+      "baseline:token_cost": "0.393237064",
+      "n_cost_known": "2435",
+      "n_requests": "2435",
+      "saving:token_cost": "-0.604535369",
+      "saving_share": "-1.537330593"
+    },
+    "lang:en": {
+      "baseline:token_cost": "0.287161891",
+      "n_cost_known": "1669",
+      "n_requests": "1669",
+      "saving:token_cost": "-0.366943913",
+      "saving_share": "-1.277829420"
+    },
+    "lang:fa": {
+      "baseline:token_cost": "9.627953043",
+      "n_cost_known": "69295",
+      "n_requests": "69295",
+      "saving:token_cost": "-11.781258237",
+      "saving_share": "-1.223651402"
+    },
+    "lang:fa_en_mixed": {
+      "baseline:token_cost": "0.511139062",
+      "n_cost_known": "3943",
+      "n_requests": "3943",
+      "saving:token_cost": "-0.653616069",
+      "saving_share": "-1.278744116"
+    },
+    "lang:missing": {
+      "baseline:token_cost": "0.081201554",
+      "n_cost_known": "556",
+      "n_requests": "556",
+      "saving:token_cost": "-0.096159983",
+      "saving_share": "-1.184213568"
+    },
+    "lang:other": {
+      "baseline:token_cost": "0.003202963",
+      "n_cost_known": "39",
+      "n_requests": "39",
+      "saving:token_cost": "-0.005419758",
+      "saving_share": "-1.692107419"
+    },
+    "lang:short_uncertain": {
+      "baseline:token_cost": "0.760726021",
+      "n_cost_known": "10967",
+      "n_requests": "10967",
+      "saving:token_cost": "-1.017320947",
+      "saving_share": "-1.337302681"
+    },
+    "lang:structured": {
+      "baseline:token_cost": "0.012865688",
+      "n_cost_known": "67",
+      "n_requests": "67",
+      "saving:token_cost": "-0.035244247",
+      "saving_share": "-2.739398530"
+    },
+    "llm_only": {
+      "baseline:token_cost": "11.677487289",
+      "n_cost_known": "88971",
+      "n_requests": "88971",
+      "saving:token_cost": "-14.560498523",
+      "saving_share": "-1.246886266"
+    },
+    "over_8k": {
+      "baseline:token_cost": "2.052428202",
+      "n_cost_known": "1493",
+      "n_requests": "1493",
+      "saving:token_cost": "-4.529489078",
+      "saving_share": "-2.206892828"
+    },
+    "routing": {
+      "moved_share": "0.071460988",
+      "moved_to:deepseek-v4-flash": "3268",
+      "moved_to:gpt-4.1-nano": "11278",
+      "moved_to:gpt-4o-mini": "359",
+      "moved_to:mimo-v2.5": "54",
+      "n_moved": "14959",
+      "n_requests_routed": "209331",
+      "reason:incumbent_unpriced": "119854",
+      "reason:insufficient_bot": "1226",
+      "reason:moved": "14959",
+      "reason:no_cheaper_candidate": "71906",
+      "reason:no_eligible_candidate": "880",
+      "reason:unknown_tokens": "506",
+      "support_median": "0.040000000"
+    },
+    "traffic_weighted": {
+      "baseline:token_cost": "11.677487289",
+      "n_cost_known": "88971",
+      "n_requests": "230762",
+      "saving:token_cost": "-14.560498523",
+      "saving_share": "-1.246886266"
+    }
+  },
+  "step": "routing",
+  "version": "route.knn.k50"
+}
