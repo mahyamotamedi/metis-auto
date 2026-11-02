@@ -18,7 +18,7 @@ For one request (`version.py`, `KnnRouter.apply`):
 
 `route_support` is the share of the `k` neighbours that ran the chosen model.
 
-**Consequence of rule 3 (data fact, tune split):** only `gpt-4o-mini`, `deepseek-v4-flash` and `gpt-4.1-nano` among the candidates were ever logged. `gpt-5-nano` and `mimo-v2.5` ran on no request, so a nearest-profile policy can never choose them.
+**Consequence of rule 3 (data fact, tune split LLM rows):** the candidates were logged on `gpt-4o-mini` 62,821, `deepseek-v4-flash` 23,915, `gpt-4.1-nano` 558, `mimo-v2.5` 9 and `gpt-5-nano` 3 rows. A nearest-profile policy can only choose a model its neighbours ran, so the two cheapest candidates are almost never reachable (`mimo-v2.5`: 4 moves at k = 5; `gpt-5-nano`: none).
 
 ## Profile features (known before the model is chosen)
 
@@ -47,7 +47,7 @@ Checked against `docs/full_eda/data_dictionary.md` and `analysis/requests_table.
 ## Repricing and units (ADR-0036)
 
 - **Routed cost** (`run.routed_baselines`): a copy of the rows with each row's `bot_provider_model` set to the routed model and the input already effective (cached tokens added back for the **logged** model, the five-model convention), priced by `baselines_full.baseline_costs` and read as `todays_models`. Only public functions of `baselines_full` are used. Token counts are assumed model-independent, logged output length unchanged, the lookup fee unchanged.
-- `candidate_costs` re-implements the same public pricing rule per row, only to **order** candidates and for intervals and slices; its sums are tested equal to `baseline_costs`. Switch-over: `baselines_full.repriced_row_costs` (on `origin/context-within-message-dedup`, not on `main`) can replace it.
+- `candidate_costs` re-implements the same public pricing rule per row, only to **order** candidates and for intervals and slices; its sums are tested equal to `baseline_costs`. Switch-over: `baselines_full.repriced_row_costs` (on `main` since #22, 82e4c72; this branch has not merged `main`) can replace it.
 - **Rows:** every baseline of a result is over the rows the router can price (incumbent priced, tokens known). The rest keep their model and are counted in the `routing` slice.
 - **Savings:** `premium_gpt_5_5`, `todays_models`, `best_single_cheap`: baseline cost minus routed cost (price-file units, `token_cost` only, no `fees`). Against a baseline other than `todays_models` this includes the baseline's own difference from today's models; **the router's own effect is the `todays_models` result**. `best_single_cheap` can be negative: one cheap model everywhere ignores every constraint. `as_logged` (recorded units): **not computed**, `saving` empty, never 0.
 - Unknown or unpriced is never 0.
@@ -60,8 +60,24 @@ Checked against `docs/full_eda/data_dictionary.md` and `analysis/requests_table.
 | `eligibility_interim.py` | INTERIM `interim_eligible_models` (candidate, enabled, not retiring, priced, known context window and output limit that fit, no attachment, no configured functions) |
 | `run.py` | `component_folds`, `nested_cv`, `least_aggressive`, `routed_baselines`, `lever_results_json` (one `LeverResult` per `k` per baseline) |
 
-Runner: `scripts/run_pipeline_b_day3.py rb3`. Results: `reports/levers/rb3.knn-router.k-<k>.tune.<baseline>.json`, summary `reports/routing/exp-route-011/summary.json`. Tests: `tests/unit/experiments/test_knn_router.py`, `test_knn_router_run.py` (synthetic). Overhead: **not measured** (`scripts/measure_lever_overhead.py`, Pipeline A, is on no branch); the fields stay `None`, never 0.
+Runner: `scripts/run_pipeline_b_day3.py rb3`. Results: `reports/levers/rb3.knn-router.k-<k>.tune.<baseline>.json`, summary `reports/routing/exp-route-011/summary.json`. Tests: `tests/unit/experiments/test_knn_router.py`, `test_knn_router_run.py` (synthetic). Overhead: **not measured** (L-1 script, see below); the fields stay `None`, never 0.
 
-## Results
+## Results, tune split (full data, `code_commit` 5a68fb6, 2026-11-02)
 
-Filled in after the full-data run on the committed Day 3 code.
+Rows: 230,762 `split_by_session == "tune"` rows inside the tune period, 209,331 of them LLM rows (naive timestamps, Q-06). **Interim eligibility; cost simulation; quality not proven.** Price-file units.
+
+**Why most traffic is untouched:** 119,854 LLM rows (57.3%) run on a model with no price in the price file (`incumbent_unpriced`, never 0), 506 have unknown tokens and 1,226 belong to bots below `min_n` = 30. The router can price 88,971 rows; every baseline below is over those rows.
+
+**Nested CV** (5 outer × 3 inner folds; outer fold sizes 62,360 / 52,806 / 30,940 / 32,122 / 31,103 LLM rows, uneven because families join sessions): every outer fold chose **k = 5** (inner moved share 1.7–4.5% at k = 5, 2.8–6.8% at 15, 4.9–10.3% at 50), as the criterion predicts. **Declared default: k = 5.**
+
+| k | role | moved (of 209,331) | to `deepseek-v4-flash` / `gpt-4.1-nano` / `gpt-4o-mini` / `mimo-v2.5` | median support | saving vs `todays_models` (router's own effect) | out-of-fold moved, saving |
+|---|---|---|---|---|---|---|
+| 5 | **default** | 3,692 (1.76%) | 2,485 / 1,038 / 165 / 4 | 0.20 | 0.190 = **0.70% [0.54, 0.89]** | 3.00%, 0.201 |
+| 15 | grid | 9,024 (4.31%) | 3,102 / 5,693 / 216 / 13 | 0.20 | 0.487 = 1.79% [1.52, 2.12] | 4.63%, 0.428 |
+| 50 | grid | 14,959 (7.15%) | 3,268 / 11,278 / 359 / 54 | 0.04 | 0.967 = 3.55% [3.06, 4.04] | 7.50%, 0.851 |
+
+Against the other baselines (k = 5; same rows): `premium_gpt_5_5` 97.36% [97.28, 97.42], almost all of it the premium model's own price, not the router; `best_single_cheap` **−131%** [−139, −125]: one cheap model everywhere would cost less than today's models even after routing (it ignores every constraint and quality). `as_logged`: not computed. Intervals are session-clustered (500 resamples).
+
+**Concentration:** the largest bot (`bot-01`, 80,526 rows) runs on an unpriced model and is untouched; of the next bots, `bot-04` and `bot-05` move 21% and 28% of their requests (saving 2.3% and 1.1% of their today's-model cost), `bot-02` (32,295 rows) moves 0.9%. Per-bot table (top 20 by size, ranks only): `reports/routing/exp-route-011/summary.json`.
+
+**Reading:** the larger `k` moves more requests because a single neighbour on a cheap model is enough (median support falls to 0.04 at k = 50: two of 50 neighbours). The saving ranking `compare` prints (k = 50 first) is the ranking the criterion refuses to use. Overhead: not measured. `scripts/measure_lever_overhead.py` reached `main` (#23) after this run; it builds only R-A1/R-A2 versions ("no known version" for `rb3.*`, dry run, nothing read) and samples report-period rows, which this session does not read. `summary.json`'s "script missing" was true when the run started. Patch for Pipeline A: Q-B24 in the Day 3 interim-contracts doc.

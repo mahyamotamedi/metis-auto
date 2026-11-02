@@ -33,6 +33,33 @@ Repriced saving against a baseline = baseline cost minus the pipeline's own cost
 
 `run.py` (helpers), runner `scripts/run_pipeline_b_day3.py i1` (after `rb3`), summary `reports/pipelines/b-only-dry-run/summary.json`. Not a `LeverResult`: `LeverResult.step` is one of cache/context/routing, and a combined pipeline has none. Tests: `tests/unit/experiments/test_b_only_dry_run.py` (synthetic).
 
-## Results
+## Results, tune split (full data, `code_commit` 5a68fb6, 2026-11-02)
 
-Filled in after the full-data run on the committed Day 3 code.
+Rows through `combine`: every tune-period row (R-B1 cache history). Counted: `split_by_session == "tune"` rows (230,762; 209,331 LLM). R-B3 at its declared default k = 5, interim eligibility. Naive timestamps (Q-06). Handoff only: no winner.
+
+**Recorded units, `as_logged`** (baseline 327.779 over LLM rows with a known cost; routing not computed in these units):
+
+| Run | Fees saved | Token cost saved | Total | Share |
+|---|---|---|---|---|
+| R-B1 alone (1-day TTL) | 3.580 | 0 | 3.580 | 1.09% |
+| R-B2 alone, conservative default | 0 | 0 | 0 | 0% |
+| R-B2 alone, stated scenario (k ≤ 1, pointer 8) | 0 | 7.657 | 7.657 | 2.34% |
+| combined, conservative default | 3.580 | 0 | 3.580 | 1.09% |
+| combined, stated scenario | 3.580 | 7.657 | **11.237** | 3.43% |
+
+Sum rule: combined = R-B1 + R-B2 exactly in both scenarios (**equal, allowed**): R-B1 lowers only fees and R-B2 only token cost, and a retrieval reuse keeps `served_from_cache` false, so R-B2 still applies to it (checked on every run).
+
+**Price-file units** (88,971 rows routing can price, the same rows for every run; saving = baseline minus the pipeline's own cost; R-B1 not computed in these units):
+
+| Run | vs `todays_models` | vs `premium_gpt_5_5` | vs `best_single_cheap` |
+|---|---|---|---|
+| R-B3 alone | 0.190 | 996.339 | −15.337 |
+| R-B2 alone, stated scenario | 0.700 | 996.849 | −14.827 |
+| combined (`PostContextRouting`), stated scenario | **0.888** | 997.037 | −14.639 |
+| combined as `combine` is today, stated scenario | 0.190 | 996.339 | −15.337 |
+
+Sum rule on the increment over today's models: conservative default 0.190 = 0 + 0.190 (equal); stated scenario **0.888 < 0.890** = 0.700 + 0.190 (holds; the 43 requests touched by both are routed on fewer tokens, so routing saves a little less on them). With `combine` as it is, the context saving disappears from the repriced figure (0.190 = routing alone): Q-B20.
+
+**Overlaps** (stated scenario, scored LLM rows): cache 1,555, context 15,013, routing 3,692; cache & context 1,414, cache & routing 9, context & routing 43, all three 9. The conservative default touches no request through context.
+
+The combined `as_logged` saving and the combined repriced saving are in different units and are **not** added. A saving over all three steps in one unit is not computed.
