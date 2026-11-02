@@ -357,3 +357,113 @@ def test_ttl_comes_from_sprint_toml_else_the_default(rp):
     assert rp.ttl_from_config({"ttl_hours": 12}) == (12, "sprint.toml")
     assert rp.ttl_from_config({}) == (rp.DEFAULT_TTL_HOURS, "script default")
     assert rp.DEFAULT_TTL_HOURS == 24
+
+
+# --- K-1 review (phase 3) -----------------------------------------------------------
+
+
+def synthetic_sheet(path: Path, verdicts: list[str], notes: list[str] | None = None):
+    """[SYNTHETIC] a review sheet; text columns hold placeholder strings only."""
+    n = len(verdicts)
+    pd.DataFrame(
+        {
+            "item": range(1, n + 1),
+            "sample": ["top_key"] * n,
+            "bot_rank": ["bot-01"] * n,
+            "question_text": ["[SYNTHETIC] text-q"] * n,
+            "stored_answer_text": ["[SYNTHETIC] text-s"] * n,
+            "hit_answer_text": ["[SYNTHETIC] text-h"] * n,
+            "verdict": verdicts,
+            "note": notes or [""] * n,
+        }
+    ).to_csv(path, index=False, encoding="utf-8-sig")
+    return path
+
+
+def test_review_reads_only_item_verdict_and_note(rp, tmp_path):
+    sheet = synthetic_sheet(tmp_path / "s.csv", ["yes", "no"])
+    review = rp.read_review(sheet)
+    assert list(review.columns) == ["item", "verdict", "note"]
+
+
+def test_review_counts_verdicts_ignoring_case_and_spaces(rp, tmp_path):
+    sheet = synthetic_sheet(
+        tmp_path / "s.csv",
+        ["yes", " YES ", "No", "unsure", "", "Unsure"],
+        ["", "a note", "", "", "", ""],
+    )
+    counts = rp.review_counts(rp.read_review(sheet))
+    assert counts == {
+        "items": 6,
+        "yes": 2,
+        "no": 1,
+        "unsure": 2,
+        "blank": 1,
+        "reviewed": 5,
+        "notes": 1,
+    }
+
+
+def test_unknown_verdict_is_refused_without_echoing_it(rp, tmp_path):
+    sheet = synthetic_sheet(tmp_path / "s.csv", ["yes", "maybe-xyz"])
+    with pytest.raises(ValueError) as err:
+        rp.review_counts(rp.read_review(sheet))
+    assert "maybe-xyz" not in str(err.value)
+    assert "1" in str(err.value)
+
+
+def test_review_labels_keep_a_candidate_saving_and_count_errors(rp):
+    counts = {"items": 30, "yes": 20, "no": 4, "unsure": 6, "blank": 0}
+    counts |= {"reviewed": 30, "notes": 4}
+    state, assumptions = rp.review_labels(counts)
+    assert state == "sampled:30"
+    text = " ".join(assumptions)
+    assert "candidate" in text and "300" in text
+    assert "4 of 30" in text and "yes 20" in text and "unsure 6" in text
+    assert "TTL" in text  # the TTL variant was not reviewed
+    assert all(len(a) <= 300 for a in assumptions)
+
+
+def test_review_labels_without_errors_still_say_candidate(rp):
+    counts = {"items": 30, "yes": 30, "no": 0, "unsure": 0, "blank": 0}
+    state, assumptions = rp.review_labels(counts | {"reviewed": 30, "notes": 0})
+    assert state == "sampled:30"
+    text = " ".join(assumptions)
+    assert "candidate" in text and "judged wrong" not in text
+
+
+def test_review_labels_unmeasured_when_nothing_was_reviewed(rp):
+    counts = {"items": 30, "yes": 0, "no": 0, "unsure": 0, "blank": 30}
+    assert rp.review_labels(counts | {"reviewed": 0, "notes": 0}) == ("unmeasured", ())
+
+
+def test_write_sheet_never_overwrites_a_reviewed_sheet(rp, tmp_path, monkeypatch):
+    monkeypatch.setattr(rp, "is_git_ignored", lambda path: True)
+    reviewed = synthetic_sheet(tmp_path / "s.csv", ["yes", ""])
+    before = reviewed.read_bytes()
+    with pytest.raises(SystemExit, match="reviewed"):
+        rp.write_sheet(pd.DataFrame({"item": [1], "verdict": [""]}), reviewed)
+    assert reviewed.read_bytes() == before
+    blank = synthetic_sheet(tmp_path / "b.csv", ["", ""])
+    rp.write_sheet(pd.DataFrame({"item": [1], "verdict": [""]}), blank)  # allowed
+
+
+def test_as_logged_result_takes_the_review_state(rp, cache):
+    before, after = report_pair(rp, cache)
+    manifest = build_manifest(
+        {"variant": "first_turn"},
+        ctx(),
+        code_commit="unknown",
+        python_version="3.13.0",
+        created_at=datetime(2026, 11, 2, tzinfo=UTC),
+    )
+    result = rp.as_logged_result(
+        cache,
+        before,
+        after,
+        manifest,
+        ("review note.",),
+        correctness_state="sampled:30",
+    )
+    assert result.correctness_state == "sampled:30"
+    assert "review note." in result.assumptions

@@ -18,7 +18,9 @@ ADR-0016, ADR-0031, ADR-0032, ADR-0034.
 
 Usage: ``.venv\\Scripts\\python.exe scripts/run_popular_question.py``
 (``--ttl-only`` runs only the TTL variants: no sensitivity check, no sheet, and
-the untimed results are left as they are; ``--no-sheet`` skips the review sheet;
+the untimed results are left as they are; ``--no-ttl`` runs only the untimed
+variants; ``--review PATH`` applies a reviewed K-1 sheet (default: the sheet
+below; only item, verdict and note are read); ``--no-sheet`` skips the sheet;
 ``--out DIR`` writes the results
 elsewhere, e.g. to compare a rerun). Every hit is checked to reuse an entry of its
 own bot and instruction fingerprint; a mismatch stops the run.
@@ -219,6 +221,7 @@ def as_logged_result(
     extra: tuple[str, ...],
     *,
     cached_separately: frozenset[str] = frozenset(),
+    correctness_state: str | None = None,
 ) -> LeverResult:
     slices = report_slices(before, after, cached_separately=cached_separately)
     llm = slices["llm_only"]
@@ -237,7 +240,7 @@ def as_logged_result(
         ci_high=None if math.isnan(hi) else hi,
         slices=slices,
         evidence_class=cache.evidence_class,
-        correctness_state=cache.correctness_state,
+        correctness_state=correctness_state or cache.correctness_state,
         assumptions=_assumptions(cache, extra),
         manifest=manifest,
     )
@@ -271,6 +274,7 @@ def repriced_results(
     *,
     premium_model: str,
     cached_separately: frozenset[str],
+    correctness_state: str | None = None,
 ) -> tuple[dict[str, LeverResult], dict[str, str]]:
     """The three repriced baselines (price-file units, token cost only).
 
@@ -320,7 +324,7 @@ def repriced_results(
                 "llm_only": _repriced_counts(int(llm.sum()), n_hits, base, save),
             },
             evidence_class=cache.evidence_class,
-            correctness_state=cache.correctness_state,
+            correctness_state=correctness_state or cache.correctness_state,
             assumptions=_assumptions(cache, extra)
             + (
                 "Repriced baseline in price-file units, token cost only (fees are "
@@ -474,8 +478,77 @@ def write_sheet(sheet: pd.DataFrame, path: Path) -> None:
         raise SystemExit(
             f"refusing to write the review sheet: {path} is not git-ignored"
         )
+    if sheet_is_reviewed(path):
+        raise SystemExit(f"refusing to overwrite a reviewed sheet: {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
     sheet.to_csv(path, index=False, encoding="utf-8-sig")
+
+
+# --- K-1 review (phase 3) -------------------------------------------------------------
+
+REVIEW_COLUMNS = ("item", "verdict", "note")
+VERDICTS = ("yes", "no", "unsure")
+ERROR_FREE_REVIEWS_NEEDED = 300
+"""Final plan, decision rules: answer error <= 1% needs about 300 error-free reviews."""
+
+
+def read_review(path: Path) -> pd.DataFrame:
+    """Only item number, verdict and note: the text columns are never read."""
+    return pd.read_csv(
+        path,
+        usecols=list(REVIEW_COLUMNS),
+        dtype=str,
+        keep_default_na=False,
+        encoding="utf-8-sig",
+    )[list(REVIEW_COLUMNS)]
+
+
+def sheet_is_reviewed(path: Path) -> bool:
+    if not path.is_file():
+        return False
+    return bool(read_review(path)["verdict"].str.strip().ne("").any())
+
+
+def review_counts(review: pd.DataFrame) -> dict[str, int]:
+    """Verdict counts (case and spaces ignored); notes are counted, not read."""
+    verdict = review["verdict"].str.strip().str.lower()
+    unknown = ~verdict.isin(VERDICTS + ("",))
+    if unknown.any():  # the value itself is never echoed: it may be free text
+        raise ValueError(
+            f"{int(unknown.sum())} verdict(s) are not yes, no, unsure or blank"
+        )
+    counts = {"items": len(review)}
+    counts |= {v: int(verdict.eq(v).sum()) for v in VERDICTS}
+    counts["blank"] = int(verdict.eq("").sum())
+    counts["reviewed"] = counts["yes"] + counts["no"] + counts["unsure"]
+    counts["notes"] = int(review["note"].str.strip().ne("").sum())
+    return counts
+
+
+def review_labels(counts: dict[str, int]) -> tuple[str, tuple[str, ...]]:
+    """``correctness_state`` and the assumptions a reviewed result carries."""
+    n = counts["reviewed"]
+    if not n:
+        return "unmeasured", ()
+    labels = [
+        f"K-1 review (owner, 2026-11-02): {n} of {counts['items']} first-turn hits "
+        f"reviewed (15 top keys, 15 seeded random): yes {counts['yes']}, no "
+        f"{counts['no']}, unsure {counts['unsure']}, blank {counts['blank']}.",
+        f"Still a candidate saving: answer error <= 1% needs about "
+        f"{ERROR_FREE_REVIEWS_NEEDED} reviewed hits with no error (decision rules); "
+        f"{n} were reviewed.",
+    ]
+    if counts["no"]:
+        labels.append(
+            f"{counts['no']} of {n} reviewed hits were judged wrong "
+            f"({counts['no'] / n:.0%}); half the sample is top keys, so this is not "
+            "a random error rate."
+        )
+    labels.append(
+        "The review applies to this untimed variant (stored answer = window mode); "
+        "the 24 h TTL variant serves the latest answer and stays unmeasured."
+    )
+    return f"sampled:{n}", tuple(labels)
 
 
 # --- main ----------------------------------------------------------------------------
@@ -529,6 +602,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--ttl-only", action="store_true", help="run only the TTL variants"
     )
+    parser.add_argument(
+        "--no-ttl", action="store_true", help="run only the untimed variants"
+    )
+    parser.add_argument(
+        "--review", type=Path, default=SHEET, help="reviewed K-1 sheet (phase 3)"
+    )
     args = parser.parse_args(argv)
 
     sprint = load_toml(SPRINT)
@@ -563,7 +642,14 @@ def main(argv: list[str] | None = None) -> int:
     out_dir: Path = args.out
     out_dir.mkdir(parents=True, exist_ok=True)
     first_turn_state = None
+    review_state, review_notes = "unmeasured", ()
+    if args.review.is_file():
+        counts = review_counts(read_review(args.review))
+        review_state, review_notes = review_labels(counts)
+        _print_table("K-1 review (counts only)", counts)
     ttls = (ttl_hours,) if args.ttl_only else (None, ttl_hours)
+    if args.no_ttl:
+        ttls = (None,)
     runs = [(variant, ttl) for ttl in ttls for variant in VARIANTS]
     for variant, ttl in runs:
         cache = cache_class(
@@ -581,13 +667,17 @@ def main(argv: list[str] | None = None) -> int:
         manifests = {
             b: _manifest(config | {"baseline": b}, ctx, commit) for b in BASELINE_KEYS
         }
+        reviewed = variant == "first_turn" and ttl is None
+        state = review_state if reviewed else None
+        notes = extra + (review_notes if reviewed else ())
         result = as_logged_result(
             cache,
             before,
             after,
             manifests[AS_LOGGED],
-            extra,
+            notes,
             cached_separately=cached_sep,
+            correctness_state=state,
         )
         (out_dir / f"{cache.lever_id}.json").write_text(
             result.to_json(), encoding="utf-8"
@@ -598,9 +688,10 @@ def main(argv: list[str] | None = None) -> int:
             after,
             ctx,
             manifests,
-            extra,
+            notes,
             premium_model=premium,
             cached_separately=cached_sep,
+            correctness_state=state,
         )
         for key, r in repriced.items():
             (out_dir / f"{cache.lever_id}__{key}.json").write_text(
@@ -636,7 +727,9 @@ def main(argv: list[str] | None = None) -> int:
         if variant == "first_turn" and ttl is None:
             first_turn_state = (cache, known, after_all, report)
 
-    if not (args.no_sheet or args.ttl_only) and first_turn_state is not None:
+    if sheet_is_reviewed(SHEET) and not (args.no_sheet or args.ttl_only):
+        print("\nK-1 review sheet already holds verdicts: not rewritten.")
+    elif not (args.no_sheet or args.ttl_only) and first_turn_state is not None:
         cache, known_rows, after_all, report = first_turn_state
         hits = after_all["served_from_cache"].astype(bool) & report
         sources = cache.served_sources(known_rows[known_rows["llm_request"]], ctx)

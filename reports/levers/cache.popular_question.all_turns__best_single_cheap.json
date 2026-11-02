@@ -26,9 +26,9 @@
   "evidence_class": "simulation",
   "lever_id": "cache.popular_question.all_turns",
   "manifest": {
-    "code_commit": "78d9eba52ddb08f048f78beaa33710c8b7406f72",
+    "code_commit": "91b330d7b008b83f10d6b4186f5712a11006058f",
     "config_hash": "3e80adc985699159463d8b784849487019da640a116f3115fbfbc0d1512b90f0",
-    "created_at": "2026-11-02T11:18:35.900024Z",
+    "created_at": "2026-11-02T13:30:08.357568Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
     "price_version": "prices-metis-2026-10-18-s75-g55",
     "python_version": "3.13.9",
