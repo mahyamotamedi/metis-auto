@@ -1,4 +1,4 @@
-"""The CI workflow (ADR-XXXX (ci-github-actions), QA-TEST, QA-REPL) runs the
+"""The CI workflow (ADR-0035, QA-TEST, QA-REPL) runs the
 documented setup and the default, offline test run on Linux and macOS: no
 secrets, no opt-in tests, actions pinned by commit. Static check (PyYAML, which
 the dev lock pins). No network."""
