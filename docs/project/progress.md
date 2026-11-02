@@ -1004,3 +1004,12 @@ Under the owner's task. Status: **run complete (300 of 300 answered, 12.03 USD);
 - **Pending (owner):** set the pilot caps and `real_data_approved` in `config/local.toml`, type "run", then decide on the full run after the pilot; the 30-item human spot-check.
 - **Run `ga-v2-20261101` (2026-11-01; language-mismatch review tool added 2026-11-02, `review-language`):** pilot 10 records (0.83 USD), then the rest grouped by identical instructions. Halted once on HTTP 402 at a ledger total of 10.04 USD (the old 10 USD Metis dashboard limit; 5 unbilled refusals), resumed after the limit was raised with the new `--retry-failed auth` flag. Result: 300 answered, 0 failed, none truncated, 12.03 USD of provider-reported cost (ledger 12.58 USD including two timeouts charged at their estimates, A-85). Prompt caching passes through Metis (124,160 cached tokens). Summary: `reports/evaluation/golden_v2/answers_ga-v2-20261101_summary.json`. Open: the 30-item human spot-check; compare the Metis dashboard with the ledger (Q-36); the adapter's `auth` label for HTTP 402.
 
+---
+
+## Lever base: StepVersion, combine, LeverResult, Manifest (2026-11-02)
+
+Final-plan tasks S-1 and E-2 (Pipeline A), branch `sprint-saba`. Status: **awaiting review**; nothing committed. Code: `analysis/levers.py`, `analysis/lever_result.py`; tests `tests/unit/analysis/test_levers.py`, `test_lever_manifest.py`; two rows in `module_reference.md`. No model calls, no data rows read.
+
+- **Decided (owner, 2026-11-02):** cost blocks are `fees` (0.002 x per-call items, a proxy) and `token_cost` (recorded total minus fees); input, output and cached costs are not in `requests.parquet`. `created_at` is passed to `build_manifest`. The `all` slice counts every row in `n_requests` but sums cost and hits over LLM rows with known cost. Decision record: [ADR-0032](../adr/0032-lever-result-and-manifest-format.md) and [ADR-0031](../adr/0031-full-data-lever-replay.md) (numbers provisional; 0029 and 0030 are taken on `origin/main`).
+- **Checked on real data (aggregates only):** blocks sum to `a_bill_totalCost` exactly; 104,084 unknown-cost rows stay NaN; the fee proxy is 35.8% of cost against 37.6% in the billing table (908 messages differ), so it understates fees by about 5%.
+- **Open:** exact fees and the input/output/cached split need an upstream change to `billing.py` and the ingest.
