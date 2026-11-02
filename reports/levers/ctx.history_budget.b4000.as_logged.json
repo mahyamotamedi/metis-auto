@@ -1,0 +1,109 @@
+{
+  "assumptions": [
+    "tokens only, quality not measured (FR-CTX-03).",
+    "History tokens = effective input - bot's tune turn-0 median (net of chunks) - chunk chars x 0.3384 (ledger recon.t0rag.coef_rag): hypothetical reconstruction and an upper bound (it holds message growth too).",
+    "Per-turn sizes: history spread over earlier turns by logged characters, most recent turns assumed sent (hypothetical); oldest whole turns dropped.",
+    "Removed tokens come out of cached input first, then uncached; the uncached-only rule is the upper-bound sensitivity (slice history_budget).",
+    "Excluded, no saving: workflow, turn 0, memory and summarising bots, gated rows, multi-call requests, bots under min_n turn-0 rows (unknown).",
+    "Dropping old turns may break the provider-cached prefix for the rest of the conversation: not measured.",
+    "as_logged: removed cached tokens at the model's implied_cached_per_M, uncached at implied_input_per_M (implied_unit_rates.csv, recorded units); a missing rate is unknown and leaves both sides, never zero.",
+    "Fees unchanged; once per request. Metis's own history policy is unknown (EDA \u00a72): the saving is an upper bound on what a budget could remove."
+  ],
+  "baseline": "as_logged",
+  "baseline_cost": {
+    "fees": "65.502000000",
+    "token_cost": "80.995575405",
+    "total": "146.497575405"
+  },
+  "ci_high": null,
+  "ci_low": null,
+  "correctness_state": "unmeasured",
+  "evidence_class": "hypothetical reconstruction",
+  "lever_id": "ctx.history_budget.b4000.as_logged",
+  "manifest": {
+    "code_commit": "84b45f0b9e2fa0749fa384244811148009e309ea",
+    "config_hash": "196caa4e6a99c46f28233480b3bcf0458dbfd800cc5044c10e3676e83bc40512",
+    "created_at": "2026-11-02T20:14:16Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "full-eda-implied-unit-rates",
+    "python_version": "3.13.16",
+    "seed": 20261102
+  },
+  "n_eligible": 847,
+  "n_requests": 73063,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
+  "saving": {
+    "fees": "0.000000000",
+    "token_cost": "0.092987056",
+    "total": "0.092987056"
+  },
+  "slices": {
+    "all": {
+      "baseline:fees": "65.502000000",
+      "baseline:token_cost": "80.995575405",
+      "baseline:total": "146.497575405",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "20744",
+      "n_requests": "73063",
+      "n_saving_unknown": "0",
+      "saved_input_tokens": "63499.961167967",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.092987056",
+      "saving:total": "0.092987056",
+      "saving_share": "0.000634734"
+    },
+    "history_budget": {
+      "hist_tokens_known": "338500.958998847",
+      "n_gated": "0",
+      "n_known": "847",
+      "n_memory": "571",
+      "n_multi_call": "10118",
+      "n_reduced": "5",
+      "n_summariser": "806",
+      "n_turn0": "7363",
+      "n_unknown": "1045",
+      "removed_tokens": "63499.961167967",
+      "saved_share_top5_bots": "1.000000000",
+      "saved_share_top_bot": "0.928110192",
+      "saved_share_top_tenant": "1.000000000",
+      "saved_tokens": "63499.961167967",
+      "saved_tokens_from_cached": "0.000000000",
+      "saved_tokens_uncached_only": "63499.961167967",
+      "saving_token_cost_uncached_only": "0.092987056"
+    },
+    "llm_only": {
+      "baseline:fees": "65.502000000",
+      "baseline:token_cost": "80.995575405",
+      "baseline:total": "146.497575405",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "20744",
+      "n_requests": "20750",
+      "n_saving_unknown": "0",
+      "saved_input_tokens": "63499.961167967",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.092987056",
+      "saving:total": "0.092987056",
+      "saving_share": "0.000634734"
+    },
+    "over_8k": {
+      "baseline:fees": "43.724000000",
+      "baseline:token_cost": "65.095822271",
+      "baseline:total": "108.819822271",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "10720",
+      "n_requests": "10720",
+      "n_saving_unknown": "0",
+      "saved_input_tokens": "58934.961167967",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.092005930",
+      "saving:total": "0.092005930",
+      "saving_share": "0.000845489"
+    }
+  },
+  "step": "context",
+  "version": "ctx.history_budget.b4000"
+}
