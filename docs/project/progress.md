@@ -39,6 +39,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 <!-- progress-index:start -->
 - 2026-11-02: [Sprint Day 2, Pipeline C: within-message chunk dedup and stable prompt order](progress/2026-11-02-sprint-day-2-pipeline-c-within-message-chunk-dedup.md)
 - 2026-11-02: [Sprint Day 2, Pipeline C: within-message dedup as a token_cost saving, lever results](progress/2026-11-02-sprint-day-2-pipeline-c-context-dedup-token-saving.md)
+- 2026-11-02: [Sprint Day 2, Pipeline B: retrieval-result cache, cross-turn chunk policy, cost trace](progress/2026-11-02-sprint-day-2-pipeline-b-retrieval-cache-chunk-policy-cost-trace.md)
 - 2026-11-02: [Sprint Day 1, Pipeline C: replay split keeps the report side, ADR for scope, split and baselines](progress/2026-11-02-sprint-day-1-pipeline-c-replay-split-report-side-keeps.md)
 - 2026-11-02: [Sprint Day 1, Pipeline C: replay scope, split and four baselines](progress/2026-11-02-sprint-day-1-pipeline-c-replay-scope-split-baselines.md)
 - 2026-11-02: [Sprint Day 1, Pipeline C: demo shell, lever view model](progress/2026-11-02-sprint-day-1-pipeline-c-demo-shell-lever-view.md)
@@ -46,6 +47,10 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-02: [Sprint Day 1, Pipeline B: comparison, cache guard, Postgres event sink](progress/2026-11-02-sprint-day-1-pipeline-b-comparison-cache-guard-postgres.md)
 - 2026-11-02: [Sharing the golden answers](progress/2026-11-02-sharing-the-golden-answers.md)
 - 2026-11-02: [Progress entries as files, ADRs as drafts](progress/2026-11-02-progress-entries-and-adr-drafts.md)
+- 2026-11-02: [Popular-question cache, R-A1: 24-hour TTL variant](progress/2026-11-02-popular-question-cache-r-a1-ttl-24h.md)
+- 2026-11-02: [Popular-question cache, R-A1 phase 3: K-1 hit review](progress/2026-11-02-popular-question-cache-r-a1-phase-3-k1-review.md)
+- 2026-11-02: [Popular-question cache, R-A1 phase 2: full-data run](progress/2026-11-02-popular-question-cache-r-a1-phase-2.md)
+- 2026-11-02: [Popular-question cache, R-A1 phase 1](progress/2026-11-02-popular-question-cache-r-a1-phase-1.md)
 - 2026-11-02: [Lever base: StepVersion, combine, LeverResult, Manifest](progress/2026-11-02-lever-base-stepversion-combine-leverresult-manifest.md)
 - 2026-11-01: [Session and configuration analysis, golden-set proposal](progress/2026-11-01-session-and-configuration-analysis-golden-set-proposal.md)
 - 2026-11-01: [PostgreSQL foundation and evaluation dataset golden-v1](progress/2026-11-01-postgresql-foundation-and-evaluation-dataset-golden-v1.md)

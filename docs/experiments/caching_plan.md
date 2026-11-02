@@ -11,7 +11,7 @@ The progression is a chain of **replaceable stages**: each adds one thing behind
 | C1b | Persian folding, history windows, first-turn-only, producing-tier rule | treatment / variant config | planned; **Persian folding treatments implemented (Stage E0, ADR-0025), not yet run on data** |
 | C2 | semantic tier: embedder, similarity, threshold from measured curves, false-hit analysis, verifier | `CandidateIndex` (`semantic`), `Embedder`, `VectorIndex` | planned |
 | C3 | persistent store (PostgreSQL) behind the same ports | `CacheStore`, `VectorIndex` adapters | planned (after the full EDA) |
-| C4 | curated shared cache with simulated rebuilds; traffic-source scope (ADR-0016, proposed) | builder + `CandidateIndex` (`curated`) | planned |
+| C4 | curated shared cache with simulated rebuilds; traffic-source scope (ADR-0016, proposed) | builder + `CandidateIndex` (`curated`) | planned on the sample; on the full data as a lever replay, [exp-cache-003](../../experiments/caching/exp-cache-003-popular-question/README.md) (phase 1, synthetic tests only, 2026-11-02) |
 | C5 | provider prompt caching: keeping prefixes stable and models warm | context order, sticky routing | planned (with the context and routing plans) |
 
 ---

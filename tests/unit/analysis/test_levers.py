@@ -16,7 +16,10 @@ from pydantic import ValidationError
 
 from metis_auto.analysis.lever_result import LeverResult, Manifest
 from metis_auto.analysis.levers import (
+    BLOCKS,
     ReplayContext,
+    StepVersion,
+    block_column,
     combine,
     summarise_slices,
     with_blocks,
@@ -190,6 +193,29 @@ def test_workflow_rows_never_counted():
     # The same hit is reported over all requests and over LLM requests only.
     assert slices["all"]["cache_hit_rate"] == Decimal("0.166666667")
     assert slices["llm_only"]["cache_hit_rate"] == Decimal("0.200000000")
+
+
+class IdentityCache:
+    """[SYNTHETIC] the smallest valid version: no hits, nothing changed."""
+
+    name = "identity-cache"
+    step = "cache"
+
+    def apply(self, req: pd.DataFrame, ctx: ReplayContext) -> pd.DataFrame:
+        out = req.copy()
+        out["served_from_cache"] = False
+        return out
+
+
+def test_identity_version_satisfies_step_version():
+    version = IdentityCache()
+    assert isinstance(version, StepVersion)
+    base = synthetic_frame()
+    out = combine(base, version, None, None, make_ctx())
+    cols = [block_column(b) for b in BLOCKS]
+    pd.testing.assert_frame_equal(out[cols], base[cols])
+    assert not out["served_from_cache"].any()
+    assert total_saving(base, out) == 0
 
 
 def test_with_blocks_derives_fee_and_residual_and_keeps_unknown():
