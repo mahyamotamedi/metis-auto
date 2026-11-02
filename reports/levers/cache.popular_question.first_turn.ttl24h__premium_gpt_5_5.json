@@ -14,7 +14,9 @@
     "Guard: no approval step, empty blocklist, no disabled bot, key version pq-v1; every served key would still need approval before serving.",
     "Tenant slices: the 10 largest tenants by LLM requests (opaque ranks); traffic_weighted slice not computed.",
     "The working tree had uncommitted changes when this ran.",
-    "Repriced baseline in price-file units, token cost only (fees are not on the price list); no interval computed."
+    "Repriced baseline in price-file units, token cost only (fees are not on the price list); no interval computed.",
+    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 41.0456 ms, p95 52.0927 ms, max 189.7006 ms; 2026-11-02, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
+    "Overhead caveat: on a one-row frame the nightly window is empty, so this times eligibility, keying and the guard path, not the nightly build (batch work) or a lookup in a built set."
   ],
   "baseline": "premium_gpt_5_5",
   "baseline_cost": {
@@ -37,8 +39,8 @@
   },
   "n_eligible": 2707,
   "n_requests": 77774,
-  "overhead_ms_p50": null,
-  "overhead_ms_p95": null,
+  "overhead_ms_p50": 41.0456,
+  "overhead_ms_p95": 52.0927,
   "saving": {
     "token_cost": "1.769614000",
     "total": "1.769614000"
