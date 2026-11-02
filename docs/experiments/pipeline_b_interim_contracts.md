@@ -86,3 +86,40 @@ For **T-0 (Parham)**:
 For **the team**:
 - Q-B12. Approve the `CacheGuard.refusal` addition ([ADR-0034](../adr/0034-cache-guard-key-encoding-and-check-order.md)), or B removes it and tests the order another way.
 - Q-B13. `[events] sink = "postgres"` writes Postgres **in addition to** the JSON Lines file (ADR-0033). Is that the intended meaning of the switch?
+
+## Day 2 (2026-11-02): R-B1, R-B2, F-2
+
+**Shared files at Day 2.** `analysis/levers.py` (blob `896092d`) and `analysis/lever_result.py` (blob `dfca79e`) are on `origin/main`; this branch has not merged `main` (owner rule). They were **borrowed** as untracked, git-excluded copies only to run tests against the real `combine`, `StepVersion`, `summarise_slices`, `LeverResult` and `build_manifest`, and **deleted before handing over**. No B code depends on them at import time: the contract tests use `pytest.importorskip`, and the run helpers import them lazily. `analysis/replay_scope.py`, `analysis/baselines_full.py`, `config/evaluation/sprint.toml`, `analysis/routing_base.py` and S-6 (`experiments/context/exp-ctx-001-within-message-dedup/`) exist on no ref.
+
+**Stand-in:** `experiments/caching/exp-cache-002-retrieval-result-cache/_interim.py`. Every result built with it says "interim split/baselines, not the shared implementation" and stays out of any final comparison. Results are written to `reports/<area>/exp-*-002/`, not `reports/levers/`.
+
+| Interim piece | Assumed shape | Replaced by |
+|---|---|---|
+| `llm_request(req)` | nullable bool; False for `bot_provider_name == "workflow"` (103,561 rows, 29.7%); `<NA>` if unknown | `analysis/replay_scope.py` (S-3) |
+| `assign_periods(req)` | `period` in `tune` / `report` / `outside` by the session's first request time (user time, else answer time); `family_leak` for report rows whose `u_h_norm` family first appeared in tune | `analysis/replay_scope.py` |
+| `PERIODS` | tune 2026-03-01..07-31, report 2026-08-01..10-31, naive | `config/evaluation/sprint.toml` |
+| baselines | only `as_logged` (recorded units); `premium_gpt_5_5`, `todays_models`, `best_single_cheap` not computed (need repricing) | `analysis/baselines_full.py` |
+| shadow rate | 0.01 passed by the script | `sprint.toml` |
+
+**Switch-over checklist (Day 2 code).**
+1. Merge `main`. Re-run `tests/unit/experiments`: the `importorskip` contract tests then run for real.
+2. Replace `_interim.llm_request` / `assign_periods` with `replay_scope` in `scripts/run_pipeline_b_day2.py`. Delete `_interim.py` and its `module_reference.md` row.
+3. Build all four baselines from `baselines_full`. R-B1's fee block has no repriced counterpart (no price list for lookups). If none is defined, report repriced baselines as "fee saving not repriceable".
+4. Read the shadow rate from `sprint.toml`.
+5. Re-run `rb1`, `rb2` and `f2`, then move the `LeverResult` files to `reports/levers/` only after the interim label is gone.
+
+### Proposals for the S-1 contract (A); not applied, nothing edited
+- **P-B1 (retrieval cache, plan §4.1).** A retrieval cache lowers only `block_fees`, leaves `served_from_cache` false, and adds `retrieval_reused`, `retrieval_lookups_skipped`, `retrieval_fee_avoided`. Today's `combine` already carries these columns (tested against the real one). Please change the `StepVersion` docstring from "cache versions … zero every cost block" to "answer-cache versions …; retrieval-cache versions lower only the fee block". [ADR-XXXX (retrieval-result-cache-accounting)](../adr/draft-retrieval-result-cache-accounting.md).
+- **P-B2 (fee block source).** `with_blocks` uses 0.002 × per-call items (35.8% vs 37.6% recorded). Let it take the recorded `costBreakdown.per_call` sum when available. R-B1 does this in its own run helper (`run.fee_blocks`), so fee avoided and the fee block share one source.
+- **P-B3 (context columns).** The plan says context versions lower `input_tokens`. The frame has `a_bill_inputTokens` (raw, cached-token convention differs by model). R-B2 writes `input_tokens_ordinary` (input), `input_tokens_after` and `ctx_*`, and lowers only `block_token_cost`. Please name the shared column.
+- **P-B4 (an "other" block).** F-2: 11.71% of recorded cost (all periods; 16.3% of tune) has no input/output/fee split. Almost all of it is March 2026 items logged without `costBreakdown`. `BLOCKS = ("fees", "token_cost")` folds it into `token_cost`. Please add an `other` block, or a slice that states how much of `token_cost` is unbroken, so no saving is stated against a total that hides it.
+
+### Questions for the owners (Day 2)
+- Q-B4 (open): `evidence_class` has no "measured potential". R-B1 uses `simulation`, with "measured potential, conditional on Metis-Auto being able to intercept retrieval" in `assumptions`.
+- Q-B8 (open, sharpened by F-2): the cost-block names (plan: fees, input, output, cached, other; code: `fees`, `token_cost`) and the missing "other" block (P-B4).
+- Q-B14 (A): confirm P-B1. Until then the combined run with R-B1 is **blocked** in the shared waterfall. R-B1's standalone fee accounting stays valid.
+- Q-B15 (A): where do a result's cache-specific aggregates go? R-B1 puts lookups, hits, guard blocks, agreement and shadow counts in a `retrieval` slice. R-B2 puts tokens in a `context_tokens` slice. `LeverResult` has no field for them.
+- Q-B16 (A, C): `traffic_weighted` for a full, unsampled replay. B copies `all`. Is that the intended meaning?
+- Q-B17 (C): the shadow-check source. Offline, the "later real lookup" of a reused lookup is the logged lookup itself. Is that acceptable for the D-2 monitor, or should the shadow check use the next logged lookup of the same key?
+- Q-B18 (C, S-6): within-message duplicates. R-B2 counts only the first occurrence of `(chunk_id, hash)` per request and leaves copies to S-6. Please report S-6 savings per request with the same rule, so the two never double count.
+- Q-B19 (Metis, via O-1): 34,569 of 91,807 tune RAG lookups sit in messages with **no per-call billing item**: almost all of March, part of April and May, and every RAG message in October. Is retrieval sometimes free, billed elsewhere, or missing from the log?
