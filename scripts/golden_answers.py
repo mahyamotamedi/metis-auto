@@ -5,6 +5,10 @@
     python scripts/golden_answers.py run --run-id R --live    # the records not done
     python scripts/golden_answers.py summary --run-id R       # content-free summary
     python scripts/golden_answers.py runs                     # stored runs and counts
+    python scripts/golden_answers.py review-language R        # language mismatches
+
+``review-language`` writes a local file WITH message text under ``runs/`` (git-ignored,
+never share or commit it) and a content-free sheet to fill in; it makes no call.
 
 A live command needs ``--live`` AND ``golden_answers.real_data_approved = true``,
 the live keys and both budget caps in ``config/local.toml``; otherwise it refuses
@@ -29,7 +33,11 @@ from metis_auto.wiring.golden_answers import (
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("command", choices=["plan", "pilot", "run", "summary", "runs"])
+    ap.add_argument(
+        "command",
+        choices=["plan", "pilot", "run", "summary", "runs", "review-language"],
+    )
+    ap.add_argument("run", nargs="?", help="the run, for review-language")
     ap.add_argument("--run-id", help="the run to create, continue or summarise")
     ap.add_argument("--config", default=CONFIG_PATH)
     ap.add_argument("--live", action="store_true", help="allow real provider calls")
@@ -51,8 +59,13 @@ def main() -> int:
             for run_id, n in db.runs(conn):
                 print(f"{run_id}: {n} stored records")
         return 0
+    args.run_id = args.run_id or args.run
     if not args.run_id:
-        ap.error(f"{args.command} needs --run-id")
+        ap.error(f"{args.command} needs a run ID")
+    if args.command == "review-language":
+        result = g.review_language(args.run_id)
+        print(json.dumps(result, indent=1, sort_keys=True, ensure_ascii=False))
+        return 1 if result["verdict_problems"] else 0
     if args.command == "summary":
         g.summary(args.run_id)
         return 0

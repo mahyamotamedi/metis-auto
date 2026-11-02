@@ -670,3 +670,81 @@ def test_golden_answers_leave_the_dataset_and_its_fingerprint_unchanged(db):
     assert snapshot() == before
     _run(db, _Client([_answer()]), "pg-verify-2")
     assert snapshot() == before  # unchanged with rows present, too
+
+
+def test_language_review_end_to_end_on_synthetic_data(db, tmp_path):
+    import subprocess
+
+    from metis_auto.evaluation.golden_answers import review as rv
+    from metis_auto.wiring.golden_answers import GoldenAnswers
+
+    _ensure_dataset(db)
+    with db["engine"].begin() as conn:
+        # the earlier freeze test locks the dataset; the throwaway database lets a
+        # test set up its synthetic stratum and instructions anyway
+        conn.execute(sa.text("SET session_replication_role = replica"))
+        conn.execute(
+            sa.text(
+                "UPDATE eval.dataset_record SET stratum = "
+                '\'{"language_group": "persian", "primary_intent": "factual_qa", '
+                '"cohort": "User A"}\' WHERE record_id = \'r1\''
+            )
+        )
+        conn.execute(
+            sa.text(
+                "INSERT INTO eval.record_input_component (record_id, position, kind, "
+                "role, source_kind, source_bot_id, availability_stage, "
+                "included_pre_retrieval, included_post_retrieval, "
+                "transmitted_to_provider) VALUES ('r1', 20, 'bot_instruction', "
+                "'system', 'bot_instruction', 'b1', 'configuration_snapshot', true, "
+                "true, 'unknown') ON CONFLICT DO NOTHING"
+            )
+        )
+        conn.execute(
+            sa.text(
+                "UPDATE src.chat_bot SET instructions = "
+                "'[SYNTHETIC] Always answer in English.' WHERE bot_id = 'b1'"
+            )
+        )
+        conn.execute(sa.text("SET session_replication_role = DEFAULT"))
+    _run(db, _Client([_answer("[SYNTHETIC] an english answer")]), "pg-review")
+
+    repo_dir = tmp_path / "repo"
+    repo_dir.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo_dir, check=True)
+    (repo_dir / ".gitignore").write_text("runs/\n")
+    answers = GoldenAnswers(
+        engine=db["engine"],
+        log=lambda _m: None,
+        report_dir=tmp_path / "reports",
+        local_dir=repo_dir / "runs" / "pg-review",
+    )
+    result = answers.review_language("pg-review")
+
+    assert result["mismatches"] == 1 and result["answered"] == 1
+    assert result["by_direction"] == {"persian→english": 1}
+    assert result["instructions_mention_language"] == 1
+    assert result["top_bots"] == [{"bot_id": "b1", "mismatches": 1}]
+    assert "SYNTHETIC" not in json.dumps(result, ensure_ascii=False)
+
+    local = json.loads(
+        (repo_dir / "runs/pg-review/review/language_mismatch_local.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert len(local) == 1 and local[0]["record_id"] == "r1"
+    assert local[0]["answer"] == "[SYNTHETIC] an english answer"
+    assert local[0]["instructions_first_800_chars"].endswith("English.")
+    assert local[0]["target_user_message"].startswith("[SYNTHETIC]")
+    assert local[0]["answer_language_group"] == "english"
+
+    sheet = tmp_path / "reports/review/language_mismatch_pg-review.csv"
+    text = sheet.read_text(encoding="utf-8")
+    assert "SYNTHETIC" not in text
+    assert text.splitlines()[0] == ",".join(rv.SHEET_COLUMNS)
+
+    # a reviewer's verdict survives running the command again
+    sheet.write_text(text.replace("true,,", "true,ok_bot_rule,bot rule"), "utf-8")
+    again = answers.review_language("pg-review")
+    assert again["kept_earlier_verdicts"] == 1 and not again["verdict_problems"]
+    assert "ok_bot_rule" in sheet.read_text(encoding="utf-8")

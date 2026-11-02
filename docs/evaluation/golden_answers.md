@@ -70,6 +70,37 @@ python scripts/golden_answers.py summary --run-id <id>
 
 The summary is `reports/evaluation/golden_v2/answers_<run_id>_summary.json`: counts per stratum, success and failure by reason, latency quantiles, truncation rate, language-mismatch rate (a script-based proxy for Persian and English requests), tokens, cost, caveat counts, and the media subset.
 
+## Reviewing language mismatches
+
+The run summary counts requests whose answer came back in a different script group than the request (the proxy rule `summary.language_mismatch`: Persian and English requests only). This command lets a person look at each one. It makes no call.
+
+```bash
+python scripts/golden_answers.py review-language <run_id>
+```
+
+The selection **is** the summary's rule (the code calls `language_mismatch()`, it has no copy of it), so the count equals the summary's. It prints counts only: mismatches by direction (Persian to X, English to X), by bot (top 10), and how many have instructions that mention a language.
+
+It writes two files:
+
+| File | Holds | Rule |
+|---|---|---|
+| `runs/golden_answers/<run_id>/review/language_mismatch_local.json` | **message text**: per record the IDs, cohort, languages, caveats, the target user message, the first 800 characters of the bot instructions (plus their total length and the language flag), and the full answer | **Never share, paste, upload or commit it.** It stays on this computer. The command refuses to write it unless git ignores the path. |
+| `reports/evaluation/golden_v2/review/language_mismatch_<run_id>.csv` | no text: `record_id, bot_id, request_lang, answer_lang, instructions_mention_language, verdict, notes` | Committable. |
+
+`instructions_mention_language` is a flag computed in code over the whole instructions (the words Persian, Farsi, English, language and their Persian forms). It says the instructions talk about a language, not what rule they give.
+
+**Filling the verdicts.** Open the local file on your own computer and the CSV next to it. For each record choose one `verdict`:
+
+| verdict | Meaning |
+|---|---|
+| `ok_bot_rule` | the bot's instructions require that answer language |
+| `ok_not_really_english` | the request only looked English or Persian to the detector (a name, a term, code) |
+| `model_error` | the model answered in the wrong language |
+| `detector_error` | the script detector mislabelled the request or the answer |
+| `unsure` | cannot tell |
+
+`notes` is optional and **must never contain message text** (no quotes, no translations, no paraphrases); a short reason such as "bot asks for English" is fine. Running the command again keeps the verdicts already in the CSV and the command reports any value outside the list above. Commit the CSV, never the local file.
+
 ## Human spot-check (planned, not done)
 
 About 30 answers, sampled across the strata, are read by a reviewer using [the annotation rubric](annotation_rubric_v1.md), to estimate how often the reference is wrong or unusable. Until then every use of these answers should say "reference", not "correct". Record the reviewer, the sample IDs and the findings next to the summary (IDs and labels only).

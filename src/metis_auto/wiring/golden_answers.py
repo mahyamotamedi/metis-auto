@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 import tomllib
 from collections.abc import Callable, Mapping
 from decimal import Decimal
@@ -29,6 +30,7 @@ from metis_auto.domain.accounting.cost import pre_call_estimate
 from metis_auto.domain.accounting.overhead import template_overhead, with_overhead
 from metis_auto.domain.accounting.tokens import sum_counts
 from metis_auto.evaluation.golden.validation import fingerprint
+from metis_auto.evaluation.golden_answers import review as rv
 from metis_auto.evaluation.golden_answers.config import (
     AnswerSettings,
     SettingsError,
@@ -132,9 +134,11 @@ class GoldenAnswers:
         loaded: LoadedSettings | None = None,
         log: Callable[[str], None] = print,
         report_dir: Path | None = None,
+        local_dir: Path | None = None,
     ) -> None:
         self.root = root or repo_root()
         self._report_dir = report_dir
+        self._local_dir = local_dir
         self.engine = engine or engine_from_settings()
         raw = tomllib.loads((self.root / config_path).read_text(encoding="utf-8"))
         self.raw = raw
@@ -510,6 +514,56 @@ class GoldenAnswers:
             json.dumps(manifest, indent=1, sort_keys=True) + "\n", encoding="utf-8"
         )
 
+    # -------------------------------------------------------- language review
+    def review_paths(self, run_id: str) -> tuple[Path, Path]:
+        """(local text-bearing file, committable sheet) for ``run_id``."""
+        local = self._local_dir or (
+            self.root / self.loaded().settings.paths.run_dir / "golden_answers" / run_id
+        )
+        slug = self.settings.dataset_id.replace("-", "_")
+        reports = self._report_dir or self.root / "reports" / "evaluation" / slug
+        return (
+            local / "review" / "language_mismatch_local.json",
+            reports / "review" / f"language_mismatch_{run_id}.csv",
+        )
+
+    def review_language(self, run_id: str) -> dict[str, Any]:
+        """Select the language mismatches of a run (the rule of the run summary),
+        write the local file with text and the content-free sheet, and return
+        counts only. Refuses to write the local file where git would track it."""
+        local_path, sheet_path = self.review_paths(run_id)
+        with self.engine.connect() as conn:
+            rows = db.summary_rows(conn, run_id)
+            chosen = rv.select_mismatches(rows)
+            inputs = db.review_inputs(conn, run_id, [r["record_id"] for r in chosen])
+        entries = [rv.local_entry(r, inputs[r["record_id"]]) for r in chosen]
+        previous = (
+            rv.read_sheet(sheet_path.read_text(encoding="utf-8"))
+            if sheet_path.exists()
+            else {}
+        )
+        sheet = rv.sheet_rows(entries, previous)
+        assert_git_ignored(self.root, local_path)
+        local_path.parent.mkdir(parents=True, exist_ok=True)
+        local_path.write_text(
+            json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        sheet_path.parent.mkdir(parents=True, exist_ok=True)
+        sheet_path.write_text(rv.render_sheet(sheet), encoding="utf-8")
+        answered = sum(r["status"] == "answered" for r in rows)
+        result = rv.breakdown(sheet)
+        result |= {
+            "run_id": run_id,
+            "answered": answered,
+            "kept_earlier_verdicts": sum(
+                bool(previous.get(r["record_id"], {}).get("verdict")) for r in sheet
+            ),
+            "verdict_problems": rv.sheet_problems(sheet),
+            "local_file": _shown(local_path, self.root),
+            "sheet": _shown(sheet_path, self.root),
+        }
+        return result
+
     # ------------------------------------------------------------------- summary
     def summary(self, run_id: str, *, planned: int | None = None) -> Path:
         with self.engine.connect() as conn:
@@ -531,6 +585,31 @@ class GoldenAnswers:
         shown = path.relative_to(self.root) if path.is_relative_to(self.root) else path
         self.log(f"Wrote {shown}")
         return path
+
+
+def assert_git_ignored(root: Path, path: Path) -> None:
+    """Refuse a text-bearing output that git would track. Where git is not
+    available the check cannot run and the write is refused too: a licence rule
+    is not worth guessing about."""
+    folder = next((p for p in (path, *path.parents) if p.is_dir()), root)
+    try:
+        done = subprocess.run(
+            ["git", "check-ignore", "-q", str(path)],
+            cwd=folder,
+            capture_output=True,
+            check=False,
+        )
+    except OSError as exc:
+        raise RuntimeError(f"cannot verify that {path.name} is git-ignored") from exc
+    if done.returncode != 0:
+        raise RuntimeError(
+            f"refusing to write {path.name}: it is not git-ignored "
+            "(it holds message text and must never be committed)"
+        )
+
+
+def _shown(path: Path, root: Path) -> str:
+    return str(path.relative_to(root)) if path.is_relative_to(root) else str(path)
 
 
 def _count(items) -> dict[str, int]:

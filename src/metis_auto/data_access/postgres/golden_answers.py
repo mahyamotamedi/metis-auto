@@ -165,3 +165,46 @@ def output_stats(conn: Connection, run_id: str) -> tuple[int, float | None]:
         {"r": run_id},
     ).one()
     return row[0], None if row[1] is None else float(row[1])
+
+
+def review_inputs(
+    conn: Connection, run_id: str, record_ids: Iterable[str]
+) -> dict[str, dict[str, Any]]:
+    """LOCAL USE ONLY: returns message text. Per record: request and bot IDs, the
+    cohort label, the bot's instructions, the target user message and the answer.
+    Callers write it to a git-ignored file, never to a log or a report."""
+    ids = list(record_ids)
+    out: dict[str, dict[str, Any]] = {}
+    for r in conn.execute(
+        text(
+            """SELECT g.record_id, x.request_id, q.bot_id, q.owner_cohort AS cohort,
+                      g.answer
+               FROM eval.golden_answer g
+               JOIN eval.dataset_record x USING (record_id)
+               JOIN eval.request q ON q.request_id = x.request_id
+               WHERE g.run_id = :r AND g.status = 'answered'
+                 AND g.record_id = ANY(:ids)"""
+        ),
+        {"r": run_id, "ids": ids},
+    ):
+        out[r.record_id] = {
+            "request_id": r.request_id,
+            "bot_id": r.bot_id,
+            "cohort": r.cohort,
+            "answer": r.answer,
+            "instructions": "",
+            "target": "",
+        }
+    for r in conn.execute(
+        text(
+            """SELECT v.record_id, v.kind, v.content
+               FROM eval.routing_input_post_retrieval_v1 v
+               WHERE v.record_id = ANY(:ids)
+                 AND v.kind IN ('bot_instruction', 'target_user_message')"""
+        ),
+        {"ids": ids},
+    ):
+        if r.record_id in out and r.content:
+            key = "instructions" if r.kind == "bot_instruction" else "target"
+            out[r.record_id][key] = r.content
+    return out
