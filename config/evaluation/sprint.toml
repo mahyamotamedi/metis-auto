@@ -1,0 +1,76 @@
+# Sprint replay settings (final plan S-3; FR-EVAL-02, FR-EVAL-07).
+# Shared file, owned by Pipeline C. Changes need everyone's OK in chat (plan,
+# "Merge and integration rules"). Read by scripts and wiring; `analysis` code
+# gets these values injected (ReplayContext, arguments), never this file.
+#
+# Status: provisional. Nothing here is a price, a model limit or a retirement
+# date that is not sourced; such values live in config/reference/ with their
+# source and check date, and this file only points to them.
+
+version = "sprint-2026-11-02"
+
+[periods]
+# Inclusive dates. A date `end` covers its whole day
+# (replay_scope.period_bounds_from_config). Logged times are naive, timezone
+# unknown (Q-06, FR-REQ-05). Column: a_timestamp (answer time).
+# Plan, "Time split": tune March-July 2026, report August-October 2026.
+tune = { start = 2026-03-01, end = 2026-07-31 }
+report = { start = 2026-08-01, end = 2026-10-31 }
+
+[split]
+# split_by_session: the seed only breaks ties between the two sides of a
+# duplicate family (owner decision 2026-11-02). No held-out split here.
+# The straddle rule applies to fitting data (thresholds, classifiers) only;
+# caches may look back across the boundary (owner decision 2026-11-02).
+seed = 20261102
+
+[sample]
+# Plan decision rule: no tenant above 35% of any sample (Review Focus 5).
+tenant_cap = 0.35
+
+[sufficiency]
+# A bot with fewer requests than this is "insufficient" (one request always
+# is). PROVISIONAL: 30 is a placeholder, not fitted; revisit with R-*3.
+min_n = 30
+
+[cache_guard]
+# CacheGuard.shadow_sample rate (plan S-5: 1% default). Callers pass it.
+shadow_rate = 0.01
+
+[cache.popular_question]
+# R-A1 values from the plan (Task R-A1). Owned by Pipeline A's version.
+window_days = 90
+window_max_days = 180
+min_count = 3
+min_sessions = 2
+
+[baselines]
+# The four baselines (compare.BASELINES keys). Premium: config/reference/
+# baselines.toml (gpt-5.5 since 2026-10-30, estimate only, never called).
+premium_model = "gpt-5.5"
+catalogue = "config/reference/catalogue-metis-test.toml"
+price_table = "config/reference/prices-metis-2026-10-18-g55.toml"
+# best_single_cheap: cheapest callable model = enabled in the catalogue and
+# priced in the price table. Cost only; quality not proven.
+
+[routing]
+# Candidates for R-A3, R-B3, R-C3: the enabled test models of the catalogue
+# (catalogue-metis-test.toml, cat-metis-test-2026-10-18-s75-g55).
+candidates = ["gpt-5-nano", "gpt-4.1-nano", "gpt-4o-mini", "deepseek-v4-flash", "mimo-v2.5"]
+# J-3 (Parham) fills this after J-1/J-2; JEV is not in the catalogue yet.
+candidates_jev = []
+
+[[routing.retiring]]
+# Only sourced entries. A retirement without a source and a date is not added.
+model_id = "grok-4-1-fast"
+replacement = "mimo-v2.5"
+source = "catalogue-metis-test.toml note: retired by xAI (no longer listed), owner decision Q-32"
+checked_on = 2026-10-18
+retirement_date = "unverified"
+
+[phatic]
+# R-C1 greeting / thanks skip gate. [PLACEHOLDER: Persian review] (K-2,
+# Shakib; fallback Pipeline C keeps this label). General words, not taken from
+# the dataset. Matched after analysis.text_features.normalize_safe.
+review_state = "[PLACEHOLDER: Persian review]"
+words = ["سلام", "درود", "ممنون", "مرسی", "متشکرم", "سپاس", "خداحافظ", "hi", "hello", "thanks", "thank you", "bye"]
