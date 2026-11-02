@@ -19,11 +19,11 @@
   "evidence_class": "hypothetical reconstruction",
   "lever_id": "ctx.within_message_dedup.best_single_cheap",
   "manifest": {
-    "code_commit": "ed8182d59c5d255f6ce11a16ca7891e7a4b601b2",
+    "code_commit": "3ca3d10b76687515b4814cc17802b878166d9067",
     "config_hash": "8bacb173424b71f34298372083a2f116e0ff74b0de029f26a0203f9fd87c1a3f",
-    "created_at": "2026-11-02T13:52:49Z",
+    "created_at": "2026-11-02T23:07:49Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "prices-metis-2026-10-18-logged",
     "python_version": "3.13.16",
     "seed": 20261102
   },

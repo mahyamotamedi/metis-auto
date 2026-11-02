@@ -20,9 +20,9 @@
   "evidence_class": "hypothetical reconstruction",
   "lever_id": "ctx.within_message_dedup.as_logged",
   "manifest": {
-    "code_commit": "ed8182d59c5d255f6ce11a16ca7891e7a4b601b2",
+    "code_commit": "3ca3d10b76687515b4814cc17802b878166d9067",
     "config_hash": "fb1b3a8bd910e479491aabf192f1ba82886c97dbc39f38623ac031adab3a43bc",
-    "created_at": "2026-11-02T13:52:49Z",
+    "created_at": "2026-11-02T23:07:49Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
     "price_version": "full-eda-implied-unit-rates",
     "python_version": "3.13.16",

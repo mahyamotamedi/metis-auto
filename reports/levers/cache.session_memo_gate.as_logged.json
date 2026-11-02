@@ -21,9 +21,9 @@
   "evidence_class": "simulation",
   "lever_id": "cache.session_memo_gate.as_logged",
   "manifest": {
-    "code_commit": "9233ec783ffc49f77843774ec94d96b6eb3a6204",
+    "code_commit": "4c4ef646bf6b83c66d9300f3f42e366f4ad2d7f7",
     "config_hash": "6435187e6a5e5f3e636b2c0bf7780977dadb94ecd2cf8f7d3d2c747e53061aae",
-    "created_at": "2026-11-02T17:28:01Z",
+    "created_at": "2026-11-02T23:08:48Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
     "price_version": "full-eda-implied-unit-rates",
     "python_version": "3.13.16",
