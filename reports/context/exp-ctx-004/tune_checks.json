@@ -1,0 +1,134 @@
+{
+  "hist_by_turn_bucket": {
+    "1": {
+      "median": 75.0,
+      "n_known": 18981,
+      "p90": 422.0,
+      "share_positive": 0.87772
+    },
+    "10-19": {
+      "median": 263.0,
+      "n_known": 17299,
+      "p90": 1191.0,
+      "share_positive": 0.86005
+    },
+    "2": {
+      "median": 168.5,
+      "n_known": 10516,
+      "p90": 729.0,
+      "share_positive": 0.885032
+    },
+    "20+": {
+      "median": 336.0,
+      "n_known": 44016,
+      "p90": 2135.0,
+      "share_positive": 0.858733
+    },
+    "3-4": {
+      "median": 200.0,
+      "n_known": 15047,
+      "p90": 912.3999999999996,
+      "share_positive": 0.88516
+    },
+    "5-9": {
+      "median": 229.5,
+      "n_known": 20754,
+      "p90": 1115.0,
+      "share_positive": 0.873856
+    }
+  },
+  "hist_positive_share_of_known": 0.869563,
+  "hist_positive_share_of_llm": 0.516875,
+  "llm_by_state": {
+    "gated": 0,
+    "known": 126613,
+    "memory": 8102,
+    "multi_call": 14463,
+    "summariser": 10801,
+    "turn0": 38297,
+    "unknown": 14731,
+    "workflow": 0
+  },
+  "min_n": 30,
+  "over_8k": {
+    "hist_share_of_input_all_over_8k": 0.459613,
+    "hist_share_of_input_known": 0.978813,
+    "hist_tokens_known": 178716512.216807,
+    "input_tokens_known": 182584908.0,
+    "llm_by_state": {
+      "gated": 0,
+      "known": 3823,
+      "memory": 236,
+      "multi_call": 8560,
+      "summariser": 1790,
+      "turn0": 2712,
+      "unknown": 84,
+      "workflow": 0
+    },
+    "requests_known": 3823,
+    "requests_llm": 17205
+  },
+  "requests_all": 234759,
+  "requests_llm": 213007,
+  "split": "tune",
+  "tokens_per_char": 0.3384048487819899,
+  "turn0_base_bots": 81,
+  "variants": {
+    "b2000": {
+      "as_logged_saving_primary": 18.016626,
+      "as_logged_saving_uncached_only": 18.012573,
+      "as_logged_saving_unknown_rows": 0,
+      "as_logged_token_cost_llm_known": 233.154156,
+      "requests_reduced": 6793,
+      "requests_reduced_over_8k": 3656,
+      "saved_share_top5_bots": 0.961188,
+      "saved_share_top_bot": 0.917789,
+      "saved_share_top_tenant": 0.968801,
+      "tokens_removed_from_cached": 614078.222226,
+      "tokens_removed_primary": 177997860.316382,
+      "tokens_removed_uncached_only": 177482925.708162
+    },
+    "b4000": {
+      "as_logged_saving_primary": 16.50471,
+      "as_logged_saving_uncached_only": 16.501667,
+      "as_logged_saving_unknown_rows": 0,
+      "as_logged_token_cost_llm_known": 233.154156,
+      "requests_reduced": 4471,
+      "requests_reduced_over_8k": 3603,
+      "saved_share_top5_bots": 0.967971,
+      "saved_share_top_bot": 0.928727,
+      "saved_share_top_tenant": 0.978904,
+      "tokens_removed_from_cached": 501376.340248,
+      "tokens_removed_primary": 167439763.561236,
+      "tokens_removed_uncached_only": 167008396.229647
+    },
+    "b8000": {
+      "as_logged_saving_primary": 14.826152,
+      "as_logged_saving_uncached_only": 14.825889,
+      "as_logged_saving_unknown_rows": 0,
+      "as_logged_token_cost_llm_known": 233.154156,
+      "requests_reduced": 3485,
+      "requests_reduced_over_8k": 3485,
+      "saved_share_top5_bots": 0.977794,
+      "saved_share_top_bot": 0.936497,
+      "saved_share_top_tenant": 0.988288,
+      "tokens_removed_from_cached": 356163.928809,
+      "tokens_removed_primary": 152250887.36951,
+      "tokens_removed_uncached_only": 151943969.312637
+    },
+    "half_over_8k": {
+      "as_logged_saving_primary": 9.692719,
+      "as_logged_saving_uncached_only": 9.694171,
+      "as_logged_saving_unknown_rows": 0,
+      "as_logged_token_cost_llm_known": 233.154156,
+      "requests_reduced": 3822,
+      "requests_reduced_over_8k": 3822,
+      "saved_share_top5_bots": 0.961448,
+      "saved_share_top_bot": 0.915235,
+      "saved_share_top_tenant": 0.97568,
+      "tokens_removed_from_cached": 320874.041854,
+      "tokens_removed_primary": 98492609.739966,
+      "tokens_removed_uncached_only": 98236867.450267
+    }
+  }
+}
