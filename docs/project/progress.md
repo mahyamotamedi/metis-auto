@@ -982,6 +982,27 @@ Run on branch `golden-dataset` under the owner's task, checkpoints C0 to C6 auth
 - **C6.** Docs, SQL examples, fingerprint, guide followed from a clean copy (fresh venv, empty database, different hash seeds): `verify` PASS, shareable export byte-identical. Not run: `hf download`, Windows.
 - **Pending:** human review; approval of the quotas; whether to retire the EDA proposal.
 
+---
+
+## golden-v2: the 300 records without attachment images (2026-11-01)
+
+Under the owner's task. Status: **awaiting review**; nothing committed. Decision: [ADR-0029](../adr/0029-evaluation-dataset-golden-v2.md); guide: [golden_v2.md](../evaluation/golden_v2.md).
+
+- golden-v1 is untouched (its regenerated exports are byte-identical; `verify` PASS). golden-v2 is derived from the pinned golden-v1: the 23 attachment records are replaced inside their cell (16 from reserves, 7 from the pool; 5 of the 7 because remaining v1 reserves were at the per-bot cap), 277 records unchanged, 133 reserves left. Own config, fingerprint and ID mapping; `verify` PASS for both. V-01 to V-09, V-11, V-12 pass; V-10 pending human review.
+- The `attachment_dependent` coverage minimum is dropped (golden-v2 does not cover attachment-dependent requests; use golden-v1). 16 `media_generation` records carry the caveat `text_model_cannot_fulfil_media`.
+- New: `selection.derive_without`, `evaluation/golden/mapping.py`, `--config` and `carry-labels` in the CLI scripts, per-dataset report folders in `wiring.golden`. 21 new unit tests; the unit and architecture suites pass.
+- **Next (owner-directed):** gpt-5.5 reference answers for golden-v2. No live call has been made.
+
+---
+
+## Golden answers from gpt-5.5 for golden-v2 (2026-11-01)
+
+Under the owner's task. Status: **run complete (300 of 300 answered, 12.03 USD); awaiting review**. Decision: [ADR-0030](../adr/0030-golden-answers-gpt-5-5.md); guide: [golden_answers.md](../evaluation/golden_answers.md).
+
+- **Built:** `eval.golden_answer` (migration 0006); `evaluation/golden_answers/` (settings, request builder, loop with resume and retries, pilot selection, content-free summary); `wiring/golden_answers.py` and `scripts/golden_answers.py` (`plan`, `pilot`, `run`, `summary`, `runs`); typed `reasoning_effort` option on the OpenAI endpoint; setting `golden_answers.real_data_approved` (default false, runtime layer only). 56 new tests; the full suite passes (1,155 offline). A dry run with a fake client against the real database proved resume (0 calls on a rerun), the local backup, the summary and that `verify` of golden-v1 and golden-v2 still passes with the table filled; its synthetic rows were removed.
+- **Plan (no call):** 300 records, none over the context window, about 1.44 M input tokens , input-only cost at least 7.9 USD, ceiling 89 USD; content counted exactly (o200k_base `exact_local`), framing approximate; pilot of 10 records bounded at 0.58 to 3.28 USD. The pilot ran (0.83 USD, 10 of 10 answered). **Budget decision (owner, 2026-11-01):** ceiling and default lifetime cap both 20 USD, the Metis account credit ([ADR-0018 amendment 2](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md)); the full run (estimated 15 to 19 USD in total) fits; if it runs short it halts and resumes after a top-up.
+- **Pending (owner):** set the pilot caps and `real_data_approved` in `config/local.toml`, type "run", then decide on the full run after the pilot; the 30-item human spot-check.
+- **Run `ga-v2-20261101` (2026-11-01; language-mismatch review tool added 2026-11-02, `review-language`):** pilot 10 records (0.83 USD), then the rest grouped by identical instructions. Halted once on HTTP 402 at a ledger total of 10.04 USD (the old 10 USD Metis dashboard limit; 5 unbilled refusals), resumed after the limit was raised with the new `--retry-failed auth` flag. Result: 300 answered, 0 failed, none truncated, 12.03 USD of provider-reported cost (ledger 12.58 USD including two timeouts charged at their estimates, A-85). Prompt caching passes through Metis (124,160 cached tokens). Summary: `reports/evaluation/golden_v2/answers_ga-v2-20261101_summary.json`. Open: the 30-item human spot-check; compare the Metis dashboard with the ledger (Q-36); the adapter's `auth` label for HTTP 402.
 
 ---
 
@@ -992,3 +1013,6 @@ Final-plan tasks S-1 and E-2 (Pipeline A), branch `sprint-saba`. Status: **await
 - **Decided (owner, 2026-11-02):** cost blocks are `fees` (0.002 x per-call items, a proxy) and `token_cost` (recorded total minus fees); input, output and cached costs are not in `requests.parquet`. `created_at` is passed to `build_manifest`. The `all` slice counts every row in `n_requests` but sums cost and hits over LLM rows with known cost. Decision record: [ADR-0032](../adr/0032-lever-result-and-manifest-format.md) and [ADR-0031](../adr/0031-full-data-lever-replay.md) (numbers provisional; 0029 and 0030 are taken on `origin/main`).
 - **Checked on real data (aggregates only):** blocks sum to `a_bill_totalCost` exactly; 104,084 unknown-cost rows stay NaN; the fee proxy is 35.8% of cost against 37.6% in the billing table (908 messages differ), so it understates fees by about 5%.
 - **Open:** exact fees and the input/output/cached split need an upstream change to `billing.py` and the ingest.
+- **Closing pass (2026-11-02, Windows).** The S-1 and E-2 tests in the plan are present and pass. The trace IDs resolve: QA-REPRO, QA-PRIV, FR-REQ-01 and FR-EVAL-07 in `requirements.md`; H-3, H-8, X1, X2, X5 and X7 in `docs/full_eda/`; P-6 in `architecture/overview.md`. ADR-0031 and ADR-0032 are listed in `docs/README.md` and link their guarding tests. The module rows pass `test_module_reference.py`. Added for the B/C handoff: `test_identity_version_satisfies_step_version` and a "How to write a version" example in the `levers.py` docstring. ADR-0032 now records the private `contracts._base` import. No shape change.
+- **Tests (working tree mid-merge of `main`):** `tests/unit/analysis` 91 passed; `tests/architecture` 18 passed; ruff check and format clean; full `pytest -q` 1200 passed, 22 skipped, 0 failed. S-0 baseline: 1092 passed, 5 skipped. The difference is my 12 lever tests plus the golden-v2 and golden-answers tests and skips that came with `main`. The two conflicts in this file and `docs/README.md` were resolved by keeping `main`'s added rows; the merge is not yet concluded (owner commits).
+- **Still open:** B and C write their identity versions (S-1 "done when"); the four-block cost split (`costBreakdown` in `billing.py` plus a re-ingest; affects F-2 and I-2); MLflow exporter ADR (T-0/T-2).

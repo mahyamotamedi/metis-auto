@@ -77,12 +77,12 @@ def test_an_enabled_chat_endpoint_without_the_field_is_rejected(loaded):
     ProviderEndpoint.model_validate(row)  # deferred rows need none
 
 
-def test_thinking_is_allowed_only_where_documented(loaded):
+def test_request_options_are_allowed_only_where_documented(loaded):
     allowed = {
         e.family: e.request_options for e in loaded.reference.endpoints.endpoints
     }
     assert allowed["deepseek"] == ("thinking",) and allowed["mimo"] == ("thinking",)
-    assert allowed["openai"] == () and allowed["grok"] == ()
+    assert allowed["openai"] == ("reasoning_effort",) and allowed["grok"] == ()
 
 
 def test_no_model_option_is_set_by_default(loaded):

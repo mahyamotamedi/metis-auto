@@ -1,6 +1,6 @@
 # ADR-0018: Live calls for development and testing, through the Metis wrapper, under a 20 USD lifetime budget
 
-- Status: **decided** (owner decisions, 2026-10-18). The per-run cap default and the placeholder tiers are **provisional**. **Amended 2026-10-18** ([amendment 1](#amendment-1-2026-10-18-lifetime-cap-10-usd-q-29)): the lifetime cap is 10 USD, under the unchanged 20 USD ceiling.
+- Status: **decided** (owner decisions, 2026-10-18). The per-run cap default and the placeholder tiers are **provisional**. **Amended 2026-10-18** ([amendment 1](#amendment-1-2026-10-18-lifetime-cap-10-usd-q-29)): the lifetime cap is 10 USD, under the unchanged 20 USD ceiling. **Amended again 2026-11-01** ([amendment 2](#amendment-2-2026-11-01-ceiling-and-lifetime-cap-20-usd-the-metis-account-credit)): the ceiling and the lifetime cap are both 20 USD, the Metis account credit, for the golden answers of golden-v2.
 - Date: 2026-10-18
 - Amends: [ADR-0003](0003-offline-by-default-model-calls.md) (its open points: provider choice and budget). ADR-0003's rules stay: offline by default, live opt-in, a cap before any live call.
 - Resolves: Q-08, Q-12. Partly answers Q-05.
@@ -50,3 +50,16 @@ ADR-0003 kept every model call offline and left two things open: which provider 
 - **Change:** `budget.lifetime_cap = "10"` in `config/defaults.toml`, so the ledger's limit matches the dashboard's. The **ceiling stays 20 USD** (`budget.lifetime_ceiling`, defaults only) as the project maximum; point 3's rules are unchanged (no layer can raise a cap above the ceiling, and the run cap stays 1 USD).
 - **Why both:** the ledger blocks a call *before* it is made, from its estimate; the dashboard limit is the provider-side safety net that also covers calls the ledger cannot see (another computer, another tool using the key). With equal limits, the ledger trips first on this machine.
 - **Consequences:** warnings fire at 5 and 8 USD (50 % and 80 % of the cap). Raising the cap up to 20 USD is a one-line change in `defaults.toml` (reviewed), and should follow a change of the dashboard limit. Comparing the dashboard's charges with the ledger is still open (Q-36).
+
+## Amendment 2 (2026-11-01): ceiling and lifetime cap 20 USD, the Metis account credit
+
+- **Decided by:** the project owner, 2026-11-01. The ceiling and the default lifetime cap are both **20 USD**, which is the credit on the owner's Metis account. (Amendment 1 had set the cap to 10 USD, the dashboard limit of Q-29.)
+- **Reason:** reference answers from `gpt-5.5` for the 300 records of golden-v2 ([ADR-0030](0030-golden-answers-gpt-5-5.md)). At the 10 USD cap the run cannot complete; it is estimated at 15 to 19 USD and fits within 20 USD.
+- **Estimate** (no live call is needed to see it: `python scripts/golden_answers.py plan --run-id ga-v2-20261101`):
+  - The content of the 300 requests is counted exactly (`tiktoken` o200k_base): 1,413,173 tokens; the billed-input estimate agreed with the pilot's provider-reported input within 0.2 % (104,857 estimated, 105,037 reported).
+  - **Pilot actuals** (10 records, run `ga-v2-20261101`): 0.830 USD, 105,037 input and 7,646 output tokens (2,189 of them reasoning), mean 765 output tokens per record, no retry, no truncation.
+  - **The other 290 records**, at the pilot's mean output: **14.67 USD** with no prompt caching; 14.11 USD under the documented GPT-5.5 cache rule (2,048-token blocks of repeated instructions); 13.76 USD in the best case. If outputs average 1.5 times the pilot's: 18.33, 17.77 and 17.42 USD. The pilot is 10 records, so the output mean is uncertain.
+  - **Whole project:** 0.85 USD already spent, so about 15.5 to 19.2 USD in total for this work, with about 19.15 USD remaining before the run. The spend guard needs the next call's worst case as headroom (up to about 0.7 USD for the largest record), so the 1.5× case is close to the limit.
+- **Change:** `budget.lifetime_ceiling = "20"` and `budget.lifetime_cap = "20"` in `config/defaults.toml` (the ceiling is unchanged; the cap goes from 10 to 20). The rules of point 3 are unchanged: only that file can set the ceiling, no layer can raise a cap above it, the per-run cap is the owner's to set in `config/local.toml` (18 USD for this run), warnings fire at 50 % and 80 % of the cap (10 and 16 USD).
+- **If the run runs short:** the spend guard stops it before a call that would not fit, and the run halts with the reason recorded. Every answer already stored is kept. After a top-up of the Metis credit, a new amendment raises the ceiling and cap to match (a reviewed change to `config/defaults.toml`), and the same run ID resumes and skips the stored records.
+- **Consequences:** the cap is a limit, not a spend. The credit itself is the provider-side safety net: calls stop there even if the ledger allows them (Q-29's dashboard limit of 10 USD no longer applies as the lower bound, but check it is not still set below 20 USD in the dashboard).

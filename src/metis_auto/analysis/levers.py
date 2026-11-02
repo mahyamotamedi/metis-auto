@@ -36,6 +36,20 @@ is the raw logged value and **excludes cached tokens for five models** (see
 in memory). This module does not resolve that. Repricing must follow the same
 rule as the EDA, with a test.
 
+How to write a version (a class with ``name``, ``step`` and ``apply``; it passes
+``isinstance(v, StepVersion)``)::
+
+    class ExactCache:
+        name = "cache.exact-v1"
+        step = "cache"
+
+        def apply(self, req: pd.DataFrame, ctx: ReplayContext) -> pd.DataFrame:
+            out = req.copy()  # a copy with the same index, never in place
+            hit = out["h_exact"].duplicated()  # example rule only
+            out["served_from_cache"] = hit
+            out.loc[hit, ["block_fees", "block_token_cost"]] = 0.0
+            return out
+
 Layer: pure pandas over injected data. No settings, no git, no files.
 """
 

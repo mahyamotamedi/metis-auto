@@ -16,8 +16,10 @@ def margin_report(
     records: Sequence[Mapping[str, Any]],
     population: Mapping[str, Counter],
     cfg: GoldenConfig,
+    derived_note: str | None = None,
 ) -> list[dict[str, Any]]:
-    """One row per margin key and coverage constraint. Each shortfall gets a cause."""
+    """One row per margin key and coverage constraint. Each shortfall gets a cause.
+    ``derived_note`` names the cause of any difference in a derived dataset."""
     rows = []
     for margin in ("primary_intent", "cohort", *SOFT_MARGINS):
         achieved = Counter(r["stratum"][margin] for r in records)
@@ -34,7 +36,9 @@ def margin_report(
                     "achieved": got,
                     "shortfall": short,
                     "basis": PROXY_BASIS.get(margin, "deterministic"),
-                    "redistribution_note": _note(quota, got, pop),
+                    "redistribution_note": derived_note
+                    if derived_note and got != quota
+                    else _note(quota, got, pop),
                 }
             )
     for tag, spec in sorted(cfg.raw["coverage"].items()):

@@ -262,17 +262,40 @@ class ThinkingMode(StrEnum):
     DISABLED = "disabled"
 
 
+class ReasoningEffort(StrEnum):
+    """``reasoning_effort`` of OpenAI Chat Completions. The values a model takes
+    differ by model; for gpt-5.5 OpenAI lists none, low, medium (the default),
+    high and xhigh (model page, checked 2026-11-01)."""
+
+    NONE = "none"
+    MINIMAL = "minimal"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    XHIGH = "xhigh"
+
+
 class ModelRequestOptions(ContractModel):
     """Provider request options for one catalogue model (Stage 7.5, Q-34).
     Unset = the provider's default: nothing is sent. Part of the config hash,
     since an option can change answers and costs. An experiment file may set
     them (Stage 8 compares them); the endpoint must allow each option."""
 
+    reasoning_effort: ReasoningEffort | None = None
+    """Sent as ``reasoning_effort`` where the endpoint allows it (OpenAI)."""
     thinking: ThinkingMode | None = None
     """``thinking: {"type": ...}`` as documented by DeepSeek and Xiaomi MiMo
     (both default to enabled). The chat templates in ``tokenizers.toml`` are
     for each provider's default; with the other mode the counted framing is
     off by a few tokens (DeepSeek: over, MiMo: under; ADR-0021)."""
+
+
+class GoldenAnswersSettings(ContractModel):
+    """Approval to send real golden-v2 conversations to a provider (ADR-0030).
+    Set only by the runtime layer (``config/local.toml``); the licence covers
+    Rahnama College's educational use, so the default is no."""
+
+    real_data_approved: bool = False
 
 
 class DevSettings(ContractModel):
@@ -295,6 +318,7 @@ class Settings(ContractModel):
     embedding: EmbeddingSettings = EmbeddingSettings()
     database: DatabaseSettings = DatabaseSettings()
     dev: DevSettings = DevSettings()
+    golden_answers: GoldenAnswersSettings = GoldenAnswersSettings()
     model_options: dict[str, ModelRequestOptions] = {}
     """Per catalogue model ID, e.g. ``[model_options."deepseek-v4-flash"]``."""
     pipeline: dict[str, dict[str, Any]] = {}

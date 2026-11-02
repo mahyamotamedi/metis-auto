@@ -46,6 +46,7 @@ from metis_auto.evaluation.golden.config import (
     position_bucket,
 )
 from metis_auto.evaluation.golden.manifest import GOLDEN_V1_SCHEMA_VERSION
+from metis_auto.evaluation.golden.mapping import build_mapping, carry_labels
 from metis_auto.evaluation.golden.records import billing_summary, build_components
 from metis_auto.evaluation.golden.report import (
     context_dependency,
@@ -57,6 +58,7 @@ from metis_auto.evaluation.golden.report import (
 )
 from metis_auto.evaluation.golden.selection import (
     Candidate,
+    derive_without,
     design_weights,
     plan_swaps,
     seeded_rank,
@@ -74,9 +76,6 @@ from metis_auto.wiring.database import engine_from_settings
 from metis_auto.wiring.db_ingest import git_sha, source_config
 
 CONFIG_PATH = "config/evaluation/golden_v1.toml"
-REPORT_DIR = "reports/evaluation/golden_v1"
-LOCAL_REVIEW = "runs/evaluation/golden_v1/review_local"
-LOCAL_EXPORT = "data/derived/eval_datasets/golden_v1"
 HISTORY_IN_SHEET = 6
 
 
@@ -97,6 +96,16 @@ class Golden:
             tomllib.loads(data.decode("utf-8")), config_sha256(data)
         )
         self.log = log
+        slug = self.cfg.dataset_id.replace("-", "_")
+        self.slug = slug
+        self.report_dir = f"reports/evaluation/{slug}"
+        self.local_review = f"runs/evaluation/{slug}/review_local"
+        self.local_export = f"data/derived/eval_datasets/{slug}"
+
+    @property
+    def derived(self) -> Mapping[str, Any] | None:
+        """The ``[derive]`` section of a dataset built from another (ADR-0029)."""
+        return self.cfg.raw.get("derive")
 
     # ------------------------------------------------------------------ requests
     def build_requests(self, force: bool = False) -> int:
@@ -242,6 +251,80 @@ class Golden:
             excluded |= drop
         raise RuntimeError("near duplicates remain after the configured rounds")
 
+    def _selection(self, cands):
+        """A fresh selection, or the base dataset minus its attachment records."""
+        if self.derived is None:
+            return self._select_without_near_duplicates(cands)
+        return self._derive_selection(cands)
+
+    def _derive_selection(self, cands):
+        """ADR-0029: drop the base's attachment records and replace each inside its
+        cell (reserves first, then the pool), then re-check near duplicates for the
+        new records only. Refuses unless the base is exactly the one pinned."""
+        spec = self.derived
+        base_id = spec["base_dataset"]
+        with self.engine.connect() as conn:
+            state = repo.dataset_state(conn, base_id)
+            if state is None:
+                raise SystemExit(
+                    f"Refused: {base_id} is not built. Build it first with "
+                    f"`build_eval_dataset.py all` and check it with `verify`."
+                )
+            base = repo.dataset_records(conn, base_id)
+            reserves = repo.reserve_rows(conn, base_id)
+            attachments = repo.attachment_request_ids(conn)
+        got = fingerprint(
+            [r["record_id"] for r in base], state["version"], state["config_sha256"]
+        )
+        if got != spec["base_fingerprint"]:
+            raise SystemExit(
+                f"Refused: {base_id} differs from the one this dataset derives "
+                f"from (fingerprint {got[:12]}…). Run its `verify` first."
+            )
+        raw = self.cfg.raw["selection"]
+        threshold = raw["near_duplicate_bigram_jaccard"]
+        excluded: set[str] = set()
+        for round_no in range(raw["near_duplicate_rounds_max"]):
+            sel = derive_without(
+                cands,
+                self.cfg,
+                base_primary=[
+                    (r["request_id"], r["selection_rationale"]) for r in base
+                ],
+                base_reserves=[r["request_id"] for r in reserves],
+                remove=frozenset(attachments),
+                exclude=frozenset(excluded),
+            )
+            new = {m["replacement"] for m in sel.moves if "replacement" in m}
+            ids = [c.request_id for c, _ in sel.primary + sel.reserves]
+            with self.engine.connect() as conn:
+                texts = repo.texts_for(conn, ids)
+            grams = {i: bigrams(texts[i]) for i in ids}
+            drop = {
+                n
+                for n in sorted(new)
+                for o in ids
+                if o != n and jaccard(grams[n], grams[o]) >= threshold
+            }
+            self.log(f"Derive round {round_no + 1}: {len(drop)} near duplicates.")
+            if not drop:
+                unfilled = sum("unfilled" in m for m in sel.moves)
+                if unfilled:
+                    self.log(
+                        f"WARNING: {unfilled} removed records have no replacement."
+                    )
+                return sel, len(excluded)
+            excluded |= drop
+        raise RuntimeError("near duplicates remain after the configured rounds")
+
+    def _stratum(self, stratum: Mapping[str, Any]) -> dict[str, Any]:
+        """The record's stratum plus its caveats, when the config names any."""
+        by_intent = self.cfg.raw.get("caveats", {}).get("by_intent")
+        if not by_intent:
+            return dict(stratum)
+        caveat = by_intent.get(stratum["primary_intent"])
+        return {**stratum, "caveats": [caveat] if caveat else []}
+
     # -------------------------------------------------------------------- dataset
     def build_dataset(self, *, force: bool = False) -> None:
         raw = self.cfg.raw
@@ -262,14 +345,19 @@ class Golden:
             for m in (*SOFT_MARGINS, "primary_intent", "cohort", "coverage")
         }
         eligible_cells: Counter = Counter()
-        for c in cands:
+        in_population = cands
+        if self.derived is not None:
+            with self.engine.connect() as conn:
+                attachments = repo.attachment_request_ids(conn)
+            in_population = [c for c in cands if c.request_id not in attachments]
+        for c in in_population:
             s = strata[c.request_id]
             for margin in (*SOFT_MARGINS, "primary_intent", "cohort"):
                 population[margin][s[margin]] += 1
             eligible_cells[c.cell] += 1
             for tag in c.tags:
                 population["coverage"][tag] += 1
-        sel, n_near = self._select_without_near_duplicates(cands)
+        sel, n_near = self._selection(cands)
         if len(sel.primary) != self.cfg.total:
             self.log(f"WARNING: selected {len(sel.primary)}, not {self.cfg.total}.")
         sampled = Counter(c.cell for c, _ in sel.primary)
@@ -305,7 +393,7 @@ class Golden:
                         "dataset_id": ds["dataset_id"],
                         "request_id": cand.request_id,
                         "session_id": cand.session_id,
-                        "stratum": strata[cand.request_id],
+                        "stratum": self._stratum(strata[cand.request_id]),
                         "population_weight": weights[cand.cell],
                         "weight_basis": "eligible_requests/primary_intent_x_cohort",
                         "selection_rank": rank,
@@ -340,7 +428,16 @@ class Golden:
             }
             for r in records
         ]
-        margins = margin_report(report_rows, population, self.cfg)
+        margins = margin_report(
+            report_rows,
+            population,
+            self.cfg,
+            derived_note=(
+                "golden-v2: attachment records replaced inside their cell (ADR-0029)"
+                if self.derived
+                else None
+            ),
+        )
         source = source_config(self.root)["source"]
         with self.engine.begin() as conn:
             repo.write_dataset(
@@ -360,6 +457,9 @@ class Golden:
                         "length_edges": edges,
                         "near_duplicates_excluded": n_near,
                         "moves": sel.moves,
+                        **(
+                            {"derived_from": dict(self.derived)} if self.derived else {}
+                        ),
                         "uncovered_population_share": uncovered,
                         "joint": {
                             f"{a}|{b}": n for (a, b), n in sorted(sel.joint.items())
@@ -368,7 +468,7 @@ class Golden:
                     "code_git_sha": git_sha(self.root),
                     "population_snapshot": {
                         "dataset_revision": source["revision"],
-                        "eligible_requests": len(cands),
+                        "eligible_requests": len(in_population),
                         "pool_distinct": sel.pool_size,
                         "by_margin": {k: dict(v) for k, v in population.items()},
                     },
@@ -429,7 +529,7 @@ class Golden:
         }
 
     def write_fingerprint(self) -> Path:
-        path = self.root / REPORT_DIR / "fingerprint.json"
+        path = self.root / self.report_dir / "fingerprint.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
             json.dumps(self._fingerprint(), indent=1, sort_keys=True) + "\n",
@@ -439,7 +539,7 @@ class Golden:
         return path
 
     def verify(self) -> bool:
-        path = self.root / REPORT_DIR / "fingerprint.json"
+        path = self.root / self.report_dir / "fingerprint.json"
         if not path.exists():
             self.log("FAIL: no committed fingerprint file.")
             return False
@@ -486,7 +586,9 @@ class Golden:
         ds = self.cfg.raw["dataset"]
         with self.engine.connect() as conn:
             shareable = self._shareable_rows(conn)
-            write_rows(shareable, self.root / REPORT_DIR / "golden_v1_shareable")
+            write_rows(
+                shareable, self.root / self.report_dir / f"{self.slug}_shareable"
+            )
             full = []
             for row in shareable:
                 rid = row["record_id"]
@@ -500,10 +602,10 @@ class Golden:
                         "reference": repo.reference_of(conn, rid),
                     }
                 )
-            write_rows(full, self.root / LOCAL_EXPORT / ds["dataset_id"])
+            write_rows(full, self.root / self.local_export / ds["dataset_id"])
         schema = {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "title": "golden-v1 shareable record (no text)",
+            "title": f"{ds['dataset_id']} shareable record (no text)",
             "type": "object",
             "properties": {
                 "schema_version": {"const": GOLDEN_V1_SCHEMA_VERSION},
@@ -533,9 +635,36 @@ class Golden:
             "required": ["schema_version", "record_id", "target_message_id", "labels"],
             "additionalProperties": False,
         }
-        path = self.root / REPORT_DIR / "golden_v1_manifest_schema.json"
+        path = self.root / self.report_dir / f"{self.slug}_manifest_schema.json"
         path.write_text(json.dumps(schema, indent=1) + "\n", encoding="utf-8")
+        if self.derived is not None:
+            self._write_mapping()
         self.log("Exports written (text only under data/derived/, which git ignores).")
+
+    def _mapping_rows(self) -> list[dict[str, Any]]:
+        spec = self.derived
+        dsid = self.cfg.dataset_id
+        with self.engine.connect() as conn:
+            base = repo.dataset_records(conn, spec["base_dataset"])
+            new = repo.dataset_records(conn, dsid)
+            moves = repo.latest_sampling_run(conn, dsid)["config"]["moves"]
+        return build_mapping(
+            {r["request_id"]: r["record_id"] for r in base},
+            {r["request_id"]: r["record_id"] for r in new},
+            moves,
+        )
+
+    def _write_mapping(self) -> Path:
+        """Record ids of the base and of this dataset, side by side. IDs only."""
+        base_slug = self.derived["base_dataset"].replace("-", "_")
+        path = self.root / self.report_dir / f"{base_slug}_to_{self.slug}_mapping.jsonl"
+        rows = self._mapping_rows()
+        path.write_text(
+            "".join(json.dumps(r, sort_keys=True) + "\n" for r in rows),
+            encoding="utf-8",
+        )
+        self.log(f"Wrote {path.relative_to(self.root)} ({len(rows)} rows).")
+        return path
 
     # --------------------------------------------------------------- review sheets
     def review_sheets(self) -> None:
@@ -580,9 +709,11 @@ class Golden:
                         **blanks,
                     }
                 )
-        _write_csv(self.root / REPORT_DIR / "review" / "review_idonly.csv", id_rows)
         _write_csv(
-            self.root / LOCAL_REVIEW / "review_with_text_LOCAL_ONLY.csv", text_rows
+            self.root / self.report_dir / "review" / "review_idonly.csv", id_rows
+        )
+        _write_csv(
+            self.root / self.local_review / "review_with_text_LOCAL_ONLY.csv", text_rows
         )
         self.log(
             f"Review sheets written; {len(double)} records marked for two reviewers."
@@ -607,21 +738,21 @@ class Golden:
 
     def import_labels(self, path: Path) -> int:
         """Reviewed labels from a teammate: the ID-and-label file, no text."""
-        rows = []
-        for line in path.read_text(encoding="utf-8").splitlines():
-            d = json.loads(line)
-            rows.append(
-                LabelRow(
-                    d["record_id"],
-                    d["dimension"],
-                    d["value"],
-                    d["annotator_pseudonym"],
-                    d.get("method", "human"),
-                    d.get("confidence"),
-                    d.get("rationale_code"),
-                )
-            )
-        return self._import(rows)
+        lines = path.read_text(encoding="utf-8").splitlines()
+        return self._import(_label_rows(json.loads(x) for x in lines if x.strip()))
+
+    def carry_labels(self, path: Path) -> int:
+        """Reviewed labels of the base dataset, re-keyed through the ID mapping.
+        Only records that are unchanged carry over; the rest need new review."""
+        if self.derived is None:
+            raise SystemExit("carry-labels needs a dataset derived from another.")
+        carried, dropped = carry_labels(
+            path.read_text(encoding="utf-8").splitlines(), self._mapping_rows()
+        )
+        self.log(
+            f"{len(carried)} labels carried over; {dropped} belong to removed records."
+        )
+        return self._import(_label_rows(carried))
 
     def _import(self, rows: list[LabelRow]) -> int:
         ds = self.cfg.raw["dataset"]
@@ -654,7 +785,7 @@ class Golden:
 
     def export_labels(self) -> Path:
         ds = self.cfg.raw["dataset"]
-        path = self.root / REPORT_DIR / "reviewed_labels.jsonl"
+        path = self.root / self.report_dir / "reviewed_labels.jsonl"
         with self.engine.connect() as conn:
             rows = [
                 lab
@@ -704,7 +835,7 @@ class Golden:
         rebuilt = None
         if rebuild:
             cands, _, _ = self._candidates()
-            sel, _ = self._select_without_near_duplicates(cands)
+            sel, _ = self._selection(cands)
             rebuilt = sorted(c.request_id for c, _ in sel.primary)
         with self.engine.connect() as conn:
             records = repo.dataset_records(conn, dsid)
@@ -778,10 +909,10 @@ class Golden:
         for name, reason in hits:
             self.log(f"content hit: {name}: {reason}")
         db = _database_lines(recon)
-        out = self.root / REPORT_DIR / "validation.md"
+        out = self.root / self.report_dir / "validation.md"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(
-            "# golden-v1 validation\n\nGenerated by `scripts/validate_eval_dataset.py`. "
+            f"# {dsid} validation\n\nGenerated by `scripts/validate_eval_dataset.py`. "
             "No content. `pending` means a human step has not happened.\n\n"
             + markdown(results)
             + "\n## Mandatory minimums and caps\n\n"
@@ -814,7 +945,7 @@ class Golden:
 
     def _committed_files(self) -> dict[str, str]:
         out = {}
-        for folder in (REPORT_DIR, "docs/evaluation"):
+        for folder in (self.report_dir, "docs/evaluation"):
             base = self.root / folder
             if not base.exists():
                 continue
@@ -831,11 +962,26 @@ class Golden:
                     )
         return out
 
+    def _compromise_line(self, snapshot: Mapping[str, Any]) -> str:
+        moves = snapshot["moves"]
+        if self.derived is None:
+            return (
+                f"{len(moves)} cell moves for lack of supply; "
+                f"{snapshot['near']} near duplicates excluded at selection.\n"
+            )
+        by_rule = Counter(m.get("rule", "unfilled") for m in moves)
+        return (
+            f"{len(moves)} records of {self.derived['base_dataset']} left the set "
+            f"({self.derived['exclude']}); replaced from reserves: "
+            f"{by_rule['reserve']}, from the pool: {by_rule['pool']}, unfilled: "
+            f"{by_rule['unfilled']}. {snapshot['near']} near duplicates excluded.\n"
+        )
+
     # ------------------------------------------------------------- quality report
     def quality_report(self) -> Path:
         ds = self.cfg.raw["dataset"]
         dsid = ds["dataset_id"]
-        out_dir = self.root / REPORT_DIR
+        out_dir = self.root / self.report_dir
         out_dir.mkdir(parents=True, exist_ok=True)
         with self.engine.connect() as conn:
             records = repo.dataset_records(conn, dsid)
@@ -858,7 +1004,7 @@ class Golden:
         ]
         must = mandatory_checks(records, self.cfg)
         lines = [
-            "# golden-v1 quality report\n",
+            f"# {dsid} quality report\n",
             "Generated by `scripts/build_eval_dataset.py report`. No message text. Status "
             "`annotated_provisional`: every label below is a **rule proposal** until "
             "human review completes. This is a balanced challenge set; **no aggregate "
@@ -894,8 +1040,7 @@ class Golden:
             "\n## Mandatory minimums and caps\n",
             markdown_table(("key", "value", "target", "met", "note"), must),
             "\n## Compromises\n",
-            f"{len(snapshot['moves'])} cell moves for lack of supply; "
-            f"{snapshot['near']} near duplicates excluded at selection.\n",
+            self._compromise_line(snapshot),
             "\n## Labels and agreement\n",
             _label_section(labels, len(records), len(RUBRIC)),
             "\n## Missing fields in the set\n",
@@ -937,6 +1082,21 @@ class Golden:
         )
         self.log(f"Wrote {path.relative_to(self.root)}")
         return path
+
+
+def _label_rows(dicts) -> list[LabelRow]:
+    return [
+        LabelRow(
+            d["record_id"],
+            d["dimension"],
+            d["value"],
+            d["annotator_pseudonym"],
+            d.get("method", "human"),
+            d.get("confidence"),
+            d.get("rationale_code"),
+        )
+        for d in dicts
+    ]
 
 
 def _sampling_snapshot(conn, dataset_id: str) -> dict[str, Any]:
