@@ -1,5 +1,5 @@
 """Replay pricing for the logged models:
-ADR-0040; FR-ACCT-02, FR-ACCT-07;
+ADR-0041; FR-ACCT-02, FR-ACCT-07;
 ADR-0002, ADR-0026, ADR-0036.
 
 ``prices-metis-2026-10-18-logged.toml`` and ``catalogue-metis-replay.toml`` are

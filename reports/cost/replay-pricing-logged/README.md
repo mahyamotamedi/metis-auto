@@ -1,6 +1,6 @@
 # Replay pricing for the logged models (2026-11-02)
 
-Pipeline B, extra task approved by the lead on 2026-11-02. Decision record: [ADR-0040](../../../docs/adr/0040-replay-pricing-for-logged-models.md). Traceability: FR-ACCT-02 (unknown price → not computed, never zero), FR-ACCT-07 (logged labels → priced models); ADR-0002, ADR-0026, ADR-0036. No live calls. Aggregates only: label names and counts, no content and no IDs.
+Pipeline B, extra task approved by the lead on 2026-11-02. Decision record: [ADR-0041](../../../docs/adr/0041-replay-pricing-for-logged-models.md). Traceability: FR-ACCT-02 (unknown price → not computed, never zero), FR-ACCT-07 (logged labels → priced models); ADR-0002, ADR-0026, ADR-0036. No live calls. Aggregates only: label names and counts, no content and no IDs.
 
 ## What changed
 
