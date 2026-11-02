@@ -1,6 +1,6 @@
 # Implementation prompt: evaluation framework (paste into a new agent session)
 
-**Status (2026-10-30): stages E0-E6 are implemented and reviewed up to E6; see `docs/project/progress.md` and `docs/experiments/e6_logging_and_status.md`. Kept as the record of the brief; do not re-run it.**
+**Status (2026-10-30): stages E0-E6 are implemented and reviewed up to E6; see `docs/project/progress.md` (the index of entries in `docs/project/progress/`) and `docs/experiments/e6_logging_and_status.md`. Kept as the record of the brief; do not re-run it.**
 
 You are working on Metis-Auto. Implement the evaluation framework specified in `docs/experiments/evaluation_framework.md`, offline, in stages. Read first, in this order: `CLAUDE.md`, `AGENTS.md`, `docs/project/progress.md`, `docs/experiments/evaluation_framework.md` (the spec; its *[verify]* and *[ours]* tags matter), `docs/architecture/evaluation.md`, ADR-0002, 0006, 0009, 0014, 0018, 0020, 0022, `docs/experiments/framework.md`, `docs/architecture/token_accounting.md`, `docs/architecture/repository_structure.md`, `docs/architecture/contracts.md`. Then inspect the existing code (`evaluation/`, `domain/accounting/`, `application/accounting/`, `adapters/`, `wiring/`, `scripts/`, `tests/`) before designing anything. Reuse what exists; extend, do not duplicate or restructure.
 
@@ -22,7 +22,7 @@ You are working on Metis-Auto. Implement the evaluation framework specified in `
 - **Sampling vs weighting** are separate: allocation (what is drawn, may oversample minority languages) and weights (inverse selection probability for population-level totals) are both stored and never conflated.
 - Tests are required for: normalization, language classification, sampling (allocation, weights, determinism, quota-unmet handling), and reporting (labels, insufficient-n handling, provenance). Use synthetic strings only, marked `[SYNTHETIC]`.
 
-## Stages (stop after each: update progress.md, give the 6-part report: changes, decisions, assumptions, questions, next stage, exit criteria; list changed files and a suggested commit message; do not commit; then wait)
+## Stages (stop after each: add a progress entry file in docs/project/progress/ and run scripts/progress_index.py, give the 6-part report: changes, decisions, assumptions, questions, next stage, exit criteria; list changed files and a suggested commit message; do not commit; then wait)
 
 **Stage E0: Persian-aware text handling for evaluation (extend what exists; pure, offline; spec §0.1, §0.3, §0.5; revised after the 2026-10-30 investigation).**
 Already in the repo (reuse, do not duplicate): `domain/caching/normalise.py` (`TREATMENTS`, `normalise`; ADR-0015 amendment 1: normalisation is a *treatment applied before fingerprinting* and recorded in `KeyComponent.treatment`, fingerprints never normalise implicitly); `domain/features/detectors.py` (`detect_language`, `LanguageConfig` with A-43 placeholder thresholds, `length_bucket`, `normalise_phrase` for greetings: do not touch, it is production routing); `Language` enum; `application.measurement.Fingerprinter` (purpose strings are free-form); `evaluation/cache_candidates` (harness takes `message_treatments`).
@@ -32,7 +32,7 @@ Already in the repo (reuse, do not duplicate): `domain/caching/normalise.py` (`T
 - **Language:** no change to `detect_language`. Add characterization tests of current behavior and report surprises; do not tune thresholds.
 - **Out of scope for E0:** changing the production cache key or lookup, consolidating `detectors._TRANSLATE`, any ADR-0015 algorithm or `fp1` change, replay-case fingerprint changes.
 - **Windows:** the earlier Windows baseline failures were fixed by the owner (2026-10-30); the full suite passes with `.venv/Scripts/python.exe -m pytest tests -q`. New tests must not import `wiring` needlessly.
-- Housekeeping: `module_reference.md` rows for every new module and the changed `normalise.py` row, a short ADR (next number), caching_plan C1b status, `progress.md`. No contract changes expected.
+- Housekeeping: `module_reference.md` rows for every new module and the changed `normalise.py` row, a short ADR (a draft, `docs/adr/draft-<slug>.md`), caching_plan C1b status, a progress entry. No contract changes expected.
 - Exit: tests for every rule and for idempotence, original text preserved, mixed right-to-left and left-to-right strings, ZWNJ cases, both digit forms, distinct prompts staying distinct, group and split determinism and leakage safety, bucket-versus-token report, and characterization of language detection and length buckets.
 
 **Stage E1: baselines and metrics core (pure domain).**

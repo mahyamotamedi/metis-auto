@@ -240,6 +240,8 @@ Content-free feature extraction and replay used by the full-dataset EDA. Written
 
 - `scripts/run_walking_skeleton.py`: the walking-skeleton entry point. Outside the package; loads settings, calls `wiring`, prints content-free metadata and the config hash.
 - `scripts/show_budget.py`: prints the live budget (cumulative spend vs caps) and why live calls are blocked. Outside the package; calls `settings` and `wiring.from_settings`. Makes no calls.
+- `scripts/progress_index.py`: rewrites the index of progress entries in `docs/project/progress.md` from the files in `docs/project/progress/` (`--check` fails if stale). Standard library only, no package imports; the one script that holds its own logic, because it is documentation tooling that must run before anything is installed.
+- `scripts/adr_finalize.py`: gives draft ADRs (`docs/adr/draft-<slug>.md`) their numbers, rewrites the references, rebuilds the ADR table in `docs/README.md` (`--dry-run`, `--check`). Standard library only, same reason.
 - `scripts/fetch_tokenizer_assets.py` (Stage 7): downloads the tokenizer files once (network, explicit) and checks their sha256; `--check` verifies only. Calls `settings`, `adapters.tokenizers`, `wiring.tokenizers`.
 - `scripts/measure_overhead.py` (Stage 7, brief §11): N walking-skeleton requests, p50/p95/max per span, hit/miss mix, hardware; `--compression off|llmlingua2|fake` (Demo A) adds the compressor and its token totals. Calls `wiring`.
 - `scripts/fetch_compressor_assets.py` (Demo A): downloads the LLMLingua-2 files once (network, explicit, about 2.2 GB) and checks their sha256; `--check` verifies only. Calls `settings`, `adapters.tokenizers` (`sha256_of`).

@@ -246,7 +246,7 @@ The renames are applied to the diagrams (§7).
 
 ## 7. Every arrow is labelled with a contract (exit criterion)
 
-All 12 Mermaid blocks in `docs/architecture/` were re-parsed with Mermaid 11.4.1 after the label changes (2026-10-17, see [progress](../project/progress.md)).
+All 12 Mermaid blocks in `docs/architecture/` were re-parsed with Mermaid 11.4.1 after the label changes (2026-10-17, see the [Stage 4 progress entry](../project/progress/2026-10-17-stage-4-internal-contracts.md)).
 
 | Diagram | Status | Notes |
 |---|---|---|
@@ -272,6 +272,6 @@ All 12 Mermaid blocks in `docs/architecture/` were re-parsed with Mermaid 11.4.1
 | O-4 | ~~Empty values: `present` or `absent`?~~ **Decided 2026-10-18:** empty means `absent`. Validator added (§2.3). Producers apply it. | Stage 5 request builder; Stage 9 sample loader |
 | O-5 | Core feature set beyond the provisional fields | Stage 8 experiments |
 | O-6 | Judge *input* contract (rubric, reference handling) beyond `Request` + `ModelResponse` | Stage 8 judge plan |
-| O-7 | ~~Whether hot-path contracts need `model_construct`~~ **Not needed (Stage 5):** walking-skeleton overhead p95 ≈ 0.1 ms vs the 100 ms budget (indicative, A-38, progress.md). Revisit with realistic request sizes. | Stage 5 |
+| O-7 | ~~Whether hot-path contracts need `model_construct`~~ **Not needed (Stage 5):** walking-skeleton overhead p95 ≈ 0.1 ms vs the 100 ms budget (indicative, A-38, [Stage 5 progress entry](../project/progress/2026-10-18-stage-5-skeletons-and-wiring.md)). Revisit with realistic request sizes. | Stage 5 |
 | O-8 | Curated-cache entry fields | only if ADR-0016 is accepted |
 | O-9 | ~~Lock the pydantic version~~ **Done (Stage 5):** pydantic 2.14.1 in `requirements.lock`; all contract tests pass under it. | Stage 5 |

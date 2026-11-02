@@ -54,4 +54,4 @@ Stage 4: [ADR-0017](../adr/0017-contract-modelling-with-pydantic.md) contract mo
 
 ## Checking diagrams
 
-All Mermaid blocks in `docs/architecture/` were parsed with Mermaid 11.4.1 on 2026-10-14, and again on 2026-10-17 after the Stage 4 label changes (see [progress.md](../project/progress.md)). Re-run the check after editing a diagram.
+All Mermaid blocks in `docs/architecture/` were parsed with Mermaid 11.4.1 on 2026-10-14, and again on 2026-10-17 after the Stage 4 label changes (see the [Stage 3](../project/progress/2026-10-14-stage-3-architecture-and-system-design.md) and [Stage 4](../project/progress/2026-10-17-stage-4-internal-contracts.md) progress entries). Re-run the check after editing a diagram.
