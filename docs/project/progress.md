@@ -1003,3 +1003,11 @@ Under the owner's task. Status: **built and tested offline; awaiting review; no 
 - **Plan (no call):** 300 records, none over the context window, about 1.44 M input tokens (approximate: tokenizer files not fetched), input-only cost at least 7.9 USD, ceiling 89 USD; pilot of 10 records bounded at 0.58 to 3.28 USD. The full run most likely exceeds the 10 USD cap: the owner decides after the pilot.
 - **Pending (owner):** set the pilot caps and `real_data_approved` in `config/local.toml`, type "run", then decide on the full run after the pilot; fetch the tokenizer files for exact counts; the 30-item human spot-check.
 
+
+## Sprint Day 1, Pipeline B: comparison, cache guard, Postgres event sink (2026-11-02)
+
+Plan: [`2026-11-01-final-plan.md`](../2026-11-01-final-plan.md) tasks S-0, S-2, S-5 and T-3. Branch `pipeline-b-compare-cache-guard-pg-sink` (created as `pipeline-b`). **Awaiting review.**
+- **S-2:** `analysis/compare.py`, `wiring/lever_compare.py`, `scripts/compare_levers.py`. Ranks only within one step, data scope, price version, evidence class and baseline. The four baselines are separate, and a missing one is marked. Insufficient evidence is never ranked. Unknown is never 0. Tenant share over 0.35 is flagged. Results are read through a protocol (interim until the shared `LeverResult`; checked against the unmerged `sprint-saba` version). The JSON loader is the interim `wiring/_interim_lever_json.py`.
+- **S-5:** `analysis/cache_guard.py` ([ADR-0034](../adr/0034-cache-guard-key-encoding-and-check-order.md)): the frozen `CacheGuard`, versioned keys, a fixed check order (`refusal` is an addition pending team OK), and a per-key seeded shadow sample with no default rate (the 1% belongs in `sprint.toml`, S-3).
+- **T-3:** [ADR-0033](../adr/0033-postgres-event-sink-layout.md). `adapters/sinks/postgres.py` (no database import), `adapters/sinks/fanout.py`, `data_access/postgres/event_store.py` (password only from the process environment), Alembic `0007_events.py` (`exp.events`, provisional `exp.lever_results`), and `[events] sink` (default `jsonl`, excluded from the config hash). The live check was **not run** (no local server).
+- Interim shapes, switch-over checklist and owner questions: [`pipeline_b_interim_contracts.md`](../experiments/pipeline_b_interim_contracts.md).
