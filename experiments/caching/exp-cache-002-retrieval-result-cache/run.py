@@ -1,7 +1,7 @@
 """R-B1 run helpers: build the lookups frame, the recorded fee block, the
 evaluation, the TTL choice and one ``LeverResult`` per baseline (final plan R-B1;
 H-3, FR-XCACHE-04, FR-EVAL-08, QA-REPRO; ADR-0036;
-ADR-XXXX (retrieval-result-cache-accounting)). Pure over frames;
+ADR-0037). Pure over frames;
 ``scripts/run_pipeline_b_day2.py`` does the file IO and passes the shared scope
 (``analysis.replay_scope``), the baselines (``analysis.baselines_full``) and the
 ``sprint.toml`` values. Outputs are content-free aggregates: no query, chunk,
