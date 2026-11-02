@@ -1,0 +1,330 @@
+{
+  "assumptions": [
+    "quality not proven: no labels (P-1..P-3 not run)",
+    "intent labels heuristic, unreviewed (A-78); Persian word lists pending review (K-2/K-3).",
+    "Strict rule (ADR-0046 Amendment 1): not simple if this or an earlier user message of the session is labelled coding, math or factual (primary or secondary tag) or holds code; later turns never count; unknown labels (unknown_uncertain, empty or unreadable text, no flags row) block too.",
+    "Rule: simple = u_n_chars <= 200, no RAG query, no attachment (unknown = not simple), no configured function, effective input <= 16000 tokens; pre-generation only.",
+    "Candidates with hidden_reasoning_billed_as_output excluded (catalogue): their list-price cost ignores hidden reasoning tokens.",
+    "Cost simulation: logged tokens assumed model-independent (tokenizers differ); logged output length unchanged.",
+    "Eligibility and candidate cost: analysis.routing_base (ADR-0045); the cheapest eligible candidate moves only if strictly cheaper, never upward.",
+    "Repriced: incumbent = the baseline's model; target at list price (routing_base.candidate_costs). Fees not priced in price-file units (ADR-0036), so baseline_cost has no fees key.",
+    "Fees unchanged by routing; rows not moved save exactly 0."
+  ],
+  "baseline": "best_single_cheap",
+  "baseline_cost": {
+    "token_cost": "39.751390761",
+    "total": "39.751390761"
+  },
+  "ci_high": 0.0,
+  "ci_low": 0.0,
+  "correctness_state": "unmeasured",
+  "evidence_class": "simulation",
+  "lever_id": "route.small_classifier.strict_unknown_blocked.best_single_cheap",
+  "manifest": {
+    "code_commit": "672c69535be763e6e96b1706d4cca057c1d96d83",
+    "config_hash": "d89bf5e4eb18e290889fba6e106f31c315e0fd7b8a5c48aad623a4b3336bd0ec",
+    "created_at": "2026-11-02T23:00:14Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "prices-metis-2026-10-18-logged",
+    "python_version": "3.13.16",
+    "seed": 20261102
+  },
+  "n_eligible": 18872,
+  "n_requests": 73062,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
+  "saving": {
+    "fees": "0.000000000",
+    "token_cost": "0.000000000",
+    "total": "0.000000000"
+  },
+  "slices": {
+    "all": {
+      "baseline:token_cost": "39.751390761",
+      "baseline:total": "39.751390761",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "20744",
+      "n_moved": "0",
+      "n_requests": "73062",
+      "n_saving_unknown": "0",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:1": {
+      "baseline:total": "23.177531190",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "5809",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:10": {
+      "baseline:total": "0.794769800",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "401",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:11": {
+      "baseline:total": "0.031625110",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "381",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:12": {
+      "baseline:total": "0.083322745",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "281",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:13": {
+      "baseline:total": "0.121639265",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "261",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:14": {
+      "baseline:total": "0.028234305",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "250",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:15": {
+      "baseline:total": "0.048868270",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "246",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:16": {
+      "baseline:total": "0.682833470",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "220",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:17": {
+      "baseline:total": "0.072067913",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "215",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:18": {
+      "baseline:total": "0.630270630",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "204",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:19": {
+      "baseline:total": "0.036159508",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "189",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:2": {
+      "baseline:total": "4.103827145",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "1559",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:20": {
+      "baseline:total": "0.142836925",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "187",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:3": {
+      "baseline:total": "2.482082295",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "1406",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:4": {
+      "baseline:total": "1.015022360",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "1323",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:5": {
+      "baseline:total": "0.541418900",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "988",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:6": {
+      "baseline:total": "1.788138220",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "926",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:7": {
+      "baseline:total": "0.656479395",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "898",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:8": {
+      "baseline:total": "0.079466459",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "648",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:9": {
+      "baseline:total": "0.434341160",
+      "insufficient": "0",
+      "n_moved": "0",
+      "n_requests": "430",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "llm_only": {
+      "baseline:token_cost": "39.751390761",
+      "baseline:total": "39.751390761",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "20744",
+      "n_moved": "0",
+      "n_requests": "20750",
+      "n_saving_unknown": "0",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "over_8k": {
+      "baseline:token_cost": "37.290683634",
+      "baseline:total": "37.290683634",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "10720",
+      "n_moved": "0",
+      "n_requests": "10720",
+      "n_saving_unknown": "0",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "routing": {
+      "max_tenant_share": "0.808771084",
+      "n_moved": "0",
+      "n_reason:attachments": "331",
+      "n_reason:attachments_unknown": "90",
+      "n_reason:content_blocked": "920",
+      "n_reason:functions": "1450",
+      "n_reason:history_blocked": "318",
+      "n_reason:label_unknown": "2105",
+      "n_reason:moved": "1223",
+      "n_reason:no_cheaper_candidate": "36",
+      "n_reason:not_simple": "14270",
+      "n_reason:over_context_window": "1",
+      "n_reason:unknown_tokens": "6",
+      "n_saving_unknown": "0",
+      "n_simple": "1259",
+      "n_tenants_over_cap": "1",
+      "n_with_target": "1259"
+    },
+    "tenant_rank:1": {
+      "n_requests": "16782",
+      "over_cap": "1",
+      "saving_share": "0.000000000",
+      "share": "0.808771084"
+    },
+    "tenant_rank:10": {
+      "n_requests": "78",
+      "over_cap": "0",
+      "saving_share": "0.000000000",
+      "share": "0.003759036"
+    },
+    "tenant_rank:2": {
+      "n_requests": "1377",
+      "over_cap": "0",
+      "saving_share": "0.000000000",
+      "share": "0.066361446"
+    },
+    "tenant_rank:3": {
+      "n_requests": "648",
+      "over_cap": "0",
+      "saving_share": "0.000000000",
+      "share": "0.031228916"
+    },
+    "tenant_rank:4": {
+      "n_requests": "640",
+      "over_cap": "0",
+      "saving_share": "0.000000000",
+      "share": "0.030843373"
+    },
+    "tenant_rank:5": {
+      "n_requests": "221",
+      "over_cap": "0",
+      "saving_share": "0.000000000",
+      "share": "0.010650602"
+    },
+    "tenant_rank:6": {
+      "n_requests": "189",
+      "over_cap": "0",
+      "saving_share": "0.000000000",
+      "share": "0.009108434"
+    },
+    "tenant_rank:7": {
+      "n_requests": "116",
+      "over_cap": "0",
+      "saving_share": "0.000000000",
+      "share": "0.005590361"
+    },
+    "tenant_rank:8": {
+      "n_requests": "111",
+      "over_cap": "0",
+      "saving_share": "0.000000000",
+      "share": "0.005349398"
+    },
+    "tenant_rank:9": {
+      "n_requests": "103",
+      "over_cap": "0",
+      "saving_share": "0.000000000",
+      "share": "0.004963855"
+    },
+    "traffic_weighted": {
+      "n_requests": "19288",
+      "saving_share": "0.000000000"
+    }
+  },
+  "step": "routing",
+  "version": "route.small_classifier.strict_unknown_blocked"
+}
