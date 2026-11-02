@@ -18,7 +18,9 @@ that hash: agreement, not correctness (ADR-0016, ``logged_match``).
 
 Key (verified 2026-11-02 in ``analysis/ingest.py`` and ``requests_table.py``):
 ``bot_id`` + ``bot_ins_h_exact`` (instruction fingerprint of the bot snapshot) +
-``u_h_norm`` (``fingerprint(normalize_safe(text))``). Variants:
+``u_h_norm`` (``fingerprint(normalize_safe(text))``), prefixed with ``key_version``
+by ``cache_guard.versioned_key`` (ADR-0034: the guard refuses any other key, so the
+caller passes the guard's own ``key_version``). Variants:
 
 - ``first_turn`` (headline): only requests with no logged history may be
   admitted or hit (ADR-0016 Part 1 point 3). ``n_prior_msgs`` at an AI row counts
@@ -39,6 +41,7 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 
+from metis_auto.analysis.cache_guard import versioned_key
 from metis_auto.analysis.levers import BLOCKS, ReplayContext, block_column
 
 Variant = Literal["first_turn", "all_turns"]
@@ -113,14 +116,21 @@ class PopularQuestionCache:
     correctness_state = "unmeasured"
 
     def __init__(
-        self, window_days: int, min_count: int, min_sessions: int, variant: Variant
+        self,
+        window_days: int,
+        min_count: int,
+        min_sessions: int,
+        variant: Variant,
+        key_version: str,
     ) -> None:
+        versioned_key(key_version, "check")  # raises on an empty or "|" version
         if variant not in VARIANTS:
             raise ValueError(f"variant must be one of {VARIANTS}, got {variant!r}")
         self.window_days = _strict_int("window_days", window_days, 1, MAX_WINDOW_DAYS)
         self.min_count = _strict_int("min_count", min_count, 1)
         self.min_sessions = _strict_int("min_sessions", min_sessions, 1)
         self.variant = variant
+        self.key_version = key_version
         self.lever_id = f"cache.popular_question.{variant}"
         self.name = self.lever_id
         self.assumptions = _COMMON + (
@@ -182,20 +192,22 @@ class PopularQuestionCache:
         return pd.DataFrame(rows, columns=["step", "requests"])
 
     def keys(self, req: pd.DataFrame) -> pd.Series:
-        """Cache key per row; NaN where the bot or the question is unknown.
+        """Guarded cache key per row; NaN where the bot or the question is unknown.
 
         Grouping hashes: in memory only, for the guard and the local review sheet.
         Never written to a committed file or to the frame ``apply`` returns.
         """
         known = req["bot_id"].notna() & req["u_h_norm"].notna()
-        key = (
+        body = (
             req["bot_id"].astype(str)
             + "|"
             + req["bot_ins_h_exact"].fillna(NO_INSTRUCTIONS).astype(str)
             + "|"
             + req["u_h_norm"].astype(str)
         )
-        return key.where(known)
+        key = pd.Series(np.nan, index=req.index, dtype=object)
+        key[known] = body[known].map(lambda b: versioned_key(self.key_version, b))
+        return key
 
     # --- replay --------------------------------------------------------------------
 
@@ -204,6 +216,22 @@ class PopularQuestionCache:
         if any(c not in req for c in cols):
             raise ValueError(f"cost blocks {cols} are missing; run with_blocks first")
         out = req.copy()
+        eligible, served, agrees, admitted_n, _ = self._replay(req, ctx)
+        for col in cols:
+            out.loc[served & out[col].notna(), col] = 0.0
+        out["served_from_cache"] = served
+        out["pq_eligible"] = eligible
+        out["pq_admitted_keys_day"] = admitted_n
+        out["pq_answer_agrees"] = agrees
+        return out
+
+    def served_sources(self, req: pd.DataFrame, ctx: ReplayContext) -> pd.Series:
+        """Per hit row, the index label of the window row whose answer is served:
+        the latest occurrence of the stored answer. In memory only (K-1 sheet)."""
+        _, served, _, _, source = self._replay(req, ctx)
+        return source[served].astype(req.index.dtype)
+
+    def _replay(self, req: pd.DataFrame, ctx: ReplayContext):
         eligible = self.eligible(req)
         key = self.keys(req)
         day = req["u_timestamp"].dt.normalize()
@@ -224,6 +252,7 @@ class PopularQuestionCache:
 
         served = pd.Series(False, index=req.index)
         agrees = pd.Series(None, index=req.index, dtype=object)
+        source = pd.Series(None, index=req.index, dtype=object)
         admitted_n = pd.Series(np.nan, index=req.index, dtype=float)
         allowed: dict[tuple[str, str], bool] = {}
         window = pd.Timedelta(days=self.window_days)
@@ -255,19 +284,20 @@ class PopularQuestionCache:
                     if not allowed[pair]:
                         continue
                 served.at[idx] = True
-                agrees.at[idx] = bool(ac == stored[kc])
-
-        for col in cols:
-            out.loc[served & out[col].notna(), col] = 0.0
-        out["served_from_cache"] = served
-        out["pq_eligible"] = eligible
-        out["pq_admitted_keys_day"] = admitted_n
-        out["pq_answer_agrees"] = agrees
-        return out
+                stored_ac, stored_row = stored[kc]
+                agrees.at[idx] = bool(ac == stored_ac)
+                source.at[idx] = stored_row
+        return eligible, served, agrees, admitted_n, source
 
     @staticmethod
-    def _stored_answers(win: pd.DataFrame) -> dict[int, int]:
-        """Answer code per key: the mode, then the latest answered, then smallest."""
+    def _stored_answers(win: pd.DataFrame) -> dict[int, tuple[int, object]]:
+        """Per key: (answer code, row label). The code is the mode, then the latest
+        answered, then the smallest hash; the row is that answer's latest row."""
+        latest = win.sort_values("t", kind="stable").drop_duplicates(
+            ["kc", "ac"], keep="last"
+        )
+        pairs = zip(latest["kc"], latest["ac"], strict=True)
+        row_of = dict(zip(pairs, latest.index, strict=True))
         per = (
             win.groupby(["kc", "ac"])
             .agg(n=("ac", "size"), last=("t", "max"))
@@ -277,4 +307,7 @@ class PopularQuestionCache:
             )
         )
         first = per.drop_duplicates("kc")
-        return dict(zip(first["kc"], first["ac"], strict=True))
+        return {
+            kc: (ac, row_of[(kc, ac)])
+            for kc, ac in zip(first["kc"], first["ac"], strict=True)
+        }

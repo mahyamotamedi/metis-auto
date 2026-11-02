@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from metis_auto.analysis.cache_guard import CacheGuard
 from metis_auto.analysis.lever_result import LeverResult, build_manifest
 from metis_auto.analysis.levers import (
     ReplayContext,
@@ -45,12 +46,19 @@ def cache_class():
 
 @pytest.fixture
 def make(cache_class):
-    def _make(variant="first_turn", window_days=90, min_count=3, min_sessions=2):
+    def _make(
+        variant="first_turn",
+        window_days=90,
+        min_count=3,
+        min_sessions=2,
+        key_version="pq-v1",
+    ):
         return cache_class(
             window_days=window_days,
             min_count=min_count,
             min_sessions=min_sessions,
             variant=variant,
+            key_version=key_version,
         )
 
     return _make
@@ -260,6 +268,46 @@ def test_hit_labelled_candidate(make):
 
 
 # --- mine ------------------------------------------------------------------------
+
+
+def test_keys_carry_the_guard_key_version(make):
+    """ADR-0034: a guarded key is "<key_version>|<body>", or the guard refuses it."""
+    req = frame(*popular(), row(5, "probe"))
+    keys = make(key_version="pq-v1").keys(req)
+    assert keys.str.startswith("pq-v1|").all()
+    assert make(key_version="pq-v2").keys(req).iloc[0] != keys.iloc[0]
+
+    def guard(version: str) -> CacheGuard:
+        empty: frozenset[str] = frozenset()
+        return CacheGuard(
+            approved=None, blocked=empty, disabled_bots=empty, key_version=version
+        )
+
+    cache = make(key_version="pq-v1")
+    assert hits(cache, req, guard("pq-v1"))[-1] is True
+    assert hits(cache, req, guard("pq-v2"))[-1] is False  # refused: key_version
+
+
+def test_served_source_is_the_latest_window_row_with_the_stored_answer(make):
+    """In memory only: which logged row supplied each served answer (K-1 sheet)."""
+    cache = make()
+    req = frame(
+        row(0, "s1", a="ans-1", minute=1),
+        row(0, "s2", a="ans-2", minute=2),
+        row(0, "s3", a="ans-1", minute=3),  # latest row with the mode answer
+        row(5, "probe"),
+        row(5, "other", q="q-2"),
+    )
+    sources = cache.served_sources(req, ctx())
+    assert sources.to_dict() == {103: 102}
+    out = cache.apply(req, ctx())
+    assert set(sources.index) == set(out.index[out["served_from_cache"]])
+
+
+def test_key_version_is_validated(make):
+    for bad in ("", "pq|v1"):
+        with pytest.raises(ValueError, match="key_version"):
+            make(key_version=bad)
 
 
 def test_first_turn_variant_never_admits_or_hits_requests_with_history(make):

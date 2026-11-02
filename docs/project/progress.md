@@ -43,6 +43,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-02: [Sprint Day 1, Pipeline B: comparison, cache guard, Postgres event sink](progress/2026-11-02-sprint-day-1-pipeline-b-comparison-cache-guard-postgres.md)
 - 2026-11-02: [Sharing the golden answers](progress/2026-11-02-sharing-the-golden-answers.md)
 - 2026-11-02: [Progress entries as files, ADRs as drafts](progress/2026-11-02-progress-entries-and-adr-drafts.md)
+- 2026-11-02: [Popular-question cache, R-A1 phase 2: full-data run](progress/2026-11-02-popular-question-cache-r-a1-phase-2.md)
 - 2026-11-02: [Popular-question cache, R-A1 phase 1](progress/2026-11-02-popular-question-cache-r-a1-phase-1.md)
 - 2026-11-02: [Lever base: StepVersion, combine, LeverResult, Manifest](progress/2026-11-02-lever-base-stepversion-combine-leverresult-manifest.md)
 - 2026-11-01: [Session and configuration analysis, golden-set proposal](progress/2026-11-01-session-and-configuration-analysis-golden-set-proposal.md)

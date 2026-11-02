@@ -4,8 +4,8 @@
 - **Design basis:** [ADR-0016](../../../docs/adr/0016-curated-cache-and-traffic-source-scope.md) Part 1 (**proposed, to be tested**; no serving change). Hits are candidate hits ([ADR-0006](../../../docs/adr/0006-evaluation-metric-definitions.md) point 2); scope is measured, not decided ([ADR-0007](../../../docs/adr/0007-cache-sharing-scope.md)); key components follow [ADR-0011](../../../docs/adr/0011-cache-key-and-lookup-design.md).
 - **Traceability:** H-8, X1 (hit correctness, `docs/full_eda/experiment_plan.md`), FR-XCACHE-02 (key), FR-XCACHE-04 (validity), FR-XCACHE-05 (scope), ADR-0006, ADR-0007, ADR-0016, [ADR-0034](../../../docs/adr/0034-cache-guard-key-encoding-and-check-order.md) (guard key encoding), ADR-0031 (full-data replay path), ADR-0032 (result format), TODO-07, Q-06.
 - **Evidence class:** *simulation* on logged requests. `correctness_state` is `unmeasured` until the K-1 review.
-- **Code:** [`version.py`](version.py), class `PopularQuestionCache(window_days, min_count, min_sessions, variant)`, a `levers.StepVersion` of step `cache`. It is loaded only through `wiring.experiments.load_candidate` (scripts and tests); `metis_auto` never imports it. Tests: `tests/unit/experiments/test_popular_question.py` (all frames [SYNTHETIC]).
-- **Status (2026-11-02):** phase 1 of 3, synthetic tests only. No real-data run yet: phase 2 waits for B's `CacheGuard` and C's scope step.
+- **Code:** [`version.py`](version.py), class `PopularQuestionCache(window_days, min_count, min_sessions, variant, key_version)`, a `levers.StepVersion` of step `cache`. It is loaded only through `wiring.experiments.load_candidate` (scripts and tests); `metis_auto` never imports it. Tests: `tests/unit/experiments/test_popular_question.py` (all frames [SYNTHETIC]).
+- **Status (2026-11-02):** phase 2 of 3 done: full-data run with B's guard and C's scope; results below and in `reports/levers/`. Phase 3 (reading the K-1 review) is next. Run: `.venv\Scripts\python.exe scripts/run_popular_question.py` (tests: `tests/unit/experiments/test_run_popular_question.py`).
 
 ## Design
 
@@ -14,8 +14,8 @@
 | Key | `bot_id` + `bot_ins_h_exact` + `u_h_norm`. `u_h_norm` is `fingerprint(normalize_safe(text))` (`analysis/ingest.py`, checked 2026-11-02). | decided |
 | Instruction part | `bot_ins_h_exact` is a hash of the **bot snapshot**, one value per bot, so it never splits a bot's traffic; it is there for ADR-0011 conformance and is a no-op on this data. A per-period instruction history does not exist in the export. | provisional |
 | Nightly set | For each naive day *d* of `u_timestamp`: keys with ≥ `min_count` eligible occurrences in ≥ `min_sessions` distinct sessions on days *d − window_days … d − 1*. No look-ahead, no same-day admission. `1 ≤ window_days ≤ 180`. | decided |
-| Parameters | Arguments, not read from `sprint.toml`; the plan's values are 90, 3, 2 and are passed by the caller. | decided |
-| Guard key | ADR-0034: a guarded key is `"<key_version>\|<body>"`, built with `analysis.cache_guard.versioned_key`, and the guard refuses any other key (`key_version`). **Gap (phase 2):** `keys()` builds the body only, with no version prefix, so B's guard would refuse every key. Needs a `key_version` source, for example a constructor argument (owner's call). | open |
+| Parameters | Arguments, not read from `sprint.toml`; the plan's values are 90, 3, 2 (`[cache.popular_question]` in `sprint.toml`) and are passed by the caller. | decided |
+| Guard key | ADR-0034: a guarded key is `"<key_version>\|<body>"`. `keys()` builds each key with `analysis.cache_guard.versioned_key` under the constructor argument `key_version` (non-empty, no `\|`), which the caller sets to the guard's own `key_version`; any other version is refused (`key_version`). Tested with B's real `CacheGuard`. Owner decision 2026-11-02: a constructor argument. | decided |
 | Hit | Eligible, key in day *d*'s set, and `ctx.guard.allows(key, bot)` when a guard is given. | decided |
 | Shadow check | Plan S-5: every cache version reports the shadow-check result. `CacheGuard.shadow_sample(keys, rate, seed)` has no default rate; the caller passes the rate from `sprint.toml` (Q-B9). The sample is per key, so the rate is a share of distinct keys. | open (phase 2) |
 | Stored answer | Mode of `a_h_norm` over the window's occurrences; ties go to the latest `a_timestamp`, then the smallest hash. | provisional |
@@ -57,6 +57,27 @@ From `reports/full_eda/tables/exact_cache_variants.csv` (dynamic cold-cache repl
 | bot+full_history, global | 8.28% | 8.0% to 8.5% |
 
 **Why this version should come out lower:** it is a nightly set with frequency limits (≥ 3 occurrences in ≥ 2 sessions in the previous 90 days), not a dynamic cache that can hit on the second occurrence; nothing asked today is served today; memory and RAG requests are out; the headline variant keeps first turns only; and the result is read on the report period (August to October 2026) only.
+
+## Results on the full data (phase 2, 2026-11-02)
+
+Simulation, candidate hits, correctness **unmeasured**. Report period August to October 2026 (77,774 requests, 24,609 LLM requests), read once; thresholds 90 / 3 / 2 from the plan, not tuned. Saving is as-logged recorded cost, fees a proxy (ADR-0032). Intervals are session-clustered 95% bootstrap (`analysis.stats.cluster_bootstrap_ratio`).
+
+| | Eligible | Candidate hits | Hits / eligible | Hits / EDA-step requests¹ | Hits / LLM requests | Cost share saved (95% CI) | Agreement² | Served keys |
+|---|---|---|---|---|---|---|---|---|
+| `first_turn` (headline) | 2,707 | 762 | 28.15% | 1.06% | 3.10% | 0.31% (0.27% to 0.36%) | 54.2% | 72 |
+| `all_turns` (upper bound) | 7,634 | 1,023 | 13.40% | 1.42% | 4.16% | 0.37% (0.33% to 0.42%) | 51.9% | 112 |
+| EDA bot+text, global (dynamic, all months) | 326,491 | 91,305 | 27.97% (27.4% to 28.5%) | 27.97% | — | 8.2% | — | — |
+| EDA bot+full_history, global | 326,491 | 27,030 | 8.28% (8.0% to 8.5%) | 8.28% | — | 0.8% | — | — |
+
+¹ Report-period requests that pass the six EDA exact-cache steps (71,979), the closest like-for-like denominator to the EDA's 326,491. ² Share of hits whose own logged answer has the stored answer's hash: a diagnostic, not correctness (ADR-0016).
+
+**Reading.** On the like-for-like denominator, ours is far below the EDA (1.1% and 1.4% against 28.0%), as expected. Two funnel steps account for most of the gap: **workflow rows** (71,979 → 23,938 after `llm_request`; the EDA funnel kept them) and **RAG requests** (23,005 → 7,634 after `no_rag`). Within what stays eligible, the first-turn hit rate (28.2%) is close to the EDA's dynamic rate, but those rows are cheap first turns: the cost share saved is 0.31%. Only about half of the hits match the stored answer, so many popular questions have several logged answers; K-1 will say whether they are still acceptable.
+
+**Other baselines** (repriced, price-file units, token cost only, no interval): first_turn saves 0.20% (premium gpt-5.5), 0.11% (today's models), 0.22% (best single cheap model); all_turns 0.26%, 0.26%, 0.27%. Files: `reports/levers/<lever_id>__<baseline>.json` (one per baseline; see the questions in the progress entry).
+
+**Admission and guard.** Admitted keys per report day: first_turn median 94, p90 144; all_turns 178 and 317. Every served key would need approval before serving (72 and 112 distinct keys). The 1% shadow sample selected **no** key: it samples per key (ADR-0034), and 1% of 72 keys rounds to none, so a 1% rate cannot check this cache; a fixed number of keys would.
+
+**Sensitivity, tune period only** (first_turn, min_sessions 2; 32,165 eligible): hits / eligible ranges from 17.3% (window 30, min_count 5) to 20.6% (window 180, min_count 2); 19.5% at the plan's 90 / 3. Cost share saved 0.27% to 0.39%. Windows beyond 90 days add almost nothing; the result is not sensitive to the thresholds.
 
 ## Phases
 
