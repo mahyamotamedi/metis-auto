@@ -14,6 +14,7 @@ import pytest
 from metis_auto.analysis.compare import BASELINES, compare, to_markdown
 
 D = Decimal
+CAP = D("0.35")  # the sprint.toml [sample] tenant_cap, passed in
 
 
 @dataclass(frozen=True)
@@ -74,7 +75,7 @@ def test_orders_versions_by_saving_within_a_step():
             lever_id="context.synthetic-a", step="context", saving=_saving("50")
         ),
     ]
-    frame = compare(results, baseline="as_logged")
+    frame = compare(results, baseline="as_logged", max_tenant_share=CAP)
 
     cache = frame[frame["step"] == "cache"].sort_values("rank")
     assert list(cache["lever_id"]) == [
@@ -100,7 +101,7 @@ def test_shows_unmeasured_correctness():
         FakeResult(lever_id="cache.synthetic-c", correctness_state="measured"),
         FakeResult(lever_id="cache.synthetic-d", correctness_state="0 errors"),
     ]
-    frame = compare(results, baseline="as_logged")
+    frame = compare(results, baseline="as_logged", max_tenant_share=CAP)
 
     unmeasured = _row(frame, "cache.synthetic-a")["correctness"]
     assert "unmeasured" in unmeasured
@@ -110,7 +111,7 @@ def test_shows_unmeasured_correctness():
     # A state outside the three agreed forms is never read as a pass.
     assert _row(frame, "cache.synthetic-d")["correctness"].startswith("unknown")
 
-    text = to_markdown(results)
+    text = to_markdown(results, max_tenant_share=CAP)
     assert "unmeasured" in text
 
 
@@ -121,16 +122,18 @@ def test_four_baselines_present_or_marked_missing():
     results = [FakeResult(baseline=name) for name in present]
 
     for name in present:
-        row = _row(compare(results, baseline=name), "cache.synthetic-a")
+        row = _row(
+            compare(results, baseline=name, max_tenant_share=CAP), "cache.synthetic-a"
+        )
         assert row["status"] == "ranked"
 
-    missing = compare(results, baseline=names[3])
+    missing = compare(results, baseline=names[3], max_tenant_share=CAP)
     assert len(missing) == 1
     row = missing.iloc[0]
     assert row["status"] == "baseline missing"
     assert row["saving"] is None and pd.isna(row["rank"])
 
-    text = to_markdown(results)
+    text = to_markdown(results, max_tenant_share=CAP)
     for baseline in BASELINES:
         assert baseline.label in text
     missing_label = BASELINES[3].label
@@ -138,7 +141,7 @@ def test_four_baselines_present_or_marked_missing():
     assert "Missing" in section.split("\n## ", 1)[0]
 
     with pytest.raises(ValueError, match="not one of the four baselines"):
-        compare(results, baseline="invented-baseline")
+        compare(results, baseline="invented-baseline", max_tenant_share=CAP)
 
 
 def test_results_with_different_baselines_are_not_compared():
@@ -146,7 +149,7 @@ def test_results_with_different_baselines_are_not_compared():
     premium = FakeResult(
         lever_id="cache.synthetic-b", baseline=BASELINES[0].key, saving=_saving("90")
     )
-    frame = compare([logged, premium], baseline="as_logged")
+    frame = compare([logged, premium], baseline="as_logged", max_tenant_share=CAP)
 
     assert _row(frame, "cache.synthetic-a")["rank"] == 1
     other = _row(frame, "cache.synthetic-b")
@@ -173,7 +176,7 @@ def test_results_with_different_baselines_are_not_compared():
             evidence_class="measured potential",
         ),
     ]
-    grouped = compare(variants, baseline="as_logged")
+    grouped = compare(variants, baseline="as_logged", max_tenant_share=CAP)
     assert grouped["group"].nunique() == 4
     assert set(grouped["rank"]) == {1}
 
@@ -185,7 +188,9 @@ def test_tenant_share_above_35_percent_is_flagged():
         lever_id="cache.synthetic-c",
         slices={k: v for k, v in _slices().items() if not k.startswith("tenant")},
     )
-    frame = compare([over, at_limit, no_tenant], baseline="as_logged")
+    frame = compare(
+        [over, at_limit, no_tenant], baseline="as_logged", max_tenant_share=CAP
+    )
 
     assert _row(frame, "cache.synthetic-a")["tenant_flag"] == "over 35%"
     assert _row(frame, "cache.synthetic-a")["max_tenant_share"] == D("0.36")
@@ -193,7 +198,24 @@ def test_tenant_share_above_35_percent_is_flagged():
     # No tenant slice is unknown, not "ok".
     assert _row(frame, "cache.synthetic-c")["tenant_flag"] == "unknown"
 
-    assert "over 35%" in to_markdown([over])
+    assert "over 35%" in to_markdown([over], max_tenant_share=CAP)
+
+
+def test_tenant_cap_is_an_argument():
+    result = FakeResult(slices=_slices("0.30"))
+
+    strict = compare([result], baseline="as_logged", max_tenant_share=D("0.25"))
+    loose = compare([result], baseline="as_logged", max_tenant_share=D("0.35"))
+
+    assert _row(strict, "cache.synthetic-a")["tenant_flag"] == "over 25%"
+    assert _row(loose, "cache.synthetic-a")["tenant_flag"] == "ok"
+    assert "over 25%" in to_markdown([result], max_tenant_share=D("0.25"))
+
+
+@pytest.mark.parametrize("cap", [0.35, D("0"), D("1.5"), D("NaN")])
+def test_tenant_cap_must_be_a_decimal_share(cap):
+    with pytest.raises((TypeError, ValueError)):
+        compare([FakeResult()], baseline="as_logged", max_tenant_share=cap)
 
 
 # --- Further behaviour from the S-2 spec ---
@@ -208,7 +230,7 @@ def test_insufficient_evidence_is_never_ranked():
         ),
         FakeResult(lever_id="cache.synthetic-d", saving=_saving("97"), n_eligible=0),
     ]
-    frame = compare(results, baseline="as_logged")
+    frame = compare(results, baseline="as_logged", max_tenant_share=CAP)
 
     assert _row(frame, "cache.synthetic-a")["rank"] == 1
     for lever in ("cache.synthetic-b", "cache.synthetic-c", "cache.synthetic-d"):
@@ -223,7 +245,9 @@ def test_n_eligible_below_the_results_own_minimum_is_insufficient():
     class WithMinimum(FakeResult):
         min_n: int | None = 500
 
-    frame = compare([WithMinimum(n_eligible=400)], baseline="as_logged")
+    frame = compare(
+        [WithMinimum(n_eligible=400)], baseline="as_logged", max_tenant_share=CAP
+    )
     row = frame.iloc[0]
     assert row["status"] == "insufficient evidence"
     assert "min_n" in row["notes"]
@@ -234,12 +258,12 @@ def test_unknown_saving_stays_unknown_not_zero():
     nan_cost = FakeResult(
         lever_id="cache.synthetic-b", baseline_cost={"total": D("NaN")}
     )
-    frame = compare([unknown, nan_cost], baseline="as_logged")
+    frame = compare([unknown, nan_cost], baseline="as_logged", max_tenant_share=CAP)
 
     row = _row(frame, "cache.synthetic-a")
     assert row["saving"] is None and row["status"] == "insufficient evidence"
     assert _row(frame, "cache.synthetic-b")["saving_share"] is None
-    text = to_markdown([unknown])
+    text = to_markdown([unknown], max_tenant_share=CAP)
     assert "unknown" in text
 
 
@@ -248,7 +272,7 @@ def test_saving_without_total_is_the_exact_sum_of_its_blocks():
         saving={"fees": D("0.002"), "input": D("1.1"), "output": D("0.0001")},
         baseline_cost={"fees": D("1"), "input": D("2"), "output": D("1")},
     )
-    row = compare([blocks], baseline="as_logged").iloc[0]
+    row = compare([blocks], baseline="as_logged", max_tenant_share=CAP).iloc[0]
     assert row["saving"] == D("1.1021")
     assert row["saving_share"] == D("1.1021") / D("4")
 
@@ -259,7 +283,7 @@ def test_row_shows_slices_overhead_assumptions_and_cost_unit():
         overhead_ms_p95=4.0,
         assumptions=("synthetic fixture", "timestamps naive"),
     )
-    row = compare([result], baseline="as_logged").iloc[0]
+    row = compare([result], baseline="as_logged", max_tenant_share=CAP).iloc[0]
     assert row["llm_only_share"] == D("0.14")
     assert row["traffic_weighted_share"] == D("0.09")
     assert row["overhead"] == "p50 1.5 ms, p95 4.0 ms"
@@ -267,10 +291,15 @@ def test_row_shows_slices_overhead_assumptions_and_cost_unit():
     assert row["cost_unit"] == "recorded cost units"
     half = replace(result, overhead_ms_p50=None)
     none = replace(result, overhead_ms_p50=None, overhead_ms_p95=None)
-    assert compare([half], baseline="as_logged").iloc[0]["overhead"] == (
-        "p50 unknown, p95 4.0 ms"
+    assert compare([half], baseline="as_logged", max_tenant_share=CAP).iloc[0][
+        "overhead"
+    ] == ("p50 unknown, p95 4.0 ms")
+    assert (
+        compare([none], baseline="as_logged", max_tenant_share=CAP).iloc[0]["overhead"]
+        == "not measured"
     )
-    assert compare([none], baseline="as_logged").iloc[0]["overhead"] == "not measured"
     premium = replace(result, baseline=BASELINES[0].key)
-    unit = compare([premium], baseline=BASELINES[0].key).iloc[0]["cost_unit"]
+    unit = compare([premium], baseline=BASELINES[0].key, max_tenant_share=CAP).iloc[0][
+        "cost_unit"
+    ]
     assert "repriced" in unit and "prices-synthetic-1" in unit
