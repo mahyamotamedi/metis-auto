@@ -748,3 +748,213 @@ def test_language_review_end_to_end_on_synthetic_data(db, tmp_path):
     again = answers.review_language("pg-review")
     assert again["kept_earlier_verdicts"] == 1 and not again["verdict_problems"]
     assert "ok_bot_rule" in sheet.read_text(encoding="utf-8")
+
+
+# --- sharing golden answers: export, import, verify (ADR-0030) -------------------
+
+
+def _sharing(db, tmp_path, name):
+    """A GoldenAnswers over the throwaway database whose dataset is 'd1', with the
+    export folder inside a temporary git repo that ignores it."""
+    import subprocess
+
+    from metis_auto.wiring.golden_answers import GoldenAnswers
+
+    repo_dir = tmp_path / "repo"
+    if not repo_dir.exists():
+        repo_dir.mkdir()
+        subprocess.run(["git", "init", "-q"], cwd=repo_dir, check=True)
+        (repo_dir / ".gitignore").write_text("runs/\n")
+    reports = tmp_path / "reports"
+    reports.mkdir(exist_ok=True)
+    (reports / "fingerprint.json").write_text(json.dumps({"fingerprint": "f" * 64}))
+    cfg = tmp_path / "answers.toml"
+    cfg.write_text(
+        (ROOT / "config/evaluation/golden_answers.toml")
+        .read_text()
+        .replace('dataset_id = "golden-v2"', 'dataset_id = "d1"')
+    )
+    return GoldenAnswers(
+        engine=db["engine"],
+        config_path=str(cfg),
+        log=lambda _m: None,
+        report_dir=reports,
+        export_dir=repo_dir / "runs" / name / "export",
+        dataset_verifier=lambda: True,
+    )
+
+
+def _count(db, run_id):
+    return scalar(
+        db, "SELECT count(*) FROM eval.golden_answer WHERE run_id = :r", r=run_id
+    )
+
+
+def test_export_then_import_into_an_empty_table_then_verify_passes(db, tmp_path):
+    from metis_auto.evaluation.golden_answers import share as sh
+
+    _ensure_dataset(db)
+    _run(db, _Client([_answer("[SYNTHETIC] a shared answer")]), "pg-share")
+    lead = _sharing(db, tmp_path, "pg-share")
+
+    exported = lead.export_answers("pg-share", created="2026-11-02")
+    folder = lead.export_path("pg-share")
+    assert sorted(p.name for p in folder.iterdir()) == sorted(sh.EXPORT_FILES)
+    assert exported["records"] == 1
+    manifest = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["answers_parquet"]["sha256"] == sh.sha256_file(
+        folder / "answers.parquet"
+    )
+    assert (
+        manifest["answers_parquet"]["sha256"]
+        == (exported["files"]["answers.parquet"]["sha256"])
+    )
+    assert (manifest["run_id"], manifest["dataset_id"], manifest["record_count"]) == (
+        "pg-share",
+        "d1",
+        1,
+    )
+    assert manifest["created"] == "2026-11-02" and manifest["model_id"] == "gpt-5.5"
+    assert "Metis-auto/golden-answers-v2" in (folder / "README.md").read_text("utf-8")
+    assert "SYNTHETIC" not in json.dumps(manifest)
+
+    lead.fingerprint_answers("pg-share")  # the committed file, hashes and counts
+    committed = lead.answers_fingerprint_path("pg-share").read_text(encoding="utf-8")
+    assert "SYNTHETIC" not in committed and lead.verify_answers("pg-share")
+
+    # a teammate's empty golden_answer table: nothing there, so the check fails
+    with db["engine"].begin() as conn:
+        conn.execute(sa.text("DELETE FROM eval.golden_answer"))
+    assert _count(db, "pg-share") == 0 and not lead.verify_answers("pg-share")
+
+    first = lead.import_answers(folder)
+    assert first == {
+        "run_id": "pg-share",
+        "records_in_export": 1,
+        "inserted": 1,
+        "already_present": 0,
+    }
+    assert lead.verify_answers("pg-share")  # PASS
+    assert (
+        scalar(db, "SELECT answer FROM eval.golden_answer WHERE run_id='pg-share'")
+        == "[SYNTHETIC] a shared answer"
+    )
+
+    again = lead.import_answers(folder)  # idempotent
+    assert (again["inserted"], again["already_present"]) == (0, 1)
+    assert _count(db, "pg-share") == 1 and lead.verify_answers("pg-share")
+
+
+def test_an_import_is_refused_and_changes_nothing_when_it_is_unsafe(db, tmp_path):
+    import shutil
+
+    from metis_auto.data_access.postgres import answer_files
+    from metis_auto.evaluation.golden_answers import share as sh
+
+    _ensure_dataset(db)
+    _run(db, _Client([_answer("[SYNTHETIC] original")]), "pg-refuse")
+    lead = _sharing(db, tmp_path, "pg-refuse")
+    lead.export_answers("pg-refuse", created="2026-11-02")
+    good = lead.export_path("pg-refuse")
+    with db["engine"].begin() as conn:
+        conn.execute(sa.text("DELETE FROM eval.golden_answer WHERE run_id='pg-refuse'"))
+
+    def copy(name):
+        target = tmp_path / name
+        shutil.copytree(good, target)
+        return target
+
+    def refused(folder, text):
+        with pytest.raises(sh.ShareRefused) as info:
+            lead.import_answers(folder)
+        assert text in str(info.value)
+        assert _count(db, "pg-refuse") == 0  # nothing was written
+
+    tampered = copy("tampered")
+    with (tampered / "answers.parquet").open("ab") as fh:
+        fh.write(b"x")
+    refused(tampered, "sha256")
+
+    other_dataset = copy("other-dataset")
+    m = json.loads((other_dataset / "manifest.json").read_text("utf-8"))
+    (other_dataset / "manifest.json").write_text(
+        json.dumps(m | {"dataset_id": "golden-v1"}), encoding="utf-8"
+    )
+    refused(other_dataset, "not 'd1'")
+
+    stray = copy("stray")
+    (stray / "language_mismatch_local.json").write_text("[]")
+    refused(stray, "not part of an export")
+
+    unknown = copy("unknown")
+    rows = answer_files.read_answers(unknown / "answers.parquet")
+    answer_files.write_answers(
+        [{**rows[0], "record_id": "gv2-not-in-my-dataset"}], unknown / "answers.parquet"
+    )
+    m = json.loads((unknown / "manifest.json").read_text("utf-8"))
+    m["answers_parquet"]["sha256"] = sh.sha256_file(unknown / "answers.parquet")
+    (unknown / "manifest.json").write_text(json.dumps(m), encoding="utf-8")
+    refused(unknown, "not in your verified")
+
+    stale = copy("stale-fingerprint")
+    m = json.loads((stale / "manifest.json").read_text("utf-8"))
+    (stale / "manifest.json").write_text(
+        json.dumps(m | {"dataset_fingerprint": "0" * 64}), encoding="utf-8"
+    )
+    refused(stale, "fingerprint")
+
+    # a hf download cache folder next to the files is fine
+    cached = copy("with-hf-cache")
+    (cached / ".cache").mkdir()
+    (cached / ".cache" / "x").write_text("cache")
+    assert lead.import_answers(cached)["inserted"] == 1
+
+    # a different local answer for the same run and record blocks a further import
+    with db["engine"].begin() as conn:
+        conn.execute(
+            sa.text("UPDATE eval.golden_answer SET answer='[SYNTHETIC] edited'")
+        )
+    with pytest.raises(sh.ShareRefused, match="different answer"):
+        lead.import_answers(good)
+    assert (
+        scalar(db, "SELECT answer FROM eval.golden_answer WHERE run_id='pg-refuse'")
+        == "[SYNTHETIC] edited"
+    )
+
+
+def test_a_verify_without_a_committed_fingerprint_fails(db, tmp_path):
+    _ensure_dataset(db)
+    _run(db, _Client([_answer()]), "pg-nofp")
+    assert not _sharing(db, tmp_path, "pg-nofp").verify_answers("pg-nofp")
+
+
+def test_export_refuses_a_folder_holding_other_files(db, tmp_path):
+    from metis_auto.evaluation.golden_answers import share as sh
+
+    _ensure_dataset(db)
+    _run(db, _Client([_answer()]), "pg-stray")
+    lead = _sharing(db, tmp_path, "pg-stray")
+    folder = lead.export_path("pg-stray")
+    folder.mkdir(parents=True)
+    (folder / "review.json").write_text("[]")
+    with pytest.raises(sh.ShareRefused, match="not part of an export"):
+        lead.export_answers("pg-stray")
+
+
+def test_export_refuses_a_folder_git_would_track(db, tmp_path):
+    from metis_auto.wiring.golden_answers import GoldenAnswers
+
+    _ensure_dataset(db)
+    _run(db, _Client([_answer()]), "pg-track")
+    lead = _sharing(db, tmp_path, "pg-track")
+    tracked = GoldenAnswers(
+        engine=db["engine"],
+        config_path=str(tmp_path / "answers.toml"),
+        log=lambda _m: None,
+        report_dir=tmp_path / "reports",
+        export_dir=tmp_path / "repo" / "public" / "export",
+        dataset_verifier=lambda: True,
+    )
+    with pytest.raises(RuntimeError, match="not git-ignored"):
+        tracked.export_answers("pg-track")
+    assert lead is not None

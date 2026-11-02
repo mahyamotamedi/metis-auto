@@ -70,6 +70,30 @@ python scripts/golden_answers.py summary --run-id <id>
 
 The summary is `reports/evaluation/golden_v2/answers_<run_id>_summary.json`: counts per stratum, success and failure by reason, latency quantiles, truncation rate, language-mismatch rate (a script-based proxy for Persian and English requests), tokens, cost, caveat counts, and the media subset.
 
+## Sharing the answers with the team
+
+The answers go to teammates only through a **private** Hugging Face dataset, `Metis-auto/golden-answers-v2`. It is separate from the raw-data dataset (`poriniki/metis`), which has a wider audience: **never upload answers there**. Teammates download and import them, and never run the answers again against the provider.
+
+**Lead: export.**
+```bash
+python scripts/golden_answers.py export ga-v2-20261101
+```
+This writes `runs/golden_answers/ga-v2-20261101/export/` with exactly three files: `answers.parquet` (one row per answered record: the answer and its run data), `manifest.json` (run, dataset, settings hash, model and reported version, record count, sha256 of the parquet, created date) and `README.md` (the dataset card: what it is, the licence, how to import). The folder holds answer text, so git ignores it (the command refuses to write it elsewhere), and it refuses if the folder holds any other file. Review files and prompts are never part of it: the review files live in `runs/golden_answers/ga-v2-20261101/review/`, outside the folder, and prompts are not stored with the answers (only a hash). Upload only the `export/` folder to `Metis-auto/golden-answers-v2`.
+
+**Lead: the committed fingerprint, once.**
+```bash
+python scripts/golden_answers.py fingerprint-answers ga-v2-20261101
+```
+writes `reports/evaluation/golden_v2/answers_ga-v2-20261101_fingerprint.json`: counts (answered, finish reasons, token totals), the settings hash, the model and version, the golden-v2 fingerprint it belongs to, and two aggregate hashes (over all answers, over all prompt fingerprints). No text and no per-answer hash. Only the lead runs it, on purpose.
+
+**Teammate: import and verify** (golden-v2 built and verified first):
+```bash
+hf download Metis-auto/golden-answers-v2 --repo-type dataset --local-dir runs/golden_answers/ga-v2-20261101/export
+python scripts/golden_answers.py import runs/golden_answers/ga-v2-20261101/export
+python scripts/golden_answers.py verify-answers ga-v2-20261101
+```
+`import` is idempotent. It refuses, and writes nothing, if: the sha256 of `answers.parquet` does not match the manifest (the file is not even opened); the folder holds anything but the three files (a dot-folder such as the download cache is ignored); the export is for another dataset or another golden-v2 fingerprint than the one committed in the checkout; golden-v2 does not verify locally; a record ID is not in the local golden-v2; or a different answer is already stored for the same run and record. `verify-answers` prints `PASS` or `FAIL: <first difference>`.
+
 ## Reviewing language mismatches
 
 The run summary counts requests whose answer came back in a different script group than the request (the proxy rule `summary.language_mismatch`: Persian and English requests only). This command lets a person look at each one. It makes no call.

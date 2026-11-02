@@ -3,11 +3,11 @@
 Durable working rules for agent sessions on Metis-Auto. Keep this file short and link to the docs rather than copying them. Also follow [`AGENTS.md`](AGENTS.md) (issue tracker in `.scratch/`, triage labels, `GLOSSARY.md` / `docs/adr/` conventions).
 
 ## Where things live
-- Project state: [`docs/project/progress.md`](docs/project/progress.md). Read it first.
+- Project state: [`docs/project/progress.md`](docs/project/progress.md): Current status (lead-owned) and an index of entries, one file per piece of work in `docs/project/progress/`. Read it first.
 - Context & unknowns: [`docs/project/context.md`](docs/project/context.md).
 - Requirements & traceability: [`docs/project/requirements.md`](docs/project/requirements.md). Every design element must cite an `FR-`/`QA-`/`NG-` or hypothesis/experiment ID. Terms: [`GLOSSARY.md`](GLOSSARY.md).
 - Assumptions & open questions: [`docs/project/assumptions_and_questions.md`](docs/project/assumptions_and_questions.md).
-- Decision records: `docs/adr/` (`NNNN-slug.md`: context, alternatives, decision, consequences). Docs index: [`docs/README.md`](docs/README.md).
+- Decision records: `docs/adr/` (`NNNN-slug.md`: context, alternatives, decision, consequences). A new ADR on a branch is a draft, `docs/adr/draft-<slug>.md`, referred to as "ADR-XXXX (<slug>)"; see [`docs/adr/README.md`](docs/adr/README.md). Docs index: [`docs/README.md`](docs/README.md).
 - Architecture (Stage 3): [`docs/architecture/README.md`](docs/architecture/README.md). Components are `CMP-nn`; principle P-1: port calls happen in `application`, decisions in pure `domain` code.
 - Modules (Stage 5): [`docs/architecture/module_reference.md`](docs/architecture/module_reference.md): who calls what, data in/out, status. Its import column is checked by `tests/architecture/test_module_reference.py`; update the row with the code. Walking skeleton: `python scripts/run_walking_skeleton.py`.
 - Contracts (Stage 4): [`docs/architecture/contracts.md`](docs/architecture/contracts.md) ([ADR-0017](docs/adr/0017-contract-modelling-with-pydantic.md)). Every contract field declares a privacy class; event and run records may hold no `content` field (tested). After changing a contract, regenerate the field reference: `python tests/architecture/contracts_docgen.py`.
@@ -39,8 +39,13 @@ Durable working rules for agent sessions on Metis-Auto. Keep this file short and
 - **Never run `git commit`, `git push`, or any command that rewrites git history** (e.g. `rebase`, `reset`, `commit --amend`, `push --force`, `filter-branch`). The user reviews and commits all changes.
 - At the end of each stage, list the changed files and suggest a commit message, but do not commit.
 
+## Parallel branches: progress entries and ADR drafts
+- **Progress:** record work as a **new file** `docs/project/progress/YYYY-MM-DD-<slug>.md` (it starts with `## Title (YYYY-MM-DD)`). **Never edit someone else's entry**, and never put entries into `progress.md`, whose Current status the lead owns. Run `python scripts/progress_index.py`.
+- **ADRs are drafts until merge:** name a new one `docs/adr/draft-<slug>.md` and cite it as `ADR-XXXX (<slug>)`. Never pick a number yourself.
+- **The merger** runs `python scripts/adr_finalize.py` and `python scripts/progress_index.py` before merging, and `--check` on both. Details: [`docs/guides/team_workflow.md`](docs/guides/team_workflow.md).
+
 ## How to work
-- Work stage by stage. At the end of each stage, give the 6-part report (changes, decisions, assumptions, questions, next stage, exit criteria). Update `progress.md` and then **stop** for review.
+- Work stage by stage. At the end of each stage, give the 6-part report (changes, decisions, assumptions, questions, next stage, exit criteria). Add a new entry file in `docs/project/progress/` (never edit someone else's entry), run `python scripts/progress_index.py`, and then **stop** for review.
 - Inspect before deciding. Don't delete, move, or restructure existing work (especially EDA, data, and reports) without approval.
 - Label assumptions as current, future, or speculative, and design elements as decided, provisional, or open.
 - Never fabricate prices, model capabilities, tokenizer behaviour, API signatures, or data facts. Cite the source and the check date, and mark the fact for re-verification.

@@ -115,6 +115,8 @@ Work through the stages in Section 5 in order. For each stage:
 
 Maintain a single project-progress document (you choose its location) recording each stage's status, outputs, open questions, and exit-criteria result, so the project state survives across sessions. Also create or update a concise `CLAUDE.md` (or equivalent agent-instructions file) capturing the durable working rules from this prompt — privacy rules, read-only data, stage protocol, where architecture docs live — so future Claude Code sessions inherit them. Keep it short; link to the docs rather than duplicating them.
 
+> **Note (2026-11-02, added after the brief; the text above is unchanged).** The project-progress document is `docs/project/progress.md`: the lead's Current status plus a generated index. Each piece of work is its own file in `docs/project/progress/` (`YYYY-MM-DD-<slug>.md`). Add a new file, never edit someone else's entry, and run `python scripts/progress_index.py`. See `CLAUDE.md` and `docs/guides/team_workflow.md`.
+
 ---
 
 ## 4. Architectural principles to respect
