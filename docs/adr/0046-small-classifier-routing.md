@@ -1,4 +1,4 @@
-# ADR-XXXX (small-classifier-routing): The small classifier routes simple requests by a pre-generation threshold rule, excludes reasoning-billed candidates, and prices the move per baseline
+# ADR-0046: The small classifier routes simple requests by a pre-generation threshold rule, excludes reasoning-billed candidates, and prices the move per baseline
 
 - Status: **decided** by the project owner, 2026-11-03 (Pipeline C, sprint task R-C3), points 1 to 5. Point 6 (incumbent per baseline) is the agent's reading of point 5, **provisional** until the owner reviews it. The `max_input_tokens` value is **provisional** (tune-only choice, unstable across folds).
 - Date: 2026-11-03

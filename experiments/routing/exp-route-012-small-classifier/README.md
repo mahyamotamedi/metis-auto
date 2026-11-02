@@ -4,7 +4,7 @@
 - **Hypothesis (H-5):** requests that are short, without retrieval, attachments or tools and with a small input can move to a cheaper eligible model; the rule finds how much of the `token_cost` block that would remove. **Not tested here: whether they keep quality.**
 - **Evidence class:** *simulation*. **Cost simulation; quality not proven: no labels (P-1..P-3 not run).** `correctness_state` is `unmeasured`. The routing decision rule (acceptable rate within 10 points of the incumbent) **cannot be passed** by this version.
 - **ID:** `exp-route-012`. `routing_plan.md` reserves `-001` to `-008` and `-010`; Pipeline B took `-011` (R-B3) and left `-009` to the plan. No other `exp-route-*` exists on `origin/main` or any remote branch (checked 2026-11-03).
-- **Decision record:** ADR-XXXX (small-classifier-routing), [draft](../../../docs/adr/draft-small-classifier-routing.md); routing base [ADR-0045](../../../docs/adr/0045-routing-base-eligibility-and-failover.md); pricing [ADR-0036](../../../docs/adr/0036-replay-scope-split-and-baselines.md), [ADR-0038](../../../docs/adr/0038-context-token-saving-conversion.md), [ADR-0041](../../../docs/adr/0041-replay-pricing-for-logged-models.md).
+- **Decision record:** ADR-0046, [draft](../../../docs/adr/0046-small-classifier-routing.md); routing base [ADR-0045](../../../docs/adr/0045-routing-base-eligibility-and-failover.md); pricing [ADR-0036](../../../docs/adr/0036-replay-scope-split-and-baselines.md), [ADR-0038](../../../docs/adr/0038-context-token-saving-conversion.md), [ADR-0041](../../../docs/adr/0041-replay-pricing-for-logged-models.md).
 
 ## Version (`version.py`, owner decisions 2026-11-03)
 

@@ -1,5 +1,5 @@
 """EXP-ROUTE-012: small classifier, a routing ``StepVersion`` (final plan R-C3;
-FR-ROUTE-01..05, FR-REQ-06, H-5; ADR-0045, ADR-XXXX (small-classifier-routing)).
+FR-ROUTE-01..05, FR-REQ-06, H-5; ADR-0045, ADR-0046).
 
 **Two modes** (owner decision 2026-11-03), ``SmallClassifier(mode, ...)``:
 

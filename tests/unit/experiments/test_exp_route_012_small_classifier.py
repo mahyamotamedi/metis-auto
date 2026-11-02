@@ -1,6 +1,5 @@
 """EXP-ROUTE-012 small classifier (sprint task R-C3; FR-ROUTE-01..05, FR-REQ-06,
-H-5; ADR-0036, ADR-0038, ADR-0041, ADR-0045, ADR-XXXX
-(small-classifier-routing)).
+H-5; ADR-0036, ADR-0038, ADR-0041, ADR-0045, ADR-0046).
 
 Every frame, bot, session, label, size, token count, rate and price here is
 SYNTHETIC: invented values, no dataset content, no real price. The version lives
