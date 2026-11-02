@@ -1,6 +1,6 @@
 """EXP-CACHE-004 session memo + greeting skip gate (sprint task R-C1; FR-REQ-06,
 FR-XCACHE-01, FR-ACCT-02, H-3, X1; ADR-0036, ADR-0037, ADR-0038,
-ADR-XXXX (session-memo-gate-accounting)).
+ADR-0039).
 
 Every frame, word, fingerprint, fee, rate and price here is SYNTHETIC: invented
 values, no dataset content, no real price. The version lives in

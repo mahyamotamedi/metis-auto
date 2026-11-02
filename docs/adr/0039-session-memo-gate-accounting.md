@@ -1,4 +1,4 @@
-# ADR-XXXX (session-memo-gate-accounting): The session memo reuses the last real lookup, and the greeting gate's repriced saving is unknown
+# ADR-0039: The session memo reuses the last real lookup, and the greeting gate's repriced saving is unknown
 
 - Status: **decided** by the project owner, 2026-11-02 (Pipeline C, sprint task R-C1). The phatic word list is a **placeholder** (`[PLACEHOLDER: Persian review]`, K-2); the chosen `overlap_threshold` is **provisional** (fitted on 2 reuses, see Consequences).
 - Date: 2026-11-02

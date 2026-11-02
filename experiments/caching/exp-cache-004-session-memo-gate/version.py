@@ -1,6 +1,6 @@
 """EXP-CACHE-004: session memo + greeting skip gate, a cache ``StepVersion``
 (final plan R-C1; FR-REQ-06, FR-XCACHE-01, FR-ACCT-02, H-3, X1; Review Focus 1
-and 4; ADR-0036, ADR-0037, ADR-0038, ADR-XXXX (session-memo-gate-accounting)).
+and 4; ADR-0036, ADR-0037, ADR-0038, ADR-0039).
 
 Two rules decide, per LLM retrieval turn of a session (in ``turn`` order), whether
 the turn's lookup runs:
@@ -361,7 +361,7 @@ def baseline_frames(
     (logged tokens, and tokens less ``SAVED_TOKENS``, repriced); ``block_fees``
     is 0 on both sides only so the slices can be summed: the fee part is not
     priced, and ``lever_result`` reports no saving for these baselines
-    (ADR-0037 item 7, ADR-XXXX (session-memo-gate-accounting)).
+    (ADR-0037 item 7, ADR-0039).
     """
     llm = req["llm_request"].astype(bool)
     before = req[["llm_request"]].copy()

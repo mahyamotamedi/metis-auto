@@ -17,8 +17,7 @@ phatic turn's chunk tokens follow ADR-0038 (characters x the ledger coefficient
    ``reports/levers/cache.session_memo_gate.<baseline>.json``. Run it on a clean
    tree, so the manifest carries the code commit.
 
-No IDs, hashes or text are written or printed. ADR-XXXX
-(session-memo-gate-accounting).
+No IDs, hashes or text are written or printed. ADR-0039.
 
     .venv/bin/python scripts/session_memo_levers.py --checks-only
     .venv/bin/python scripts/session_memo_levers.py
