@@ -23,15 +23,18 @@ FR-EVAL-06, FR-EVAL-09, FR-REQ-04, QA-COST).
   and is not rounded before the share is computed.
 - **Correctness** is displayed as stored: ``unmeasured`` is shown as unmeasured,
   never as zero errors. A state outside the three agreed forms is "unknown".
-- **Tenant share**: the largest ``tenant_rank:<n>`` slice share above 0.35 is
-  flagged; no tenant slice is "unknown", not "ok".
+- **Tenant share**: the largest ``tenant_rank:<n>`` slice share above
+  ``max_tenant_share`` is flagged; no tenant slice is "unknown", not "ok". The
+  cap is a required argument: callers pass ``[sample] tenant_cap`` from
+  ``config/evaluation/sprint.toml`` (0.35, plan decision rule); ``analysis`` reads
+  no config file.
 
 INTERIM SHAPES (docs/experiments/pipeline_b_interim_contracts.md): the shared
 ``LeverResult`` (S-1, ``analysis/lever_result.py``) does not exist yet. Results
 are read through ``LeverResultLike``, a protocol naming the plan's fields; the
 real pydantic model must satisfy it unchanged. The key names inside the mappings
 (``TOTAL_KEY``, ``SAVING_SHARE_KEY``, ``TENANT_SHARE_KEY``), the baseline keys
-and the 0.35 limit's home are assumptions to confirm with S-1 and S-3.
+are assumptions to confirm with S-1 and S-3.
 """
 
 from __future__ import annotations
@@ -52,8 +55,6 @@ TENANT_SHARE_KEY = "share"  # inside each tenant_rank:<n> slice
 TENANT_PREFIX = "tenant_rank:"
 LLM_ONLY = "llm_only"
 TRAFFIC_WEIGHTED = "traffic_weighted"
-# Plan decision rule: no tenant above 35% of any sample. Move to sprint.toml (S-3).
-MAX_TENANT_SHARE = Decimal("0.35")
 STEP_ORDER = ("cache", "context", "routing")
 
 RANKED = "ranked"
@@ -153,11 +154,18 @@ COLUMNS = (
 )
 
 
-def compare(results: Sequence[LeverResultLike], *, baseline: str) -> pd.DataFrame:
+def compare(
+    results: Sequence[LeverResultLike], *, baseline: str, max_tenant_share: Decimal
+) -> pd.DataFrame:
     """One row per result under ``baseline``, plus one ``baseline missing`` row per
-    version that has results only under other baselines. Columns: ``COLUMNS``."""
+    version that has results only under other baselines. Columns: ``COLUMNS``.
+
+    ``max_tenant_share`` is the tenant cap (a ``Decimal`` share in (0, 1]); a
+    larger top-tenant share is flagged.
+    """
     chosen = _baseline(baseline)
-    rows = [_row(r, chosen) for r in results if r.baseline == chosen.key]
+    cap = _share_cap(max_tenant_share)
+    rows = [_row(r, chosen, cap) for r in results if r.baseline == chosen.key]
     present = {
         (r.step, r.lever_id, r.version) for r in results if r.baseline == chosen.key
     }
@@ -170,7 +178,12 @@ def compare(results: Sequence[LeverResultLike], *, baseline: str) -> pd.DataFram
     return frame
 
 
-def to_markdown(results: Sequence[LeverResultLike], *, note: str | None = None) -> str:
+def to_markdown(
+    results: Sequence[LeverResultLike],
+    *,
+    max_tenant_share: Decimal,
+    note: str | None = None,
+) -> str:
     """The comparison for all four baselines, one section each; content-free."""
     lines = ["# Lever comparison", ""]
     if note:
@@ -182,7 +195,7 @@ def to_markdown(results: Sequence[LeverResultLike], *, note: str | None = None) 
         "",
     ]
     for b in BASELINES:
-        frame = compare(results, baseline=b.key)
+        frame = compare(results, baseline=b.key, max_tenant_share=max_tenant_share)
         unit = "recorded cost units" if b.recorded else "repriced (see each group)"
         lines += [f"## {b.label} (`{b.key}`)", "", f"Cost unit: {unit}.", ""]
         if not any(r.baseline == b.key for r in results):
@@ -214,7 +227,15 @@ def _baseline(key: str) -> Baseline:
     raise ValueError(f"{key!r} is not one of the four baselines ({names})")
 
 
-def _row(r: LeverResultLike, b: Baseline) -> dict[str, object]:
+def _share_cap(value: object) -> Decimal:
+    if isinstance(value, bool) or not isinstance(value, Decimal):
+        raise TypeError("max_tenant_share must be a Decimal, never float or text")
+    if not value.is_finite() or not Decimal(0) < value <= Decimal(1):
+        raise ValueError("max_tenant_share must be a share in (0, 1]")
+    return value
+
+
+def _row(r: LeverResultLike, b: Baseline, cap: Decimal) -> dict[str, object]:
     saving = _total(r.saving)
     cost = _total(r.baseline_cost)
     share = saving / cost if saving is not None and cost else None
@@ -241,7 +262,7 @@ def _row(r: LeverResultLike, b: Baseline) -> dict[str, object]:
         "llm_only_share": _slice_share(r.slices, LLM_ONLY),
         "traffic_weighted_share": _slice_share(r.slices, TRAFFIC_WEIGHTED),
         "max_tenant_share": tenant,
-        "tenant_flag": _tenant_flag(tenant),
+        "tenant_flag": _tenant_flag(tenant, cap),
         "overhead": _overhead(r.overhead_ms_p50, r.overhead_ms_p95),
         "assumptions": "; ".join(r.assumptions),
         "notes": "; ".join(notes),
@@ -355,10 +376,16 @@ def _max_tenant_share(slices: Mapping[str, Mapping[str, Decimal]]) -> Decimal | 
     return max(known) if known else None
 
 
-def _tenant_flag(share: Decimal | None) -> str:
+def _tenant_flag(share: Decimal | None, cap: Decimal) -> str:
     if share is None:
         return "unknown"
-    return "over 35%" if share > MAX_TENANT_SHARE else "ok"
+    return f"over {_percent(cap)}%" if share > cap else "ok"
+
+
+def _percent(share: Decimal) -> str:
+    """``0.35`` -> ``35``; ``0.355`` -> ``35.5`` (no trailing zeros, no exponent)."""
+    text = f"{share * 100:f}"
+    return text.rstrip("0").rstrip(".") if "." in text else text
 
 
 def _correctness(state: str) -> str:

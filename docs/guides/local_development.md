@@ -52,6 +52,8 @@ Everything runs offline with fakes. No `.env` is needed: without `METIS_FINGERPR
 
 Lint and format: `.venv/bin/ruff check . && .venv/bin/ruff format --check .`
 
+CI (`.github/workflows/ci.yml`, [ADR-0035](../adr/0035-ci-github-actions.md)) runs the setup above (with `requirements-db.lock`, the dev lock plus the `db` extra) and these three commands on every push and pull request, on Linux and macOS, with no secrets and without the opt-in tests.
+
 ## 3. Configuration in practice
 
 | I want to… | Do this |
@@ -71,11 +73,11 @@ Precedence, lowest first: policy code defaults < `config/defaults.toml` < experi
 - `.env` is git-ignored. It holds `METIS_API_KEY=` (empty). **Paste the key there yourself**; no tool or agent should read, print, or commit it. `.env.example` (committed) lists every variable with placeholders.
 - Secrets are never logged, never written to events or run records, and never part of the config hash. A config file containing a secret-like key is rejected.
 - **Having the key does not enable live calls.** All of these are needed (ADR-0018): an experiment asking for `counterfactual_source = "live"`, `live.enabled = true` in your runtime config (or `METIS__LIVE__ENABLED=true`), both budget caps set, and the key. The live client arrives with Stage 7.5 (§5.1); it needs the `live` extra (`openai`), which the dev lock includes.
-- The **Metis dashboard** spending limit for the project's API key is **10 USD** (set by the owner; Q-29, 2026-10-18). It is the second safety net, and `budget.lifetime_cap` matches it.
+- The **Metis account credit** is **20 USD** (owner, 2026-11-01), and `budget.lifetime_cap` matches it ([ADR-0018 amendment 2](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md#amendment-2-2026-11-01-ceiling-and-lifetime-cap-20-usd-the-metis-account-credit); the dashboard limit was 10 USD before, Q-29). It is the second safety net: calls stop at the credit even if the ledger allows them.
 
 ## 5. The live budget and the spend ledger
 
-- Lifetime cap **10 USD** (`budget.lifetime_cap` in `config/defaults.toml`), matching the Metis dashboard limit for the key (Q-29, [ADR-0018 amendment 1](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md#amendment-1-2026-10-18-lifetime-cap-10-usd-q-29)). The **20 USD ceiling** stays the project maximum: only `config/defaults.toml` can set it, and no layer can raise a cap above it. Per-run cap **1 USD** by default. Warnings at 50 % and 80 % of the lifetime cap.
+- Lifetime cap **20 USD** (`budget.lifetime_cap` in `config/defaults.toml`; 10 USD until 2026-11-01), matching the Metis account credit (Q-29, [ADR-0018 amendment 1](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md#amendment-1-2026-10-18-lifetime-cap-10-usd-q-29)). The **20 USD ceiling** is the project maximum: only `config/defaults.toml` can set it, and no layer can raise a cap above it. Per-run cap **1 USD** by default. Warnings at 50 % and 80 % of the lifetime cap.
 - The ledger is `data/spend/ledger.jsonl` (git-ignored), one line per live charge: amount, currency, time, run ID. **Never delete or edit it**: that resets or corrupts the lifetime total, and a malformed ledger blocks all live calls.
 - Check the budget at any time (no calls are made): `.venv/bin/python scripts/show_budget.py`.
 
@@ -122,7 +124,7 @@ docker build --target runtime -t metis-auto:runtime . && docker run --rm metis-a
 - The images do **not** contain the tokenizer files (`data/tokenizers/` is git-ignored data), so in the container the exact-tokenizer tests skip and counts use the labelled chars/4 approximation (Stage 10 roadmap: a fetch step in the `dev` image).
 - Optional PostgreSQL for the source data and evaluation datasets ([ADR-0027](../adr/0027-local-postgresql-foundation.md)): set `METIS_DB_PASSWORD` in `.env`, install `requirements-db.lock`, then `docker compose --profile db up -d postgres`. It listens on `127.0.0.1:5432` only and refuses to start without the password. Full steps: [team_setup.md](team_setup.md). Database tests are opt-in: `pytest --run-postgres`.
 - The base image is pinned by digest in the `Dockerfile` (multi-arch, checked 2026-10-18). To update it, pull `python:3.13-slim`, replace the digest, and rerun the commands above.
-- **Verified 2026-10-18** (Docker 29.8.2, Compose v5.5.1, Apple Silicon, linux/arm64): `dev` image smoke test 16/16 and full suite 392/392; `runtime` image runs the walking skeleton with the same config hash as a native run; neither image contains `.env`, `config/local.toml`, or the spend ledger (see progress.md).
+- **Verified 2026-10-18** (Docker 29.8.2, Compose v5.5.1, Apple Silicon, linux/arm64): `dev` image smoke test 16/16 and full suite 392/392; `runtime` image runs the walking skeleton with the same config hash as a native run; neither image contains `.env`, `config/local.toml`, or the spend ledger (see the [Stage 6 progress entry](../project/progress/2026-10-18-stage-6-configuration-environment-containers.md)).
 
 ## 7. Where things go
 

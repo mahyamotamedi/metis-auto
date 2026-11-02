@@ -20,8 +20,10 @@ def request_inputs(conn: Connection, dataset_id: str) -> list[dict[str, Any]]:
     component kind, the stratum (labels) and nothing else."""
     records = conn.execute(
         text(
-            """SELECT record_id, stratum FROM eval.dataset_record
-               WHERE dataset_id = :d ORDER BY selection_rank, record_id COLLATE "C" """
+            """SELECT x.record_id, x.stratum, q.bot_id FROM eval.dataset_record x
+               JOIN eval.request q USING (request_id)
+               WHERE x.dataset_id = :d
+               ORDER BY x.selection_rank, x.record_id COLLATE "C" """
         ),
         {"d": dataset_id},
     ).all()
@@ -49,6 +51,7 @@ def request_inputs(conn: Connection, dataset_id: str) -> list[dict[str, Any]]:
     return [
         {
             "record_id": rec.record_id,
+            "bot_id": rec.bot_id,
             "stratum": rec.stratum,
             "rows": rows[rec.record_id],
             "kinds": sorted(kinds[rec.record_id]),
@@ -150,3 +153,105 @@ def answers_for(
         {"r": run_id, "ids": list(record_ids)},
     )
     return {r.record_id: r.answer for r in rows}
+
+
+def output_stats(conn: Connection, run_id: str) -> tuple[int, float | None]:
+    """(answered records, mean output tokens per answered record) of a run."""
+    row = conn.execute(
+        text(
+            "SELECT count(*), avg(output_tokens) FROM eval.golden_answer "
+            "WHERE run_id = :r AND status = 'answered' AND output_tokens IS NOT NULL"
+        ),
+        {"r": run_id},
+    ).one()
+    return row[0], None if row[1] is None else float(row[1])
+
+
+def review_inputs(
+    conn: Connection, run_id: str, record_ids: Iterable[str]
+) -> dict[str, dict[str, Any]]:
+    """LOCAL USE ONLY: returns message text. Per record: request and bot IDs, the
+    cohort label, the bot's instructions, the target user message and the answer.
+    Callers write it to a git-ignored file, never to a log or a report."""
+    ids = list(record_ids)
+    out: dict[str, dict[str, Any]] = {}
+    for r in conn.execute(
+        text(
+            """SELECT g.record_id, x.request_id, q.bot_id, q.owner_cohort AS cohort,
+                      g.answer
+               FROM eval.golden_answer g
+               JOIN eval.dataset_record x USING (record_id)
+               JOIN eval.request q ON q.request_id = x.request_id
+               WHERE g.run_id = :r AND g.status = 'answered'
+                 AND g.record_id = ANY(:ids)"""
+        ),
+        {"r": run_id, "ids": ids},
+    ):
+        out[r.record_id] = {
+            "request_id": r.request_id,
+            "bot_id": r.bot_id,
+            "cohort": r.cohort,
+            "answer": r.answer,
+            "instructions": "",
+            "target": "",
+        }
+    for r in conn.execute(
+        text(
+            """SELECT v.record_id, v.kind, v.content
+               FROM eval.routing_input_post_retrieval_v1 v
+               WHERE v.record_id = ANY(:ids)
+                 AND v.kind IN ('bot_instruction', 'target_user_message')"""
+        ),
+        {"ids": ids},
+    ):
+        if r.record_id in out and r.content:
+            key = "instructions" if r.kind == "bot_instruction" else "target"
+            out[r.record_id][key] = r.content
+    return out
+
+
+def export_rows(conn: Connection, run_id: str) -> list[dict[str, Any]]:
+    """LOCAL USE ONLY: the answered rows of a run with their answer text, in the
+    shape of the sharing file (``answer_files.COLUMNS``)."""
+    rows = conn.execute(
+        text(
+            """SELECT record_id, run_id, model_id, provider_model_version, effort,
+                      max_output_tokens, settings_hash, prompt_fingerprint, status,
+                      answer, answer_chars, answer_language_group, finish_reason,
+                      error_class, attempts, input_tokens, cached_input_tokens,
+                      output_tokens, reasoning_tokens, cost_usd, cost_state,
+                      latency_ms, caveats
+               FROM eval.golden_answer
+               WHERE run_id = :r AND status = 'answered'
+               ORDER BY record_id COLLATE "C" """
+        ),
+        {"r": run_id},
+    )
+    out = []
+    for r in rows:
+        row = dict(r._mapping)
+        row["cost_usd"] = None if row["cost_usd"] is None else str(row["cost_usd"])
+        row["caveats"] = list(row["caveats"])
+        out.append(row)
+    return out
+
+
+def dataset_record_ids(conn: Connection, dataset_id: str) -> set[str]:
+    rows = conn.execute(
+        text("SELECT record_id FROM eval.dataset_record WHERE dataset_id = :d"),
+        {"d": dataset_id},
+    )
+    return {r.record_id for r in rows}
+
+
+def insert_answers(conn: Connection, rows: Iterable[Mapping[str, Any]]) -> None:
+    """Insert shared rows in the caller's transaction. An answered row already
+    stored is never overwritten (``save_answer``)."""
+    from decimal import Decimal
+
+    for row in rows:
+        cost = row["cost_usd"]
+        save_answer(
+            conn,
+            {**row, "cost_usd": None if cost is None else Decimal(cost)},
+        )

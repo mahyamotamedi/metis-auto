@@ -144,7 +144,28 @@ Windows: use `.venv\Scripts\python` as before.
 
 **You should see:** `Dataset golden-v2: 300 records, 133 reserves, status annotated_provisional.`, then `PASS`. It takes about a minute, because the requests are already built. If it says "Refused … differs from the one this dataset derives from", your golden-v1 is not the team's: run step 9 and send the line to the lead.
 
-### 11. Get reviewed labels, when there are some
+### 11. Get the golden answers (optional)
+
+The golden answers are gpt-5.5's reference answers for the 300 golden-v2 records (run `ga-v2-20261101`, [golden_answers.md](../evaluation/golden_answers.md)). **Never run them again against the provider:** the run cost about 12 USD and is already done. Download the export instead. It is a different, **private team dataset**, `Metis-auto/golden-answers-v2`, not the raw-data dataset. The answers are covered by the same licence: do not copy, upload or quote them anywhere else.
+
+1. Ask the project lead to add your Hugging Face account to the **Metis-auto** organisation, so that you can read `Metis-auto/golden-answers-v2`. Use the same read token as in step 4 (`HF_TOKEN` in your terminal).
+2. Do this only after golden-v2 passed step 10, because the import checks your copy.
+
+```bash
+.venv/bin/hf download Metis-auto/golden-answers-v2 --repo-type dataset --local-dir runs/golden_answers/ga-v2-20261101/export
+```
+```bash
+.venv/bin/python scripts/golden_answers.py import runs/golden_answers/ga-v2-20261101/export
+```
+```bash
+.venv/bin/python scripts/golden_answers.py verify-answers ga-v2-20261101
+```
+
+Windows: use `.venv\Scripts\hf` and `.venv\Scripts\python`.
+
+**You should see:** `"inserted": 300` (or `"already_present": 300` if you ran it before), then `PASS`. `import` refuses, and writes nothing, if the sha256 of the file does not match, if the export is for another dataset, or if a record is not in your verified golden-v2. `verify-answers` checks your copy against the fingerprint committed in `reports/evaluation/golden_v2/answers_ga-v2-20261101_fingerprint.json`; a `FAIL` means do not use your copy and send the printed line to the lead. Never edit that fingerprint file to make a check pass.
+
+### 12. Get reviewed labels, when there are some
 
 After `git pull`, if `reports/evaluation/golden_v1/reviewed_labels.jsonl` exists:
 
@@ -166,6 +187,8 @@ Labels are done once and shared through git, as IDs and labels with no text. For
 | 401 or 403 from Hugging Face | Your account has no access, or the token is wrong. Ask the lead. |
 | `verify` prints `FAIL: config…` | Your code differs: `git status`, then `git pull`. |
 | `golden-v2` says `Refused: golden-v1 is not built` or `differs from the one this dataset derives from` | Build and verify golden-v1 first (steps 8 and 9). If that passes and this remains, send the line to the lead. |
+| `import` prints `import refused: …` | Read the reasons. The usual one is a golden-v2 that is not built and verified (steps 8 to 10). Do not edit the downloaded files. Send the line to the lead. Nothing was written. |
+| `verify-answers` prints `FAIL: …` | Your copy differs from the lead's. Do not use it; send the line to the lead. |
 | `verify` prints `FAIL: dataset revision…` or `record ids…` | Do not use this copy. Send the printed line to the lead. It holds no messages. |
 
 **Who to ask:** the project lead. Send the command and the error. Never send data.

@@ -96,6 +96,9 @@ class CacheGuard:
         ``rate``, so the result is deterministic for a seed, independent of row
         order, about ``rate`` of distinct keys, and per key (every row of a
         selected key is selected). Missing keys are never selected.
+
+        There is no default rate: callers pass ``[cache_guard] shadow_rate`` from
+        ``config/evaluation/sprint.toml`` (0.01, plan S-5).
         """
         _check_rate(rate)
         if isinstance(seed, bool) or not isinstance(seed, int):
