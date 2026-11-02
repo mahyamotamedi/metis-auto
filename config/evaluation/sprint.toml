@@ -18,8 +18,10 @@ tune = { start = 2026-03-01, end = 2026-07-31 }
 report = { start = 2026-08-01, end = 2026-10-31 }
 
 [split]
-# split_by_session: the seed only breaks ties between the two sides of a
-# duplicate family (owner decision 2026-11-02). No held-out split here.
+# split_by_session: a duplicate family on both sides keeps its report rows,
+# its tune rows are excluded (owner decision 2026-11-02, ADR-XXXX
+# (replay-scope-split-and-baselines)). No ties, so the seed does not change
+# the split; it stays for the plan's interface. No held-out split here.
 # The straddle rule applies to fitting data (thresholds, classifiers) only;
 # caches may look back across the boundary (owner decision 2026-11-02).
 seed = 20261102

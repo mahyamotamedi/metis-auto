@@ -126,8 +126,8 @@ def test_unknown_provider_is_not_false():
 
 def split_frame() -> pd.DataFrame:
     """[SYNTHETIC] Session s1 starts in tune and runs over the boundary. Family
-    (b1, f-greet) has rows in both periods: 3 in tune, 1 in report. Family
-    (b2, f-tie) has 1 row on each side (a tie). Row 9 has no user text."""
+    (b1, f-greet) has rows on both sides: 2 in tune, 1 in report. Family
+    (b2, f-tie) has 1 row on each side. Row 9 has no time and no user text."""
     return pd.DataFrame(
         {
             "session_id": ["s1", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"],
@@ -176,25 +176,37 @@ def test_no_session_or_duplicate_family_straddles_the_split():
     assert (split[has_text].groupby(family).nunique() == 1).all()
     # A whole session takes the period of its first request.
     assert split.loc[[100, 101]].tolist() == ["tune", "tune"]
-    # A family goes to the side holding most of its rows; the rest is excluded.
-    assert split.loc[[102, 103]].tolist() == ["tune", "tune"]
-    assert split.loc[104] == "excluded"
+    # A straddling family keeps its report rows; its tune rows are excluded.
+    assert split.loc[[102, 103]].tolist() == ["excluded", "excluded"]
+    assert split.loc[104] == "report"
     # A family is per bot: the same text under bot b3 is its own family.
     assert split.loc[108] == "tune"
     # No timestamp in the session: unknown, never silently tune.
     assert split.loc[109] == "unknown"
 
 
-def test_seed_only_breaks_ties():
+def test_straddling_family_keeps_report_rows():
+    """Owner decision 2026-11-02: the report side keeps a straddling family,
+    whatever the row counts; its tune rows become excluded."""
+    req = scope(split_frame(), ctx())
+    split = split_by_session(req, seed=7)
+    # (b1, f-greet): 2 rows in tune, 1 in report. The report row stays.
+    assert split.loc[104] == "report"
+    assert split.loc[[102, 103]].tolist() == ["excluded", "excluded"]
+    # (b2, f-tie): 1 row on each side. No tie-break: report keeps it.
+    assert split.loc[[105, 106]].tolist() == ["excluded", "report"]
+    # Every report-period row with a session in report keeps its label.
+    report = req["session_id"].isin(["s4", "s6", "s7"])
+    assert (split[report] == "report").all()
+
+
+def test_seed_does_not_change_the_split():
     req = scope(split_frame(), ctx())
     splits = [split_by_session(req, seed=s) for s in range(20)]
-    tie = [105, 106]
-    others = req.index.difference(tie)
     for s in splits:
-        assert s.loc[others].equals(splits[0].loc[others])
-        assert sorted(s.loc[tie]) in (["excluded", "tune"], ["excluded", "report"])
-    assert len({tuple(s.loc[tie]) for s in splits}) == 2
-    assert split_by_session(req, seed=3).equals(split_by_session(req, seed=3))
+        assert s.equals(splits[0])
+    with pytest.raises(TypeError, match="seed"):
+        split_by_session(req, seed=True)
 
 
 # --- sufficiency ---
