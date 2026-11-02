@@ -39,7 +39,8 @@ differ): a *simulation*, labelled so by the caller.
 Public row-level helpers for lever versions (S-6b): ``token_counts``,
 ``lower_uncached_input`` (a context saving comes out of uncached input only)
 and ``repriced_row_costs`` (per-row cost of each repriced baseline, tier chosen
-again by the lowered input). ADR-0038.
+again by the lowered input). ADR-0038. ``model_row_costs`` (R-0): one model's
+per-row cost by the same rule, for ``routing_base.candidate_costs``.
 
 Decision record: ADR-0036,
 ``docs/adr/0036-replay-scope-split-and-baselines.md``.
@@ -204,6 +205,32 @@ def repriced_row_costs(
             cost[rows.index] = _reprice(tokens.loc[rows.index], prices[ref])
         out[key] = cost / per_tokens
     return out
+
+
+def model_row_costs(
+    req: pd.DataFrame,
+    ctx: ReplayContext,
+    model: str,
+    *,
+    cached_separately: frozenset[str],
+    tokens: pd.DataFrame | None = None,
+) -> pd.Series:
+    """Per-row cost of every request on ``model``, price-file units (R-0).
+
+    Same rule as ``repriced_row_costs`` with ``cheap_model=model``: the cached
+    add-back follows the **logged** model, the tier the effective input. NaN:
+    workflow row, unknown tokens, a model with no price, or an input that no
+    price row covers. A model missing from the catalogue is refused.
+    """
+    prices, per_tokens = _prices(ctx.price_table)
+    if tokens is None:
+        tokens = _tokens(req, cached_separately)
+    known = _llm(req) & tokens[["input", "cached", "output"]].notna().all(axis=1)
+    cost = pd.Series(np.nan, index=req.index)
+    ref = _price_ref(ctx.catalogue, model)
+    if ref in prices:
+        cost[known] = _reprice(tokens[known], prices[ref])
+    return cost / per_tokens
 
 
 def _as_logged(req: pd.DataFrame, llm: pd.Series) -> dict[str, Decimal]:

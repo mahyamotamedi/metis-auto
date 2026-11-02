@@ -159,3 +159,25 @@ def test_repriced_row_costs_sum_to_baseline_costs():
 def test_unpriced_premium_model_is_refused():
     with pytest.raises(ValueError, match="price"):
         baseline_costs(frame(), ctx(), premium_model="syn-unpriced")
+
+
+def test_model_row_costs_equals_the_repriced_column_of_that_model():
+    """R-0 helper: one model's per-row cost is the same rule as the repriced
+    baselines (``best_single_cheap`` fixed to that model)."""
+    from metis_auto.analysis.baselines_full import model_row_costs, repriced_row_costs
+
+    req = frame()
+    sep = frozenset({"syn-small"})
+    for model in ("syn-small", "syn-mid"):
+        got = model_row_costs(req, ctx(), model, cached_separately=sep)
+        ref = repriced_row_costs(
+            req,
+            ctx(),
+            premium_model="syn-premium",
+            cached_separately=sep,
+            cheap_model=model,
+        )["best_single_cheap"]
+        pd.testing.assert_series_equal(got, ref, check_names=False)
+    assert (
+        model_row_costs(req, ctx(), "syn-unpriced", cached_separately=sep).isna().all()
+    )
