@@ -96,6 +96,6 @@ Every dashboard figure in the brief is derivable from the events above. This tab
 
 ## 6. Sinks and logs
 
-- `EventSink` port. Adapters now: in-memory (tests) and JSON Lines per run under `runs/` (gitignored). Later: database, or an exporter to a tracing or metrics backend (for example OpenTelemetry). That would be one more adapter.
+- `EventSink` port. Adapters now: in-memory (tests), JSON Lines per run under `runs/` (gitignored), and (T-3, ADR-0033) PostgreSQL rows in `exp.events` with a fan-out sink, selected by `[events] sink`; with `postgres` the JSON Lines file stays the run's record. Later: database, or an exporter to a tracing or metrics backend (for example OpenTelemetry). That would be one more adapter.
 - **Emission is synchronous and in-process** today. A sink failure fails an offline run, because a run with missing events is not a valid measurement. The online phase will need a non-blocking sink that counts dropped events instead; that is noted for the gateway.
 - **Operator logs** (Python `logging`) are for diagnostics. They follow the same no-content rule, and they are not a measurement source.

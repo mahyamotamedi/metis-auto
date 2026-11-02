@@ -1013,3 +1013,13 @@ Final-plan tasks S-1 and E-2 (Pipeline A), branch `sprint-saba`. Status: **await
 - **Decided (owner, 2026-11-02):** cost blocks are `fees` (0.002 x per-call items, a proxy) and `token_cost` (recorded total minus fees); input, output and cached costs are not in `requests.parquet`. `created_at` is passed to `build_manifest`. The `all` slice counts every row in `n_requests` but sums cost and hits over LLM rows with known cost. Decision record: [ADR-0032](../adr/0032-lever-result-and-manifest-format.md) and [ADR-0031](../adr/0031-full-data-lever-replay.md) (numbers provisional; 0029 and 0030 are taken on `origin/main`).
 - **Checked on real data (aggregates only):** blocks sum to `a_bill_totalCost` exactly; 104,084 unknown-cost rows stay NaN; the fee proxy is 35.8% of cost against 37.6% in the billing table (908 messages differ), so it understates fees by about 5%.
 - **Open:** exact fees and the input/output/cached split need an upstream change to `billing.py` and the ingest.
+
+---
+
+## Sprint Day 1, Pipeline B: comparison, cache guard, Postgres event sink (2026-11-02)
+
+Plan: [`2026-11-01-final-plan.md`](../2026-11-01-final-plan.md) tasks S-0, S-2, S-5 and T-3. Branch `pipeline-b-compare-cache-guard-pg-sink` (created as `pipeline-b`). **Awaiting review.**
+- **S-2:** `analysis/compare.py`, `wiring/lever_compare.py`, `scripts/compare_levers.py`. Ranks only within one step, data scope, price version, evidence class and baseline. The four baselines are separate, and a missing one is marked. Insufficient evidence is never ranked. Unknown is never 0. Tenant share over 0.35 is flagged. Results are read through a protocol (interim until the shared `LeverResult`; checked against the unmerged `sprint-saba` version). The JSON loader is the interim `wiring/_interim_lever_json.py`.
+- **S-5:** `analysis/cache_guard.py` ([ADR-0034](../adr/0034-cache-guard-key-encoding-and-check-order.md)): the frozen `CacheGuard`, versioned keys, a fixed check order (`refusal` is an addition pending team OK), and a per-key seeded shadow sample with no default rate (the 1% belongs in `sprint.toml`, S-3).
+- **T-3:** [ADR-0033](../adr/0033-postgres-event-sink-layout.md). `adapters/sinks/postgres.py` (no database import), `adapters/sinks/fanout.py`, `data_access/postgres/event_store.py` (password only from the process environment), Alembic `0007_events.py` (`exp.events`, provisional `exp.lever_results`), and `[events] sink` (default `jsonl`, excluded from the config hash). The live check was **not run** (no local server).
+- Interim shapes, switch-over checklist and owner questions: [`pipeline_b_interim_contracts.md`](../experiments/pipeline_b_interim_contracts.md).

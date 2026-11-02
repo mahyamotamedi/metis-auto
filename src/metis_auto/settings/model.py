@@ -257,6 +257,17 @@ class DatabaseSettings(ContractModel):
     user: str = "metis"
 
 
+class EventSettings(ContractModel):
+    """Where a run's events go (T-3, ADR-0033). ``jsonl`` (default): the run's
+    JSON Lines file only. ``postgres``: that same file, which stays the run's
+    record (ADR-0022), plus the ``exp.events`` table of the local PostgreSQL
+    (``[database]``, password from ``METIS_DB_PASSWORD`` in the process
+    environment only). Machine-local and excluded from the config hash: the sink
+    does not change a result."""
+
+    sink: Literal["jsonl", "postgres"] = "jsonl"
+
+
 class ThinkingMode(StrEnum):
     ENABLED = "enabled"
     DISABLED = "disabled"
@@ -317,6 +328,7 @@ class Settings(ContractModel):
     experiment: ExperimentSettings = ExperimentSettings()
     embedding: EmbeddingSettings = EmbeddingSettings()
     database: DatabaseSettings = DatabaseSettings()
+    events: EventSettings = EventSettings()
     dev: DevSettings = DevSettings()
     golden_answers: GoldenAnswersSettings = GoldenAnswersSettings()
     model_options: dict[str, ModelRequestOptions] = {}
@@ -326,7 +338,7 @@ class Settings(ContractModel):
     ``features``, ``accounting``), opaque here; wiring validates them."""
 
 
-HASH_EXCLUDED_SECTIONS = ("paths", "logging", "reference")
+HASH_EXCLUDED_SECTIONS = ("paths", "logging", "reference", "events")
 """Sections left out of the config hash: machine-local or replaced by
 reference version IDs (configuration.md §3 rule 6)."""
 
