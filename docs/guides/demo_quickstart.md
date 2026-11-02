@@ -135,7 +135,7 @@ Your Metis key alone is never enough. A fresh clone therefore cannot spend money
 | `[paths]` | where run records and the spend ledger live on this computer | leave commented out |
 | `[logging]` | how much the programs log (`"DEBUG"`, `"INFO"`, …) | leave commented out |
 | `[live]` | `enabled = true` allows real calls on this computer (the second key) | `true` only while you want real answers |
-| `[budget]` | lower caps for this computer: `run_cap` (per run) and `lifetime_cap` (in total); they can never exceed the 20 USD ceiling (the shared default lifetime cap is 10 USD) | e.g. `run_cap = "0.10"` |
+| `[budget]` | lower caps for this computer: `run_cap` (per run) and `lifetime_cap` (in total); they can never exceed the 20 USD ceiling (the shared default lifetime cap is also 20 USD) | e.g. `run_cap = "0.10"` |
 
 **Check it:** `.venv/bin/python scripts/show_budget.py` prints the budget and `live_blocked_by`. With `.env` and `local.toml` set up, the only reason left should be `experiment.counterfactual_source is not 'live'`. That is expected: the UI's Live switch and `chat.py` supply that key themselves.
 
@@ -143,7 +143,7 @@ Your Metis key alone is never enough. A fresh clone therefore cannot spend money
 
 ## 6. The budget
 
-- **10 USD lifetime cap; 20 USD for the whole project, for good.** The *lifetime cap* (`budget.lifetime_cap`, 10 USD in `config/defaults.toml`) matches the spending limit the owner set on the Metis dashboard for the project key (Q-29, 2026-10-18). The *ceiling* of 20 USD is the project maximum: only `config/defaults.toml` can set it, and no local setting can raise a cap above it.
+- **20 USD lifetime cap and ceiling, the Metis account credit.** The *lifetime cap* (`budget.lifetime_cap`, 20 USD in `config/defaults.toml` since 2026-11-01; ADR-0018 amendment 2) matches the credit on the owner's Metis account (it was 10 USD, the dashboard limit of Q-29). The *ceiling* of 20 USD is the project maximum: only `config/defaults.toml` can set it, and no local setting can raise a cap above it.
 - **Per-run cap:** 1 USD by default for each run (one `chat.py` session is one run). Your `local.toml` can lower it, e.g. `run_cap = "0.10"`.
 - **The spend guard:** before every real call, Metis-Auto estimates the call's maximum cost and refuses the call if it would go over either cap. You see `failure: budget_exhausted`. Every answered call is charged at its actual cost.
 - **The ledger:** `data/spend/ledger.jsonl` records every charge (amount, time, run ID; no messages). **Never delete or edit it**: deleting it resets the lifetime total to zero on this computer, and a damaged file blocks all real calls.
@@ -153,13 +153,13 @@ Your Metis key alone is never enough. A fresh clone therefore cannot spend money
   .venv/bin/python scripts/show_budget.py
   ```
 
-- **The ledger is per computer.** Your ledger counts only the calls made *from your computer*. If several teammates use **one Metis account**, each ledger allows up to the 10 USD lifetime cap, so together you could spend more than the budget. Coordinate in one of two ways:
-  1. **Preferably,** the account owner sets a **spending limit in the Metis dashboard**, which covers everyone (the owner's key has a 10 USD limit); and/or
-  2. **split the budget:** each person lowers their own lifetime cap in `config/local.toml`, e.g. for four people sharing the 10 USD:
+- **The ledger is per computer.** Your ledger counts only the calls made *from your computer*. If several teammates use **one Metis account**, each ledger allows up to the 20 USD lifetime cap, so together you could spend more than the budget. Coordinate in one of two ways:
+  1. **Preferably,** the account owner sets a **spending limit in the Metis dashboard**, which covers everyone (the owner's account credit is 20 USD); and/or
+  2. **split the budget:** each person lowers their own lifetime cap in `config/local.toml`, e.g. for four people sharing the 20 USD:
 
      ```toml
      [budget]
-     lifetime_cap = "2.5"
+     lifetime_cap = "5"
      run_cap = "0.10"
      ```
 
@@ -218,7 +218,7 @@ Optional: *More (fake mode)* → **Cut off the next answer**, then ask anything 
   Since 2026-10-30 the premium baseline is `gpt-5.5` ([ADR-0026](../adr/0026-premium-baseline-gpt-5-5.md)), about 1.9× the price of the earlier `gpt-5.4`, so savings versus premium are larger than before; older screenshots show smaller numbers.
 - **Saved** = (premium − paid) ÷ premium.
 - **The waterfall** reads top to bottom: start at the premium estimate (blue); each green bar is a saving that brings it down (routing, compression, cache, provider cache); an orange bar (*extra cost*) pushes it back up (retries, escalations, helper calls, small counting differences); the last blue bar is what was paid. The table below it lists every term for the message and the session, savings shown negative: **premium − routing − compression − cache − provider cache + extra cost = actually paid**, exactly. Routing usually dominates, which can make the other bars hard to see: read the table.
-- **Budget**: *Lifetime* is everything this computer's ledger has charged against the lifetime cap (10 USD); *This run* is this run against the per-run cap (1 USD by default, or your `local.toml`'s `run_cap`). A yellow warning appears past 50 % of the lifetime cap and a red one past 80 %. The ledger is per computer (§6).
+- **Budget**: *Lifetime* is everything this computer's ledger has charged against the lifetime cap (20 USD); *This run* is this run against the per-run cap (1 USD by default, or your `local.toml`'s `run_cap`). A yellow warning appears past 50 % of the lifetime cap and a red one past 80 %. The ledger is per computer (§6).
 - **Labels**: the caveat line under the chart repeats that the premium figure is an estimate and that the demo settings are placeholders, not tuned. Keep it in view when you present.
 
 ### 7.5 Fake vs live in the UI
@@ -291,7 +291,7 @@ savings (this message | session):
   extra_cost                         0.000000 USD | 0.000000 USD
   actually_paid                      0.000011 USD | 0.000011 USD
 overhead: 0.96 ms, cost 0.000000 USD
-budget: 0 of 10 USD used (0.00%); this run 0 of 1
+budget: 0 of 20 USD used (0.00%); this run 0 of 1
 settings: routing sticky_v1, compression off, cache_scope session, seed off, deepseek_thinking on (default), user 1
 ```
 
@@ -312,7 +312,7 @@ settings: routing sticky_v1, compression off, cache_scope session, seed off, dee
 | `provider_cache_saving` | the provider's cached-input discount |
 | `extra_cost` | anything else paid: retries, failed attempts, small counting differences |
 | `overhead` | Metis-Auto's own processing time (not the model's), compression included, and the cost of any helper calls |
-| `budget` | lifetime spend vs the lifetime cap (10 USD), and this run vs the per-run cap |
+| `budget` | lifetime spend vs the lifetime cap (20 USD), and this run vs the per-run cap |
 | `settings` | the current routing mode and demo toggles, and which user of the bot you are |
 
 In fake mode, costs are what the fake answer *would* cost; nothing is charged and the budget does not move.

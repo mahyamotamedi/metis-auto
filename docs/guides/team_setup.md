@@ -126,7 +126,25 @@ Took about 5 minutes on a Mac (298 s, measured once; yours may differ). Also saf
 
 **You should see:** `PASS`. Done.
 
-### 10. Get reviewed labels, when there are some
+### 10. Build golden-v2 (the same 300 records without attachment images)
+
+golden-v2 replaces the 23 records that carry an image with text-only ones ([golden_v2.md](../evaluation/golden_v2.md), [ADR-0029](../adr/0029-evaluation-dataset-golden-v2.md)). Do this after step 9 passed, because it is built from your golden-v1. If your copy of the repository is older than golden-v2, run `git pull` first.
+
+```bash
+git pull
+```
+```bash
+.venv/bin/python scripts/build_eval_dataset.py --config config/evaluation/golden_v2.toml all
+```
+```bash
+.venv/bin/python scripts/build_eval_dataset.py --config config/evaluation/golden_v2.toml verify
+```
+
+Windows: use `.venv\Scripts\python` as before.
+
+**You should see:** `Dataset golden-v2: 300 records, 133 reserves, status annotated_provisional.`, then `PASS`. It takes about a minute, because the requests are already built. If it says "Refused … differs from the one this dataset derives from", your golden-v1 is not the team's: run step 9 and send the line to the lead.
+
+### 11. Get reviewed labels, when there are some
 
 After `git pull`, if `reports/evaluation/golden_v1/reviewed_labels.jsonl` exists:
 
@@ -134,7 +152,7 @@ After `git pull`, if `reports/evaluation/golden_v1/reviewed_labels.jsonl` exists
 .venv/bin/python scripts/build_eval_dataset.py import-labels reports/evaluation/golden_v1/reviewed_labels.jsonl
 ```
 
-Labels are done once and shared through git, as IDs and labels with no text.
+Labels are done once and shared through git, as IDs and labels with no text. For golden-v2, after importing the golden-v1 labels, carry them over with `.venv/bin/python scripts/build_eval_dataset.py --config config/evaluation/golden_v2.toml carry-labels reports/evaluation/golden_v1/reviewed_labels.jsonl`; the 23 replacement records need review.
 
 ## When a step fails
 
@@ -147,6 +165,7 @@ Labels are done once and shared through git, as IDs and labels with no text.
 | `password authentication failed` | You changed the password after the first start. Ask for help; the fix deletes your local database. |
 | 401 or 403 from Hugging Face | Your account has no access, or the token is wrong. Ask the lead. |
 | `verify` prints `FAIL: config…` | Your code differs: `git status`, then `git pull`. |
+| `golden-v2` says `Refused: golden-v1 is not built` or `differs from the one this dataset derives from` | Build and verify golden-v1 first (steps 8 and 9). If that passes and this remains, send the line to the lead. |
 | `verify` prints `FAIL: dataset revision…` or `record ids…` | Do not use this copy. Send the printed line to the lead. It holds no messages. |
 
 **Who to ask:** the project lead. Send the command and the error. Never send data.

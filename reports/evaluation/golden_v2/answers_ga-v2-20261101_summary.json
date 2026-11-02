@@ -1,0 +1,252 @@
+{
+ "by_stratum": {
+  "bot_class": {
+   "blank_no_config": {
+    "answered": 20,
+    "failed": 0
+   },
+   "instruction_only": {
+    "answered": 131,
+    "failed": 0
+   },
+   "instruction_rag": {
+    "answered": 93,
+    "failed": 0
+   },
+   "rag_only": {
+    "answered": 5,
+    "failed": 0
+   },
+   "workflow_unknown_config": {
+    "answered": 51,
+    "failed": 0
+   }
+  },
+  "cohort": {
+   "Remaining accounts": {
+    "answered": 75,
+    "failed": 0
+   },
+   "User A": {
+    "answered": 60,
+    "failed": 0
+   },
+   "User B": {
+    "answered": 55,
+    "failed": 0
+   },
+   "User C": {
+    "answered": 45,
+    "failed": 0
+   },
+   "User D": {
+    "answered": 36,
+    "failed": 0
+   },
+   "User E": {
+    "answered": 29,
+    "failed": 0
+   }
+  },
+  "complexity_proxy": {
+   "average": {
+    "answered": 116,
+    "failed": 0
+   },
+   "complex": {
+    "answered": 90,
+    "failed": 0
+   },
+   "simple": {
+    "answered": 94,
+    "failed": 0
+   }
+  },
+  "language_group": {
+   "english": {
+    "answered": 45,
+    "failed": 0
+   },
+   "finglish": {
+    "answered": 5,
+    "failed": 0
+   },
+   "mixed": {
+    "answered": 39,
+    "failed": 0
+   },
+   "other": {
+    "answered": 4,
+    "failed": 0
+   },
+   "other_arabic_script": {
+    "answered": 13,
+    "failed": 0
+   },
+   "persian": {
+    "answered": 174,
+    "failed": 0
+   },
+   "structured": {
+    "answered": 20,
+    "failed": 0
+   }
+  },
+  "position": {
+   "first": {
+    "answered": 90,
+    "failed": 0
+   },
+   "late": {
+    "answered": 97,
+    "failed": 0
+   },
+   "middle": {
+    "answered": 113,
+    "failed": 0
+   }
+  },
+  "primary_intent": {
+   "advice_recommendation": {
+    "answered": 22,
+    "failed": 0
+   },
+   "ambiguous_context_dependent": {
+    "answered": 24,
+    "failed": 0
+   },
+   "bot_service_support": {
+    "answered": 42,
+    "failed": 0
+   },
+   "coding": {
+    "answered": 22,
+    "failed": 0
+   },
+   "conversational_smalltalk": {
+    "answered": 35,
+    "failed": 0
+   },
+   "factual_qa": {
+    "answered": 45,
+    "failed": 0
+   },
+   "math_reasoning": {
+    "answered": 21,
+    "failed": 0
+   },
+   "media_generation": {
+    "answered": 16,
+    "failed": 0
+   },
+   "other_unclassified": {
+    "answered": 8,
+    "failed": 0
+   },
+   "summarization_extraction_structured": {
+    "answered": 17,
+    "failed": 0
+   },
+   "translation": {
+    "answered": 23,
+    "failed": 0
+   },
+   "writing_creative": {
+    "answered": 25,
+    "failed": 0
+   }
+  },
+  "target_length": {
+   "long": {
+    "answered": 69,
+    "failed": 0
+   },
+   "medium": {
+    "answered": 94,
+    "failed": 0
+   },
+   "short": {
+    "answered": 68,
+    "failed": 0
+   },
+   "very_long": {
+    "answered": 28,
+    "failed": 0
+   },
+   "very_short": {
+    "answered": 41,
+    "failed": 0
+   }
+  }
+ },
+ "caveats": {
+  "config_unknown": 51,
+  "earlier_rag_not_sent": 68,
+  "input_widget_not_sent": 22,
+  "no_instructions": 30,
+  "text_model_cannot_fulfil_media": 16
+ },
+ "cost_not_computed": 0,
+ "cost_usd": "12.02596450",
+ "failures_by_reason": {},
+ "finish_reasons": {
+  "complete": 300
+ },
+ "language_mismatch": {
+  "evaluated": 219,
+  "mismatches": 31,
+  "note": "script-based proxy; persian and english requests only",
+  "rate": 0.1416
+ },
+ "latency_ms": {
+  "max": 106744.82658389024,
+  "n": 300,
+  "p50": 6780.8034578338265,
+  "p90": 20455.961082829162,
+  "p99": 62155.66420881078
+ },
+ "manifest": {
+  "backoff_seconds": [
+   5.0,
+   20.0
+  ],
+  "context_window": 1050000,
+  "dataset_id": "golden-v2",
+  "layout": "dataset_positions",
+  "limits_checked_on": "2026-11-01",
+  "limits_source": "https://developers.openai.com/api/docs/models/gpt-5.5",
+  "max_output_tokens": 8192,
+  "model_id": "gpt-5.5",
+  "model_output_limit": 128000,
+  "pilot_size": 10,
+  "reasoning_effort": "medium",
+  "retry_max_attempts": 3,
+  "settings_hash": "bcb3a94fe090ef4038f315f35d4aed22af2b8bdc350be52f0192b230900564b0"
+ },
+ "media_generation_reported_apart": {
+  "answered": 16,
+  "caveat": "text_model_cannot_fulfil_media",
+  "cost_usd": "0.66905850",
+  "failed": 0,
+  "records": 16,
+  "truncated": 0
+ },
+ "records": {
+  "answered": 300,
+  "failed": 0,
+  "not_yet_run": 0,
+  "planned": 300,
+  "stored": 300
+ },
+ "run_id": "ga-v2-20261101",
+ "tokens": {
+  "cached_input_tokens": 124160,
+  "input_tokens": 1444759,
+  "output_tokens": 142254,
+  "reasoning_tokens": 48989
+ },
+ "truncated": {
+  "count": 0,
+  "rate": 0.0
+ }
+}

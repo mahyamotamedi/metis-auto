@@ -1,0 +1,8 @@
+language_group,advice_recommendation,ambiguous_context_dependent,bot_service_support,coding,conversational_smalltalk,factual_qa,math_reasoning,media_generation,other_unclassified,summarization_extraction_structured,translation,writing_creative,total
+english,1,5,3,1,8,9,6,4,1,1,2,4,45
+finglish,0,0,0,1,0,3,0,0,1,0,0,0,5
+mixed,5,2,7,2,3,7,1,2,2,3,3,2,39
+other,0,0,0,0,0,2,2,0,0,0,0,0,4
+other_arabic_script,0,2,2,0,3,2,0,0,0,3,0,1,13
+persian,16,14,24,11,21,19,11,10,3,10,17,18,174
+structured,0,1,6,7,0,3,1,0,1,0,1,0,20

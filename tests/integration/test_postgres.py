@@ -392,3 +392,359 @@ def test_migrations_have_no_drift_and_downgrade_cleanly():
         with admin.connect() as conn:
             conn.execute(sa.text(f"DROP DATABASE {name} WITH (FORCE)"))
         admin.dispose()
+
+
+# --- eval.golden_answer (ADR-0030) ------------------------------------------------
+
+
+def _ensure_dataset(db):
+    with db["engine"].begin() as conn:
+        if not conn.scalar(sa.text("SELECT count(*) FROM eval.dataset_record")):
+            _dataset(conn)
+
+
+def _golden_parts():
+    from metis_auto.contracts import ComponentName, InputPart, PartRole
+
+    return (
+        InputPart(
+            role=PartRole.USER,
+            text="[SYNTHETIC] question",
+            component=ComponentName.MESSAGE,
+        ),
+    )
+
+
+def _task(record_id="r1", caveats=()):
+    from metis_auto.contracts import Fidelity, TokenCount
+    from metis_auto.evaluation.golden_answers.request import prompt_fingerprint
+    from metis_auto.evaluation.golden_answers.runner import Task
+
+    parts = _golden_parts()
+    return Task(
+        record_id=record_id,
+        parts=parts,
+        caveats=tuple(caveats),
+        fingerprint=prompt_fingerprint(parts, "dataset_positions"),
+        input_tokens=TokenCount(tokens=50, fidelity=Fidelity.EXACT_LOCAL, method="t@1"),
+        strata={"language_group": "english", "primary_intent": "factual_qa"},
+    )
+
+
+class _Client:
+    def __init__(self, results):
+        from metis_auto.contracts import AnswerSource
+
+        self.source = AnswerSource.FAKE
+        self.results = list(results)
+        self.calls = 0
+
+    def invoke(self, invocation):
+        self.calls += 1
+        return self.results.pop(0)
+
+
+def _answer(text="[SYNTHETIC] answer"):
+    from metis_auto.contracts import (
+        AnswerSource,
+        Fidelity,
+        FinishReason,
+        ModelResponse,
+        TokenCount,
+        TokenUsage,
+    )
+
+    def count(n):
+        return TokenCount(tokens=n, fidelity=Fidelity.PROVIDER_REPORTED, method="u")
+
+    return ModelResponse(
+        text=text,
+        finish_reason=FinishReason.COMPLETE,
+        usage=TokenUsage(
+            model_id="gpt-5.5", input=count(50), output=count(20), reasoning=count(8)
+        ),
+        provider_latency_ms=12.0,
+        provider_model_version="gpt-5.5-test",
+        source=AnswerSource.FAKE,
+    )
+
+
+def _failure(error_class):
+    from metis_auto.contracts import AnswerSource, ErrorClass, ModelError
+
+    return ModelError(
+        error_class=ErrorClass(error_class),
+        retryable=error_class == "unavailable",
+        source=AnswerSource.FAKE,
+    )
+
+
+def _run(db, client, run_id, tasks=None):
+    from metis_auto.adapters.system import FakeClock
+    from metis_auto.evaluation.golden_answers.config import parse_settings
+    from metis_auto.evaluation.golden_answers.runner import run_answers
+    from metis_auto.settings import load_settings
+    from metis_auto.wiring.golden_answers import DbStore, NoSpend
+
+    loaded = load_settings(environ={}, dotenv=None, runtime=None)
+    entry = next(
+        e for e in loaded.reference.catalogue.entries if e.model_id == "gpt-5.5"
+    )
+    raw = tomllib.loads((ROOT / "config/evaluation/golden_answers.toml").read_text())
+    from datetime import UTC, datetime
+
+    return run_answers(
+        tasks or [_task()],
+        run_id=run_id,
+        client=client,
+        entry=entry,
+        prices=loaded.reference.prices,
+        settings=parse_settings(raw),
+        store=DbStore(db["engine"]),
+        spend=NoSpend(),
+        clock=FakeClock(datetime(2026, 11, 1, tzinfo=UTC)),
+        classify_language=lambda text: "english",
+    )
+
+
+def test_golden_answer_rows_hold_the_run_the_settings_and_the_usage(db):
+    _ensure_dataset(db)
+    client = _Client([_answer()])
+    report = _run(db, client, "pg-insert")
+    assert (report.answered, client.calls) == (1, 1)
+    with db["engine"].connect() as conn:
+        row = conn.execute(
+            sa.text("SELECT * FROM eval.golden_answer WHERE run_id='pg-insert'")
+        ).one()
+    assert (row.record_id, row.status, row.model_id) == ("r1", "answered", "gpt-5.5")
+    assert (row.effort, row.max_output_tokens, row.attempts) == ("medium", 8192, 1)
+    assert (row.input_tokens, row.output_tokens, row.reasoning_tokens) == (50, 20, 8)
+    assert row.cost_usd > 0 and row.cost_state == "reported"
+    assert row.answer_chars == len("[SYNTHETIC] answer")
+    assert row.answer_language_group == "english"
+    assert len(row.settings_hash) == 64 and len(row.prompt_fingerprint) == 64
+    assert row.created_at is not None
+
+
+def test_golden_answer_constraints_reject_bad_rows(db):
+    _ensure_dataset(db)
+    base = (
+        "INSERT INTO eval.golden_answer (run_id, record_id, model_id, settings_hash, "
+        "prompt_fingerprint, status) VALUES ('pg-bad', {rid}, 'm', 'h', 'f', {st})"
+    )
+    for sql in (
+        base.format(rid="'r1'", st="'bogus'"),  # status check
+        base.format(rid="'no-such-record'", st="'failed'"),  # foreign key
+    ):
+        with pytest.raises(sa.exc.IntegrityError), db["engine"].begin() as conn:
+            conn.execute(sa.text(sql))
+
+
+def test_a_rerun_in_the_same_run_makes_no_second_call_and_keeps_one_row(db):
+    _ensure_dataset(db)
+    first = _Client([_answer()])
+    _run(db, first, "pg-resume")
+    second = _Client([_answer("[SYNTHETIC] another")])
+    report = _run(db, second, "pg-resume")
+    assert (report.skipped, report.answered, second.calls) == (1, 0, 0)
+    assert (
+        scalar(db, "SELECT count(*) FROM eval.golden_answer WHERE run_id='pg-resume'")
+        == 1
+    )
+    assert (
+        scalar(db, "SELECT answer FROM eval.golden_answer WHERE run_id='pg-resume'")
+        == "[SYNTHETIC] answer"
+    )
+
+
+def test_a_retryable_failure_is_replaced_by_a_later_answer_never_the_reverse(db):
+    _ensure_dataset(db)
+    failing = _Client([_failure("unavailable")] * 3)
+    _run(db, failing, "pg-retry")
+    assert (
+        scalar(db, "SELECT status FROM eval.golden_answer WHERE run_id='pg-retry'")
+        == "failed"
+    )
+    retry = _Client([_answer()])
+    assert _run(db, retry, "pg-retry").answered == 1
+    row = scalar(
+        db,
+        "SELECT status || ':' || attempts FROM eval.golden_answer "
+        "WHERE run_id='pg-retry'",
+    )
+    assert row == "answered:1"
+    # an answered row is never overwritten, even by a later write of a failure
+    from metis_auto.evaluation.golden_answers.runner import AnswerRow
+    from metis_auto.wiring.golden_answers import DbStore
+
+    DbStore(db["engine"]).save(
+        AnswerRow(
+            run_id="pg-retry",
+            record_id="r1",
+            model_id="gpt-5.5",
+            effort="medium",
+            max_output_tokens=8192,
+            settings_hash="h",
+            prompt_fingerprint="f",
+            status="failed",
+            answer=None,
+            answer_chars=None,
+            answer_language_group=None,
+            finish_reason=None,
+            error_class="unavailable",
+            attempts=3,
+            provider_model_version=None,
+            input_tokens=None,
+            cached_input_tokens=None,
+            output_tokens=None,
+            reasoning_tokens=None,
+            cost_usd=None,
+            cost_state="error",
+            latency_ms=None,
+            caveats=(),
+        )
+    )
+    assert (
+        scalar(db, "SELECT status FROM eval.golden_answer WHERE run_id='pg-retry'")
+        == "answered"
+    )
+
+
+def test_a_non_retryable_failure_is_recorded_once_and_skipped_on_rerun(db):
+    _ensure_dataset(db)
+    _run(db, _Client([_failure("context_overflow")]), "pg-fatal")
+    again = _Client([_answer()])
+    report = _run(db, again, "pg-fatal")
+    assert (report.skipped, again.calls) == (1, 0)
+    assert (
+        scalar(db, "SELECT error_class FROM eval.golden_answer WHERE run_id='pg-fatal'")
+        == "context_overflow"
+    )
+
+
+def test_runs_coexist_and_the_summary_rows_hold_no_text(db):
+    _ensure_dataset(db)
+    _run(db, _Client([_answer()]), "pg-a")
+    _run(db, _Client([_answer()]), "pg-b")
+    from metis_auto.data_access.postgres import golden_answers as ga
+
+    with db["engine"].connect() as conn:
+        runs = dict(ga.runs(conn))
+        rows = ga.summary_rows(conn, "pg-a")
+    assert runs["pg-a"] == 1 and runs["pg-b"] == 1
+    assert len(rows) == 1 and "answer" not in rows[0]
+    assert rows[0]["strata"] == {}  # the synthetic stratum is empty
+    assert "SYNTHETIC" not in json.dumps(rows, default=str)
+
+
+def test_golden_answers_leave_the_dataset_and_its_fingerprint_unchanged(db):
+    _ensure_dataset(db)
+    from metis_auto.data_access.postgres import repository as repo
+    from metis_auto.evaluation.golden.validation import fingerprint
+
+    def snapshot():
+        with db["engine"].connect() as conn:
+            records = repo.dataset_records(conn, "d1")
+            state = repo.dataset_state(conn, "d1")
+            tables = {
+                t: conn.scalar(sa.text(f"SELECT count(*) FROM eval.{t}"))
+                for t in (
+                    "dataset",
+                    "dataset_record",
+                    "record_input_component",
+                    "record_reference",
+                    "annotation",
+                )
+            }
+        ids = [r["record_id"] for r in records]
+        return (
+            fingerprint(ids, "1", state["config_sha256"]),
+            [r["selection_rank"] for r in records],
+            tables,
+        )
+
+    before = snapshot()
+    _run(db, _Client([_answer()]), "pg-verify")
+    with db["engine"].begin() as conn:
+        conn.execute(sa.text("DELETE FROM eval.golden_answer"))
+    assert snapshot() == before
+    _run(db, _Client([_answer()]), "pg-verify-2")
+    assert snapshot() == before  # unchanged with rows present, too
+
+
+def test_language_review_end_to_end_on_synthetic_data(db, tmp_path):
+    import subprocess
+
+    from metis_auto.evaluation.golden_answers import review as rv
+    from metis_auto.wiring.golden_answers import GoldenAnswers
+
+    _ensure_dataset(db)
+    with db["engine"].begin() as conn:
+        # the earlier freeze test locks the dataset; the throwaway database lets a
+        # test set up its synthetic stratum and instructions anyway
+        conn.execute(sa.text("SET session_replication_role = replica"))
+        conn.execute(
+            sa.text(
+                "UPDATE eval.dataset_record SET stratum = "
+                '\'{"language_group": "persian", "primary_intent": "factual_qa", '
+                '"cohort": "User A"}\' WHERE record_id = \'r1\''
+            )
+        )
+        conn.execute(
+            sa.text(
+                "INSERT INTO eval.record_input_component (record_id, position, kind, "
+                "role, source_kind, source_bot_id, availability_stage, "
+                "included_pre_retrieval, included_post_retrieval, "
+                "transmitted_to_provider) VALUES ('r1', 20, 'bot_instruction', "
+                "'system', 'bot_instruction', 'b1', 'configuration_snapshot', true, "
+                "true, 'unknown') ON CONFLICT DO NOTHING"
+            )
+        )
+        conn.execute(
+            sa.text(
+                "UPDATE src.chat_bot SET instructions = "
+                "'[SYNTHETIC] Always answer in English.' WHERE bot_id = 'b1'"
+            )
+        )
+        conn.execute(sa.text("SET session_replication_role = DEFAULT"))
+    _run(db, _Client([_answer("[SYNTHETIC] an english answer")]), "pg-review")
+
+    repo_dir = tmp_path / "repo"
+    repo_dir.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo_dir, check=True)
+    (repo_dir / ".gitignore").write_text("runs/\n")
+    answers = GoldenAnswers(
+        engine=db["engine"],
+        log=lambda _m: None,
+        report_dir=tmp_path / "reports",
+        local_dir=repo_dir / "runs" / "pg-review",
+    )
+    result = answers.review_language("pg-review")
+
+    assert result["mismatches"] == 1 and result["answered"] == 1
+    assert result["by_direction"] == {"persian→english": 1}
+    assert result["instructions_mention_language"] == 1
+    assert result["top_bots"] == [{"bot_id": "b1", "mismatches": 1}]
+    assert "SYNTHETIC" not in json.dumps(result, ensure_ascii=False)
+
+    local = json.loads(
+        (repo_dir / "runs/pg-review/review/language_mismatch_local.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert len(local) == 1 and local[0]["record_id"] == "r1"
+    assert local[0]["answer"] == "[SYNTHETIC] an english answer"
+    assert local[0]["instructions_first_800_chars"].endswith("English.")
+    assert local[0]["target_user_message"].startswith("[SYNTHETIC]")
+    assert local[0]["answer_language_group"] == "english"
+
+    sheet = tmp_path / "reports/review/language_mismatch_pg-review.csv"
+    text = sheet.read_text(encoding="utf-8")
+    assert "SYNTHETIC" not in text
+    assert text.splitlines()[0] == ",".join(rv.SHEET_COLUMNS)
+
+    # a reviewer's verdict survives running the command again
+    sheet.write_text(text.replace("true,,", "true,ok_bot_rule,bot rule"), "utf-8")
+    again = answers.review_language("pg-review")
+    assert again["kept_earlier_verdicts"] == 1 and not again["verdict_problems"]
+    assert "ok_bot_rule" in sheet.read_text(encoding="utf-8")
