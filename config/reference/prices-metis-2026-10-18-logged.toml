@@ -1,0 +1,541 @@
+# Price table for REPLAY: the logged models of the full dataset, so the
+# todays_models baseline stops being mostly unknown (ADR-XXXX
+# (replay-pricing-for-logged-models); FR-ACCT-02, FR-ACCT-07; ADR-0002,
+# ADR-0026, ADR-0036). Used by config/evaluation/sprint.toml only; the live
+# defaults keep prices-metis-2026-10-18-g55.toml.
+#
+# A copy of prices-metis-2026-10-18-g55.toml (its rows unchanged, below) plus one
+# row per logged label (label-mapping-full-v1.toml) that is a real text model
+# AND has a pricing-page row under exactly the same model name. A label whose
+# name differs from every page row, or that is not a text model, has no row
+# here: its price stays unknown, never guessed.
+#
+# Source: Metis pricing page, https://metisai.ir/pricing, saved by the owner on
+# 2026-10-18; extract committed as docs/references/metis_pricing_2026-10-18.csv.
+# Amounts are taken from the CSV's `raw` column only.
+# tests/unit/settings/test_logged_prices.py checks every new amount against
+# that `raw` text.
+#
+# Token prices only. Per-call, search-query, web-search and audio-input prices
+# are not token prices for this schema and are left out (named on each row).
+# cache_write: "Cache Write Token" as one amount; Anthropic's "Cache Write (5m)"
+# and "(1h)" as the ttl-5m / ttl-1h variants.
+# No cached-input price on the page: cached_input = that row's input price
+# (no discount assumed, an upper bound), noted on the row; never 0.
+#
+# Amounts are decimal STRINGS (exact), USD per 1,000,000 tokens.
+# effective_from: unknown (the page states none). Re-verify before any budget
+# decision. A change in price = a new file with a new version, never an edit.
+#
+# Version history: "prices-metis-2026-10-18-logged" (2026-11-02, Pipeline B) is
+# this file: prices-metis-2026-10-18-s75-g55 plus 43 logged labels; no existing
+# amount changed. Earlier history: see prices-metis-2026-10-18-g55.toml.
+
+version = "prices-metis-2026-10-18-logged"
+currency = "USD"
+per_tokens = 1000000
+
+[evidence]
+source = "Metis pricing page https://metisai.ir/pricing, saved 2026-10-18; docs/references/metis_pricing_2026-10-18.csv (raw column)"
+checked_on = 2026-10-18
+
+[[prices]]
+price_ref = "metis-gpt-5-nano"
+input = "0.055"
+output = "0.44"
+cached_input = "0.0055"
+
+[[prices]]
+price_ref = "metis-gpt-4.1-nano"
+input = "0.11"
+output = "0.44"
+cached_input = "0.0275"
+
+[[prices]]
+price_ref = "metis-gpt-4o-mini"
+input = "0.165"
+output = "0.66"
+cached_input = "0.0825"
+
+[[prices]]
+price_ref = "metis-deepseek-v4-flash"
+input = "0.165"
+output = "0.66"
+cached_input = "0.0033"
+
+[[prices]]
+price_ref = "metis-grok-4-1-fast"
+input = "0.22"
+output = "0.55"
+cached_input = "0.11"
+
+[[prices]]
+# mimo-v2.5 (Stage 7.5, Q-32): pricing page row "xiaomi,mimo-v2.5". The Metis
+# MiMo wrapper page (saved the same day) shows lower figures (0.14 / 0.0028 /
+# 0.28), about 10 % below: probably Xiaomi's list price. The pricing page is
+# the price source for every model here. Xiaomi bills requests to mimo-v2.5
+# at mimo-v2.6-flash prices since 2026-10-14 (mimo.mi.com/docs/en-US/updates/
+# deprecate); what Metis charges after that switch is unverified (A-60).
+price_ref = "metis-mimo-v2.5"
+input = "0.154"
+output = "0.308"
+cached_input = "0.0031"
+
+# gpt-5.4 has context-length tiers. The Metis page labels the first tier
+# "≤ 270K context". Whether K means 1,000 or 1,024 (270,000 or 276,480 tokens)
+# is not stated, and OpenAI's own model page (checked 2026-10-18) uses a
+# different figure (">272K input tokens ... for the full session"). Chosen
+# reading (conservative, ADR-0020): the cheaper tier ends at 270,000 input
+# tokens, so a call is never priced below the bill; inputs of 270,001-276,480
+# get the caveat context_tier_boundary_uncertain. "Context" is read as the
+# call's input tokens, and the tier prices the whole call (OpenAI's "full
+# session" rule). Re-verify on the next pricing-page check.
+[[prices]]
+price_ref = "metis-gpt-5.4"
+tier = "standard"
+max_input_tokens = 270000
+max_input_tokens_uncertain_up_to = 276480
+input = "2.875"
+output = "17.25"
+cached_input = "0.2875"
+
+[[prices]]
+price_ref = "metis-gpt-5.4"
+tier = "long"
+min_input_tokens = 270001
+input = "5.75"
+output = "25.875"
+cached_input = "0.575"
+
+# gpt-5.5 (E2, 2026-10-30): pricing page row "gpt-5.5", "raw" column; same
+# two-tier shape and conservative boundary reading as gpt-5.4 above. Prices are
+# those of the page saved 2026-10-18: re-verify before any budget decision.
+[[prices]]
+price_ref = "metis-gpt-5.5"
+tier = "standard"
+max_input_tokens = 270000
+max_input_tokens_uncertain_up_to = 276480
+input = "5.5"
+output = "33.0"
+cached_input = "0.55"
+
+[[prices]]
+price_ref = "metis-gpt-5.5"
+tier = "long"
+min_input_tokens = 270001
+input = "11.0"
+output = "49.5"
+cached_input = "1.1"
+
+# --- Logged labels (2026-11-02, replay only), by request count ----------------
+[[prices]]
+# gemini-2.5-flash-lite: pricing page row "google,gemini-2.5-flash-lite", raw column.
+# Not a token price, left out: Search Query $0.0154 / call; Input Audio Token $0.33 / 1M tokens.
+# price page saved 2026-10-18; availability to re-check (Vertex retired 2.5 on 2026-10-20 per project research)
+# page lists no cached price; no discount assumed (upper bound); EDA: Google cached input ~0.03%
+price_ref = "metis-gemini-2.5-flash-lite"
+input = "0.11"
+output = "0.44"
+cached_input = "0.11"
+
+[[prices]]
+# gemini-2.5-flash: pricing page row "google,gemini-2.5-flash", raw column.
+# Not a token price, left out: Search Query $0.0154 / call; Input Audio Token $1.1 / 1M tokens.
+# price page saved 2026-10-18; availability to re-check (Vertex retired 2.5 on 2026-10-20 per project research)
+# page lists no cached price; no discount assumed (upper bound); EDA: Google cached input ~0.03%
+price_ref = "metis-gemini-2.5-flash"
+input = "0.33"
+output = "2.75"
+cached_input = "0.33"
+
+[[prices]]
+# gpt-5.4-nano: pricing page row "openai_chat_completion,gpt-5.4-nano", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-gpt-5.4-nano"
+input = "0.23"
+output = "1.4375"
+cached_input = "0.023"
+
+[[prices]]
+# gpt-4.1-mini: pricing page row "openai_chat_completion,gpt-4.1-mini", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-gpt-4.1-mini"
+input = "0.44"
+output = "1.76"
+cached_input = "0.11"
+
+[[prices]]
+# gpt-5.1: pricing page row "openai_chat_completion,gpt-5.1", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-gpt-5.1"
+input = "1.375"
+output = "11.0"
+cached_input = "0.1375"
+
+[[prices]]
+# gpt-5.2: pricing page row "openai_chat_completion,gpt-5.2", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-gpt-5.2"
+input = "1.925"
+output = "15.4"
+cached_input = "0.1925"
+
+[[prices]]
+# gemini-2.0-flash: pricing page row "google,gemini-2.0-flash", raw column.
+# Not a token price, left out: Search Query $0.0154 / call; Input Audio Token $0.77 / 1M tokens.
+# page lists no cached price; no discount assumed (upper bound); EDA: Google cached input ~0.03%
+price_ref = "metis-gemini-2.0-flash"
+input = "0.11"
+output = "0.44"
+cached_input = "0.11"
+
+[[prices]]
+# gpt-5-mini: pricing page row "openai_chat_completion,gpt-5-mini", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-gpt-5-mini"
+input = "0.275"
+output = "2.2"
+cached_input = "0.0275"
+
+[[prices]]
+# gpt-5.4-mini: pricing page row "openai_chat_completion,gpt-5.4-mini", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-gpt-5.4-mini"
+input = "0.8625"
+output = "5.175"
+cached_input = "0.0862"
+
+[[prices]]
+# gpt-6-luna: pricing page row "openai_chat_completion,gpt-6-luna", raw column.
+# Not a token price, left out: Web Search $0.011 / call.
+# Context tiers: "≤ 270K context" / "Long context"; same boundary reading
+# as gpt-5.4 above (conservative: cheaper tier ends at 270,000 input tokens).
+price_ref = "metis-gpt-6-luna"
+tier = "standard"
+max_input_tokens = 270000
+max_input_tokens_uncertain_up_to = 276480
+input = "0.11"
+output = "0.55"
+cached_input = "0.011"
+cache_write = "0.1375"
+
+[[prices]]
+price_ref = "metis-gpt-6-luna"
+tier = "long"
+min_input_tokens = 270001
+input = "0.22"
+output = "0.825"
+cached_input = "0.022"
+cache_write = "0.275"
+
+[[prices]]
+# gpt-5.6-luna: pricing page row "openai_chat_completion,gpt-5.6-luna", raw column.
+# Not a token price, left out: Web Search $0.011 / call.
+# Context tiers: "≤ 270K context" / "Long context"; same boundary reading
+# as gpt-5.4 above (conservative: cheaper tier ends at 270,000 input tokens).
+price_ref = "metis-gpt-5.6-luna"
+tier = "standard"
+max_input_tokens = 270000
+max_input_tokens_uncertain_up_to = 276480
+input = "0.22"
+output = "1.32"
+cached_input = "0.022"
+cache_write = "0.275"
+
+[[prices]]
+price_ref = "metis-gpt-5.6-luna"
+tier = "long"
+min_input_tokens = 270001
+input = "0.44"
+output = "1.98"
+cached_input = "0.044"
+cache_write = "0.55"
+
+[[prices]]
+# gpt-4.1: pricing page row "openai_chat_completion,gpt-4.1", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-gpt-4.1"
+input = "2.2"
+output = "8.8"
+cached_input = "0.55"
+
+[[prices]]
+# gemini-3.1-flash-lite: pricing page row "google,gemini-3.1-flash-lite", raw column.
+# Not a token price, left out: Search Query $0.0154 / call; Input Audio Token $0.55 / 1M tokens.
+# page lists no cached price; no discount assumed (upper bound); EDA: Google cached input ~0.03%
+price_ref = "metis-gemini-3.1-flash-lite"
+input = "0.275"
+output = "1.65"
+cached_input = "0.275"
+
+[[prices]]
+# gpt-4o: pricing page row "openai_chat_completion,gpt-4o", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-gpt-4o"
+input = "2.75"
+output = "11.0"
+cached_input = "1.375"
+
+[[prices]]
+# gpt-5: pricing page row "openai_chat_completion,gpt-5", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-gpt-5"
+input = "1.375"
+output = "11.0"
+cached_input = "0.1375"
+
+[[prices]]
+# claude-4-sonnet: pricing page row "anthropic,claude-4-sonnet", raw column.
+price_ref = "metis-claude-4-sonnet"
+input = "3.3"
+output = "16.5"
+cached_input = "0.33"
+cache_write = { "ttl-5m" = "4.125", "ttl-1h" = "6.6" }
+
+[[prices]]
+# claude-4-opus: pricing page row "anthropic,claude-4-opus", raw column.
+price_ref = "metis-claude-4-opus"
+input = "16.5"
+output = "82.5"
+cached_input = "1.65"
+cache_write = { "ttl-5m" = "20.625", "ttl-1h" = "33.0" }
+
+[[prices]]
+# gpt-5.6-terra: pricing page row "openai_chat_completion,gpt-5.6-terra", raw column.
+# Not a token price, left out: Web Search $0.011 / call.
+# Context tiers: "≤ 270K context" / "Long context"; same boundary reading
+# as gpt-5.4 above (conservative: cheaper tier ends at 270,000 input tokens).
+price_ref = "metis-gpt-5.6-terra"
+tier = "standard"
+max_input_tokens = 270000
+max_input_tokens_uncertain_up_to = 276480
+input = "2.2"
+output = "13.2"
+cached_input = "0.22"
+cache_write = "2.75"
+
+[[prices]]
+price_ref = "metis-gpt-5.6-terra"
+tier = "long"
+min_input_tokens = 270001
+input = "4.4"
+output = "19.8"
+cached_input = "0.44"
+cache_write = "5.5"
+
+[[prices]]
+# gemini-3-flash-preview: pricing page row "google,gemini-3-flash-preview", raw column.
+# Not a token price, left out: Search Query $0.0154 / call; Input Audio Token $1.1 / 1M tokens.
+# page lists no cached price; no discount assumed (upper bound); EDA: Google cached input ~0.03%
+price_ref = "metis-gemini-3-flash-preview"
+input = "0.55"
+output = "3.3"
+cached_input = "0.55"
+
+[[prices]]
+# o3-mini: pricing page row "openai_chat_completion,o3-mini", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-o3-mini"
+input = "1.21"
+output = "4.84"
+cached_input = "0.605"
+
+[[prices]]
+# gemini-3.5-flash-lite: pricing page row "google,gemini-3.5-flash-lite", raw column.
+# Not a token price, left out: Search Query $0.0154 / call.
+# page lists no cached price; no discount assumed (upper bound); EDA: Google cached input ~0.03%
+price_ref = "metis-gemini-3.5-flash-lite"
+input = "0.33"
+output = "2.75"
+cached_input = "0.33"
+
+[[prices]]
+# claude-opus-4-5: pricing page row "anthropic,claude-opus-4-5", raw column.
+price_ref = "metis-claude-opus-4-5"
+input = "5.5"
+output = "27.5"
+cached_input = "0.55"
+cache_write = { "ttl-5m" = "6.875", "ttl-1h" = "11.0" }
+
+[[prices]]
+# claude-sonnet-5: pricing page row "anthropic,claude-sonnet-5", raw column.
+price_ref = "metis-claude-sonnet-5"
+input = "2.2"
+output = "11.0"
+cached_input = "0.22"
+cache_write = { "ttl-5m" = "2.75", "ttl-1h" = "4.4" }
+
+[[prices]]
+# metis-gpt: pricing page row "openai_chat_completion,metis-gpt", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+# Metis's own label: the page names no underlying model.
+price_ref = "metis-metis-gpt"
+input = "2.1175"
+output = "16.94"
+cached_input = "1.0588"
+
+[[prices]]
+# claude-sonnet-4-6: pricing page row "anthropic,claude-sonnet-4-6", raw column.
+price_ref = "metis-claude-sonnet-4-6"
+input = "5.05"
+output = "22.0"
+cached_input = "0.505"
+cache_write = { "ttl-5m" = "6.3125", "ttl-1h" = "10.1" }
+
+[[prices]]
+# grok-3-beta: pricing page row "grok,grok-3-beta", raw column.
+price_ref = "metis-grok-3-beta"
+input = "3.3"
+output = "16.5"
+cached_input = "1.65"
+
+[[prices]]
+# gpt-5.6-sol: pricing page row "openai_chat_completion,gpt-5.6-sol", raw column.
+# Not a token price, left out: Web Search $0.011 / call.
+# Context tiers: "≤ 270K context" / "Long context"; same boundary reading
+# as gpt-5.4 above (conservative: cheaper tier ends at 270,000 input tokens).
+price_ref = "metis-gpt-5.6-sol"
+tier = "standard"
+max_input_tokens = 270000
+max_input_tokens_uncertain_up_to = 276480
+input = "4.4"
+output = "22.0"
+cached_input = "0.44"
+cache_write = "5.5"
+
+[[prices]]
+price_ref = "metis-gpt-5.6-sol"
+tier = "long"
+min_input_tokens = 270001
+input = "8.8"
+output = "33.0"
+cached_input = "0.88"
+cache_write = "11.0"
+
+[[prices]]
+# grok-4-fast: pricing page row "grok,grok-4-fast", raw column.
+price_ref = "metis-grok-4-fast"
+input = "0.22"
+output = "0.55"
+cached_input = "0.11"
+
+[[prices]]
+# grok-4-0709: pricing page row "grok,grok-4-0709", raw column.
+price_ref = "metis-grok-4-0709"
+input = "3.3"
+output = "16.5"
+cached_input = "1.65"
+
+[[prices]]
+# deepseek-v4-pro: pricing page row "deepseek,deepseek-v4-pro", raw column.
+price_ref = "metis-deepseek-v4-pro"
+input = "0.726"
+output = "2.178"
+cached_input = "0.0242"
+
+[[prices]]
+# command-r: pricing page row "cohere,command-r", raw column.
+# page lists no cached price; no discount assumed (upper bound); EDA: Google cached input ~0.03%
+price_ref = "metis-command-r"
+input = "0.165"
+output = "0.66"
+cached_input = "0.165"
+
+[[prices]]
+# gpt-4o-mini-2024-07-18: pricing page row "openai_chat_completion,gpt-4o-mini-2024-07-18", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-gpt-4o-mini-2024-07-18"
+input = "0.165"
+output = "0.66"
+cached_input = "0.0825"
+
+[[prices]]
+# grok-3-mini-beta: pricing page row "grok,grok-3-mini-beta", raw column.
+price_ref = "metis-grok-3-mini-beta"
+input = "0.33"
+output = "0.55"
+cached_input = "0.165"
+
+[[prices]]
+# gemini-2.5-pro: pricing page row "google,gemini-2.5-pro", raw column.
+# Not a token price, left out: Search Query $0.0154 / call.
+# price page saved 2026-10-18; availability to re-check (Vertex retired 2.5 on 2026-10-20 per project research)
+# page lists no cached price; no discount assumed (upper bound); EDA: Google cached input ~0.03%
+price_ref = "metis-gemini-2.5-pro"
+input = "2.75"
+output = "16.5"
+cached_input = "2.75"
+
+[[prices]]
+# gemini-3.1-flash-lite-preview: pricing page row "google,gemini-3.1-flash-lite-preview", raw column.
+# Not a token price, left out: Search Query $0.0154 / call; Input Audio Token $0.55 / 1M tokens.
+# page lists no cached price; no discount assumed (upper bound); EDA: Google cached input ~0.03%
+price_ref = "metis-gemini-3.1-flash-lite-preview"
+input = "0.275"
+output = "1.65"
+cached_input = "0.275"
+
+[[prices]]
+# claude-opus-4-6: pricing page row "anthropic,claude-opus-4-6", raw column.
+price_ref = "metis-claude-opus-4-6"
+input = "5.5"
+output = "27.5"
+cached_input = "0.55"
+cache_write = { "ttl-5m" = "6.875", "ttl-1h" = "11.0" }
+
+[[prices]]
+# gpt-4o-mini-search-preview: pricing page row "openai_chat_completion,gpt-4o-mini-search-preview", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+price_ref = "metis-gpt-4o-mini-search-preview"
+input = "0.165"
+output = "0.66"
+cached_input = "0.0825"
+
+[[prices]]
+# claude-haiku-4-5: pricing page row "anthropic,claude-haiku-4-5", raw column.
+price_ref = "metis-claude-haiku-4-5"
+input = "1.1"
+output = "5.5"
+cached_input = "0.11"
+cache_write = { "ttl-5m" = "1.375", "ttl-1h" = "2.2" }
+
+[[prices]]
+# claude-opus-5: pricing page row "anthropic,claude-opus-5", raw column.
+price_ref = "metis-claude-opus-5"
+input = "5.5"
+output = "27.5"
+cached_input = "0.55"
+cache_write = { "ttl-5m" = "6.875", "ttl-1h" = "11.0" }
+
+[[prices]]
+# deepseek-v4.1-flash: pricing page row "deepseek,deepseek-v4.1-flash", raw column.
+price_ref = "metis-deepseek-v4.1-flash"
+input = "0.165"
+output = "0.66"
+cached_input = "0.0033"
+
+[[prices]]
+# metis-gpt-mini: pricing page row "openai_chat_completion,metis-gpt-mini", raw column.
+# Not a token price, left out: Web Search $0.0115 / call.
+# Metis's own label: the page names no underlying model.
+price_ref = "metis-metis-gpt-mini"
+input = "0.275"
+output = "2.2"
+cached_input = "0.1375"
+
+[[prices]]
+# claude-opus-4-7: pricing page row "anthropic,claude-opus-4-7", raw column.
+price_ref = "metis-claude-opus-4-7"
+input = "5.5"
+output = "27.5"
+cached_input = "0.55"
+cache_write = { "ttl-5m" = "6.875", "ttl-1h" = "11.0" }
+
+[[prices]]
+# gemini-3-pro-preview: pricing page row "google,gemini-3-pro-preview", raw column.
+# Not a token price, left out: Search Query $0.0154 / call.
+# page lists no cached price; no discount assumed (upper bound); EDA: Google cached input ~0.03%
+price_ref = "metis-gemini-3-pro-preview"
+input = "4.4"
+output = "19.8"
+cached_input = "4.4"

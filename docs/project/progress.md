@@ -37,6 +37,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 ## Entries, newest first
 
 <!-- progress-index:start -->
+- 2026-11-02: [Replay pricing for the logged models](progress/2026-11-02-sprint-pipeline-b-replay-pricing-logged-models.md)
 - 2026-11-02: [Sprint Day 3, Pipeline B: kNN router, Redis cache store, B-only combined dry run](progress/2026-11-02-sprint-day-3-pipeline-b-knn-router-redis-store-combined-replay.md)
 - 2026-11-02: [Sprint Day 2, Pipeline C: within-message chunk dedup and stable prompt order](progress/2026-11-02-sprint-day-2-pipeline-c-within-message-chunk-dedup.md)
 - 2026-11-02: [Sprint Day 2, Pipeline C: within-message dedup as a token_cost saving, lever results](progress/2026-11-02-sprint-day-2-pipeline-c-context-dedup-token-saving.md)
