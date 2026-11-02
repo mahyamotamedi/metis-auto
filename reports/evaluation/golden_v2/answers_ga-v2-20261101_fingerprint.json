@@ -1,0 +1,24 @@
+{
+ "answered_count": 300,
+ "answers_sha256": "07a2e825cdf4e1c71eb4e7fad24b3609a5b067b7f5782610ae5a4ce52d2d2e7a",
+ "dataset_fingerprint": "c18a5e3111e470ebe11348cd53a8a8742d397684b5d4ee89ede8fafe6a7f134b",
+ "dataset_id": "golden-v2",
+ "fingerprint": "4cbc7eef5180849e759931bb243f9f9f498881082fd0ed8079c0aa7fee793394",
+ "finish_reasons": {
+  "complete": 300
+ },
+ "model_id": "gpt-5.5",
+ "prompt_fingerprints_sha256": "1f7bd38c2d287697df476f357a4033c23fb0c388a086c677b270daa86aea24aa",
+ "provider_model_versions": [
+  "gpt-5.5-2026-04-23"
+ ],
+ "run_id": "ga-v2-20261101",
+ "schema": "golden-answers-fingerprint-1",
+ "settings_hash": "bcb3a94fe090ef4038f315f35d4aed22af2b8bdc350be52f0192b230900564b0",
+ "tokens": {
+  "cached_input_tokens": 124160,
+  "input_tokens": 1444759,
+  "output_tokens": 142254,
+  "reasoning_tokens": 48989
+ }
+}
