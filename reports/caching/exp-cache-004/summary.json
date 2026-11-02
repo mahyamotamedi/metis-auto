@@ -1,0 +1,117 @@
+{
+  "chosen_threshold": 0.8,
+  "free_checks": {
+    "report": {
+      "chunk_overlap_previous_turn": {
+        "n_overlap_unknown": 7,
+        "n_retrieval_turns": 14882,
+        "n_with_previous": 9755,
+        "share_at_least_0.5": 0.246741029431528,
+        "share_at_least_0.8": 0.03709178873807284,
+        "share_at_least_1": 0.012498320118263673
+      },
+      "phatic": {
+        "gate_eligible_share": 0.022577610536218252,
+        "n_gate_eligible": 336,
+        "n_phatic_match": 339,
+        "n_retrieval_turns": 14882,
+        "phatic_share": 0.02277919634457734
+      },
+      "requests_all": 73063,
+      "requests_llm": 20750
+    },
+    "tune": {
+      "chunk_overlap_previous_turn": {
+        "n_overlap_unknown": 7,
+        "n_retrieval_turns": 27797,
+        "n_with_previous": 19495,
+        "share_at_least_0.5": 0.23016872324351548,
+        "share_at_least_0.8": 0.0286361837608375,
+        "share_at_least_1": 0.008562075044069504
+      },
+      "phatic": {
+        "gate_eligible_share": 0.0029499586286289886,
+        "n_gate_eligible": 82,
+        "n_phatic_match": 84,
+        "n_retrieval_turns": 27797,
+        "phatic_share": 0.0030219088390833542
+      },
+      "requests_all": 234759,
+      "requests_llm": 213007
+    }
+  },
+  "lookups": {
+    "n_fee_attributable": 29540,
+    "n_query_set_known": 63456,
+    "n_requests_with_lookup": 63456
+  },
+  "phatic_review_state": "[PLACEHOLDER: Persian review]",
+  "thresholds_tune": {
+    "0.5": {
+      "agreement_mean": 0.7303766722672317,
+      "agreement_share_at_least_0_9": 0.2191780821917808,
+      "fee_avoided": 0.878,
+      "n_evaluable": 73,
+      "n_fee_unattributed": 105,
+      "n_guard_block": 0,
+      "n_lookups_skipped": 409,
+      "n_performed": 27557,
+      "n_requests_all": 234759,
+      "n_requests_llm": 213007,
+      "n_retrieval_turns": 27797,
+      "n_reused": 73,
+      "n_skipped_cited": 0,
+      "n_skipped_phatic": 62,
+      "reused_share_all": 0.00031095719439936276,
+      "reused_share_llm": 0.00034271174186763817,
+      "reused_share_retrieval": 0.0026261826815843436,
+      "skipped_phatic_share_all": 0.00026410063085973275,
+      "skipped_phatic_share_llm": 0.00029107024651772007,
+      "skipped_phatic_share_retrieval": 0.002230456524085333
+    },
+    "0.8": {
+      "agreement_mean": 1.0,
+      "agreement_share_at_least_0_9": 1.0,
+      "fee_avoided": 0.442,
+      "n_evaluable": 2,
+      "n_fee_unattributed": 25,
+      "n_guard_block": 0,
+      "n_lookups_skipped": 197,
+      "n_performed": 27708,
+      "n_requests_all": 234759,
+      "n_requests_llm": 213007,
+      "n_retrieval_turns": 27797,
+      "n_reused": 2,
+      "n_skipped_cited": 0,
+      "n_skipped_phatic": 62,
+      "reused_share_all": 8.519375189023637e-06,
+      "reused_share_llm": 9.389362790894197e-06,
+      "reused_share_retrieval": 7.195021045436558e-05,
+      "skipped_phatic_share_all": 0.00026410063085973275,
+      "skipped_phatic_share_llm": 0.00029107024651772007,
+      "skipped_phatic_share_retrieval": 0.002230456524085333
+    },
+    "1": {
+      "agreement_mean": 1.0,
+      "agreement_share_at_least_0_9": 1.0,
+      "fee_avoided": 0.442,
+      "n_evaluable": 2,
+      "n_fee_unattributed": 25,
+      "n_guard_block": 0,
+      "n_lookups_skipped": 197,
+      "n_performed": 27708,
+      "n_requests_all": 234759,
+      "n_requests_llm": 213007,
+      "n_retrieval_turns": 27797,
+      "n_reused": 2,
+      "n_skipped_cited": 0,
+      "n_skipped_phatic": 62,
+      "reused_share_all": 8.519375189023637e-06,
+      "reused_share_llm": 9.389362790894197e-06,
+      "reused_share_retrieval": 7.195021045436558e-05,
+      "skipped_phatic_share_all": 0.00026410063085973275,
+      "skipped_phatic_share_llm": 0.00029107024651772007,
+      "skipped_phatic_share_retrieval": 0.002230456524085333
+    }
+  }
+}
