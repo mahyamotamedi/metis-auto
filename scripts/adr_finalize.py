@@ -223,7 +223,8 @@ def check(root: Path) -> tuple[list[str], list[str]]:
     for path in repo_files(root):
         text = read(path)
         for m in PLACEHOLDER.finditer(text or ""):
-            errors.append(f"{path.relative_to(root)}: unresolved {m.group(0)}")
+            rel = path.relative_to(root).as_posix()
+            errors.append(f"{rel}: unresolved {m.group(0)}")
     numbers = sorted(int(n) for n in seen)
     gaps = sorted(set(range(1, numbers[-1] + 1)) - set(numbers)) if numbers else []
     if gaps:
@@ -259,7 +260,8 @@ def finalize(root: Path, *, dry_run: bool, out=print) -> int:
             if count:
                 touched[path] = (new, count)
         for path, (_new, count) in sorted(touched.items()):
-            out(f"  {count} reference(s) updated in {path.relative_to(root)}")
+            rel = path.relative_to(root).as_posix()
+            out(f"  {count} reference(s) updated in {rel}")
     if not dry_run:
         for slug, number in info["renames"].items():
             (root / "docs/adr" / f"draft-{slug}.md").rename(
