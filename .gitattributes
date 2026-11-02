@@ -2,4 +2,9 @@
 # exactly as-is, no line-ending conversion or diff normalisation.
 # docs/references/metis_pricing_2026-10-18.csv has CRLF line endings.
 docs/references/*.csv -text
+# progress.md ends with a generated index, and every branch adds lines to it.
+# "union" keeps both sides' added lines instead of reporting a conflict. The
+# merger then runs `python scripts/progress_index.py`, which rewrites the index
+# in the right order. (The entries themselves are separate files in
+# docs/project/progress/, so they never conflict.)
 docs/project/progress.md merge=union
