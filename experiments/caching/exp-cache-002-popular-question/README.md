@@ -2,7 +2,7 @@
 
 - **Hypothesis:** H-8 (a curated first-turn cache captures a useful share of requests; EDA §5, `docs/full_eda/full_eda_report.md`). Final plan task R-A1.
 - **Design basis:** [ADR-0016](../../../docs/adr/0016-curated-cache-and-traffic-source-scope.md) Part 1 (**proposed, to be tested**; no serving change). Hits are candidate hits ([ADR-0006](../../../docs/adr/0006-evaluation-metric-definitions.md) point 2); scope is measured, not decided ([ADR-0007](../../../docs/adr/0007-cache-sharing-scope.md)); key components follow [ADR-0011](../../../docs/adr/0011-cache-key-and-lookup-design.md).
-- **Traceability:** H-8, X1 (hit correctness, `docs/full_eda/experiment_plan.md`), FR-XCACHE-02 (key), FR-XCACHE-04 (validity), FR-XCACHE-05 (scope), ADR-0006, ADR-0007, ADR-0016, ADR-0031 (full-data replay path), ADR-0032 (result format), TODO-07, Q-06.
+- **Traceability:** H-8, X1 (hit correctness, `docs/full_eda/experiment_plan.md`), FR-XCACHE-02 (key), FR-XCACHE-04 (validity), FR-XCACHE-05 (scope), ADR-0006, ADR-0007, ADR-0016, [ADR-0034](../../../docs/adr/0034-cache-guard-key-encoding-and-check-order.md) (guard key encoding), ADR-0031 (full-data replay path), ADR-0032 (result format), TODO-07, Q-06.
 - **Evidence class:** *simulation* on logged requests. `correctness_state` is `unmeasured` until the K-1 review.
 - **Code:** [`version.py`](version.py), class `PopularQuestionCache(window_days, min_count, min_sessions, variant)`, a `levers.StepVersion` of step `cache`. It is loaded only through `wiring.experiments.load_candidate` (scripts and tests); `metis_auto` never imports it. Tests: `tests/unit/experiments/test_popular_question.py` (all frames [SYNTHETIC]).
 - **Status (2026-11-02):** phase 1 of 3, synthetic tests only. No real-data run yet: phase 2 waits for B's `CacheGuard` and C's scope step.
@@ -15,7 +15,9 @@
 | Instruction part | `bot_ins_h_exact` is a hash of the **bot snapshot**, one value per bot, so it never splits a bot's traffic; it is there for ADR-0011 conformance and is a no-op on this data. A per-period instruction history does not exist in the export. | provisional |
 | Nightly set | For each naive day *d* of `u_timestamp`: keys with ≥ `min_count` eligible occurrences in ≥ `min_sessions` distinct sessions on days *d − window_days … d − 1*. No look-ahead, no same-day admission. `1 ≤ window_days ≤ 180`. | decided |
 | Parameters | Arguments, not read from `sprint.toml`; the plan's values are 90, 3, 2 and are passed by the caller. | decided |
+| Guard key | ADR-0034: a guarded key is `"<key_version>\|<body>"`, built with `analysis.cache_guard.versioned_key`, and the guard refuses any other key (`key_version`). **Gap (phase 2):** `keys()` builds the body only, with no version prefix, so B's guard would refuse every key. Needs a `key_version` source, for example a constructor argument (owner's call). | open |
 | Hit | Eligible, key in day *d*'s set, and `ctx.guard.allows(key, bot)` when a guard is given. | decided |
+| Shadow check | Plan S-5: every cache version reports the shadow-check result. `CacheGuard.shadow_sample(keys, rate, seed)` has no default rate; the caller passes the rate from `sprint.toml` (Q-B9). The sample is per key, so the rate is a share of distinct keys. | open (phase 2) |
 | Stored answer | Mode of `a_h_norm` over the window's occurrences; ties go to the latest `a_timestamp`, then the smallest hash. | provisional |
 | Agreement | `pq_answer_agrees`: the hit's own logged answer hash equals the stored one. A diagnostic, never a correctness claim (ADR-0016, `logged_match`). | decided |
 | Effect | Copy with the same index; hit rows get `served_from_cache = True` and zero known `block_fees` and `block_token_cost` (unknown stays unknown). Added columns: `pq_eligible`, `pq_admitted_keys_day` (count), `pq_answer_agrees`. No key, hash or text in the output. | decided |
@@ -59,5 +61,5 @@ From `reports/full_eda/tables/exact_cache_variants.csv` (dynamic cold-cache repl
 ## Phases
 
 1. **(this)** tests and implementation on [SYNTHETIC] frames; guard and scope replaced by stand-ins in tests.
-2. Real-data run after the 18:00 merge, with B's guard and C's scope; write the local K-1 review sheet (30 items, uncommitted).
+2. Real-data run after the 18:00 merge, with B's guard (versioned keys, shadow-check result) and C's scope; write the local K-1 review sheet (30 items, uncommitted).
 3. Read the reviewed sheet; `correctness_state` becomes `sampled:<n>`.
