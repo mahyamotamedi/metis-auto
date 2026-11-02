@@ -2,3 +2,4 @@
 # exactly as-is, no line-ending conversion or diff normalisation.
 # docs/references/metis_pricing_2026-10-18.csv has CRLF line endings.
 docs/references/*.csv -text
+docs/project/progress.md merge=union

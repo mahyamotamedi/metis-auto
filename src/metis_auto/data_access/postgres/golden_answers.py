@@ -208,3 +208,50 @@ def review_inputs(
             key = "instructions" if r.kind == "bot_instruction" else "target"
             out[r.record_id][key] = r.content
     return out
+
+
+def export_rows(conn: Connection, run_id: str) -> list[dict[str, Any]]:
+    """LOCAL USE ONLY: the answered rows of a run with their answer text, in the
+    shape of the sharing file (``answer_files.COLUMNS``)."""
+    rows = conn.execute(
+        text(
+            """SELECT record_id, run_id, model_id, provider_model_version, effort,
+                      max_output_tokens, settings_hash, prompt_fingerprint, status,
+                      answer, answer_chars, answer_language_group, finish_reason,
+                      error_class, attempts, input_tokens, cached_input_tokens,
+                      output_tokens, reasoning_tokens, cost_usd, cost_state,
+                      latency_ms, caveats
+               FROM eval.golden_answer
+               WHERE run_id = :r AND status = 'answered'
+               ORDER BY record_id COLLATE "C" """
+        ),
+        {"r": run_id},
+    )
+    out = []
+    for r in rows:
+        row = dict(r._mapping)
+        row["cost_usd"] = None if row["cost_usd"] is None else str(row["cost_usd"])
+        row["caveats"] = list(row["caveats"])
+        out.append(row)
+    return out
+
+
+def dataset_record_ids(conn: Connection, dataset_id: str) -> set[str]:
+    rows = conn.execute(
+        text("SELECT record_id FROM eval.dataset_record WHERE dataset_id = :d"),
+        {"d": dataset_id},
+    )
+    return {r.record_id for r in rows}
+
+
+def insert_answers(conn: Connection, rows: Iterable[Mapping[str, Any]]) -> None:
+    """Insert shared rows in the caller's transaction. An answered row already
+    stored is never overwritten (``save_answer``)."""
+    from decimal import Decimal
+
+    for row in rows:
+        cost = row["cost_usd"]
+        save_answer(
+            conn,
+            {**row, "cost_usd": None if cost is None else Decimal(cost)},
+        )
