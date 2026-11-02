@@ -40,7 +40,6 @@ from metis_auto.adapters.providers import (
     ProxyModelClient,
     ReplayModelClient,
 )
-from metis_auto.adapters.sinks import JsonLinesEventSink
 from metis_auto.adapters.stores import InMemoryCacheStore
 from metis_auto.adapters.system import SequentialIdSource, SystemClock
 from metis_auto.adapters.tokenizers import ApproxCharsTokenizer
@@ -71,6 +70,7 @@ from metis_auto.settings import (
 from .from_settings import (
     build_accounting_service,
     build_pipeline_from_settings,
+    event_sink,
     fingerprint_key,
     pipeline_config,
 )
@@ -228,7 +228,7 @@ class PreparedRun:
     cases: CaseSet
     loaded: LoadedSettings
     run_dir: Path
-    sink: JsonLinesEventSink
+    sink: EventSink
 
 
 def prepare(
@@ -345,7 +345,8 @@ def prepare(
                 **inject,
             )
 
-    sink = JsonLinesEventSink(run_dir / "events.jsonl")  # opened last
+    # opened last; [events] sink (T-3): the JSON Lines file, plus Postgres if set
+    sink = event_sink(loaded, run_dir / "events.jsonl")
     setup = RunSetup(
         experiment=exp,
         manifest=manifest,

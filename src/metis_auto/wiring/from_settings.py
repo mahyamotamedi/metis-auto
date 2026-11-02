@@ -15,8 +15,14 @@ from __future__ import annotations
 import logging
 import secrets
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
+from metis_auto.adapters.sinks import (
+    FanOutEventSink,
+    JsonLinesEventSink,
+    PostgresEventSink,
+)
 from metis_auto.adapters.system import FileSpendLedger, SystemClock
 from metis_auto.adapters.tokenizers import ApproxCharsTokenizer
 from metis_auto.application.accounting import AccountingService
@@ -29,6 +35,7 @@ from metis_auto.contracts import (
     Money,
     RunMode,
 )
+from metis_auto.data_access.postgres import event_store
 from metis_auto.ports import (
     CacheStore,
     Clock,
@@ -239,3 +246,28 @@ def build_accounting_service(
     return AccountingService(
         measurement, loaded.reference.catalogue, loaded.reference.prices
     )
+
+
+def event_sink(loaded: LoadedSettings, path: Path) -> EventSink:
+    """The run's event sink from ``[events] sink`` (T-3, ADR-0033).
+
+    ``jsonl`` (default): the JSON Lines file at ``path``, unchanged. ``postgres``:
+    the same file plus ``exp.events``, through ``FanOutEventSink``. The file
+    stays the run's record (ADR-0022). Postgres is connected first, so an
+    unreachable server fails before any file is opened. The password comes
+    only from ``METIS_DB_PASSWORD`` in the process environment
+    (``data_access.postgres.event_store``).
+    """
+    if loaded.settings.events.sink == "jsonl":
+        return JsonLinesEventSink(path)
+    db = loaded.settings.database
+    connect = event_store.event_connection_factory(
+        host=db.host, port=db.port, name=db.name, user=db.user
+    )
+    postgres = PostgresEventSink(connect)
+    try:
+        jsonl = JsonLinesEventSink(path)
+    except Exception:
+        postgres.close()
+        raise
+    return FanOutEventSink((jsonl, postgres))
