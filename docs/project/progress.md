@@ -37,6 +37,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 ## Entries, newest first
 
 <!-- progress-index:start -->
+- 2026-11-02: [Sprint Day 2, Pipeline C: within-message chunk dedup and stable prompt order](progress/2026-11-02-sprint-day-2-pipeline-c-within-message-chunk-dedup.md)
 - 2026-11-02: [Sprint Day 1, Pipeline C: replay split keeps the report side, ADR for scope, split and baselines](progress/2026-11-02-sprint-day-1-pipeline-c-replay-split-report-side-keeps.md)
 - 2026-11-02: [Sprint Day 1, Pipeline C: replay scope, split and four baselines](progress/2026-11-02-sprint-day-1-pipeline-c-replay-scope-split-baselines.md)
 - 2026-11-02: [Sprint Day 1, Pipeline C: demo shell, lever view model](progress/2026-11-02-sprint-day-1-pipeline-c-demo-shell-lever-view.md)
