@@ -1,0 +1,198 @@
+{
+  "chosen_max_input_tokens": 16000,
+  "chosen_per_fold": {
+    "0": 32000,
+    "1": 16000,
+    "2": 8000,
+    "3": 16000,
+    "4": 8000
+  },
+  "evidence": "simulation; quality not proven (no labels)",
+  "frozen_max_input_tokens": 16000,
+  "max_u_chars": 200,
+  "naive_timestamps": "Q-06",
+  "rag_query_share_llm": 0.127592,
+  "requests_all": 230762,
+  "requests_llm": 209331,
+  "rule_features_unknown_share_llm": {
+    "a_rag_n_queries": 0.0,
+    "bot_n_functions": 0.0,
+    "u_att_n": 0.006096,
+    "u_n_chars": 0.006096
+  },
+  "split": "tune (split_by_session tune rows inside the tune period)",
+  "token_grid": {
+    "1000": {
+      "moved_share": 0.22024,
+      "saving_share": 0.078958,
+      "simple_share_llm": 0.533519
+    },
+    "16000": {
+      "moved_share": 0.38753,
+      "saving_share": 0.2717,
+      "simple_share_llm": 0.770655
+    },
+    "2000": {
+      "moved_share": 0.358088,
+      "saving_share": 0.133657,
+      "simple_share_llm": 0.72746
+    },
+    "32000": {
+      "moved_share": 0.38827,
+      "saving_share": 0.277122,
+      "simple_share_llm": 0.777391
+    },
+    "4000": {
+      "moved_share": 0.370284,
+      "saving_share": 0.167888,
+      "simple_share_llm": 0.747954
+    },
+    "500": {
+      "moved_share": 0.137744,
+      "saving_share": 0.057949,
+      "simple_share_llm": 0.241144
+    },
+    "8000": {
+      "moved_share": 0.385953,
+      "saving_share": 0.239669,
+      "simple_share_llm": 0.766609
+    }
+  },
+  "tolerance": 0.01,
+  "versions": {
+    "primary": {
+      "baselines": {
+        "as_logged": {
+          "baseline": 322.29412,
+          "n_moved": 134199,
+          "n_saving_unknown": 25816,
+          "saving": 57.715083,
+          "saving_share": 0.179076,
+          "saving_share_top5_bots": 0.725026,
+          "saving_share_top_bot": 0.364795,
+          "saving_share_top_tenant": 0.805421
+        },
+        "best_single_cheap": {
+          "baseline": 49.808602,
+          "n_moved": 0,
+          "n_saving_unknown": 0,
+          "saving": 0.0,
+          "saving_share": 0.0
+        },
+        "premium_gpt_5_5": {
+          "baseline": 4466.994047,
+          "n_moved": 160374,
+          "n_saving_unknown": 0,
+          "saving": 1685.138903,
+          "saving_share": 0.377242,
+          "saving_share_top5_bots": 0.688861,
+          "saving_share_top_bot": 0.45624,
+          "saving_share_top_tenant": 0.554878
+        },
+        "todays_models": {
+          "baseline": 225.436153,
+          "n_moved": 81122,
+          "n_saving_unknown": 0,
+          "saving": 61.251049,
+          "saving_share": 0.2717,
+          "saving_share_top5_bots": 0.747798,
+          "saving_share_top_bot": 0.377945,
+          "saving_share_top_tenant": 0.764136
+        }
+      },
+      "candidates": [
+        "gpt-4.1-nano",
+        "gpt-4o-mini"
+      ],
+      "moved_share_all": 0.35154,
+      "moved_share_llm": 0.38753,
+      "moved_to": {
+        "gpt-4.1-nano": 81122
+      },
+      "reasons_llm": {
+        "attachments": 2676,
+        "attachments_unknown": 1262,
+        "functions": 2277,
+        "incumbent_unpriced": 88,
+        "moved": 81122,
+        "no_cheaper_candidate": 80110,
+        "no_eligible_candidate": 11,
+        "not_simple": 41279,
+        "unknown_tokens": 506
+      },
+      "simple_share_all": 0.699084,
+      "simple_share_llm": 0.770655,
+      "version": "route.small_classifier.rules"
+    },
+    "with_reasoning_models": {
+      "baselines": {
+        "as_logged": {
+          "baseline": 327.778988,
+          "n_moved": 57531,
+          "n_saving_unknown": 0,
+          "saving": 57.214203,
+          "saving_share": 0.174551,
+          "saving_share_top5_bots": 0.720127,
+          "saving_share_top_bot": 0.367485,
+          "saving_share_top_tenant": 0.787526
+        },
+        "best_single_cheap": {
+          "baseline": 49.808602,
+          "n_moved": 22462,
+          "n_saving_unknown": 0,
+          "saving": 0.609656,
+          "saving_share": 0.01224,
+          "saving_share_top5_bots": 0.61716,
+          "saving_share_top_bot": 0.256679,
+          "saving_share_top_tenant": 0.493902
+        },
+        "premium_gpt_5_5": {
+          "baseline": 4466.994047,
+          "n_moved": 160376,
+          "n_saving_unknown": 0,
+          "saving": 1697.347372,
+          "saving_share": 0.379975,
+          "saving_share_top5_bots": 0.689293,
+          "saving_share_top_bot": 0.457281,
+          "saving_share_top_tenant": 0.555584
+        },
+        "todays_models": {
+          "baseline": 225.436153,
+          "n_moved": 160360,
+          "n_saving_unknown": 0,
+          "saving": 69.088705,
+          "saving_share": 0.306467,
+          "saving_share_top5_bots": 0.682023,
+          "saving_share_top_bot": 0.335456,
+          "saving_share_top_tenant": 0.731558
+        }
+      },
+      "candidates": [
+        "gpt-5-nano",
+        "gpt-4.1-nano",
+        "gpt-4o-mini",
+        "deepseek-v4-flash",
+        "mimo-v2.5"
+      ],
+      "moved_share_all": 0.694915,
+      "moved_share_llm": 0.766059,
+      "moved_to": {
+        "gpt-5-nano": 137911,
+        "mimo-v2.5": 22449
+      },
+      "reasons_llm": {
+        "attachments": 2676,
+        "attachments_unknown": 1262,
+        "functions": 2277,
+        "incumbent_unpriced": 88,
+        "moved": 160360,
+        "no_cheaper_candidate": 874,
+        "not_simple": 41288,
+        "unknown_tokens": 506
+      },
+      "simple_share_all": 0.699084,
+      "simple_share_llm": 0.770655,
+      "version": "route.small_classifier.rules.with_reasoning_models"
+    }
+  }
+}
