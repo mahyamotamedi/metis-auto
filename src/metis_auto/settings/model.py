@@ -268,6 +268,22 @@ class EventSettings(ContractModel):
     sink: Literal["jsonl", "postgres"] = "jsonl"
 
 
+class CacheStoreSettings(ContractModel):
+    """Where answer-cache entries live (T-1). ``memory`` (default): one
+    in-process store per chat session, unchanged. ``redis``: a Redis server at
+    ``redis_host:redis_port`` (database ``redis_db``), keys under
+    ``redis_namespace`` and the cache key schema version; a password only from
+    ``METIS_REDIS_PASSWORD`` in the process environment
+    (``adapters.stores.redis_store``). Machine-local and excluded from the
+    config hash: a store holds data and decides nothing (ADR-0011 point 5)."""
+
+    store: Literal["memory", "redis"] = "memory"
+    redis_host: str = "localhost"
+    redis_port: int = Field(default=6379, gt=0, lt=65536)
+    redis_db: int = Field(default=0, ge=0)
+    redis_namespace: str = Field(default="metis-auto", min_length=1)
+
+
 class ThinkingMode(StrEnum):
     ENABLED = "enabled"
     DISABLED = "disabled"
@@ -329,6 +345,7 @@ class Settings(ContractModel):
     embedding: EmbeddingSettings = EmbeddingSettings()
     database: DatabaseSettings = DatabaseSettings()
     events: EventSettings = EventSettings()
+    cache: CacheStoreSettings = CacheStoreSettings()
     dev: DevSettings = DevSettings()
     golden_answers: GoldenAnswersSettings = GoldenAnswersSettings()
     model_options: dict[str, ModelRequestOptions] = {}
@@ -338,7 +355,7 @@ class Settings(ContractModel):
     ``features``, ``accounting``), opaque here; wiring validates them."""
 
 
-HASH_EXCLUDED_SECTIONS = ("paths", "logging", "reference", "events")
+HASH_EXCLUDED_SECTIONS = ("paths", "logging", "reference", "events", "cache")
 """Sections left out of the config hash: machine-local or replaced by
 reference version IDs (configuration.md §3 rule 6)."""
 

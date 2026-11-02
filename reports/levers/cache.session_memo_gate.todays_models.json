@@ -1,0 +1,72 @@
+{
+  "assumptions": [
+    "Candidate reuse and candidate skip: simulation on logged requests; production correctness not measured.",
+    "Memo: reuse the session's last real lookup when the Jaccard of normalised query fingerprints is >= 0.8 (chosen on the tune split). Reused chunks are still sent: fees only, never served_from_cache.",
+    "Gate: exact match of u_h_norm against the phatic list plus one trailing mark (heuristic); list state [PLACEHOLDER: Persian review]. Never turn 0, attachments or workflow.",
+    "Skipped turn tokens = all its chunk characters x 0.3384 (ledger recon.t0rag.coef_rag): hypothetical reconstruction, uncached input only.",
+    "Repriced: saving not computed. The fee part is not priced in price-file units (ADR-0036, ADR-0037 item 7), so the total is unknown; the known token part is session_memo.token_saving_lower_bound.",
+    "Agreement = Jaccard over (chunk_id, h_exact) with the turn's logged chunks (slice session_memo); the gate has no agreement, n_skipped_cited is a proxy risk indicator.",
+    "Combined with a context version, a skipped turn's dropped chunks must not be counted again (Review Focus 1); not enforced by combine.",
+    "Measured potential, conditional on Metis-Auto being able to intercept retrieval. Timestamps naive (Q-06)."
+  ],
+  "baseline": "todays_models",
+  "baseline_cost": {
+    "token_cost": "2.935424858",
+    "total": "2.935424858"
+  },
+  "ci_high": null,
+  "ci_low": null,
+  "correctness_state": "unmeasured",
+  "evidence_class": "simulation",
+  "lever_id": "cache.session_memo_gate.todays_models",
+  "manifest": {
+    "code_commit": "9233ec783ffc49f77843774ec94d96b6eb3a6204",
+    "config_hash": "eaf49a9f8ae7898bf9015f378b537a5498961475045bfa185043a43b5e26c4b5",
+    "created_at": "2026-11-02T17:28:01Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "python_version": "3.13.16",
+    "seed": 20261102
+  },
+  "n_eligible": 14882,
+  "n_requests": 73063,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
+  "saving": {},
+  "slices": {
+    "all": {
+      "baseline:token_cost": "2.935424858",
+      "baseline:total": "2.935424858",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "2874",
+      "n_requests": "73063",
+      "n_saving_unknown": "0",
+      "saved_input_tokens": "16472.532824161"
+    },
+    "llm_only": {
+      "baseline:token_cost": "2.935424858",
+      "baseline:total": "2.935424858",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "2874",
+      "n_requests": "20750",
+      "n_saving_unknown": "0",
+      "saved_input_tokens": "16472.532824161"
+    },
+    "session_memo": {
+      "n_evaluable": "0",
+      "n_fee_unattributed": "80",
+      "n_guard_block": "0",
+      "n_lookups_skipped": "789",
+      "n_performed": "14546",
+      "n_retrieval_turns": "14882",
+      "n_reused": "0",
+      "n_skipped_cited": "0",
+      "n_skipped_phatic": "256",
+      "token_saving_lower_bound": "0.003623957"
+    }
+  },
+  "step": "cache",
+  "version": "cache.session_memo_gate"
+}

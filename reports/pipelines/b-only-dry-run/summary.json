@@ -1,0 +1,202 @@
+{
+  "checks": {
+    "cache_alone.retrieval_rows_not_served": true,
+    "combined.conservative-default.retrieval_rows_not_served": true,
+    "combined.stated-scenario-k1.retrieval_rows_not_served": true,
+    "combined_today.stated-scenario-k1.retrieval_rows_not_served": true
+  },
+  "created_at": "2026-11-02T15:33:58.431282+00:00",
+  "overlaps": {
+    "combined.conservative-default": {
+      "all_three": 0,
+      "cache": 1555,
+      "cache&context": 0,
+      "cache&routing": 9,
+      "context": 0,
+      "context&routing": 0,
+      "routing": 3692
+    },
+    "combined.stated-scenario-k1": {
+      "all_three": 9,
+      "cache": 1555,
+      "cache&context": 1414,
+      "cache&routing": 9,
+      "context": 15013,
+      "context&routing": 43,
+      "routing": 3692
+    },
+    "combined_today.stated-scenario-k1": {
+      "all_three": 9,
+      "cache": 1555,
+      "cache&context": 1414,
+      "cache&routing": 9,
+      "context": 15013,
+      "context&routing": 43,
+      "routing": 3692
+    }
+  },
+  "period": "tune (naive timestamps, Q-06); scored rows split_by_session tune; every tune-period row is R-B1 cache history",
+  "recorded": {
+    "cache_alone": {
+      "baseline:total": "327.778988324",
+      "saving:fees": "3.580000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "3.580000000"
+    },
+    "combined.conservative-default": {
+      "baseline:total": "327.778988324",
+      "saving:fees": "3.580000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "3.580000000",
+      "steps": "cache + context; routing not computed"
+    },
+    "combined.stated-scenario-k1": {
+      "baseline:total": "327.778988324",
+      "saving:fees": "3.580000000",
+      "saving:token_cost": "7.657114466",
+      "saving:total": "11.237114466",
+      "steps": "cache + context; routing not computed"
+    },
+    "combined_today.stated-scenario-k1": {
+      "baseline:total": "327.778988324",
+      "saving:fees": "3.580000000",
+      "saving:token_cost": "7.657114466",
+      "saving:total": "11.237114466",
+      "steps": "cache + context; routing not computed"
+    },
+    "context_alone.conservative-default": {
+      "baseline:total": "327.778988324",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "0.000000000"
+    },
+    "context_alone.stated-scenario-k1": {
+      "baseline:total": "327.778988324",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "7.657114466",
+      "saving:total": "7.657114466"
+    },
+    "routing_alone": "not computed in these units: the routed cost is in price-file units and recorded units are never subtracted across"
+  },
+  "repriced": {
+    "cache_alone": "not computed in these units: R-B1 saves recorded per-call fees, and the repriced baselines have no fee block",
+    "combined.conservative-default": {
+      "best_single_cheap": "-15.336983443",
+      "premium_gpt_5_5": "996.339144618",
+      "todays_models": "0.190131237"
+    },
+    "combined.stated-scenario-k1": {
+      "best_single_cheap": "-14.639081245",
+      "premium_gpt_5_5": "997.037046816",
+      "todays_models": "0.888033435"
+    },
+    "combined_today.stated-scenario-k1": {
+      "best_single_cheap": "-15.336983443",
+      "premium_gpt_5_5": "996.339144618",
+      "todays_models": "0.190131237"
+    },
+    "context_alone.conservative-default": {
+      "best_single_cheap": "-15.527114680",
+      "premium_gpt_5_5": "996.149013381",
+      "todays_models": "0.000000000"
+    },
+    "context_alone.stated-scenario-k1": {
+      "best_single_cheap": "-14.827325676",
+      "premium_gpt_5_5": "996.848802385",
+      "todays_models": "0.699789004"
+    },
+    "routing_alone": {
+      "best_single_cheap": "-15.336983443",
+      "premium_gpt_5_5": "996.339144618",
+      "todays_models": "0.190131237"
+    }
+  },
+  "repriced_note": "per-baseline savings share the term (baseline - today's models), so they are not additive across runs; the sum rule is checked on the increment over today's models, which is the same for the three repriced baselines",
+  "repriced_rows": {
+    "n": 88971,
+    "note": "rows whose incumbent and tokens routing can price; same rows for every run"
+  },
+  "routing_after_context": "combined.*: PostContextRouting (input lowered by R-B2's net tokens saved); combined_today.*: combine as it is (routing reprices the logged input)",
+  "sum_rule": {
+    "as_logged.conservative-default": {
+      "combined": "3.580000000",
+      "equal": true,
+      "holds": true,
+      "standalone_sum": "3.580000000"
+    },
+    "as_logged.stated-scenario-k1": {
+      "combined": "11.237114466",
+      "equal": true,
+      "holds": true,
+      "standalone_sum": "11.237114466"
+    },
+    "repriced_increment_over_todays_models.conservative-default": {
+      "combined": "0.190131237",
+      "equal": true,
+      "holds": true,
+      "standalone_sum": "0.190131237"
+    },
+    "repriced_increment_over_todays_models.stated-scenario-k1": {
+      "combined": "0.888033435",
+      "equal": false,
+      "holds": true,
+      "standalone_sum": "0.889920241"
+    }
+  },
+  "task": "I-1, Pipeline B only: dry-run combine of R-B1 + R-B2 + R-B3 (handoff; no winner picked)",
+  "units": {
+    "as_logged": {
+      "combined_steps": [
+        "cache",
+        "context"
+      ],
+      "not_computed": {
+        "routing": "not computed in these units: the routed cost is in price-file units and recorded units are never subtracted across"
+      }
+    },
+    "best_single_cheap": {
+      "combined_steps": [
+        "context",
+        "routing"
+      ],
+      "not_computed": {
+        "cache": "not computed in these units: R-B1 saves recorded per-call fees, and the repriced baselines have no fee block"
+      }
+    },
+    "premium_gpt_5_5": {
+      "combined_steps": [
+        "context",
+        "routing"
+      ],
+      "not_computed": {
+        "cache": "not computed in these units: R-B1 saves recorded per-call fees, and the repriced baselines have no fee block"
+      }
+    },
+    "todays_models": {
+      "combined_steps": [
+        "context",
+        "routing"
+      ],
+      "not_computed": {
+        "cache": "not computed in these units: R-B1 saves recorded per-call fees, and the repriced baselines have no fee block"
+      }
+    }
+  },
+  "versions": {
+    "cache": "R-B1 retrieval_result_cache.ttl_1d (TTL chosen on Day 2)",
+    "context": {
+      "conservative-default": [
+        0,
+        8,
+        false
+      ],
+      "stated-scenario-k1": [
+        1,
+        8,
+        false
+      ]
+    },
+    "routing": "R-B3 route.knn.k5 (declared default), interim eligibility, not the shared routing base"
+  },
+  "why_not_lever_result": "LeverResult.step is one of cache/context/routing; a combined pipeline has no step, so a content-free summary is written"
+}
