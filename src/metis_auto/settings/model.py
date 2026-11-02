@@ -315,6 +315,16 @@ class ModelRequestOptions(ContractModel):
     (both default to enabled). The chat templates in ``tokenizers.toml`` are
     for each provider's default; with the other mode the counted framing is
     off by a few tokens (DeepSeek: over, MiMo: under; ADR-0021)."""
+    thinking_budget: int | None = Field(
+        default=None, ge=0, exclude_if=lambda v: v is None
+    )
+    """Gemini thinking budget in tokens, sent on every call as
+    ``generationConfig.thinkingConfig.thinkingBudget`` (field name unverified;
+    ADR-XXXX (gemini-native-adapter)). Allowed only for a model whose endpoint
+    has ``api_format = "google_genai"``. Unset = the native adapter refuses to
+    call, so no call thinks at the provider's default; provider-chosen
+    ("dynamic") budgets are not allowed. Thinking tokens bill as output.
+    Left out of dumps while unset, so existing config hashes stay the same."""
 
 
 class GoldenAnswersSettings(ContractModel):
