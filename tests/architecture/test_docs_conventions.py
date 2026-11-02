@@ -57,7 +57,17 @@ def test_gitattributes_merges_progress_md_by_union_with_a_reason():
 
 def test_adr_numbers_are_unique_and_the_readme_table_matches_the_files():
     errors, _notes = af.check(ROOT)
-    errors = [e for e in errors if not e.startswith("draft not finalized")]
+    # On a branch, a draft and the placeholders that cite it are allowed: the merger
+    # resolves them. A placeholder with no draft behind it is still an error.
+    slugs = {
+        m[1] for p in (ROOT / "docs/adr").iterdir() if (m := af.DRAFT.match(p.name))
+    }
+    errors = [
+        e
+        for e in errors
+        if not e.startswith("draft not finalized")
+        and not any(e.endswith(f": unresolved {PH} ({s})") for s in slugs)
+    ]
     assert errors == []
 
 
