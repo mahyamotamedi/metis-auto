@@ -1,6 +1,6 @@
 """EXP-CTX-004 history budget, stepped window (sprint task R-C2; FR-CTX-02,
 FR-CTX-03, FR-ACCT-02, H-1, X4; ADR-0036, ADR-0038, ADR-0039,
-ADR-XXXX (history-token-measure)).
+ADR-0044).
 
 Every frame, bot, size, token count, rate and price here is SYNTHETIC: invented
 values, no dataset content, no real price. The version lives in

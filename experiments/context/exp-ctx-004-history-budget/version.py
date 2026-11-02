@@ -1,7 +1,7 @@
 """EXP-CTX-004: history budget with a stepped window, a context ``StepVersion``
 (final plan R-C2; FR-CTX-02, FR-CTX-03, FR-ACCT-02, H-1, X4; Review Focus 1).
 
-**History tokens** (owner decision 2026-11-02; ADR-XXXX (history-token-measure)).
+**History tokens** (owner decision 2026-11-02; ADR-0044).
 What reached the provider is unknown (EDA §2), so the history actually sent is
 estimated by the excess-over-turn-0 proxy (ledger ``hist.excess_over_t0_all``):
 ``hist_tokens = max(0, effective input - turn-0 base of the bot - chunk

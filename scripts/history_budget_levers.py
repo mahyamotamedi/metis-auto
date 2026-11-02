@@ -3,7 +3,7 @@
 Reads ``requests.parquet``, scopes it and splits it by session
 (``replay_scope``). The turn-0 base per bot is fitted on the **tune** split
 only (``min_n`` from ``sprint.toml``); per-turn sizes come from every logged
-turn of the session. History tokens follow ADR-XXXX (history-token-measure):
+turn of the session. History tokens follow ADR-0044:
 excess over the bot's turn-0 base less chunk tokens (characters x the ledger
 coefficient ``recon.t0rag.coef_rag``). ``as_logged`` is priced at each model's
 ``implied_input_per_M`` and ``implied_cached_per_M``

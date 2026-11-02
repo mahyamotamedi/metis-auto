@@ -1,4 +1,4 @@
-# ADR-XXXX (history-token-measure): History tokens are the excess over the bot's net turn-0 base, single calls only, removed from cached input first
+# ADR-0044: History tokens are the excess over the bot's net turn-0 base, single calls only, removed from cached input first
 
 - Status: **decided** by the project owner, 2026-11-02 (Pipeline C, sprint task R-C2), points 1, 3, 4, 6 and 7; points 2 and 5 are the agent's precision of those decisions, **provisional** until the owner reviews them. The measure is a *hypothetical reconstruction* and an upper bound.
 - Date: 2026-11-02
