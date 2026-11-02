@@ -20,11 +20,11 @@
   "evidence_class": "simulation",
   "lever_id": "cache.session_memo_gate.best_single_cheap",
   "manifest": {
-    "code_commit": "9233ec783ffc49f77843774ec94d96b6eb3a6204",
+    "code_commit": "4c4ef646bf6b83c66d9300f3f42e366f4ad2d7f7",
     "config_hash": "f6958181b0e3d9b002cfa083fe202e8fee6661d4cdf41ba114bb6bc87c6d2d4e",
-    "created_at": "2026-11-02T17:28:01Z",
+    "created_at": "2026-11-02T23:08:48Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "prices-metis-2026-10-18-logged",
     "python_version": "3.13.16",
     "seed": 20261102
   },

@@ -11,8 +11,8 @@
   ],
   "baseline": "todays_models",
   "baseline_cost": {
-    "token_cost": "2.935424858",
-    "total": "2.935424858"
+    "token_cost": "242.764576877",
+    "total": "242.764576877"
   },
   "ci_high": null,
   "ci_low": null,
@@ -20,11 +20,11 @@
   "evidence_class": "simulation",
   "lever_id": "cache.session_memo_gate.todays_models",
   "manifest": {
-    "code_commit": "9233ec783ffc49f77843774ec94d96b6eb3a6204",
+    "code_commit": "4c4ef646bf6b83c66d9300f3f42e366f4ad2d7f7",
     "config_hash": "eaf49a9f8ae7898bf9015f378b537a5498961475045bfa185043a43b5e26c4b5",
-    "created_at": "2026-11-02T17:28:01Z",
+    "created_at": "2026-11-02T23:08:48Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "prices-metis-2026-10-18-logged",
     "python_version": "3.13.16",
     "seed": 20261102
   },
@@ -35,24 +35,24 @@
   "saving": {},
   "slices": {
     "all": {
-      "baseline:token_cost": "2.935424858",
-      "baseline:total": "2.935424858",
+      "baseline:token_cost": "242.764576877",
+      "baseline:total": "242.764576877",
       "cache_hit_rate": "0.000000000",
       "n_cache_hits": "0",
-      "n_cost_known": "2874",
+      "n_cost_known": "20707",
       "n_requests": "73063",
       "n_saving_unknown": "0",
-      "saved_input_tokens": "16472.532824161"
+      "saved_input_tokens": "2321713.524953122"
     },
     "llm_only": {
-      "baseline:token_cost": "2.935424858",
-      "baseline:total": "2.935424858",
+      "baseline:token_cost": "242.764576877",
+      "baseline:total": "242.764576877",
       "cache_hit_rate": "0.000000000",
       "n_cache_hits": "0",
-      "n_cost_known": "2874",
+      "n_cost_known": "20707",
       "n_requests": "20750",
       "n_saving_unknown": "0",
-      "saved_input_tokens": "16472.532824161"
+      "saved_input_tokens": "2321713.524953122"
     },
     "session_memo": {
       "n_evaluable": "0",
@@ -64,7 +64,7 @@
       "n_reused": "0",
       "n_skipped_cited": "0",
       "n_skipped_phatic": "256",
-      "token_saving_lower_bound": "0.003623957"
+      "token_saving_lower_bound": "0.764353485"
     }
   },
   "step": "cache",
