@@ -38,6 +38,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 
 <!-- progress-index:start -->
 - 2026-11-02: [Sprint Day 1, Pipeline C: replay scope, split and four baselines](progress/2026-11-02-sprint-day-1-pipeline-c-replay-scope-split-baselines.md)
+- 2026-11-02: [Sprint Day 1, Pipeline C: demo shell, lever view model](progress/2026-11-02-sprint-day-1-pipeline-c-demo-shell-lever-view.md)
 - 2026-11-02: [Sprint Day 1, Pipeline C: CI on GitHub Actions](progress/2026-11-02-sprint-day-1-pipeline-c-ci-github-actions.md)
 - 2026-11-02: [Sprint Day 1, Pipeline B: comparison, cache guard, Postgres event sink](progress/2026-11-02-sprint-day-1-pipeline-b-comparison-cache-guard-postgres.md)
 - 2026-11-02: [Sharing the golden answers](progress/2026-11-02-sharing-the-golden-answers.md)
