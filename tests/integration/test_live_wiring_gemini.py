@@ -1,4 +1,4 @@
-"""Gemini wiring over a FAKE transport (ADR-XXXX (gemini-native-adapter)).
+"""Gemini wiring over a FAKE transport (ADR-0043).
 
 The real configuration keeps the Gemini endpoint deferred and has no Gemini
 model; these tests enable both in SYNTHETIC copies under ``tmp_path`` to check

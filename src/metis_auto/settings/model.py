@@ -320,7 +320,7 @@ class ModelRequestOptions(ContractModel):
     )
     """Gemini thinking budget in tokens, sent on every call as
     ``generationConfig.thinkingConfig.thinkingBudget`` (field name unverified;
-    ADR-XXXX (gemini-native-adapter)). Allowed only for a model whose endpoint
+    ADR-0043). Allowed only for a model whose endpoint
     has ``api_format = "google_genai"``. Unset = the native adapter refuses to
     call, so no call thinks at the provider's default; provider-chosen
     ("dynamic") budgets are not allowed. Thinking tokens bill as output.

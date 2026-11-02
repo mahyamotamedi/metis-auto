@@ -1,13 +1,13 @@
-# ADR-XXXX (gemini-live-calls): Gemini is callable through the native adapter once enabled (amends ADR-0018 point 2)
+# ADR-0042: Gemini is callable through the native adapter once enabled (amends ADR-0018 point 2)
 
 - Status: **proposed**, until the owner approves a live check. Nothing changes in the configuration until then.
 - Date: 2026-11-02
 - Amends: ADR-0018 point 2 ("Gemini needs a different wire format and is **deferred**").
-- Relates to: [ADR-XXXX (gemini-native-adapter)](draft-gemini-native-adapter.md), ADR-0003, ADR-0018 (amendments 1 and 2: the lifetime cap and ceiling), ADR-0019, ADR-0021.
+- Relates to: [ADR-0043](0043-gemini-native-adapter.md), ADR-0003, ADR-0018 (amendments 1 and 2: the lifetime cap and ceiling), ADR-0019, ADR-0021.
 
 ## Context
 
-ADR-0018 point 2 deferred Gemini because the Metis wrapper serves it in Google's format, which needs a second adapter. ADR-XXXX (gemini-native-adapter) adds that adapter, offline only, with every wire field name unverified. ADR-0018's rules still hold: live calls are for development and testing, under the lifetime cap; only own or synthetic messages; never without the owner asking.
+ADR-0018 point 2 deferred Gemini because the Metis wrapper serves it in Google's format, which needs a second adapter. ADR-0043 adds that adapter, offline only, with every wire field name unverified. ADR-0018's rules still hold: live calls are for development and testing, under the lifetime cap; only own or synthetic messages; never without the owner asking.
 
 ## Decision (proposed)
 

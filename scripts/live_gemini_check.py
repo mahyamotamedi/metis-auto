@@ -1,12 +1,13 @@
-"""The tiny live Gemini check through the Metis wrapper (ADR-XXXX
-(gemini-native-adapter), ADR-XXXX (gemini-live-calls)).
+"""The tiny live Gemini check through the Metis wrapper.
+
+ADR-0043, ADR-0042.
 
     python scripts/live_gemini_check.py --thinking-budget 0        # plan only
     python scripts/live_gemini_check.py --thinking-budget 0 --run  # asks, calls
     python scripts/live_gemini_check.py --thinking-budget 0 --run --yes
 
 NOT RUN YET. Before the first ``--run`` it needs, all from the owner:
-  1. the ADR-0018 amendment, ADR-XXXX (gemini-live-calls), accepted;
+  1. the ADR-0018 amendment, ADR-0042, accepted;
   2. a raised Metis dashboard limit (Q-29) that covers this check;
   3. the enabling step: a catalogue row for the model (with a price and a
      tokenizer row), and the ``gemini`` endpoint row's status ``enabled``;

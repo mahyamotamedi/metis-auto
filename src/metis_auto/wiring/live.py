@@ -12,8 +12,8 @@ The adapter needs the optional extra ``live`` (``openai``); it is imported only
 when a live client is actually built, so offline runs never need it. An
 enabled ``google_genai`` endpoint (none is: Gemini is "deferred") adds the
 Gemini native adapter (standard library only) behind a per-model dispatching
-client, with each model's ``thinking_budget`` (ADR-XXXX
-(gemini-native-adapter)).
+client, with each model's ``thinking_budget``
+(ADR-0043).
 Called by: scripts (``live_wrapper_check.py``, ``chat.py``), ``wiring.chat``,
 tests. Calls: settings, wiring.from_settings, adapters.providers.
 """
@@ -173,7 +173,7 @@ def request_options(loaded: LoadedSettings) -> dict[str, dict[str, Any]]:
 def thinking_budgets(loaded: LoadedSettings) -> dict[str, int]:
     """``[model_options] thinking_budget`` per model, for the Gemini native
     adapter, after the same checks as ``request_options``. A Gemini model
-    without one is refused by the adapter (ADR-XXXX (gemini-native-adapter))."""
+    without one is refused by the adapter (ADR-0043)."""
     request_options(loaded)
     return {
         model_id: options.thinking_budget

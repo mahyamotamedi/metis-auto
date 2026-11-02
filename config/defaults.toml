@@ -90,7 +90,7 @@ ephemeral_fingerprint_key = true
 # Gemini (native adapter; endpoint deferred, no catalogue row yet): every
 # model needs an explicit thinking_budget (tokens, >= 0). Unset = the adapter
 # refuses to call, so nothing thinks at the provider's default. Thinking
-# tokens bill as output. ADR-XXXX (gemini-native-adapter).
+# tokens bill as output. ADR-0043.
 
 # --- Policy selection (promoted components only; repository_structure §6.2).
 # Thresholds not listed here keep their typed code defaults (A-43:

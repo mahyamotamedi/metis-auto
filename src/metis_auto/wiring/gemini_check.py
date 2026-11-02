@@ -1,5 +1,5 @@
-"""The Gemini live check: plan and settings (ADR-XXXX (gemini-native-adapter),
-ADR-XXXX (gemini-live-calls)).
+"""The Gemini live check: plan and settings (ADR-0043,
+ADR-0042).
 
 Responsibility: the no-call half of ``scripts/live_gemini_check.py``. ``plan``
 lists every reason the check would refuse (no catalogue row, endpoint not an

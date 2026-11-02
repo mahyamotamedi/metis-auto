@@ -31,7 +31,7 @@ One operation, provisionally `invoke(ModelInvocation) -> ModelResult`.
 | Quality-injecting client | decorator | Scripted empty, truncated, wrong-language, or refusal answers, for detector and cascade tests. | no |
 | Replay client | base | Answers from recorded responses or logged references ([evaluation.md §4](evaluation.md#4-counterfactual-sources-and-their-limits)). "No answer" when none exists. | no |
 | Recording decorator | decorator | Writes live results to `data/recorded/` for reuse. | no (wraps a live client) |
-| Live client: **one** OpenAI-compatible adapter for OpenAI, DeepSeek, and Grok (`openai_compat.py`, Stage 7.5); Gemini: a second, native adapter on the standard library (`gemini_native.py`, offline only; endpoint `deferred`; ADR-XXXX (gemini-native-adapter)) | base | Real calls. Opt-in only, built only with both keys and caps (`wiring.live`), always wrapped in the recording decorator; tests use mocked HTTP; the one real-network test is marked `network` (ADR-0003, ADR-0021). | **yes** |
+| Live client: **one** OpenAI-compatible adapter for OpenAI, DeepSeek, and Grok (`openai_compat.py`, Stage 7.5); Gemini: a second, native adapter on the standard library (`gemini_native.py`, offline only; endpoint `deferred`; ADR-0043) | base | Real calls. Opt-in only, built only with both keys and caps (`wiring.live`), always wrapped in the recording decorator; tests use mocked HTTP; the one real-network test is marked `network` (ADR-0003, ADR-0021). | **yes** |
 
 The decorators compose, for example *recording(live)* or *fault(fake)*. Wiring builds the stack from configuration. Pipeline code sees only `ModelClient`.
 

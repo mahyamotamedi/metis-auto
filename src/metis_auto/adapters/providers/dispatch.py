@@ -1,4 +1,4 @@
-"""Per-model dispatching client (CMP-10; ADR-XXXX (gemini-native-adapter)).
+"""Per-model dispatching client (CMP-10; ADR-0043).
 
 Responsibility: present several adapters as one ``ModelClient`` by sending
 each invocation to the client configured for its catalogue model (e.g.

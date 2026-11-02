@@ -1,6 +1,6 @@
 """Live client for Gemini's native ``generateContent`` through the Metis wrapper
-(CMP-10; providers.md §2–§3, ADR-0018, ADR-0021, ADR-XXXX
-(gemini-native-adapter)).
+(CMP-10; providers.md §2–§3, ADR-0018, ADR-0021,
+ADR-0043).
 
 Responsibility: turn a ``ModelInvocation`` into one Gemini REST request, and
 the reply into a ``ModelResult``: answer text, normalised finish reason,

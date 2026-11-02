@@ -1,5 +1,5 @@
-"""Gemini through the native adapter: settings side (ADR-XXXX
-(gemini-native-adapter)). Reads the real config files; offline."""
+"""Gemini through the native adapter: settings side
+(ADR-0043). Reads the real config files; offline."""
 
 import pytest
 from pydantic import ValidationError

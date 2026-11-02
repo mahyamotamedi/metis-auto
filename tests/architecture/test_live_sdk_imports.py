@@ -34,8 +34,8 @@ def test_the_providers_package_does_not_import_the_adapter_eagerly():
     assert "openai_compat" not in init
 
 
-# --- Gemini native adapter: standard-library HTTP, no SDK (ADR-XXXX
-# (gemini-native-adapter)). ---------------------------------------------------
+# --- Gemini native adapter: standard-library HTTP, no SDK
+# (ADR-0043). -----------------------------------------
 
 GEMINI = SRC / "adapters" / "providers" / "gemini_native.py"
 STDLIB_HTTP = {"urllib.request", "http.client"}

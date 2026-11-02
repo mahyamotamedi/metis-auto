@@ -1,9 +1,9 @@
-# ADR-XXXX (gemini-native-adapter): A Gemini adapter on the standard library, offline until a live check
+# ADR-0043: A Gemini adapter on the standard library, offline until a live check
 
 - Status: **decided** (adapter shape, no SDK, no dependency, explicit thinking budget, wiring by `api_format`); wire-format field names **provisional and unverified** (no Gemini response has been seen through the Metis wrapper); the endpoint stays `deferred`. Decided by the lead (Mahya), 2026-11-02, plan stretch item 1.
 - Date: 2026-11-02
 - Traces: FR-API-02 (adapters normalise request, response, usage, finish reasons, and errors), FR-FAIL-01 (error classes the attempt policy retries or fails over on), QA-REPL (a provider is one interface implementation plus one config entry).
-- Relates to: ADR-0003 (offline by default), ADR-0013 (no hidden attempts), ADR-0018 point 2 (Gemini deferred; amended by [ADR-XXXX (gemini-live-calls)](draft-gemini-live-calls.md)), ADR-0019 (configuration and secrets), ADR-0020 (token inclusion rules), ADR-0021 (the OpenAI-compatible adapter, whose pattern this follows).
+- Relates to: ADR-0003 (offline by default), ADR-0013 (no hidden attempts), ADR-0018 point 2 (Gemini deferred; amended by [ADR-0042](0042-gemini-live-calls.md)), ADR-0019 (configuration and secrets), ADR-0020 (token inclusion rules), ADR-0021 (the OpenAI-compatible adapter, whose pattern this follows).
 
 ## Context
 
