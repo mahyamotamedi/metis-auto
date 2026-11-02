@@ -22,6 +22,8 @@
 | Agreement | `pq_answer_agrees`: the hit's own logged answer hash equals the stored one. A diagnostic, never a correctness claim (ADR-0016, `logged_match`). | decided |
 | Effect | Copy with the same index; hit rows get `served_from_cache = True` and zero known `block_fees` and `block_token_cost` (unknown stays unknown). Added columns: `pq_eligible`, `pq_admitted_keys_day` (count), `pq_answer_agrees`. No key, hash or text in the output. | decided |
 
+**Scope of a hit.** Hits are scoped to the same bot and the same system-prompt fingerprint; this is checked at run time. The key holds `bot_id` and `bot_ins_h_exact` (missing instructions are their own value, `-`, and never match present ones), and `apply` compares every hit with the stored entry it reuses: a different bot or instruction fingerprint raises an error and stops the run (`scope_check` holds the counts; the script prints them). The instruction fingerprint is still a bot snapshot, so instruction changes over time are not seen (see Assumptions).
+
 ### Variants (same code, `variant=` argument)
 
 - **`first_turn` (headline):** `lever_id = cache.popular_question.first_turn`. Only requests with no logged history may be admitted or hit (ADR-0016 Part 1 point 3). In `requests`, `n_prior_msgs` at an AI row counts every earlier USER/AI message **including the request's own question** (`history_columns`, checked on a synthetic session), so "no history" is `n_prior_msgs == 1` (decided by the owner, 2026-11-02; the EDA's H-8 figures use `turn == 0`, which also counts sessions with two user messages before the first answer).

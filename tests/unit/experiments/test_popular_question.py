@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from metis_auto.analysis.cache_guard import CacheGuard
+from metis_auto.analysis.cache_guard import CacheGuard, versioned_key
 from metis_auto.analysis.lever_result import LeverResult, build_manifest
 from metis_auto.analysis.levers import (
     ReplayContext,
@@ -302,6 +302,105 @@ def test_served_source_is_the_latest_window_row_with_the_stored_answer(make):
     assert sources.to_dict() == {103: 102}
     out = cache.apply(req, ctx())
     assert set(sources.index) == set(out.index[out["served_from_cache"]])
+
+
+def popular_for(q="q-1", **over) -> list[dict]:
+    """[SYNTHETIC] three occurrences of ``q`` in three sessions, with overrides."""
+    tag = "-".join(f"{v}" for v in over.values())
+    return [row(0, f"s-{q}-{tag}-{i}", q=q, **over) for i in range(3)]
+
+
+def test_hits_stay_inside_their_own_bot(make):
+    """Same normalised question admitted for two bots: each hit uses its own bot."""
+    cache = make()
+    req = frame(
+        *popular_for(bot_id="bot-a"),
+        *popular_for(bot_id="bot-b"),
+        row(5, "p-a", bot_id="bot-a"),
+        row(5, "p-b", bot_id="bot-b"),
+    )
+    assert hits(cache, req)[-2:] == [True, True]
+    sources = cache.served_sources(req, ctx())
+    assert (
+        req.loc[sources.to_numpy(), "bot_id"].to_numpy()
+        == req.loc[sources.index, "bot_id"].to_numpy()
+    ).all()
+    only_a = frame(*popular_for(bot_id="bot-a"), row(5, "p-b", bot_id="bot-b"))
+    assert hits(cache, only_a)[-1] is False  # bot B never hits bot A's entry
+
+
+def test_same_bot_with_other_instructions_never_hits(make):
+    req = frame(
+        *popular_for(bot_ins_h_exact="ins-a"), row(5, "p", bot_ins_h_exact="ins-b")
+    )
+    assert hits(make(), req)[-1] is False
+
+
+def test_missing_instructions_never_match_present_ones(make):
+    missing_then_present = frame(
+        *popular_for(bot_ins_h_exact=np.nan), row(5, "p", bot_ins_h_exact="ins-a")
+    )
+    present_then_missing = frame(
+        *popular_for(bot_ins_h_exact="ins-a"), row(5, "p", bot_ins_h_exact=np.nan)
+    )
+    assert hits(make(), missing_then_present)[-1] is False
+    assert hits(make(), present_then_missing)[-1] is False
+
+
+def test_rag_run_request_of_a_bot_is_never_a_hit(make):
+    cache = make()
+    req = frame(*popular(), row(5, "p", a_rag_state="ok", a_rag_n_queries=1))
+    out = cache.apply(req, ctx())
+    assert not out["served_from_cache"].iloc[-1]
+    assert not out["pq_eligible"].iloc[-1]
+
+
+def test_scope_check_counts_every_hit(make):
+    cache = make()
+    req = frame(
+        *popular_for(bot_id="bot-a"),
+        *popular_for(bot_id="bot-b"),
+        row(5, "p-a", bot_id="bot-a"),
+        row(5, "p-b", bot_id="bot-b"),
+    )
+    cache.apply(req, ctx())
+    assert cache.scope_check == {
+        "hits_checked": 2,
+        "cross_bot_hits": 0,
+        "cross_instruction_hits": 0,
+    }
+
+
+@pytest.mark.parametrize(
+    ("drop", "message"),
+    [("bot", "cross-bot"), ("instructions", "cross-instruction")],
+)
+def test_scope_check_fails_the_run_when_a_key_loses_its_scope(
+    cache_class, drop, message
+):
+    """A key bug that drops the bot or the instructions must raise, not count."""
+
+    class BrokenKey(cache_class):
+        def keys(self, req):
+            parts = [req["u_h_norm"].astype(str)]
+            if drop != "bot":
+                parts.insert(0, req["bot_id"].astype(str))
+            if drop != "instructions":
+                parts.insert(0, req["bot_ins_h_exact"].fillna("-").astype(str))
+            body = parts[0]
+            for p in parts[1:]:
+                body = body + "|" + p
+            return body.map(lambda b: versioned_key(self.key_version, b))
+
+    cache = BrokenKey(90, 3, 2, "first_turn", "pq-v1")
+    if drop == "bot":
+        req = frame(*popular_for(bot_id="bot-a"), row(5, "p", bot_id="bot-b"))
+    else:
+        req = frame(
+            *popular_for(bot_ins_h_exact="ins-a"), row(5, "p", bot_ins_h_exact="ins-b")
+        )
+    with pytest.raises(RuntimeError, match=message):
+        cache.apply(req, ctx())
 
 
 def test_key_version_is_validated(make):

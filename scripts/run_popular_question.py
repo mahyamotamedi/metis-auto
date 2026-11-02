@@ -17,7 +17,9 @@ else. Traces: H-8, X1, FR-XCACHE-02, FR-XCACHE-04, FR-XCACHE-05, ADR-0006,
 ADR-0016, ADR-0031, ADR-0032, ADR-0034.
 
 Usage: ``.venv\\Scripts\\python.exe scripts/run_popular_question.py``
-(``--no-sheet`` skips the review sheet).
+(``--no-sheet`` skips the review sheet; ``--out DIR`` writes the results
+elsewhere, e.g. to compare a rerun). Every hit is checked to reuse an entry of its
+own bot and instruction fingerprint; a mismatch stops the run.
 """
 
 from __future__ import annotations
@@ -494,6 +496,7 @@ def _print_table(title: str, rows: dict[str, object]) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--no-sheet", action="store_true")
+    parser.add_argument("--out", type=Path, default=OUT_DIR, help="result folder")
     args = parser.parse_args(argv)
 
     sprint = load_toml(SPRINT)
@@ -522,7 +525,8 @@ def main(argv: list[str] | None = None) -> int:
 
     known = req[req["period"].isin(["tune", "report"])]
     report = known["period"].eq("report")
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir: Path = args.out
+    out_dir.mkdir(parents=True, exist_ok=True)
     first_turn_state = None
     for variant in VARIANTS:
         cache = cache_class(
@@ -556,7 +560,7 @@ def main(argv: list[str] | None = None) -> int:
             extra,
             cached_separately=cached_sep,
         )
-        (OUT_DIR / f"{cache.lever_id}.json").write_text(
+        (out_dir / f"{cache.lever_id}.json").write_text(
             result.to_json(), encoding="utf-8"
         )
         repriced, missing = repriced_results(
@@ -570,12 +574,16 @@ def main(argv: list[str] | None = None) -> int:
             cached_separately=cached_sep,
         )
         for key, r in repriced.items():
-            (OUT_DIR / f"{cache.lever_id}__{key}.json").write_text(
+            (out_dir / f"{cache.lever_id}__{key}.json").write_text(
                 r.to_json(), encoding="utf-8"
             )
         funnel = cache.funnel(before)
         print(f"\n=== {cache.lever_id} (report period) ===")
         print(funnel.to_string(index=False))
+        _print_table(
+            "scope check (same bot, same instruction fingerprint; raises if not)",
+            dict(cache.scope_check or {}),
+        )
         _print_table(
             "diagnostics (aggregates only)",
             diagnostics(

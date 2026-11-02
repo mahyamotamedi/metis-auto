@@ -131,6 +131,8 @@ class PopularQuestionCache:
         self.min_sessions = _strict_int("min_sessions", min_sessions, 1)
         self.variant = variant
         self.key_version = key_version
+        self.scope_check: dict[str, int] | None = None
+        """Counts of the last ``apply``: hits checked, cross-bot, cross-instruction."""
         self.lever_id = f"cache.popular_question.{variant}"
         self.name = self.lever_id
         self.assumptions = _COMMON + (
@@ -287,7 +289,34 @@ class PopularQuestionCache:
                 stored_ac, stored_row = stored[kc]
                 agrees.at[idx] = bool(ac == stored_ac)
                 source.at[idx] = stored_row
+        self.scope_check = self._check_scope(req, served, source)
         return eligible, served, agrees, admitted_n, source
+
+    @staticmethod
+    def _check_scope(
+        req: pd.DataFrame, served: pd.Series, source: pd.Series
+    ) -> dict[str, int]:
+        """Every hit must reuse an entry of its own bot and instruction fingerprint.
+
+        Compares the hit row with the stored entry's row; any difference raises,
+        so a key bug fails the run instead of counting cross-bot hits.
+        """
+        hit_rows = served.index[served]
+        src_rows = source[hit_rows].to_numpy()
+        ins = req["bot_ins_h_exact"].fillna(NO_INSTRUCTIONS).astype(str)
+        bots = req["bot_id"].astype(str)
+        cross_bot = int((bots[hit_rows].to_numpy() != bots[src_rows].to_numpy()).sum())
+        cross_ins = int((ins[hit_rows].to_numpy() != ins[src_rows].to_numpy()).sum())
+        if cross_bot or cross_ins:
+            raise RuntimeError(
+                f"scope check failed: {cross_bot} cross-bot and {cross_ins} "
+                "cross-instruction hits; the cache key lost its bot or instructions"
+            )
+        return {
+            "hits_checked": len(hit_rows),
+            "cross_bot_hits": cross_bot,
+            "cross_instruction_hits": cross_ins,
+        }
 
     @staticmethod
     def _stored_answers(win: pd.DataFrame) -> dict[int, tuple[int, object]]:
