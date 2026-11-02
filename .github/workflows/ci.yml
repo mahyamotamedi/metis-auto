@@ -1,0 +1,62 @@
+# CI: lint, format check and the default offline test run, which includes the
+# architecture rules (tests/architecture). ADR-XXXX (ci-github-actions); QA-TEST,
+# QA-REPL. The commands are the local setup of ADR-0001 and the local development
+# guide, in the same order.
+#
+# The default run needs no secrets, no network and no PostgreSQL: tests marked
+# `network` or `postgres` stay skipped (tests/conftest.py, ADR-0003, ADR-0027).
+#
+# Windows is excluded: the suite has known Windows failures (33 failed, 3
+# collection errors in the Day 1 baseline), from the POSIX-only `fcntl` lock in
+# the spend ledger (adapters/system/ledger.py) and from POSIX path assumptions.
+# They are recorded, not fixed, in the sprint plan.
+#
+# Actions are pinned by commit (tag in the comment; checked on GitHub 2026-11-02).
+# setup-python v7.1.0 (2026-10-22) is newer than the two-week release-age rule of
+# ADR-0001, so v7.0.0 is used.
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Create the venv
+        run: python -m venv .venv
+      # The db lock is requirements-dev.lock (dev, eda, live, tokenizers) plus the
+      # `db` extra, with the shared pins equal. wiring/golden_answers.py imports
+      # sqlalchemy at module level, so three test modules fail to import with the
+      # dev lock alone. No database is started: Postgres tests stay skipped.
+      - name: Install the locked dependencies (dev lock plus the db extra)
+        run: .venv/bin/pip install --require-hashes -r requirements-db.lock
+      - name: Install the package
+        run: .venv/bin/pip install -e . --no-deps
+      # Public tokenizer files (about 10 MB, sha256-pinned in
+      # config/reference/tokenizers.toml, no key). Without them two budget tests
+      # fail on the chars/4 fallback. The test run itself stays offline.
+      - name: Fetch the tokenizer files
+        run: .venv/bin/python scripts/fetch_tokenizer_assets.py
+      - name: Lint
+        run: .venv/bin/ruff check .
+      - name: Format check
+        run: .venv/bin/ruff format --check .
+      - name: Tests (offline; opt-in tests skipped)
+        run: .venv/bin/python -m pytest -q
