@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from metis_auto.analysis.lever_result import build_manifest
+from metis_auto.analysis.lever_result import LeverResult, build_manifest
 from metis_auto.analysis.levers import ReplayContext
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -100,6 +100,10 @@ def version(rr, req, **kw):
     )
 
 
+def pricing(rr):
+    return rr.Pricing(ctx(), "syn-model", "syn-model")
+
+
 def manifest():
     return build_manifest(
         {"synthetic": True},
@@ -130,8 +134,9 @@ def test_grid_has_every_top_k_and_threshold_plus_none(rr):
 
 def test_point_metrics_split_raw_dedup_and_cut_tokens(rr):
     req = frame()
-    out = version(rr, req, top_k=3).apply(req, ctx())
-    m = rr.point_metrics(req, out, seed=1)
+    v = version(rr, req, top_k=3)
+    out = v.apply(req, ctx())
+    m = rr.point_metrics(v, req, out, seed=1, pricing=pricing(rr))
     assert m["eligible_requests"] == 4 and m["eligible_cost_known"] == 4
     assert m["raw_chunk_tokens"] == pytest.approx(4 * 2200 * SLOPE)
     assert m["dedup_tokens_s6_not_counted"] == pytest.approx(4 * 100 * SLOPE)
@@ -145,8 +150,8 @@ def test_point_metrics_split_raw_dedup_and_cut_tokens(rr):
 
 def test_point_metrics_without_eligible_rows_are_missing_not_zero(rr):
     req = frame(n_rag=0)
-    out = version(rr, req, top_k=3).apply(req, ctx())
-    m = rr.point_metrics(req, out, seed=1)
+    v = version(rr, req, top_k=3)
+    m = rr.point_metrics(v, req, v.apply(req, ctx()), seed=1, pricing=pricing(rr))
     assert m["eligible_requests"] == 0
     assert math.isnan(m["chunk_share_removed"]) and math.isnan(m["score_mass_kept"])
 
@@ -185,7 +190,9 @@ def test_lever_result_counts_only_the_cut_not_dedup(rr):
     req = frame()
     v = version(rr, req, top_k=3)
     out = v.apply(req, ctx())
-    r = rr.headline_result(v, req, out, manifest(), extra=("[SYNTHETIC] note",))
+    r = rr.headline_result(
+        v, req, out, manifest(), pricing=pricing(rr), extra=("[SYNTHETIC] note",)
+    )
     assert r.lever_id == "context.reranker_cut.observed_relevancy"
     assert r.step == "context" and r.baseline == "todays_models"
     assert r.correctness_state == "unmeasured"
@@ -196,7 +203,7 @@ def test_lever_result_counts_only_the_cut_not_dedup(rr):
     llm = r.slices["llm_only"]
     assert float(llm["saved_input_tokens"]) == pytest.approx(4 * 750)
     assert float(llm["dedup_tokens_s6_not_counted"]) == pytest.approx(4 * 50)
-    assert "baseline:fees" not in llm and "saving:fees" not in llm
+    assert "baseline:fees" not in llm and float(llm["saving:fees"]) == 0  # ADR-0038
     assert set(r.slices) == {"all", "llm_only"}
     assert r.ci_low is not None and r.ci_low <= r.ci_high
     assert "[SYNTHETIC] note" in r.assumptions
@@ -206,7 +213,8 @@ def test_unknown_cost_rows_leave_both_sides(rr):
     req = frame()
     req.loc[req.index[0], "bot_provider_model"] = "unpriced-model"
     v = version(rr, req, top_k=3)
-    r = rr.headline_result(v, req, v.apply(req, ctx()), manifest(), extra=())
+    out = v.apply(req, ctx())
+    r = rr.headline_result(v, req, out, manifest(), pricing=pricing(rr), extra=())
     llm = r.slices["llm_only"]
     assert float(llm["n_cost_known"]) == 5
     assert float(r.saving["total"]) == pytest.approx(3 * 750 / 1e6)
@@ -242,7 +250,9 @@ def test_content_is_attached_by_position_and_chunk_id_is_checked(rr):
 def test_curve_rows_hold_numbers_and_labels_only(rr):
     req = frame()
     v = version(rr, req)
-    curve = rr.curve(v, req, ctx(), {"q50": 0.6}, top_ks=(3,), floor=3, seed=1)
+    curve = rr.curve(
+        v, req, ctx(), {"q50": 0.6}, top_ks=(3,), floor=3, seed=1, pricing=pricing(rr)
+    )
     allowed = {"top_k", "threshold_rule", "threshold", "floor"}
     text_cols = [
         c for c in curve.columns if curve[c].dtype == object and c not in allowed
@@ -251,3 +261,132 @@ def test_curve_rows_hold_numbers_and_labels_only(rr):
     assert set(curve["threshold_rule"]) == {"none", "q50"}
     saved = curve.set_index(["top_k", "threshold_rule"])["saved_input_tokens"]
     assert saved[(3, "none")] >= 0 and np.isfinite(saved.to_numpy(float)).all()
+
+
+# --- four baselines (ADR-0036, ADR-0038)
+
+RATES = {"syn-model": 2.0}  # [SYNTHETIC] implied input rate per 1M, recorded units
+BASELINE_KEYS = ("premium_gpt_5_5", "as_logged", "todays_models", "best_single_cheap")
+REPRICED = ("premium_gpt_5_5", "todays_models", "best_single_cheap")
+
+
+def ctx4() -> ReplayContext:
+    """[SYNTHETIC] prices for the logged, a premium and a cheap model."""
+    base = ctx()
+    prices = [
+        *base.price_table["prices"],
+        {"price_ref": "p-prem", "input": 5.0, "cached_input": 0.5, "output": 10.0},
+        {"price_ref": "p-cheap", "input": 0.1, "cached_input": 0.01, "output": 0.2},
+    ]
+    models = [
+        *base.catalogue["models"],
+        {"model_id": "syn-premium", "price_ref": "p-prem"},
+        {"model_id": "syn-cheap", "price_ref": "p-cheap"},
+    ]
+    return ReplayContext(
+        period_bounds=base.period_bounds,
+        price_table=base.price_table | {"prices": prices},
+        catalogue={"models": models},
+        seed=base.seed,
+    )
+
+
+def pricing4(rr, rates=RATES):
+    return rr.Pricing(ctx4(), "syn-premium", "syn-cheap", rates=rates)
+
+
+def result4(rr, req, baseline, rates=RATES):
+    v = version(rr, req, top_k=3)
+    out = v.apply(req, ctx4())
+    return rr.headline_result(
+        v,
+        req,
+        out,
+        manifest(),
+        pricing=pricing4(rr, rates),
+        extra=(),
+        baseline=baseline,
+    )
+
+
+def test_four_baselines_written_per_scorer(rr, tmp_path):
+    req = frame()
+    lexical = rr._load("lexical_overlap")
+    rows = chunk_rows(req["ai_message_id"])
+    rows["content"] = "text " + rows["h_exact"]
+    queries = {m: f"text h-{m}-1" for m in req["ai_message_id"]}
+    cls = rr.load_version_class()
+    for scorer in (None, lexical):
+        v = cls(scorer, 0, None, 3, chunks=rows, tokens_per_char=SLOPE, queries=queries)
+        out = v.apply(req, ctx4())
+        paths = rr.write_results(
+            v,
+            req,
+            out,
+            lambda baseline: manifest(),
+            pricing=pricing4(rr),
+            extra=("[SYNTHETIC] note",),
+            out_dir=tmp_path,
+        )
+        name = v.scorer_name
+        assert {p.name for p in paths} == {
+            f"context.reranker_cut.{name}.{b}.json" for b in BASELINE_KEYS
+        }
+        for path in paths:
+            r = LeverResult.from_json(path.read_text(encoding="utf-8"))
+            assert r.lever_id == f"context.reranker_cut.{name}"
+            assert path.name == f"{r.lever_id}.{r.baseline}.json"
+    assert len(list(tmp_path.glob("*.json"))) == 8
+
+
+def test_as_logged_uses_implied_input_rate_and_never_changes_fees(rr):
+    r = result4(rr, frame(), "as_logged")
+    # 4 eligible requests x 750 cut tokens x 2.0 per 1M (S-6's 50 tokens not counted)
+    assert float(r.saving["token_cost"]) == pytest.approx(4 * 750 * 2.0 / 1e6)
+    assert float(r.saving["fees"]) == 0
+    assert float(r.baseline_cost["fees"]) == pytest.approx(6 * 0.002)  # recorded
+    assert float(r.baseline_cost["token_cost"]) == pytest.approx(6 * 0.05)
+    assert float(r.slices["llm_only"]["saving:fees"]) == 0
+
+
+def test_model_without_implied_rate_is_unknown_not_zero(rr):
+    req = frame()
+    # one RAG row and one LLM row without RAG run on a model with no implied rate
+    req.loc[req.index[[0, 4]], "bot_provider_model"] = "syn-no-rate"
+    r = result4(rr, req, "as_logged")
+    llm = r.slices["llm_only"]
+    assert float(llm["n_saving_unknown"]) == 1  # the RAG row: saving unknown
+    assert float(llm["n_cost_known"]) == 5  # it leaves both sides; nothing to cut: 0
+    assert float(r.baseline_cost["token_cost"]) == pytest.approx(5 * 0.05)
+    assert float(r.saving["token_cost"]) == pytest.approx(3 * 750 * 2.0 / 1e6)
+    assert float(r.saving["token_cost"]) > 0
+
+
+def test_repriced_baseline_has_no_fees_key(rr):
+    for baseline in REPRICED:
+        r = result4(rr, frame(), baseline)
+        assert set(r.baseline_cost) == {"token_cost", "total"}, baseline
+        assert float(r.saving["fees"]) == 0
+        for name in ("all", "llm_only"):
+            assert "baseline:fees" not in r.slices[name]
+    assert "fees" in result4(rr, frame(), "as_logged").baseline_cost
+
+
+def test_recorded_and_repriced_units_never_mixed(rr):
+    req = frame()
+    got = {b: result4(rr, req, b) for b in BASELINE_KEYS}
+    logged = got["as_logged"]
+    assert float(logged.baseline_cost["total"]) == pytest.approx(6 * (0.002 + 0.05))
+    per_row = {"premium_gpt_5_5": 10_000 * 5.0 + 100 * 10.0}
+    per_row |= {"todays_models": 10_000 * 1.0 + 100 * 2.0}
+    per_row |= {"best_single_cheap": 10_000 * 0.1 + 100 * 0.2}
+    cut = {"premium_gpt_5_5": 5.0, "todays_models": 1.0, "best_single_cheap": 0.1}
+    for b in REPRICED:
+        r = got[b]
+        assert r.baseline_cost["total"] == r.baseline_cost["token_cost"]
+        assert float(r.baseline_cost["total"]) == pytest.approx(6 * per_row[b] / 1e6)
+        assert float(r.saving["total"]) == pytest.approx(4 * 750 * cut[b] / 1e6)
+        assert any("price-file units" in a for a in r.assumptions)
+        assert not any("recorded units" in a for a in r.assumptions)
+    assert any("recorded units" in a for a in logged.assumptions)
+    assert not any("price-file units" in a for a in logged.assumptions)

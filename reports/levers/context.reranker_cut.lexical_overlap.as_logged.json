@@ -1,0 +1,91 @@
+{
+  "assumptions": [
+    "Token sizing, not a quality result: removing a chunk can remove the one the answer needed; answer quality is not measured (FR-CTX-03).",
+    "S-6 (within-message dedup, Pipeline C) runs first: exact copies (same h_exact) are collapsed before ranking; their tokens are S-6's, not counted here.",
+    "Tokens = removed chunk characters x 0.3384 tokens per character (EDA recon.t0rag.coef_rag, hypothetical reconstruction), from uncached input only.",
+    "One result per baseline; recorded and repriced cost are never mixed, and each result states its unit in a 'Unit:' line (ADR-0036, ADR-0038).",
+    "A chunk without a score is kept and counted, never treated as 0; the floor keeps at least that many unique chunks per request.",
+    "The real bge-reranker-v2-m3 run (cut-first item a) was not done.",
+    "Scorer: heuristic word overlap of the normalised user message with each chunk (normalize_safe, word tokens, no stopword list).",
+    "Unit: recorded units (as_logged). Fees never change (ADR-0038).",
+    "as_logged saving = the cut's tokens x the logged model's implied_input_per_M / 1e6 (reports/full_eda/tables/implied_unit_rates.csv), off the recorded token block after S-6's share.",
+    "A model without an implied rate makes the saving unknown: the row leaves both sides (n_saving_unknown), never zero.",
+    "Headline chosen on the tune period (Mar-Jul 2026): top_k none, threshold q50 (0.2000), floor 3; most tokens saved with score mass kept >= 0.9 (tune 0.905); rule met: True. Reported on Aug-Oct 2026.",
+    "Slices all and llm_only; workflow rows have no cost. Tokens cover every eligible request; cost only those with a known cost (n_eligible_cost_known).",
+    "Cached tokens: the saving uses characters, not a_bill_inputTokens; the repriced baselines add cached tokens back for the five models (Review Focus 3).",
+    "Removed tokens are priced as uncached input (chunks assumed after the cached prefix); the saving is capped at input minus cached tokens.",
+    "Lexical: seeded sample of 2,000 eligible report-period requests; slices all and llm_only are that sample, so the cost share is of RAG requests only (observed: of all LLM requests).",
+    "The working tree had uncommitted changes when this ran.",
+    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 28.1893 ms, p95 35.3411 ms, max 112.5649 ms; 2026-11-02, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
+    "Overhead caveat: the headline point; chunks (and text) of the sampled rows are loaded before timing, so reading data is not timed; scoring and the cut are. Not a reranker model's latency."
+  ],
+  "baseline": "as_logged",
+  "baseline_cost": {
+    "fees": "9.008000000",
+    "token_cost": "9.526838016",
+    "total": "18.534838016"
+  },
+  "ci_high": 0.021773279270834556,
+  "ci_low": 0.018767313373525902,
+  "correctness_state": "unmeasured",
+  "evidence_class": "heuristic",
+  "lever_id": "context.reranker_cut.lexical_overlap",
+  "manifest": {
+    "code_commit": "f44d84f644958f47550fd77174b624e65914461a",
+    "config_hash": "ba00c4b83e55ef3f1674640e0944f2d5fdbbae0dc8809c2446b7c74365e19313",
+    "created_at": "2026-11-02T17:40:49.239459Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "full-eda-implied-unit-rates",
+    "python_version": "3.13.9",
+    "seed": 20261102
+  },
+  "n_eligible": 2000,
+  "n_requests": 2000,
+  "overhead_ms_p50": 28.1893,
+  "overhead_ms_p95": 35.3411,
+  "saving": {
+    "fees": "0.000000000",
+    "token_cost": "0.377196986",
+    "total": "0.377196986"
+  },
+  "slices": {
+    "all": {
+      "baseline:fees": "9.008000000",
+      "baseline:token_cost": "9.526838016",
+      "baseline:total": "18.534838016",
+      "dedup_tokens_s6_not_counted": "7463072.277582390",
+      "n_cost_known": "2000",
+      "n_eligible": "2000",
+      "n_eligible_cost_known": "2000",
+      "n_requests": "2000",
+      "n_saving_unknown": "0",
+      "raw_chunk_tokens": "17584249.604424354",
+      "saved_input_tokens": "2291572.582031062",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.377196986",
+      "saving:total": "0.377196986",
+      "saving_share": "0.020350703",
+      "unscored_chunks": "235"
+    },
+    "llm_only": {
+      "baseline:fees": "9.008000000",
+      "baseline:token_cost": "9.526838016",
+      "baseline:total": "18.534838016",
+      "dedup_tokens_s6_not_counted": "7463072.277582390",
+      "n_cost_known": "2000",
+      "n_eligible": "2000",
+      "n_eligible_cost_known": "2000",
+      "n_requests": "2000",
+      "n_saving_unknown": "0",
+      "raw_chunk_tokens": "17584249.604424354",
+      "saved_input_tokens": "2291572.582031062",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.377196986",
+      "saving:total": "0.377196986",
+      "saving_share": "0.020350703",
+      "unscored_chunks": "235"
+    }
+  },
+  "step": "context",
+  "version": "rc-v1"
+}
