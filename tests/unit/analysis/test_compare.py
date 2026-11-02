@@ -36,7 +36,7 @@ def _slices(tenant_share: str = "0.30") -> dict[str, dict[str, Decimal]]:
 class FakeResult:
     lever_id: str = "cache.synthetic-a"
     step: str = "cache"
-    version: str = "v1"
+    version: str = ""  # empty: the lever_id, so each fake is its own version
     n_requests: int = 1000
     n_eligible: int = 400
     baseline: str = "as_logged"
@@ -54,14 +54,24 @@ class FakeResult:
     overhead_ms_p95: float | None = None
     manifest: FakeManifest = field(default_factory=FakeManifest)
 
+    def __post_init__(self) -> None:
+        if not self.version:
+            object.__setattr__(self, "version", self.lever_id)
+
 
 def _saving(amount: str) -> dict[str, Decimal]:
     return {"total": D(amount)}
 
 
-def _row(frame: pd.DataFrame, lever_id: str, version: str = "v1") -> pd.Series:
-    match = frame[(frame["lever_id"] == lever_id) & (frame["version"] == version)]
-    assert len(match) == 1, f"expected one row for {lever_id} {version}"
+def _row(frame: pd.DataFrame, lever_id: str) -> pd.Series:
+    match = frame[frame["lever_id"] == lever_id]
+    assert len(match) == 1, f"expected one row for {lever_id}"
+    return match.iloc[0]
+
+
+def _version_row(frame: pd.DataFrame, version: str) -> pd.Series:
+    match = frame[frame["version"] == version]
+    assert len(match) == 1, f"expected one row for version {version}"
     return match.iloc[0]
 
 
@@ -152,7 +162,7 @@ def test_results_with_different_baselines_are_not_compared():
     frame = compare([logged, premium], baseline="as_logged", max_tenant_share=CAP)
 
     assert _row(frame, "cache.synthetic-a")["rank"] == 1
-    other = _row(frame, "cache.synthetic-b")
+    other = _version_row(frame, "cache.synthetic-b")
     assert other["status"] == "baseline missing"
     assert pd.isna(other["rank"]) and other["saving"] is None
 
@@ -199,6 +209,79 @@ def test_tenant_share_above_35_percent_is_flagged():
     assert _row(frame, "cache.synthetic-c")["tenant_flag"] == "unknown"
 
     assert "over 35%" in to_markdown([over], max_tenant_share=CAP)
+
+
+# --- Version identity across baselines (lever IDs carry a baseline suffix) ---
+
+
+def _qualified(version: str, baseline: str, saving: str = "10") -> FakeResult:
+    """A result named like ``reports/levers/<lever_id>.json`` of Pipeline B."""
+    return FakeResult(
+        lever_id=f"cache.synthetic-{version}.{baseline}",
+        version=version,
+        baseline=baseline,
+        saving=_saving(saving),
+    )
+
+
+def test_same_version_under_baseline_qualified_lever_ids_is_one_version():
+    premium = BASELINES[0].key
+    results = [
+        _qualified("v1", "as_logged"),
+        _qualified("v1", premium),
+        _qualified("v2", "as_logged", saving="20"),
+        _qualified("v2", premium, saving="30"),
+    ]
+
+    for baseline in ("as_logged", premium):
+        frame = compare(results, baseline=baseline, max_tenant_share=CAP)
+        assert "baseline missing" not in set(frame["status"])
+        assert list(frame["version"]) == ["v2", "v1"]  # ranked by saving
+        assert list(frame["rank"]) == [1, 2]
+        assert all(frame["lever_id"].str.endswith("." + baseline))
+
+
+def test_version_missing_from_the_chosen_baseline_is_still_listed():
+    premium = BASELINES[0].key
+    results = [
+        _qualified("v1", "as_logged"),
+        _qualified("v1", premium),
+        _qualified("v2", premium),  # v2 has no as_logged result
+    ]
+
+    frame = compare(results, baseline="as_logged", max_tenant_share=CAP)
+
+    missing = frame[frame["status"] == "baseline missing"]
+    assert list(missing["version"]) == ["v2"]  # one row, not one per lever_id
+    row = missing.iloc[0]
+    assert row["step"] == "cache" and pd.isna(row["lever_id"])  # blank
+    assert premium in row["notes"] and "baseline-qualified" in row["notes"]
+    assert _version_row(frame, "v1")["status"] == "ranked"
+    text = to_markdown(results, max_tenant_share=CAP)
+    assert "| — | baseline missing | — | v2 |" in text
+
+
+def test_two_results_with_the_same_version_under_one_baseline_are_flagged():
+    # Two pipelines (or two runs) reuse one version label under one baseline.
+    first = FakeResult(lever_id="cache.synthetic-a", version="v1", saving=_saving("9"))
+    second = FakeResult(lever_id="cache.synthetic-b", version="v1", saving=_saving("5"))
+    other = FakeResult(lever_id="cache.synthetic-c", version="v2", saving=_saving("1"))
+
+    frame = compare([first, second, other], baseline="as_logged", max_tenant_share=CAP)
+
+    for lever_id, twin in (
+        ("cache.synthetic-a", "cache.synthetic-b"),
+        ("cache.synthetic-b", "cache.synthetic-a"),
+    ):
+        row = _row(frame, lever_id)
+        assert row["status"] == "duplicate version"
+        assert pd.isna(row["rank"])  # never ranked, never merged
+        assert twin in row["notes"]
+    # The unique version still ranks; the duplicates do not take rank 1 from it.
+    assert _row(frame, "cache.synthetic-c")["rank"] == 1
+    assert "duplicate version" in to_markdown(
+        [first, second, other], max_tenant_share=CAP
+    )
 
 
 def test_tenant_cap_is_an_argument():

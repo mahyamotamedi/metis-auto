@@ -9,8 +9,16 @@ FR-EVAL-06, FR-EVAL-09, FR-REQ-04, QA-COST).
   price version (``manifest.price_version``) and one evidence class. Different
   groups are listed, never ranked against each other.
 - **One baseline at a time.** A result under another baseline is never compared.
-  A version that has a result under some baseline but not under the chosen one
-  gets a row with status ``baseline missing``; nothing is invented for it.
+- **A version is ``(step, version)``**, the same across baselines. ``lever_id``
+  names one result file (ADR-0032) and may carry a baseline suffix (Pipeline B:
+  ``rb1.retrieval-cache.ttl-1d.user.tune.as_logged``), so it never identifies a
+  version. A version with a result under some baseline but not under the chosen
+  one gets one row with status ``baseline missing``, a blank ``lever_id`` and the
+  baselines it does have in ``notes``; nothing is invented for it. Two results
+  with the same ``(step, version)`` under one baseline are never merged: both get
+  status ``duplicate version``, no rank, and each other's ``lever_id`` in
+  ``notes``. So a ``version`` label must be unique within a step for each
+  baseline.
 - **Four baselines** (``BASELINES``): premium ``gpt-5.5`` (estimate only),
   as-logged recorded cost, today's logged models, best single cheap model. Only
   as-logged is in recorded cost units; the others are repriced. They are never
@@ -60,6 +68,7 @@ STEP_ORDER = ("cache", "context", "routing")
 RANKED = "ranked"
 INSUFFICIENT = "insufficient evidence"
 MISSING = "baseline missing"
+DUPLICATE = "duplicate version"
 
 _SAMPLED = re.compile(r"sampled:(\d+)")
 
@@ -158,19 +167,26 @@ def compare(
     results: Sequence[LeverResultLike], *, baseline: str, max_tenant_share: Decimal
 ) -> pd.DataFrame:
     """One row per result under ``baseline``, plus one ``baseline missing`` row per
-    version that has results only under other baselines. Columns: ``COLUMNS``.
+    version (``(step, version)``) that has results only under other baselines.
+    Columns: ``COLUMNS``.
 
     ``max_tenant_share`` is the tenant cap (a ``Decimal`` share in (0, 1]); a
     larger top-tenant share is flagged.
     """
     chosen = _baseline(baseline)
     cap = _share_cap(max_tenant_share)
-    rows = [_row(r, chosen, cap) for r in results if r.baseline == chosen.key]
-    present = {
-        (r.step, r.lever_id, r.version) for r in results if r.baseline == chosen.key
-    }
-    absent = {(r.step, r.lever_id, r.version) for r in results} - present
-    rows += [_missing_row(*k, chosen) for k in sorted(absent)]
+    chosen_results = [r for r in results if r.baseline == chosen.key]
+    rows = [_row(r, chosen, cap) for r in chosen_results]
+    _flag_duplicates(rows)
+    present = {(r.step, r.version) for r in chosen_results}
+    elsewhere: dict[tuple[str, str], set[str]] = {}
+    for r in results:
+        if (r.step, r.version) not in present:
+            elsewhere.setdefault((r.step, r.version), set()).add(r.baseline)
+    rows += [
+        _missing_row(step, version, chosen, sorted(others))
+        for (step, version), others in sorted(elsewhere.items())
+    ]
     _rank(rows)
     rows.sort(key=_order)
     frame = pd.DataFrame(rows, columns=list(COLUMNS))
@@ -271,17 +287,38 @@ def _row(r: LeverResultLike, b: Baseline, cap: Decimal) -> dict[str, object]:
     }
 
 
-def _missing_row(step: str, lever_id: str, version: str, b: Baseline) -> dict:
+def _flag_duplicates(rows: list[dict[str, object]]) -> None:
+    """Mark rows that share ``(step, version)`` under one baseline; never merge."""
+    by_version: dict[tuple[object, object], list[dict[str, object]]] = {}
+    for row in rows:
+        by_version.setdefault((row["step"], row["version"]), []).append(row)
+    for twins in by_version.values():
+        if len(twins) < 2:
+            continue
+        for row in twins:
+            others = sorted(str(t["lever_id"]) for t in twins if t is not row)
+            note = f"same step and version as {', '.join(others)}; not ranked"
+            row["status"] = DUPLICATE
+            row["notes"] = "; ".join(n for n in (note, row["notes"]) if n)
+
+
+def _missing_row(
+    step: str, version: str, b: Baseline, others: Sequence[str]
+) -> dict[str, object]:
     row: dict[str, object] = dict.fromkeys(COLUMNS)
     row |= {
         "group": f"{step} | {MISSING}",
         "status": MISSING,
         "step": step,
-        "lever_id": lever_id,
+        "lever_id": None,
         "version": version,
         "baseline": b.key,
         "tenant_flag": "unknown",
-        "notes": "no result under this baseline; none is invented",
+        "notes": (
+            "no result under this baseline; none is invented; present under "
+            f"{', '.join(others)} (lever IDs are baseline-qualified, so the "
+            "version is matched by step and version)"
+        ),
     }
     return row
 
@@ -463,7 +500,7 @@ def _table(frame: pd.DataFrame) -> list[str]:
             row["notes"],
         )
         if row["status"] == MISSING:  # not applicable, rather than unknown
-            keep = {1, 2, 3, len(cells) - 1}  # status, lever, version, notes
+            keep = {1, 3, len(cells) - 1}  # status, version, notes
             cells = tuple(c if i in keep else "—" for i, c in enumerate(cells))
         lines.append("| " + " | ".join(_cell(c) for c in cells) + " |")
     return lines
