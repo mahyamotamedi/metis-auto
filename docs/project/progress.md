@@ -37,9 +37,9 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 ## Entries, newest first
 
 <!-- progress-index:start -->
+- 2026-11-02: [Sprint Day 3, Pipeline B: kNN router, Redis cache store, B-only combined dry run](progress/2026-11-02-sprint-day-3-pipeline-b-knn-router-redis-store-combined-replay.md)
 - 2026-11-02: [Sprint Day 2, Pipeline C: within-message chunk dedup and stable prompt order](progress/2026-11-02-sprint-day-2-pipeline-c-within-message-chunk-dedup.md)
 - 2026-11-02: [Sprint Day 2, Pipeline C: within-message dedup as a token_cost saving, lever results](progress/2026-11-02-sprint-day-2-pipeline-c-context-dedup-token-saving.md)
-- 2026-11-02: [Sprint Day 3, Pipeline B: kNN router, Redis cache store, B-only combined dry run](progress/2026-11-02-sprint-day-3-pipeline-b-knn-router-redis-store-combined-replay.md)
 - 2026-11-02: [Sprint Day 2, Pipeline B: retrieval-result cache, cross-turn chunk policy, cost trace](progress/2026-11-02-sprint-day-2-pipeline-b-retrieval-cache-chunk-policy-cost-trace.md)
 - 2026-11-02: [Sprint Day 1, Pipeline C: replay split keeps the report side, ADR for scope, split and baselines](progress/2026-11-02-sprint-day-1-pipeline-c-replay-split-report-side-keeps.md)
 - 2026-11-02: [Sprint Day 1, Pipeline C: replay scope, split and four baselines](progress/2026-11-02-sprint-day-1-pipeline-c-replay-scope-split-baselines.md)
