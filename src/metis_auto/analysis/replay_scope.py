@@ -27,8 +27,8 @@ Columns are the real names in ``requests.parquet`` (``a_timestamp``,
   So no session and no family is on both sides. ``excluded`` rows are in
   neither side of the fit; all of them come from tune sessions, and callers
   report their count (FR-EVAL-08). Decision record:
-  ADR-XXXX (replay-scope-split-and-baselines),
-  ``docs/adr/draft-replay-scope-split-and-baselines.md``.
+  ADR-0036,
+  ``docs/adr/0036-replay-scope-split-and-baselines.md``.
 - ``bot_sufficiency``: a bot with fewer than ``min_n`` requests is
   ``insufficient``; a bot with one request always is.
 - ``cap_tenant_share`` downsamples the largest tenants (``user_id``; a missing

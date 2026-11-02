@@ -1,4 +1,4 @@
-# ADR-XXXX (replay-scope-split-and-baselines): The replay split is for fitting only, a straddling duplicate family stays on the report side, and baselines never mix recorded with repriced units
+# ADR-0036: The replay split is for fitting only, a straddling duplicate family stays on the report side, and baselines never mix recorded with repriced units
 
 - Status: **decided** by the project owner, 2026-11-02 (Pipeline C, task S-3). `min_n = 30` and the `todays_models` price coverage are **provisional**.
 - Date: 2026-11-02
