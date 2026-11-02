@@ -32,13 +32,13 @@ All 349,079 AI messages were traced: 244,995 with items, 103,764 with an empty l
 - **What the ~12% is:** almost all of it (58.62 units) is **March 2026** billing items logged without any `costBreakdown`: 44,806 items with no key and 1,119 with an empty one. 40,084 of them carry token usage. After March, items without a breakdown add less than 0.001 units in total (1,119 items, recorded cost rounds to 0.000). So the remainder is not a separate kind of cost. It is March cost whose input/output/fee split was not logged (*metadata-derived*: dated by the request's answer time, naive timestamps, Q-06).
 - **Explanations ruled out:** web search calls, audio tokens, grounding queries and billable seconds are zero on every item. Cache writes are broken down (0.14%). No unknown `costBreakdown` key exists.
 - **By model label** (share of the remainder): `gemini-2.5-flash` 23.2%, `claude-4-opus` 21.5%, `gemini-2.5-flash-lite` 9.8%, `gpt-5.1` 8.9%, `gpt-4o-mini` 7.6%, others smaller (`reports/cost/exp-cost-002/summary.json`). This says which models ran in March, not that those models bill differently.
-- **Tune period** (March–July, interim split): the other group is 16.3% of tune cost, because all of March falls in tune. Any block share computed over the tune period must say so.
+- **Tune period** (March–July, `replay_scope` `period` per row from `a_timestamp`, ADR-0036): the other group's share of tune cost is in `summary.json` (`scopes.tune`); all of March falls in tune, so it is larger there than over all periods. Any block share computed over the tune period must say so.
 
 ## Consequences
 
 - No final saving may be stated as a share of a total that hides the 11.7% (all periods) or 16.3% (tune). A fee or input saving measured from `costBreakdown` covers only the broken-down part. For March, the fee and token blocks are unknown, not zero.
 - R-B1 takes its fee block from `costBreakdown.per_call`. March RAG lookups mostly have no per-call item, so they are unattributed and never skipped (conservative).
-- `analysis/levers.py` has two blocks (`fees`, `token_cost`). Its `with_blocks` proxy puts the March remainder into `token_cost`. The waterfall cannot show an "other" block yet (open question Q-B8 for A and C).
+- **"Other" is reported inside `token_cost`** (owner decision 3, 2026-11-02; Q-B8 answered). `analysis/levers.py` keeps two blocks (`fees`, `token_cost`) and is unchanged, so the 11.71% has no block of its own in any `LeverResult` or waterfall. It is not hidden: this breakdown (table above and `reports/cost/exp-cost-002/summary.json`) is the reference for how much of `token_cost` is "other", and every final share that uses `token_cost` or the recorded total must point here.
 
 ## Run
 

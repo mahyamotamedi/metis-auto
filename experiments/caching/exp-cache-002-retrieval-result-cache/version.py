@@ -66,7 +66,8 @@ The decision rule "agreement >= 0.9" refers to that mean, on evaluable hits, wit
 the unknown count beside it.
 
 **Shadow check.** ``guard.shadow_sample`` selects hit rows at ``shadow_rate``
-(no default: ``sprint.toml`` does not exist yet). Offline, a selected hit's later
+(no default: the script passes ``[cache_guard] shadow_rate`` from
+``config/evaluation/sprint.toml``). Offline, a selected hit's later
 real lookup is the logged lookup itself. The result is ``agree`` (>= 0.9),
 ``disagree`` or ``unknown`` (no evaluable agreement).
 """
@@ -405,14 +406,18 @@ def summarise(outcomes: pd.DataFrame) -> dict[str, Any]:
 
 
 def repeat_rates(
-    lookups: pd.DataFrame, windows_days: Sequence[int]
+    lookups: pd.DataFrame,
+    windows_days: Sequence[int],
+    scored: pd.Index | None = None,
 ) -> dict[int, float]:
     """Free check: share of keyed lookups whose key was already looked up and
     completed (``t_done`` strictly before this ``t_arrive``) within each window.
 
     The key is ``lookup_key`` with the unknown-corpus marker where no version
-    is known. Lookups without a key are left out of the denominator. Run it on
-    tune data only: it sets the TTL.
+    is known. Lookups without a key are left out of the denominator. Every
+    lookup is history; with ``scored`` (request labels) only those requests'
+    lookups are in the denominator. Run it on tune-period data only: it sets
+    the TTL.
     """
     if not len(lookups):
         return {w: float("nan") for w in windows_days}
@@ -428,8 +433,9 @@ def repeat_rates(
         key = _key_of(row)
         if key is None:
             continue
-        prev = latest.get(key)
-        gaps.append(None if prev is None else row.t_arrive - prev)
+        if scored is None or row.req in scored:
+            prev = latest.get(key)
+            gaps.append(None if prev is None else row.t_arrive - prev)
         heapq.heappush(pending, (row.t_done, i, key))
     if not gaps:
         return {w: float("nan") for w in windows_days}

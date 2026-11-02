@@ -91,7 +91,7 @@ For **the team**:
 
 **Shared files at Day 2.** `analysis/levers.py` (blob `896092d`) and `analysis/lever_result.py` (blob `dfca79e`) are on `origin/main`; this branch has not merged `main` (owner rule). They were **borrowed** as untracked, git-excluded copies only to run tests against the real `combine`, `StepVersion`, `summarise_slices`, `LeverResult` and `build_manifest`, and **deleted before handing over**. No B code depends on them at import time: the contract tests use `pytest.importorskip`, and the run helpers import them lazily. `analysis/replay_scope.py`, `analysis/baselines_full.py`, `config/evaluation/sprint.toml`, `analysis/routing_base.py` and S-6 (`experiments/context/exp-ctx-001-within-message-dedup/`) exist on no ref.
 
-**Stand-in:** `experiments/caching/exp-cache-002-retrieval-result-cache/_interim.py`. Every result built with it says "interim split/baselines, not the shared implementation" and stays out of any final comparison. Results are written to `reports/<area>/exp-*-002/`, not `reports/levers/`.
+**Stand-in (retired 2026-11-02):** `experiments/caching/exp-cache-002-retrieval-result-cache/_interim.py` and its test are deleted. R-B1, R-B2 and F-2 now use `analysis/replay_scope.py`, `analysis/baselines_full.py` and `config/evaluation/sprint.toml` from `main` (cb7066e, split rule e974c48, ADR-0036). Results are written to `reports/levers/<lever_id>.json`, one per version per baseline; the old `reports/<area>/exp-*-002/levers/` files are removed and the `summary.json` files stay where they were. The table below is kept as the record of what the stand-in assumed.
 
 | Interim piece | Assumed shape | Replaced by |
 |---|---|---|
@@ -101,12 +101,12 @@ For **the team**:
 | baselines | only `as_logged` (recorded units); `premium_gpt_5_5`, `todays_models`, `best_single_cheap` not computed (need repricing) | `analysis/baselines_full.py` |
 | shadow rate | 0.01 passed by the script | `sprint.toml` |
 
-**Switch-over checklist (Day 2 code).**
-1. Merge `main`. Re-run `tests/unit/experiments`: the `importorskip` contract tests then run for real.
-2. Replace `_interim.llm_request` / `assign_periods` with `replay_scope` in `scripts/run_pipeline_b_day2.py`. Delete `_interim.py` and its `module_reference.md` row.
-3. Build all four baselines from `baselines_full`. R-B1's fee block has no repriced counterpart (no price list for lookups). If none is defined, report repriced baselines as "fee saving not repriceable".
-4. Read the shadow rate from `sprint.toml`.
-5. Re-run `rb1`, `rb2` and `f2`, then move the `LeverResult` files to `reports/levers/` only after the interim label is gone.
+**Switch-over checklist (Day 2 code): done 2026-11-02.**
+1. ~~Merge `main`.~~ Done (via the Day 1 branch). The contract tests in `tests/unit/experiments` run for real (no skips).
+2. ~~Replace `_interim.llm_request` / `assign_periods` with `replay_scope`.~~ Done: `scope` (per-row `period` from `a_timestamp`; a missing provider is an error) and `split_by_session` (R-B1's fitting split). `_interim.py` and its row deleted.
+3. ~~Build all four baselines from `baselines_full`.~~ Done. R-B1 against the repriced baselines: saving **not computed** (empty `saving`, never 0; ADR-0036 decision 5). R-B2: before-minus-after `baseline_costs` per repriced baseline.
+4. ~~Read the shadow rate from `sprint.toml`.~~ Done, with every other setting (periods, seed, `min_n`, `[baselines]`).
+5. ~~Re-run and move the `LeverResult` files to `reports/levers/`.~~ Done; results regenerated on a committed `code_commit`.
 
 ### Proposals for the S-1 contract (A); not applied, nothing edited
 - **P-B1 (retrieval cache, plan §4.1).** A retrieval cache lowers only `block_fees`, leaves `served_from_cache` false, and adds `retrieval_reused`, `retrieval_lookups_skipped`, `retrieval_fee_avoided`. Today's `combine` already carries these columns (tested against the real one). Please change the `StepVersion` docstring from "cache versions … zero every cost block" to "answer-cache versions …; retrieval-cache versions lower only the fee block". [ADR-XXXX (retrieval-result-cache-accounting)](../adr/draft-retrieval-result-cache-accounting.md).
@@ -116,7 +116,7 @@ For **the team**:
 
 ### Questions for the owners (Day 2)
 - Q-B4 (open): `evidence_class` has no "measured potential". R-B1 uses `simulation`, with "measured potential, conditional on Metis-Auto being able to intercept retrieval" in `assumptions`.
-- Q-B8 (open, sharpened by F-2): the cost-block names (plan: fees, input, output, cached, other; code: `fees`, `token_cost`) and the missing "other" block (P-B4).
+- Q-B8 (**answered** 2026-11-02, see the S-3 questions above): two blocks; "other" is reported inside `token_cost` (owner decision 3). P-B4 is therefore declined; F-2's breakdown is the reference for the share of `token_cost` that is "other".
 - Q-B14 (A): confirm P-B1. Until then the combined run with R-B1 is **blocked** in the shared waterfall. R-B1's standalone fee accounting stays valid.
 - Q-B15 (A): where do a result's cache-specific aggregates go? R-B1 puts lookups, hits, guard blocks, agreement and shadow counts in a `retrieval` slice. R-B2 puts tokens in a `context_tokens` slice. `LeverResult` has no field for them.
 - Q-B16 (A, C): `traffic_weighted` for a full, unsampled replay. B copies `all`. Is that the intended meaning?

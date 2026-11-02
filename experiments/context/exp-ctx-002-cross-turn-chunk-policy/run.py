@@ -1,7 +1,17 @@
 """R-B2 run helpers: the chunks frame, ordinary input tokens and cost per request,
-one scenario's evaluation and its ``LeverResult`` (final plan R-B2; H-1,
-FR-CTX-02, QA-REPRO). Pure over frames; ``scripts/run_pipeline_b_day2.py`` does
-the file IO and passes the interim split. Outputs are content-free aggregates.
+one scenario's evaluation, its repriced savings and one ``LeverResult`` per
+baseline (final plan R-B2; H-1, FR-CTX-02, QA-REPRO; ADR-0036). Pure over
+frames; ``scripts/run_pipeline_b_day2.py`` does the file IO and passes the
+shared scope (``period == "tune"`` rows: R-B2 fits nothing) and the
+``sprint.toml`` baseline settings. Outputs are content-free aggregates.
+
+Savings per baseline (units never mixed, ADR-0036 decisions 5 to 7):
+
+- ``as_logged`` (recorded units): net tokens removed x the request's recorded
+  ordinary input rate, inside ``token_cost``.
+- repriced baselines (price-file units): ``baseline_costs`` on the "before"
+  frame minus ``baseline_costs`` on the "after" frame (``after_tokens``), per
+  baseline. The best single cheap model must be the same model in both.
 """
 
 from __future__ import annotations
@@ -125,20 +135,78 @@ def _dec(value: float) -> Decimal:
     return Decimal(f"{value + 0.0:.9f}")
 
 
-def lever_result_json(
+REPRICED_KEYS = ("premium_gpt_5_5", "todays_models", "best_single_cheap")
+
+
+def after_tokens(req: pd.DataFrame, cached_separately: frozenset[str]) -> pd.DataFrame:
+    """A copy of ``req`` with ``a_bill_inputTokens`` lowered by
+    ``ctx_tokens_saved`` (the net tokens a scenario removed).
+
+    The cached-token convention of ``baselines_full``: for models that count
+    cached tokens inside the input, the input never goes below the cached
+    tokens; for the models in ``cached_separately`` it never goes below 0.
+    Cached and output tokens are unchanged; unknown input stays unknown.
+    """
+    out = req.copy()
+    raw = out["a_bill_inputTokens"]
+    cached = out["a_bill_cachedInputTokens"].fillna(0)
+    floor = cached.where(~out["bot_provider_model"].isin(cached_separately), 0.0)
+    floor = floor.clip(upper=raw)
+    saved = out["ctx_tokens_saved"].fillna(0).astype(float)
+    lowered = (raw - saved).clip(lower=floor)
+    out["a_bill_inputTokens"] = lowered.where(raw.notna())
+    return out
+
+
+def repriced_savings(
+    req: pd.DataFrame,
+    ctx: Any,
+    *,
+    premium_model: str,
+    cached_separately: frozenset[str],
+) -> dict[str, Any]:
+    """``before`` (the four baselines of ``req``) and ``saving`` per repriced
+    baseline (``token_cost`` and ``total``, the before-after difference).
+
+    ``req`` carries ``ctx_tokens_saved`` (the scenario's ``after`` frame).
+    """
+    from metis_auto.analysis.baselines_full import (
+        baseline_costs,
+        best_single_cheap_model,
+    )
+
+    after = after_tokens(req, cached_separately)
+    kw = {"premium_model": premium_model, "cached_separately": cached_separately}
+    before_costs = baseline_costs(req, ctx, **kw)
+    after_costs = baseline_costs(after, ctx, **kw)
+    sep = {"cached_separately": cached_separately}
+    if best_single_cheap_model(req, ctx, **sep) != best_single_cheap_model(
+        after, ctx, **sep
+    ):
+        raise ValueError("the best single cheap model changed; the difference is void")
+    saving = {}
+    for key in REPRICED_KEYS:
+        diff = before_costs[key]["token_cost"] - after_costs[key]["token_cost"]
+        saving[key] = {"token_cost": diff, "total": diff}
+    return {"before": before_costs, "saving": saving}
+
+
+def lever_results_json(
     res: dict[str, Any],
     req: pd.DataFrame,
     *,
-    seed: int,
+    repriced: Mapping[str, Any] | None,
+    ctx: Any,
     code_commit: str,
     python_version: str,
     created_at: datetime,
-    period_bounds: Mapping[str, tuple[pd.Timestamp, pd.Timestamp]] | None = None,
     extra_assumptions: Sequence[str] = (),
-) -> str:
-    """The scenario's ``LeverResult`` (baseline ``as_logged``) as JSON text."""
+) -> dict[str, str]:
+    """The scenario's ``LeverResult`` JSON text per baseline key: ``as_logged``
+    always, and the three repriced baselines when ``repriced`` (from
+    ``repriced_savings``) is given. ``ctx`` goes into the manifest."""
     from metis_auto.analysis.lever_result import LeverResult, build_manifest
-    from metis_auto.analysis.levers import BLOCKS, ReplayContext, summarise_slices
+    from metis_auto.analysis.levers import BLOCKS, summarise_slices
 
     after = res["after"]
     slices = summarise_slices(req, after)
@@ -156,44 +224,68 @@ def lever_result_json(
             s["tokens"]["saved"] / s["tokens"]["supported_input"]
         )
     known = slices["llm_only"]
-    ctx = ReplayContext(
-        period_bounds=dict(period_bounds or {}),
-        price_table={"version": "recorded-units"},
-        catalogue={},
-        seed=seed,
-    )
     sc = res["scenario"]
-    config = {"lever": "rb2-cross-turn-chunk-policy", **sc, "interim": True}
+    config = {"lever": "rb2-cross-turn-chunk-policy", **sc, "period": "tune"}
+    manifest = build_manifest(
+        config,
+        ctx,
+        code_commit=code_commit,
+        python_version=python_version,
+        created_at=created_at,
+    )
     window = sc["visible_window"]
     ledger = "ledger" if sc["session_ledger"] else "pointer"
-    result = LeverResult(
-        lever_id=f"rb2.cross-turn.k-{window}.ptr-{sc['pointer_tokens']}.{ledger}",
-        step="context",
-        version=res["name"],
-        n_requests=len(req),
-        n_eligible=int(req["llm_request"].astype(bool).sum()),
-        baseline="as_logged",
-        baseline_cost={b: known[f"baseline:{b}"] for b in BLOCKS},
-        saving={b: known[f"saving:{b}"] for b in BLOCKS},
-        slices=slices,
-        evidence_class="hypothetical reconstruction",
-        correctness_state="unmeasured",
-        assumptions=(
-            TOKENS_ONLY,
-            "visibility is assumed (history policy unidentified, EDA section 2)",
-            f"chunk tokens = chars x {sc['tokens_per_char']:.4f} (EDA turn-0 slope)",
-            "removed tokens priced at the request's recorded ordinary input rate; "
-            "provider-cached input not repriced",
-            "fees and output unchanged; within-message copies left to S-6",
-            "timestamps are naive (Q-06)",
-            *extra_assumptions,
-        ),
-        manifest=build_manifest(
-            config,
-            ctx,
-            code_commit=code_commit,
-            python_version=python_version,
-            created_at=created_at,
-        ),
+    common = (
+        TOKENS_ONLY,
+        "visibility is assumed (history policy unidentified, EDA section 2)",
+        f"chunk tokens = chars x {sc['tokens_per_char']:.4f} (EDA turn-0 slope)",
+        "fees and output unchanged; within-message copies left to S-6",
+        "rows: period tune (a_timestamp); no fitted parameter, so no split",
+        "timestamps are naive (Q-06)",
     )
-    return result.to_json()
+    baselines: dict[str, dict[str, Any]] = {
+        "as_logged": {
+            "baseline_cost": {b: known[f"baseline:{b}"] for b in BLOCKS},
+            "saving": {b: known[f"saving:{b}"] for b in BLOCKS},
+            "assumptions": (
+                "removed tokens priced at the request's recorded ordinary input "
+                "rate; provider-cached input not repriced (recorded units)",
+            ),
+        }
+    }
+    for key in REPRICED_KEYS if repriced is not None else ():
+        base = repriced["before"][key]
+        baselines[key] = {
+            "baseline_cost": {"token_cost": base["token_cost"], "total": base["total"]},
+            "saving": dict(repriced["saving"][key]),
+            "assumptions": (
+                "saving = baseline_costs before minus after, input tokens lowered "
+                "by the net tokens removed (price-file units, never mixed)",
+            ),
+        }
+    out: dict[str, str] = {}
+    for key, fields in baselines.items():
+        result = LeverResult(
+            lever_id=(
+                f"rb2.cross-turn.k-{window}.ptr-{sc['pointer_tokens']}.{ledger}.{key}"
+            ),
+            step="context",
+            version=res["name"],
+            n_requests=len(req),
+            n_eligible=int(req["llm_request"].astype(bool).sum()),
+            baseline=key,
+            baseline_cost=fields["baseline_cost"],
+            saving=fields["saving"],
+            slices=slices,
+            evidence_class="hypothetical reconstruction",
+            correctness_state="unmeasured",
+            assumptions=(
+                common[0],
+                *fields["assumptions"],
+                *common[1:],
+                *extra_assumptions,
+            ),
+            manifest=manifest,
+        )
+        out[key] = result.to_json()
+    return out

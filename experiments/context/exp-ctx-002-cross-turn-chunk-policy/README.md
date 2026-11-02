@@ -1,8 +1,23 @@
 # EXP-CTX-002: cross-turn chunk policy (sprint task R-B2)
 
-- **Hypothesis:** H-1 (context can be reduced). A retrieved chunk that was already supplied earlier in the same session, with the same content, does not need to be sent again *if the model still sees it*. A short pointer replaces it. Traces: FR-CTX-02, FR-CTX-03, QA-PRIV, QA-REPRO; plan task R-B2; Review Focus 4 (same ID, changed hash).
+- **Hypothesis:** H-1 (context can be reduced). A retrieved chunk that was already supplied earlier in the same session, with the same content, does not need to be sent again *if the model still sees it*. A short pointer replaces it. Traces: FR-CTX-02, FR-CTX-03, QA-PRIV, QA-REPRO; plan task R-B2; Review Focus 4 (same ID, changed hash); scope, baselines and units: [ADR-0036](../../../docs/adr/0036-replay-scope-split-and-baselines.md).
 - **Evidence class:** *hypothetical reconstruction*. **Tokens only, quality not measured.** Token savings alone cannot pass the context quality rule (loss − win within noise + 3 points, groups, JSON, language, refusals). That needs the paid ablation (cut-first d).
-- **Status:** tune period run on full data (2026-11-02). The report period is not read. Interim split (`exp-cache-002/_interim.py`): "interim split/baselines, not the shared implementation".
+- **Status:** tune period run on full data on the shared S-3 code (2026-11-02): `replay_scope.scope` and `baselines_full.baseline_costs` (ADR-0036). The Day 2 interim stand-ins are retired. The report period is not read.
+
+## Data scope (ADR-0036; owner decision 1, 2026-11-02)
+
+R-B2 has **no fitted parameter**: visibility and pointer size are scenarios. Its scenarios therefore run on `period == "tune"` LLM rows (per row, from `a_timestamp`), with no fitting split; `split_by_session` is not applied. Settings (periods, seed, `min_n`, `[baselines]`) come from `config/evaluation/sprint.toml` in the script. The cached-token convention is `baselines_full.cached_reported_separately` (the EDA's rule; `summary.json` says whether it equals the EDA table).
+
+## Baselines (ADR-0036, decisions 5 to 7)
+
+One `LeverResult` per scenario **per baseline**, keyed by `baselines_full.BASELINE_KEYS`, written to `reports/levers/rb2.cross-turn.k-<w>.ptr-<p>.<pointer|ledger>.<baseline>.json`.
+
+| Baseline | Units | Saving |
+|---|---|---|
+| `as_logged` | recorded | net tokens removed × the request's recorded ordinary input rate, inside `token_cost` (method below) |
+| `premium_gpt_5_5`, `todays_models`, `best_single_cheap` | price-file | `baseline_costs(before) − baseline_costs(after)` per baseline, where "after" lowers each changed request's `a_bill_inputTokens` by its net tokens removed, never below the cached tokens for models that count them inside input (`run.after_tokens`). The cheapest single model must be the same before and after. |
+
+Recorded and price-file units are never mixed; an unknown price stays unknown (`n_unknown` in the baseline).
 
 ## Rule (`version.py`)
 
@@ -43,4 +58,4 @@ Reading: under the conservative default nothing is saved. If the model keeps the
 .venv/bin/python scripts/run_pipeline_b_day2.py rb2   # needs the local derived tables and raw billing table
 ```
 
-Outputs: `reports/context/exp-ctx-002/summary.json` and `levers/*.json` (interim `LeverResult`, baseline `as_logged`, evidence `hypothetical reconstruction`).
+Outputs: `reports/context/exp-ctx-002/summary.json` and `reports/levers/rb2.*.json` (32 `LeverResult` files: 8 scenarios × 4 baselines, evidence `hypothetical reconstruction`).

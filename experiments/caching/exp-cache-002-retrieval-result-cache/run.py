@@ -1,9 +1,16 @@
 """R-B1 run helpers: build the lookups frame, the recorded fee block, the
-evaluation and the interim ``LeverResult`` (final plan R-B1; H-3, FR-XCACHE-04,
-QA-REPRO; ADR-XXXX (retrieval-result-cache-accounting)). Pure over frames;
-``scripts/run_pipeline_b_day2.py`` does the file IO. Outputs are content-free
-aggregates: no query, chunk, hash, bot, user or session value leaves this
-module except as a count or a rank.
+evaluation, the TTL choice and one ``LeverResult`` per baseline (final plan R-B1;
+H-3, FR-XCACHE-04, FR-EVAL-08, QA-REPRO; ADR-0036;
+ADR-XXXX (retrieval-result-cache-accounting)). Pure over frames;
+``scripts/run_pipeline_b_day2.py`` does the file IO and passes the shared scope
+(``analysis.replay_scope``), the baselines (``analysis.baselines_full``) and the
+``sprint.toml`` values. Outputs are content-free aggregates: no query, chunk,
+hash, bot, user or session value leaves this module except as a count or a rank.
+
+**Fitting vs history** (owner decision 2026-11-02, ADR-0036 decision 1). The
+TTL is a fitted threshold, so it is chosen on ``scored`` rows only, which the
+script sets to ``split_by_session == "tune"``. The replay itself runs over every
+LLM row it is given, so earlier rows of any split or period are cache history.
 """
 
 from __future__ import annotations
@@ -11,7 +18,7 @@ from __future__ import annotations
 import importlib.util
 import math
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -41,7 +48,10 @@ def _sibling(name: str) -> Any:
 
 
 version = _sibling("version")
-interim = _sibling("_interim")
+REPRICED_NOT_COMPUTED = (
+    "saving not computed in price-file units: R-B1 avoids only per-call fees, "
+    "and repriced baselines have no fees block (ADR-0036, decision 5)"
+)
 
 
 def _settings(row: Any) -> str:
@@ -130,13 +140,21 @@ def evaluate(
     ttl: pd.Timedelta | None,
     ctx: Any,
     shadow_rate: float,
+    *,
+    scored: pd.Series | None = None,
 ) -> dict[str, Any]:
-    """Replay one TTL over ``req`` (already restricted to one period) and return
-    content-free aggregates plus the ``after`` frame (same index as ``req``)."""
+    """Replay one TTL over every LLM row of ``req`` and return content-free
+    aggregates plus the ``after`` frame, both over the ``scored`` rows only
+    (a boolean mask on ``req.index``; default every row). Unscored rows are
+    cache history: they look up and insert, but are not counted."""
     cache = version.RetrievalResultCache(ttl, lookups=lookups, shadow_rate=shadow_rate)
+    llm_all = req["llm_request"].astype(bool)
+    all_outcomes = cache.replay(ctx, requests=req.index[llm_all.to_numpy()])
+    all_after = cache.apply(req, ctx)
+    keep = _mask(scored, req.index)
+    req, after = req.loc[keep], all_after.loc[keep]
+    outcomes = all_outcomes[all_outcomes["req"].isin(req.index)]
     llm = req["llm_request"].astype(bool)
-    outcomes = cache.replay(ctx, requests=req.index[llm.to_numpy()])
-    after = cache.apply(req, ctx)
     known = llm & req[["block_fees", "block_token_cost"]].notna().all(axis=1)
     fee_block = math.fsum(req.loc[known, "block_fees"])
     total = fee_block + math.fsum(req.loc[known, "block_token_cost"])
@@ -182,6 +200,56 @@ def evaluate(
     }
 
 
+def _mask(scored: pd.Series | None, index: pd.Index) -> pd.Series:
+    if scored is None:
+        return pd.Series(True, index=index)
+    return scored.reindex(index, fill_value=False).astype(bool)
+
+
+def passes_ttl_rule(summary: dict[str, Any]) -> bool:
+    """Declared before the run (README): mean agreement on evaluable hits >= 0.9
+    and at least half of the hits evaluable."""
+    a = summary["agreement"]
+    if not a["n_hits"] or "mean" not in a:
+        return False
+    return a["mean"] >= 0.9 and a["n_evaluable"] >= 0.5 * a["n_hits"]
+
+
+def choose_ttl(
+    req: pd.DataFrame,
+    lookups: pd.DataFrame,
+    ttls_days: Sequence[int],
+    ctx: Any,
+    shadow_rate: float,
+    *,
+    scored: pd.Series,
+) -> dict[str, Any]:
+    """The TTL rule on ``scored`` rows only: the longest TTL that passes
+    ``passes_ttl_rule`` (``None`` if none does). ``"none"`` (no expiry) is
+    reported but never chosen. The replay reads every LLM row of ``req`` as
+    history, as ``evaluate`` does."""
+    llm = req["llm_request"].astype(bool)
+    keep = _mask(scored, req.index)
+    counted = req.index[keep.to_numpy()]
+    by_ttl: dict[str, Any] = {}
+    chosen = None
+    for days in (None, *ttls_days):
+        ttl = None if days is None else pd.Timedelta(days=days)
+        cache = version.RetrievalResultCache(
+            ttl, lookups=lookups, shadow_rate=shadow_rate
+        )
+        outcomes = cache.replay(ctx, requests=req.index[llm.to_numpy()])
+        summary = version.summarise(outcomes[outcomes["req"].isin(counted)])
+        passed = passes_ttl_rule(summary)
+        by_ttl["none" if days is None else f"{days}d"] = {
+            "summary": summary,
+            "passes_rule": passed,
+        }
+        if days is not None and passed:
+            chosen = days
+    return {"by_ttl": by_ttl, "chosen_ttl_days": chosen}
+
+
 def tenant_shares(
     req: pd.DataFrame, after: pd.DataFrame
 ) -> dict[str, dict[str, float]]:
@@ -201,10 +269,13 @@ def tenant_shares(
 
 
 def ttl_table(
-    lookups: pd.DataFrame, windows_days: Sequence[int] = (1, 7, 30, 90)
+    lookups: pd.DataFrame,
+    windows_days: Sequence[int] = (1, 7, 30, 90),
+    scored: pd.Index | None = None,
 ) -> dict[int, float]:
-    """The free check that sets the TTL (tune lookups only)."""
-    return version.repeat_rates(lookups, windows_days)
+    """The free check behind the TTL (tune-period lookups only). ``scored``:
+    request labels whose lookups form the denominator; all are history."""
+    return version.repeat_rates(lookups, windows_days, scored)
 
 
 def churn_summary(lookups: pd.DataFrame) -> dict[str, Any]:
@@ -232,12 +303,14 @@ def _dec(value: float) -> Decimal:
     return Decimal(f"{value + 0.0:.9f}")
 
 
-def lever_result_json(
+def lever_results_json(
     res: dict[str, Any],
     req: pd.DataFrame,
     *,
+    baselines: Mapping[str, Mapping[str, Decimal]],
+    split_counts: Mapping[str, int],
     ttl: pd.Timedelta | None,
-    seed: int,
+    ctx: Any,
     code_commit: str,
     python_version: str,
     created_at: datetime,
@@ -245,13 +318,24 @@ def lever_result_json(
     shadow_rate: float = 0.0,
     scope: str = "user",
     period: str = "tune",
-) -> str:
-    """The interim ``LeverResult`` (baseline ``as_logged``) as JSON text.
+) -> dict[str, str]:
+    """One ``LeverResult`` JSON text per baseline key (``BASELINE_KEYS``).
 
-    Needs ``analysis/levers.py`` and ``analysis/lever_result.py`` (on ``main``).
+    ``req`` and ``res`` cover the scored rows; ``baselines`` is
+    ``baselines_full.baseline_costs`` over the same rows. ``ctx`` is the
+    ``ReplayContext`` (period bounds, price table, catalogue, seed, ``min_n``)
+    that goes into the manifest.
+
+    - ``as_logged`` (recorded units): baseline and saving per block. The blocks
+      are R-B1's recorded per-call split (``fee_blocks``); their sum must equal
+      the shared ``as_logged`` total.
+    - repriced baselines (price-file units): ``baseline_cost`` holds
+      ``token_cost`` and ``total`` only; ``saving`` is empty, the way a missing
+      value is represented (``compare`` shows "saving unknown"), never 0.
     """
+    from metis_auto.analysis.baselines_full import BASELINE_KEYS
     from metis_auto.analysis.lever_result import LeverResult, build_manifest
-    from metis_auto.analysis.levers import BLOCKS, ReplayContext, summarise_slices
+    from metis_auto.analysis.levers import BLOCKS, summarise_slices
 
     after = res["after"]
     slices = summarise_slices(req, after)
@@ -274,16 +358,12 @@ def lever_result_json(
     slices["retrieval"] = {k: Decimal(int(v)) for k, v in retrieval.items()}
     if "mean" in s["agreement"]:
         slices["retrieval"]["agreement_mean"] = _dec(s["agreement"]["mean"])
+    slices["split"] = {k: Decimal(int(v)) for k, v in split_counts.items()}
     known = slices["llm_only"]
-    baseline_cost = {b: known[f"baseline:{b}"] for b in BLOCKS}
-    saving = {b: known[f"saving:{b}"] for b in BLOCKS}
-    bounds = interim.PERIODS[period]
-    ctx = ReplayContext(
-        period_bounds={period: bounds},
-        price_table={"version": "recorded-units"},
-        catalogue={},
-        seed=seed,
-    )
+    recorded = {b: known[f"baseline:{b}"] for b in BLOCKS}
+    recorded_total = sum(recorded.values(), Decimal(0))
+    if abs(recorded_total - baselines["as_logged"]["total"]) > Decimal("0.000001"):
+        raise ValueError("recorded blocks do not sum to the as_logged baseline total")
     days = "none" if ttl is None else f"{ttl / pd.Timedelta(days=1):g}d"
     config = {
         "lever": "rb1-retrieval-result-cache",
@@ -291,44 +371,80 @@ def lever_result_json(
         "scope": scope,
         "shadow_rate": shadow_rate,
         "period": period,
-        "interim": True,
+        "split": "split_by_session tune rows (ADR-0036)",
     }
+    manifest = build_manifest(
+        config,
+        ctx,
+        code_commit=code_commit,
+        python_version=python_version,
+        created_at=created_at,
+    )
     ci = res["fees"]["share_of_total_cost_ci"]
     ci_ok = all(isinstance(v, float) and math.isfinite(v) for v in ci)
-    result = LeverResult(
-        lever_id=f"rb1.retrieval-cache.ttl-{days}.{scope}.{period}.interim",
-        step="cache",
-        version=res["name"],
-        n_requests=len(req),
-        n_eligible=int(r["n_requests_llm"]),
-        baseline="as_logged",
-        baseline_cost=baseline_cost,
-        saving=saving,
-        ci_low=ci[0] if ci_ok else None,
-        ci_high=ci[1] if ci_ok else None,
-        slices=slices,
-        evidence_class="simulation",
-        correctness_state="unmeasured",
-        assumptions=(
-            MEASURED_POTENTIAL,
-            interim.INTERIM_LABEL,
-            "candidate reuse; agreement with the later real lookup is in slice "
-            "'retrieval'; production correctness not measured",
-            "fees avoided are recorded per-call amounts of skipped lookups "
-            "(recorded units); token cost unchanged",
-            "fee block from recorded costBreakdown.per_call, not the 0.002 proxy",
-            "no corpus-version evidence: every hit is ttl_only",
-            "retrieval settings are a configuration snapshot, not a history",
-            "ci is session-clustered, share of total recorded cost",
-            "timestamps are naive (Q-06)",
-            *extra_assumptions,
-        ),
-        manifest=build_manifest(
-            config,
-            ctx,
-            code_commit=code_commit,
-            python_version=python_version,
-            created_at=created_at,
-        ),
+    common = (
+        MEASURED_POTENTIAL,
+        "candidate reuse; agreement with the later real lookup is in slice "
+        "'retrieval'; production correctness not measured",
+        "TTL chosen on split_by_session tune rows only; earlier rows of any "
+        "split are cache history (owner decision 2026-11-02)",
+        "frequency bias: the tune split drops a family's tune rows if it recurs "
+        "in the report period, so repeat rates are understated (ADR-0036)",
+        "no corpus-version evidence: every hit is ttl_only",
+        "retrieval settings are a configuration snapshot, not a history",
+        "timestamps are naive (Q-06)",
     )
-    return result.to_json()
+    out: dict[str, str] = {}
+    for key in BASELINE_KEYS:
+        if key == "as_logged":
+            fields: dict[str, Any] = {
+                "baseline_cost": recorded | {"total": recorded_total},
+                "saving": {b: known[f"saving:{b}"] for b in BLOCKS},
+                "ci_low": ci[0] if ci_ok else None,
+                "ci_high": ci[1] if ci_ok else None,
+                "assumptions": (
+                    "fees avoided are recorded per-call amounts of skipped lookups "
+                    "(recorded units); token cost unchanged",
+                    "fee block from recorded costBreakdown.per_call, not the 0.002 "
+                    "proxy; the total equals the shared as_logged total",
+                    "ci is session-clustered, share of total recorded cost",
+                ),
+            }
+        else:
+            base = baselines[key]
+            fields = {
+                "baseline_cost": {
+                    "token_cost": base["token_cost"],
+                    "total": base["total"],
+                },
+                "saving": {},
+                "ci_low": None,
+                "ci_high": None,
+                "assumptions": (
+                    REPRICED_NOT_COMPUTED,
+                    "baseline in price-file units; never added to recorded units",
+                ),
+            }
+        result = LeverResult(
+            lever_id=f"rb1.retrieval-cache.ttl-{days}.{scope}.{period}.{key}",
+            step="cache",
+            version=res["name"],
+            n_requests=len(req),
+            n_eligible=int(r["n_requests_llm"]),
+            baseline=key,
+            slices=slices,
+            evidence_class="simulation",
+            correctness_state="unmeasured",
+            manifest=manifest,
+            **fields
+            | {
+                "assumptions": (
+                    common[0],
+                    *fields["assumptions"],
+                    *common[1:],
+                    *extra_assumptions,
+                )
+            },
+        )
+        out[key] = result.to_json()
+    return out
