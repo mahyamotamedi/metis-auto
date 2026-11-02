@@ -25,12 +25,14 @@ from metis_auto.analysis.request_features import language_group
 from metis_auto.analysis.text_features import language_label
 from metis_auto.application.pipeline.spend_guard import SpendGuard
 from metis_auto.contracts import AnswerSource, CostEstimate, CostStatus, PartRole
+from metis_auto.data_access.postgres import answer_files
 from metis_auto.data_access.postgres import golden_answers as db
 from metis_auto.domain.accounting.cost import pre_call_estimate
 from metis_auto.domain.accounting.overhead import template_overhead, with_overhead
 from metis_auto.domain.accounting.tokens import sum_counts
 from metis_auto.evaluation.golden.validation import fingerprint
 from metis_auto.evaluation.golden_answers import review as rv
+from metis_auto.evaluation.golden_answers import share as sh
 from metis_auto.evaluation.golden_answers.config import (
     AnswerSettings,
     SettingsError,
@@ -135,10 +137,14 @@ class GoldenAnswers:
         log: Callable[[str], None] = print,
         report_dir: Path | None = None,
         local_dir: Path | None = None,
+        export_dir: Path | None = None,
+        dataset_verifier: Callable[[], bool] | None = None,
     ) -> None:
         self.root = root or repo_root()
         self._report_dir = report_dir
         self._local_dir = local_dir
+        self._export_dir = export_dir
+        self._dataset_verifier = dataset_verifier
         self.engine = engine or engine_from_settings()
         raw = tomllib.loads((self.root / config_path).read_text(encoding="utf-8"))
         self.raw = raw
@@ -358,6 +364,8 @@ class GoldenAnswers:
             raise RunRefused("live run refused: " + "; ".join(reasons))
 
     def _dataset_verified(self) -> bool:
+        if self._dataset_verifier is not None:
+            return self._dataset_verifier()
         from metis_auto.wiring.golden import Golden
 
         quiet = Golden(
@@ -514,6 +522,173 @@ class GoldenAnswers:
             json.dumps(manifest, indent=1, sort_keys=True) + "\n", encoding="utf-8"
         )
 
+    # ------------------------------------------------------------------ sharing
+    def _reports_folder(self) -> Path:
+        slug = self.settings.dataset_id.replace("-", "_")
+        return self._report_dir or self.root / "reports" / "evaluation" / slug
+
+    def _dataset_fingerprint(self) -> str:
+        """The golden-v2 fingerprint committed in this checkout."""
+        path = self._reports_folder() / "fingerprint.json"
+        return json.loads(path.read_text(encoding="utf-8"))["fingerprint"]
+
+    def export_path(self, run_id: str) -> Path:
+        return self._export_dir or (
+            self.root
+            / self.loaded().settings.paths.run_dir
+            / "golden_answers"
+            / run_id
+            / "export"
+        )
+
+    def answers_fingerprint_path(self, run_id: str) -> Path:
+        return self._reports_folder() / f"answers_{run_id}_fingerprint.json"
+
+    def export_answers(
+        self, run_id: str, *, created: str | None = None
+    ) -> dict[str, Any]:
+        """Write the answered records of ``run_id`` to ``runs/.../export/``:
+        answers.parquet, manifest.json and README.md, and nothing else. The folder
+        holds answer text: git ignores it, and only it is meant for upload to the
+        team's private dataset. Returns names, sizes and hashes only."""
+        with self.engine.connect() as conn:
+            rows = db.export_rows(conn, run_id)
+        folder = self.export_path(run_id)
+        assert_git_ignored(self.root, folder / "answers.parquet")
+        folder.mkdir(parents=True, exist_ok=True)
+        stray = _stray_files(folder)
+        if stray:
+            raise sh.ShareRefused(
+                f"{folder.name}/ holds files that are not part of an export: {stray}; "
+                "move them away (review files and prompts must never be uploaded)"
+            )
+        answer_files.write_answers(rows, folder / "answers.parquet")
+        parquet = folder / "answers.parquet"
+        run_settings_path = folder.parent / "manifest.json"
+        run_settings = None
+        if run_settings_path.exists():
+            run_settings = json.loads(
+                run_settings_path.read_text(encoding="utf-8")
+            ).get("settings")
+        manifest = sh.build_manifest(
+            rows,
+            dataset_id=self.settings.dataset_id,
+            dataset_fingerprint=self._dataset_fingerprint(),
+            parquet_sha256=sh.sha256_file(parquet),
+            parquet_bytes=parquet.stat().st_size,
+            created=created or SystemClock().now().date().isoformat(),
+            run_settings=run_settings,
+        )
+        (folder / "manifest.json").write_text(
+            json.dumps(manifest, indent=1, sort_keys=True, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        (folder / "README.md").write_text(sh.readme_text(manifest), encoding="utf-8")
+        return {
+            "folder": _shown(folder, self.root),
+            "records": len(rows),
+            "files": {
+                name: {
+                    "bytes": (folder / name).stat().st_size,
+                    "sha256": sh.sha256_file(folder / name),
+                }
+                for name in sh.EXPORT_FILES
+            },
+        }
+
+    def import_answers(self, path: Path) -> dict[str, Any]:
+        """Load an export folder into the local ``eval.golden_answer``. Idempotent.
+        Refuses (changing nothing) unless the parquet matches its sha256, the
+        dataset is this one, every record is in the verified local dataset and
+        nothing already stored differs."""
+        folder = Path(path)
+        stray = _stray_files(folder)
+        manifest_path, parquet = folder / "manifest.json", folder / "answers.parquet"
+        if not manifest_path.exists() or not parquet.exists():
+            raise sh.ShareRefused(
+                f"{folder} is not an export folder "
+                "(manifest.json or answers.parquet missing)"
+            )
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        actual_sha = sh.sha256_file(parquet)
+        if actual_sha != manifest.get("answers_parquet", {}).get("sha256"):
+            # a changed file is never opened
+            raise sh.ShareRefused(
+                "import refused: the sha256 of answers.parquet does not match "
+                "the manifest"
+            )
+        try:
+            rows = answer_files.read_answers(parquet)
+        except (ValueError, OSError) as exc:
+            raise sh.ShareRefused(
+                f"import refused: answers.parquet cannot be read ({type(exc).__name__})"
+            ) from exc
+        reasons: list[str] = []
+        if not self._dataset_verified():
+            reasons.append(f"{self.settings.dataset_id}: verify did not pass locally")
+        run_id = manifest.get("run_id")
+        with self.engine.connect() as conn:
+            local_ids = db.dataset_record_ids(conn, self.settings.dataset_id)
+            existing = db.answers_for(conn, run_id, [r["record_id"] for r in rows])
+        reasons += sh.import_problems(
+            manifest,
+            rows,
+            actual_parquet_sha256=actual_sha,
+            expected_dataset_id=self.settings.dataset_id,
+            local_dataset_fingerprint=self._dataset_fingerprint(),
+            local_record_ids=local_ids,
+            existing_answers=existing,
+            stray_files=stray,
+        )
+        if reasons:
+            raise sh.ShareRefused("import refused: " + "; ".join(reasons))
+        fresh = [r for r in rows if r["record_id"] not in existing]
+        with self.engine.begin() as conn:
+            db.insert_answers(conn, fresh)
+        return {
+            "run_id": run_id,
+            "records_in_export": len(rows),
+            "inserted": len(fresh),
+            "already_present": len(rows) - len(fresh),
+        }
+
+    def _answers_payload(self, run_id: str) -> dict[str, Any]:
+        with self.engine.connect() as conn:
+            rows = db.export_rows(conn, run_id)
+        return sh.fingerprint_payload(
+            rows,
+            dataset_id=self.settings.dataset_id,
+            dataset_fingerprint=self._dataset_fingerprint(),
+        )
+
+    def fingerprint_answers(self, run_id: str) -> Path:
+        """Write the committed fingerprint of a run: hashes and counts only. The
+        lead runs it once, on purpose; a teammate never does, to make a check pass."""
+        path = self.answers_fingerprint_path(run_id)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(self._answers_payload(run_id), indent=1, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        self.log(f"Wrote {_shown(path, self.root)}")
+        return path
+
+    def verify_answers(self, run_id: str) -> bool:
+        path = self.answers_fingerprint_path(run_id)
+        if not path.exists():
+            self.log(f"FAIL: no committed fingerprint file {path.name}.")
+            return False
+        try:
+            actual = self._answers_payload(run_id)
+        except sh.ShareRefused as exc:
+            self.log(f"FAIL: {exc}")
+            return False
+        problem = sh.fingerprint_diff(
+            json.loads(path.read_text(encoding="utf-8")), actual
+        )
+        self.log("PASS" if problem is None else f"FAIL: {problem}")
+        return problem is None
+
     # -------------------------------------------------------- language review
     def review_paths(self, run_id: str) -> tuple[Path, Path]:
         """(local text-bearing file, committable sheet) for ``run_id``."""
@@ -606,6 +781,16 @@ def assert_git_ignored(root: Path, path: Path) -> None:
             f"refusing to write {path.name}: it is not git-ignored "
             "(it holds message text and must never be committed)"
         )
+
+
+def _stray_files(folder: Path) -> list[str]:
+    """Entries of an export folder that are not export files. Names starting with
+    a dot (the Hugging Face download cache) are ignored."""
+    return sorted(
+        p.name
+        for p in folder.iterdir()
+        if not p.name.startswith(".") and p.name not in sh.EXPORT_FILES
+    )
 
 
 def _shown(path: Path, root: Path) -> str:
