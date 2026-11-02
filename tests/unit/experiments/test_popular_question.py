@@ -403,6 +403,108 @@ def test_scope_check_fails_the_run_when_a_key_loses_its_scope(
         cache.apply(req, ctx())
 
 
+# --- TTL (pq-v2) -------------------------------------------------------------------
+
+
+def at(day, hours=10.0) -> pd.Timestamp:
+    return BASE + pd.Timedelta(days=day, hours=hours)
+
+
+def answered(day, session, hours=10.0, **over) -> dict:
+    """[SYNTHETIC] a row whose answer is logged exactly at ``at(day, hours)``."""
+    return row(
+        day,
+        session,
+        u_timestamp=at(day, hours) - pd.Timedelta(seconds=30),
+        a_timestamp=at(day, hours),
+        **over,
+    )
+
+
+def asked(day, session, hours, **over) -> dict:
+    """[SYNTHETIC] a probe asked at ``at(day, hours)``."""
+    return row(
+        day,
+        session,
+        u_timestamp=at(day, hours),
+        a_timestamp=at(day, hours) + pd.Timedelta(seconds=30),
+        **over,
+    )
+
+
+def ttl_cache(cache_class, ttl_hours=24, variant="first_turn"):
+    return cache_class(90, 3, 2, variant, "pq-v1", ttl_hours=ttl_hours)
+
+
+def test_ttl_hit_needs_the_latest_answer_to_be_younger_than_ttl(cache_class):
+    """Strictly less than ``ttl_hours``: exactly 24 h after the answer is a miss."""
+    cache = ttl_cache(cache_class)
+    occurrences = [answered(0, f"s{i}", hours=9 + i) for i in range(3)]  # latest 11:00
+    just_inside = frame(*occurrences, asked(1, "p", hours=11 - 1 / 3600))
+    exactly = frame(*occurrences, asked(1, "p", hours=11))
+    assert hits(cache, just_inside)[-1] is True
+    assert hits(cache, exactly)[-1] is False
+    assert hits(ttl_cache(cache_class, None), exactly)[-1] is True  # no TTL: hit
+
+
+def test_ttl_serves_the_latest_answer_not_the_mode(cache_class):
+    cache = ttl_cache(cache_class)
+    req = frame(
+        answered(0, "s1", hours=9, a="ans-1"),
+        answered(0, "s2", hours=10, a="ans-1"),
+        answered(0, "s3", hours=11, a="ans-2"),  # latest, not the mode
+        asked(1, "p", hours=8, a="ans-2"),
+    )
+    out = cache.apply(req, ctx())
+    assert out["pq_answer_agrees"].loc[103] is True
+    assert cache.served_sources(req, ctx()).to_dict() == {103: 102}
+    assert cache.stability_check == {"hits": 1, "latest_is_mode": 0}
+
+
+def test_ttl_leaves_the_admission_set_unchanged(cache_class):
+    req = frame(*popular(day=0), row(5, "probe"))
+    timed, untimed = ttl_cache(cache_class), ttl_cache(cache_class, None)
+    a, b = timed.apply(req, ctx()), untimed.apply(req, ctx())
+    pd.testing.assert_series_equal(a["pq_admitted_keys_day"], b["pq_admitted_keys_day"])
+    assert b["served_from_cache"].iloc[-1] and not a["served_from_cache"].iloc[-1]
+
+
+def test_no_ttl_reproduces_the_untimed_version(make, cache_class):
+    req = frame(
+        row(0, "s1", a="ans-3", minute=1),
+        row(0, "s2", a="ans-1", minute=2),
+        row(0, "s3", a="ans-2", minute=3),
+        *popular(day=1, q="q-2"),
+        row(5, "probe", a="ans-2"),
+        row(6, "probe-2", q="q-2"),
+    )
+    pd.testing.assert_frame_equal(
+        make().apply(req, ctx()), ttl_cache(cache_class, None).apply(req, ctx())
+    )
+    assert ttl_cache(cache_class, None).version == "pq-v1"
+
+
+def test_ttl_hours_is_validated(cache_class):
+    ttl_cache(cache_class, 24)
+    ttl_cache(cache_class, 0.5)
+    ttl_cache(cache_class, 90 * 24)
+    for bad in (0, -1, True, float("nan"), float("inf"), 90 * 24 + 1, "24"):
+        with pytest.raises(ValueError, match="ttl_hours"):
+            ttl_cache(cache_class, bad)
+
+
+def test_ttl_variant_has_its_own_lever_id_version_and_assumption(cache_class):
+    cache = ttl_cache(cache_class, 24)
+    assert cache.lever_id == "cache.popular_question.first_turn.ttl24h"
+    assert cache.name == cache.lever_id
+    assert cache.version == "pq-v2"
+    assert any("24 h" in a and "TTL" in a for a in cache.assumptions)
+    assert all(len(a) <= 300 for a in cache.assumptions)
+    upper = ttl_cache(cache_class, 24, "all_turns")
+    assert upper.lever_id == "cache.popular_question.all_turns.ttl24h"
+    assert ttl_cache(cache_class, 1.5).lever_id.endswith(".ttl1.5h")
+
+
 def test_key_version_is_validated(make):
     for bad in ("", "pq|v1"):
         with pytest.raises(ValueError, match="key_version"):

@@ -321,3 +321,39 @@ def test_repriced_results_use_price_units_and_token_cost_only(rp, cache):
     )  # 240 / (240 + 9,020)
     assert "baseline:fees" not in r.slices["all"]  # no recorded amounts mixed in
     assert any("price-file units" in a for a in r.assumptions)
+
+
+SPRINT_SYN = {
+    "baselines": {"price_table": "prices-syn.toml", "catalogue": "catalogue-syn.toml"}
+}
+
+
+def test_run_config_adds_ttl_only_to_ttl_runs_and_changes_the_hash(rp):
+    from metis_auto.analysis.lever_result import config_hash
+
+    cls = rp.load_cache_class()
+    untimed = rp.run_config(
+        cls(90, 3, 2, "first_turn", rp.KEY_VERSION), 0.01, SPRINT_SYN
+    )
+    timed = rp.run_config(
+        cls(90, 3, 2, "first_turn", rp.KEY_VERSION, ttl_hours=24), 0.01, SPRINT_SYN
+    )
+    # The untimed config is exactly the phase-2 one, so committed results still match.
+    assert set(untimed) == {
+        "variant",
+        "window_days",
+        "min_count",
+        "min_sessions",
+        "key_version",
+        "shadow_rate",
+        "price_table",
+        "catalogue",
+    }
+    assert timed == untimed | {"ttl_hours": 24.0}
+    assert config_hash(timed, ctx()) != config_hash(untimed, ctx())
+
+
+def test_ttl_comes_from_sprint_toml_else_the_default(rp):
+    assert rp.ttl_from_config({"ttl_hours": 12}) == (12, "sprint.toml")
+    assert rp.ttl_from_config({}) == (rp.DEFAULT_TTL_HOURS, "script default")
+    assert rp.DEFAULT_TTL_HOURS == 24

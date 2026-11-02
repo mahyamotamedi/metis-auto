@@ -28,6 +28,12 @@ caller passes the guard's own ``key_version``). Variants:
   first answer of a session has ``n_prior_msgs == 1``.
 - ``all_turns`` (upper bound): any turn, history ignored. Unsafe for follow-ups.
 
+TTL (``ttl_hours``, version ``pq-v2``; ``None`` keeps ``pq-v1``): admission is
+unchanged, but the stored answer is the key's **latest** eligible answer from an
+earlier day, and a request hits only if that answer was logged less than
+``ttl_hours`` before it (``u_timestamp - a_timestamp``). The nightly build never
+serves an answer from the request's own day.
+
 ``apply`` returns a copy with the same index. Hit rows get
 ``served_from_cache = True`` and zero known cost blocks (unknown stays unknown).
 Added columns are counts and flags only (``pq_eligible``,
@@ -36,6 +42,7 @@ Added columns are counts and flags only (``pq_eligible``,
 
 from __future__ import annotations
 
+import math
 from typing import Literal
 
 import numpy as np
@@ -98,6 +105,22 @@ _REQUIRED = (
 )
 
 
+def _ttl(value: object, window_days: int) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise ValueError(f"ttl_hours must be a number or None, got {value!r}")
+    if not math.isfinite(value) or not 0 < value <= window_days * 24:
+        raise ValueError(
+            f"ttl_hours must be above 0 and at most window_days x 24, got {value}"
+        )
+    return float(value)
+
+
+def _hours_label(hours: float) -> str:
+    return f"{int(hours)}" if hours == int(hours) else f"{hours:g}"
+
+
 def _strict_int(name: str, value: object, low: int, high: int | None = None) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
         raise ValueError(f"{name} must be an int, got {value!r}")
@@ -122,6 +145,8 @@ class PopularQuestionCache:
         min_sessions: int,
         variant: Variant,
         key_version: str,
+        *,
+        ttl_hours: float | None = None,
     ) -> None:
         versioned_key(key_version, "check")  # raises on an empty or "|" version
         if variant not in VARIANTS:
@@ -131,13 +156,26 @@ class PopularQuestionCache:
         self.min_sessions = _strict_int("min_sessions", min_sessions, 1)
         self.variant = variant
         self.key_version = key_version
+        self.ttl_hours = _ttl(ttl_hours, self.window_days)
         self.scope_check: dict[str, int] | None = None
         """Counts of the last ``apply``: hits checked, cross-bot, cross-instruction."""
+        self.stability_check: dict[str, int] | None = None
+        """TTL only, last ``apply``: hits, and hits whose latest answer is the mode."""
         self.lever_id = f"cache.popular_question.{variant}"
-        self.name = self.lever_id
         self.assumptions = _COMMON + (
             _FIRST_TURN if variant == "first_turn" else _ALL_TURNS
         )
+        if self.ttl_hours is not None:
+            label = _hours_label(self.ttl_hours)
+            self.version = "pq-v2"
+            self.lever_id += f".ttl{label}h"
+            self.assumptions += (
+                f"TTL {label} h: the stored answer is the key's latest eligible "
+                f"answer from an earlier day, served only if logged less than {label} "
+                "h before the request; ADR-0016 point 6 (valid until the next build) "
+                "differs.",
+            )
+        self.name = self.lever_id
 
     # --- eligibility ---------------------------------------------------------------
 
@@ -245,6 +283,7 @@ class PopularQuestionCache:
                 "session": req.loc[eligible, "session_id"],
                 "day": day[eligible],
                 "t": req.loc[eligible, "a_timestamp"],
+                "t_ask": req.loc[eligible, "u_timestamp"],
             }
         )
         e["kc"] = pd.factorize(e["key"])[0]
@@ -258,6 +297,8 @@ class PopularQuestionCache:
         admitted_n = pd.Series(np.nan, index=req.index, dtype=float)
         allowed: dict[tuple[str, str], bool] = {}
         window = pd.Timedelta(days=self.window_days)
+        ttl = None if self.ttl_hours is None else pd.Timedelta(hours=self.ttl_hours)
+        n_latest_is_mode = 0
 
         for d in sorted(day.dropna().unique()):
             d = pd.Timestamp(d)
@@ -271,14 +312,24 @@ class PopularQuestionCache:
             if today.empty:
                 continue
             stored = self._stored_answers(win[win["kc"].isin(today["kc"])])
-            for idx, k, bot, kc, ac in zip(
+            latest = (
+                self._latest_answers(win[win["kc"].isin(today["kc"])])
+                if ttl is not None
+                else None
+            )
+            for idx, k, bot, kc, ac, t_ask in zip(
                 today.index,
                 today["key"],
                 today["bot"],
                 today["kc"],
                 today["ac"],
+                today["t_ask"],
                 strict=True,
             ):
+                if latest is not None:
+                    latest_ac, latest_row, latest_t = latest[kc]
+                    if not t_ask - latest_t < ttl:
+                        continue
                 if ctx.guard is not None:
                     pair = (k, str(bot))
                     if pair not in allowed:
@@ -287,9 +338,17 @@ class PopularQuestionCache:
                         continue
                 served.at[idx] = True
                 stored_ac, stored_row = stored[kc]
+                if latest is not None:
+                    n_latest_is_mode += int(latest_ac == stored_ac)
+                    stored_ac, stored_row = latest_ac, latest_row
                 agrees.at[idx] = bool(ac == stored_ac)
                 source.at[idx] = stored_row
         self.scope_check = self._check_scope(req, served, source)
+        self.stability_check = (
+            {"hits": int(served.sum()), "latest_is_mode": n_latest_is_mode}
+            if ttl is not None
+            else None
+        )
         return eligible, served, agrees, admitted_n, source
 
     @staticmethod
@@ -316,6 +375,17 @@ class PopularQuestionCache:
             "hits_checked": len(hit_rows),
             "cross_bot_hits": cross_bot,
             "cross_instruction_hits": cross_ins,
+        }
+
+    @staticmethod
+    def _latest_answers(win: pd.DataFrame) -> dict[int, tuple[int, object, object]]:
+        """Per key: (answer code, row label, answer time) of its latest row."""
+        last = win.sort_values("t", kind="stable").drop_duplicates("kc", keep="last")
+        return {
+            kc: (ac, row, t)
+            for kc, ac, row, t in zip(
+                last["kc"], last["ac"], last.index, last["t"], strict=True
+            )
         }
 
     @staticmethod

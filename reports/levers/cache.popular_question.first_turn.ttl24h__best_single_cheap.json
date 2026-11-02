@@ -1,0 +1,68 @@
+{
+  "assumptions": [
+    "Hits are candidate hits: the logged answer is not checked against the new request (ADR-0006); correctness unmeasured until the K-1 review (X1).",
+    "Saving is the recorded cost of avoided calls, before lookup overhead and before the build cost (regeneration or judging) that ADR-0016 charges.",
+    "Measured potential, not a serving decision: global scope within a bot; every bot has one owner account, so cross-user reuse is unmeasured (ADR-0016).",
+    "Ineligible: no user text, non-STOP or empty answer, attachments, tools, actions, bad times, workflow rows, memory on or unknown, RAG run or unknown.",
+    "No time-sensitivity detector exists (TODO-07): time-dependent questions can be admitted.",
+    "Instructions are a bot snapshot (bot_ins_h_exact): changes over time are not seen, so the instruction key part does not split a bot's traffic.",
+    "Days are naive calendar days of the user timestamp (Q-06).",
+    "Headline variant: only requests with no logged history (n_prior_msgs == 1, the request's own question) are admitted or hit.",
+    "TTL 24 h: the stored answer is the key's latest eligible answer from an earlier day, served only if logged less than 24 h before the request; ADR-0016 point 6 (valid until the next build) differs.",
+    "Fees are a proxy: 0.002 per per-call billing item (ADR-0032); it understates the recorded fee block by about 5% and overstates token cost by the same.",
+    "Report period (Aug-Oct 2026) read once; the window may look back into the tune period (owner decision 2026-11-02). Period is from a_timestamp, days from u_timestamp (naive, Q-06).",
+    "Guard: no approval step, empty blocklist, no disabled bot, key version pq-v1; every served key would still need approval before serving.",
+    "Tenant slices: the 10 largest tenants by LLM requests (opaque ranks); traffic_weighted slice not computed.",
+    "The working tree had uncommitted changes when this ran.",
+    "Repriced baseline in price-file units, token cost only (fees are not on the price list); no interval computed."
+  ],
+  "baseline": "best_single_cheap",
+  "baseline_cost": {
+    "token_cost": "41.847755950",
+    "total": "41.847755950"
+  },
+  "ci_high": null,
+  "ci_low": null,
+  "correctness_state": "unmeasured",
+  "evidence_class": "simulation",
+  "lever_id": "cache.popular_question.first_turn.ttl24h",
+  "manifest": {
+    "code_commit": "345304819ab0a7ccf706aab4605b8a76c4876bc1",
+    "config_hash": "3c5c120566f9923cbc855e01645ee7e8b6c5ecace7abed1bf933c868f59ec4df",
+    "created_at": "2026-11-02T12:58:03.578170Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "python_version": "3.13.9",
+    "seed": 20261102
+  },
+  "n_eligible": 2707,
+  "n_requests": 77774,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
+  "saving": {
+    "token_cost": "0.019438650",
+    "total": "0.019438650"
+  },
+  "slices": {
+    "all": {
+      "baseline:total": "41.847755950",
+      "cache_hit_rate": "0.002751562",
+      "n_cache_hits": "214",
+      "n_cost_known": "24598",
+      "n_requests": "77774",
+      "saving:total": "0.019438650",
+      "saving_share": "0.000464509"
+    },
+    "llm_only": {
+      "baseline:total": "41.847755950",
+      "cache_hit_rate": "0.008696006",
+      "n_cache_hits": "214",
+      "n_cost_known": "24598",
+      "n_requests": "24609",
+      "saving:total": "0.019438650",
+      "saving_share": "0.000464509"
+    }
+  },
+  "step": "cache",
+  "version": "pq-v2"
+}

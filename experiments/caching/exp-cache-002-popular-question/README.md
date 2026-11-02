@@ -5,7 +5,7 @@
 - **Traceability:** H-8, X1 (hit correctness, `docs/full_eda/experiment_plan.md`), FR-XCACHE-02 (key), FR-XCACHE-04 (validity), FR-XCACHE-05 (scope), ADR-0006, ADR-0007, ADR-0016, [ADR-0034](../../../docs/adr/0034-cache-guard-key-encoding-and-check-order.md) (guard key encoding), ADR-0031 (full-data replay path), ADR-0032 (result format), TODO-07, Q-06.
 - **Evidence class:** *simulation* on logged requests. `correctness_state` is `unmeasured` until the K-1 review.
 - **Code:** [`version.py`](version.py), class `PopularQuestionCache(window_days, min_count, min_sessions, variant, key_version)`, a `levers.StepVersion` of step `cache`. It is loaded only through `wiring.experiments.load_candidate` (scripts and tests); `metis_auto` never imports it. Tests: `tests/unit/experiments/test_popular_question.py` (all frames [SYNTHETIC]).
-- **Status (2026-11-02):** phase 2 of 3 done: full-data run with B's guard and C's scope; results below and in `reports/levers/`. Phase 3 (reading the K-1 review) is next. Run: `.venv\Scripts\python.exe scripts/run_popular_question.py` (tests: `tests/unit/experiments/test_run_popular_question.py`).
+- **Status (2026-11-02):** phase 2 of 3 done: full-data run with B's guard and C's scope; results below and in `reports/levers/`. A 24 h TTL variant (`pq-v2`, `--ttl-only`) is added beside the untimed results. Phase 3 (reading the K-1 review) is next; the review sheet comes from the untimed first_turn hits. Run: `.venv\Scripts\python.exe scripts/run_popular_question.py` (tests: `tests/unit/experiments/test_run_popular_question.py`).
 
 ## Design
 
@@ -19,6 +19,7 @@
 | Hit | Eligible, key in day *d*'s set, and `ctx.guard.allows(key, bot)` when a guard is given. | decided |
 | Shadow check | Plan S-5: every cache version reports the shadow-check result. `CacheGuard.shadow_sample(keys, rate, seed)` has no default rate; the caller passes the rate from `sprint.toml` (Q-B9). The sample is per key, so the rate is a share of distinct keys. | open (phase 2) |
 | Stored answer | Mode of `a_h_norm` over the window's occurrences; ties go to the latest `a_timestamp`, then the smallest hash. | provisional |
+| TTL (`ttl_hours`, version `pq-v2`) | Optional keyword argument; `None` keeps `pq-v1` unchanged (tested). With a TTL the admission set is unchanged, the stored answer is the key's **latest** eligible answer from an earlier day, and a request hits only if that answer was logged less than `ttl_hours` before it (`u_timestamp - a_timestamp`, strictly less). The nightly build never serves a same-day answer. lever_id gets `.ttl<h>h`; `ttl_hours` is in the manifest's config hash. Default 24 h (production TTL, owner 2026-11-02) until `sprint.toml` holds `ttl_hours` (C's file). | decided |
 | Agreement | `pq_answer_agrees`: the hit's own logged answer hash equals the stored one. A diagnostic, never a correctness claim (ADR-0016, `logged_match`). | decided |
 | Effect | Copy with the same index; hit rows get `served_from_cache = True` and zero known `block_fees` and `block_token_cost` (unknown stays unknown). Added columns: `pq_eligible`, `pq_admitted_keys_day` (count), `pq_answer_agrees`. No key, hash or text in the output. | decided |
 
@@ -68,6 +69,8 @@ Simulation, candidate hits, correctness **unmeasured**. Report period August to 
 |---|---|---|---|---|---|---|---|---|
 | `first_turn` (headline) | 2,707 | 762 | 28.15% | 1.06% | 3.10% | 0.31% (0.27% to 0.36%) | 54.2% | 72 |
 | `all_turns` (upper bound) | 7,634 | 1,023 | 13.40% | 1.42% | 4.16% | 0.37% (0.33% to 0.42%) | 51.9% | 112 |
+| `first_turn.ttl24h` (headline under the 24 h TTL) | 2,707 | 214 | 7.91% | 0.30% | 0.87% | **0.07%** (0.05% to 0.09%) | 52.8% | 19 |
+| `all_turns.ttl24h` | 7,634 | 274 | 3.59% | 0.38% | 1.11% | 0.08% (0.07% to 0.10%) | 51.5% | 24 |
 | EDA bot+text, global (dynamic, all months) | 326,491 | 91,305 | 27.97% (27.4% to 28.5%) | 27.97% | — | 8.2% | — | — |
 | EDA bot+full_history, global | 326,491 | 27,030 | 8.28% (8.0% to 8.5%) | 8.28% | — | 0.8% | — | — |
 
@@ -76,6 +79,8 @@ Simulation, candidate hits, correctness **unmeasured**. Report period August to 
 **Reading.** On the like-for-like denominator, ours is far below the EDA (1.1% and 1.4% against 28.0%), as expected. Two funnel steps account for most of the gap: **workflow rows** (71,979 → 23,938 after `llm_request`; the EDA funnel kept them) and **RAG requests** (23,005 → 7,634 after `no_rag`). Within what stays eligible, the first-turn hit rate (28.2%) is close to the EDA's dynamic rate, but those rows are cheap first turns: the cost share saved is 0.31%. Only about half of the hits match the stored answer, so many popular questions have several logged answers; K-1 will say whether they are still acceptable.
 
 **Other baselines** (repriced, price-file units, token cost only, no interval): first_turn saves 0.20% (premium gpt-5.5), 0.11% (today's models), 0.22% (best single cheap model); all_turns 0.26%, 0.26%, 0.27%. Files: `reports/levers/<lever_id>__<baseline>.json` (one per baseline; see the questions in the progress entry).
+
+**Under the 24 h production TTL** (2026-11-02). The untimed rows above have no age limit: the served answer was the 90-day mode, median 104 h old, and only 19.8% of first_turn hits used an answer under 24 h. With the TTL, only hits whose key was answered less than 24 h earlier remain: 214 of 762 first_turn hits (28.1%) and 274 of 1,023 all_turns hits (26.8%). The cost share saved falls from 0.31% to **0.07%** and from 0.37% to 0.08%, so the untimed result overstates the saving under a 24 h TTL by about 4 to 5 times. The admission set is the same (same admitted keys per day). Over all replay hits (tune and report), the latest answer is also the window's most common answer for 83.1% of first_turn and 67.4% of all_turns hits. Repriced, first_turn.ttl24h saves 0.045% (premium gpt-5.5), 0.003% (today's models) and 0.046% (best single cheap model). The untimed results are kept as the upper bound.
 
 **Admission and guard.** Admitted keys per report day: first_turn median 94, p90 144; all_turns 178 and 317. Every served key would need approval before serving (72 and 112 distinct keys). The 1% shadow sample selected **no** key: it samples per key (ADR-0034), and 1% of 72 keys rounds to none, so a 1% rate cannot check this cache; a fixed number of keys would.
 

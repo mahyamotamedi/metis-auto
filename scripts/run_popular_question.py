@@ -17,7 +17,9 @@ else. Traces: H-8, X1, FR-XCACHE-02, FR-XCACHE-04, FR-XCACHE-05, ADR-0006,
 ADR-0016, ADR-0031, ADR-0032, ADR-0034.
 
 Usage: ``.venv\\Scripts\\python.exe scripts/run_popular_question.py``
-(``--no-sheet`` skips the review sheet; ``--out DIR`` writes the results
+(``--ttl-only`` runs only the TTL variants: no sensitivity check, no sheet, and
+the untimed results are left as they are; ``--no-sheet`` skips the review sheet;
+``--out DIR`` writes the results
 elsewhere, e.g. to compare a rerun). Every hit is checked to reuse an entry of its
 own bot and instruction fingerprint; a mismatch stops the run.
 """
@@ -66,6 +68,8 @@ OUT_DIR = ROOT / "reports" / "levers"
 SHEET = ROOT / "data" / "derived" / "review" / "k1_popular_question.csv"
 
 KEY_VERSION = "pq-v1"
+DEFAULT_TTL_HOURS = 24
+"""Production TTL (owner, 2026-11-02) until ``sprint.toml`` holds ``ttl_hours``."""
 VARIANTS = ("first_turn", "all_turns")
 AS_LOGGED = "as_logged"
 OVER_TOKENS = 8000
@@ -477,6 +481,31 @@ def write_sheet(sheet: pd.DataFrame, path: Path) -> None:
 # --- main ----------------------------------------------------------------------------
 
 
+def ttl_from_config(pq_cfg: dict) -> tuple[float, str]:
+    """``ttl_hours`` from ``[cache.popular_question]``, else the script default."""
+    if "ttl_hours" in pq_cfg:
+        return pq_cfg["ttl_hours"], "sprint.toml"
+    return DEFAULT_TTL_HOURS, "script default"
+
+
+def run_config(cache, shadow_rate: float, sprint: dict) -> dict[str, object]:
+    """Settings that change a result (hashed into the manifest). ``ttl_hours`` is
+    added only for a TTL run, so an untimed run hashes as in phase 2."""
+    config: dict[str, object] = {
+        "variant": cache.variant,
+        "window_days": cache.window_days,
+        "min_count": cache.min_count,
+        "min_sessions": cache.min_sessions,
+        "key_version": cache.key_version,
+        "shadow_rate": shadow_rate,
+        "price_table": sprint["baselines"]["price_table"],
+        "catalogue": sprint["baselines"]["catalogue"],
+    }
+    if cache.ttl_hours is not None:
+        config["ttl_hours"] = cache.ttl_hours
+    return config
+
+
 def _manifest(config: dict, ctx: ReplayContext, commit: str) -> Manifest:
     return build_manifest(
         config,
@@ -497,6 +526,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--no-sheet", action="store_true")
     parser.add_argument("--out", type=Path, default=OUT_DIR, help="result folder")
+    parser.add_argument(
+        "--ttl-only", action="store_true", help="run only the TTL variants"
+    )
     args = parser.parse_args(argv)
 
     sprint = load_toml(SPRINT)
@@ -519,36 +551,33 @@ def main(argv: list[str] | None = None) -> int:
     cache_class = load_cache_class()
     print(f"requests: {len(req):,}; periods: {req['period'].value_counts().to_dict()}")
 
-    grid = sensitivity(cache_class, req, ctx)
-    print("\nsensitivity, TUNE period only (first_turn, min_sessions 2):")
-    print(grid.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+    ttl_hours, ttl_source = ttl_from_config(pq_cfg)
+    print(f"TTL: {ttl_hours} h ({ttl_source})")
+    if not args.ttl_only:
+        grid = sensitivity(cache_class, req, ctx)
+        print("\nsensitivity, TUNE period only (first_turn, min_sessions 2):")
+        print(grid.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
 
     known = req[req["period"].isin(["tune", "report"])]
     report = known["period"].eq("report")
     out_dir: Path = args.out
     out_dir.mkdir(parents=True, exist_ok=True)
     first_turn_state = None
-    for variant in VARIANTS:
+    ttls = (ttl_hours,) if args.ttl_only else (None, ttl_hours)
+    runs = [(variant, ttl) for ttl in ttls for variant in VARIANTS]
+    for variant, ttl in runs:
         cache = cache_class(
             pq_cfg["window_days"],
             pq_cfg["min_count"],
             pq_cfg["min_sessions"],
             variant,
             KEY_VERSION,
+            ttl_hours=ttl,
         )
         after_all = combine(known, cache, None, None, ctx)  # report read once here
         before, after = known[report], after_all[report]
         keys = cache.keys(before)
-        config = {
-            "variant": variant,
-            "window_days": cache.window_days,
-            "min_count": cache.min_count,
-            "min_sessions": cache.min_sessions,
-            "key_version": KEY_VERSION,
-            "shadow_rate": shadow_rate,
-            "price_table": sprint["baselines"]["price_table"],
-            "catalogue": sprint["baselines"]["catalogue"],
-        }
+        config = run_config(cache, shadow_rate, sprint)
         manifests = {
             b: _manifest(config | {"baseline": b}, ctx, commit) for b in BASELINE_KEYS
         }
@@ -584,6 +613,11 @@ def main(argv: list[str] | None = None) -> int:
             "scope check (same bot, same instruction fingerprint; raises if not)",
             dict(cache.scope_check or {}),
         )
+        if cache.stability_check is not None:
+            _print_table(
+                "stability (TTL: hits whose latest answer is the window's mode)",
+                dict(cache.stability_check),
+            )
         _print_table(
             "diagnostics (aggregates only)",
             diagnostics(
@@ -599,10 +633,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  repriced {key:24s} saving share {share}")
         for key, why in missing.items():
             print(f"  repriced {key:24s} missing: {why}")
-        if variant == "first_turn":
+        if variant == "first_turn" and ttl is None:
             first_turn_state = (cache, known, after_all, report)
 
-    if not args.no_sheet and first_turn_state is not None:
+    if not (args.no_sheet or args.ttl_only) and first_turn_state is not None:
         cache, known_rows, after_all, report = first_turn_state
         hits = after_all["served_from_cache"].astype(bool) & report
         sources = cache.served_sources(known_rows[known_rows["llm_request"]], ctx)
