@@ -1,6 +1,6 @@
 # Pipeline B: interim contracts (sprint Day 1)
 
-Status: **interim**, 2026-11-02. At the end of Day 1, `analysis/lever_result.py` and `analysis/levers.py` reached `origin/main`, but this branch has not merged `main` yet. The switch-over checklist below can start after that merge. Pipeline B's Day 1 code (S-2 comparison, S-5 cache guard, T-3 Postgres event sink) was written before the shared sprint files existed on `origin/main`. B's code depends on **shapes, not files**: each module declares a `typing.Protocol` for what it reads, tests use test-local fakes, and the real classes must satisfy the protocols with no change to B's code. This page lists every assumed shape, the file that will replace each stand-in, the switch-over checklist, and the questions the owners must confirm. Source plan: [`docs/2026-11-01-final-plan.md`](../2026-11-01-final-plan.md) ("Shared interfaces").
+Status: **interim**, 2026-11-02. At the end of Day 1, `analysis/lever_result.py` and `analysis/levers.py` reached `origin/main`. **Update 2026-11-02:** this branch has merged `main` at `e974c48`, so the S-3 files (`replay_scope.py`, `baselines_full.py`, `sprint.toml`) are here too; Q-B7 to Q-B9 are answered below. The S-1 loader switch-over (checklist items 1 to 4, 6) is still open. Pipeline B's Day 1 code (S-2 comparison, S-5 cache guard, T-3 Postgres event sink) was written before the shared sprint files existed on `origin/main`. B's code depends on **shapes, not files**: each module declares a `typing.Protocol` for what it reads, tests use test-local fakes, and the real classes must satisfy the protocols with no change to B's code. This page lists every assumed shape, the file that will replace each stand-in, the switch-over checklist, and the questions the owners must confirm. Source plan: [`docs/2026-11-01-final-plan.md`](../2026-11-01-final-plan.md) ("Shared interfaces").
 
 ## Shared files: where they stand
 
@@ -8,8 +8,8 @@ Status: **interim**, 2026-11-02. At the end of Day 1, `analysis/lever_result.py`
 |---|---|---|---|
 | `analysis/lever_result.py` (S-1, A) | **yes**, since `b3fdaae` ("Sprint saba (#11)"), seen at the end of Day 1, 2026-11-02; identical to the checked `sprint-saba` code | — | `LeverResultLike` protocol in `analysis/compare.py`; JSON loader `wiring/_interim_lever_json.py` (switch-over pending: this branch has not merged `main`) |
 | `analysis/levers.py` (S-1, A) | **yes**, since `b3fdaae` | — | none needed (B does not read `StepVersion`, `ReplayContext` or `combine` on Day 1); `CacheGuard` satisfies its `CacheGuardLike` |
-| `analysis/replay_scope.py`, `analysis/baselines_full.py` (S-3, C) | no | no | baseline keys `BASELINES` in `analysis/compare.py` |
-| `config/evaluation/sprint.toml` (S-3, C) | no | no | `CacheGuard.shadow_sample` takes `rate` as a required argument; the 0.35 tenant limit is `compare.MAX_TENANT_SHARE` |
+| `analysis/replay_scope.py`, `analysis/baselines_full.py` (S-3, C) | **available on main (cb7066e)**; split rule changed in `e974c48` (ADR-0036, report side keeps a straddling family) | — | baseline keys `BASELINES` in `analysis/compare.py` (the same four keys as `baselines_full.BASELINE_KEYS`, Q-B7) |
+| `config/evaluation/sprint.toml` (S-3, C) | **available on main (cb7066e)** | — | none left: `CacheGuard.shadow_sample` takes `rate` (callers pass `[cache_guard] shadow_rate`); `compare` takes the required `max_tenant_share` (`scripts/compare_levers.py` passes `[sample] tenant_cap`); `compare.MAX_TENANT_SHARE` removed |
 | `analysis/routing_base.py` (R-0, Parham) | no | no | not used on Day 1 |
 
 **Checked against the real file.** The `LeverResult` on `origin/sprint-saba` was exported to a scratch folder (`git archive`, nothing merged) on 2026-11-02. A real `LeverResult` was fed to `compare()` unchanged, and its `to_json()` output was read by the interim loader. Both gave the same ranks, savings and flags. The protocol fits that version. Re-check when it lands on `main`.
@@ -39,7 +39,7 @@ JSON loader: `wiring/_interim_lever_json.result_from_json` reads money only from
 ## S-5: cache guard
 
 `analysis/cache_guard.py` implements the plan's frozen `CacheGuard` contract exactly. It depends on no shared file. Interim parts:
-- `shadow_sample(keys, rate, seed)` has **no default rate**. The plan's 1% default belongs in `sprint.toml` (S-3, C), which does not exist yet. Callers pass the rate. When `sprint.toml` exists, the caller (a cache version or wiring) reads it from there. The guard's signature does not change.
+- `shadow_sample(keys, rate, seed)` has **no default rate**. The plan's 1% default is `[cache_guard] shadow_rate = 0.01` in `config/evaluation/sprint.toml` (on main since `cb7066e`, Q-B9). Callers (a cache version's script or wiring) read it there and pass it in. The guard's signature does not change.
 - The key encoding (`<key_version>|<digest>`) is defined in the module docstring. Cache versions (R-A1, R-B1, R-C1) build keys with `versioned_key(key_version, body)`; the body comes from text normalised by `analysis/text_features.normalize_safe` (the caller's job, the guard only sees strings).
 - Addition to the frozen contract, pending approval: `refusal(key, bot) -> str | None` returns the first failing check (`disabled_bot`, `blocked`, `not_approved`, `key_version`), so the check order is testable and the D-2 cache monitor can count guard blocks by reason. `allows` is `refusal(...) is None`. The fields and the `allows` / `shadow_sample` signatures are exactly the plan's.
 - `shadow_sample` selects **per key** (every row of a selected key is selected), so the rate is about the share of distinct keys. It equals the row share when keys are unique. Missing keys are never selected.
@@ -51,6 +51,14 @@ Layout decided in [ADR-0033](../adr/0033-postgres-event-sink-layout.md). It depe
 - Marker and extra: the plan's `services` marker and extra (T-0, Parham) do not exist. The live test uses the existing `postgres` marker (`--run-postgres`) and the `db` extra, which already pins `psycopg[binary]`. **Patch for T-0** (not applied here; `pyproject.toml` and the locks are Parham's): if a `services` marker is added, mark `tests/integration/test_postgres_sink_live.py` with it too, and drop `psycopg[binary]` from the planned `services` extra or keep it equal to the `db` pin.
 - The plan's `test_psycopg_imported_only_in_postgres_sink` conflicts with `tests/architecture/test_db_imports.py`. The sink imports no database library, and psycopg is imported only in `data_access/postgres/event_store.py`.
 
+## Version identity in `compare` (2026-11-02)
+
+`compare` identifies a version by **`(step, version)`**, the same across baselines. `lever_id` names one result file (ADR-0032) and may carry a baseline suffix, as Pipeline B's do since the S-3 switch-over (`rb2.cross-turn.k-1.ptr-8.pointer.best_single_cheap`). Before this, `compare` keyed by `(step, lever_id, version)`, so the 48 Day 2 files gave 152 spurious "baseline missing" rows. Now:
+- a version missing under the chosen baseline gets **one** "baseline missing" row, with a blank `lever_id` and the baselines it does have in `notes`;
+- two results with the same `(step, version)` under one baseline both get status `duplicate version`, no rank, and each other's `lever_id` in `notes` (never merged).
+
+**Who depends on it:** every pipeline whose results go to `reports/levers/` and through `scripts/compare_levers.py` (A: R-A*, C: R-C*, and the plan's final `comparison.md`). Each `version` label must be unique within a step for each baseline. `wiring/lever_view.py` (C) only sorts by `lever_id` and filters by baseline, so it is not affected.
+
 ## Switch-over checklist
 
 When `analysis/lever_result.py` is on `main`:
@@ -58,10 +66,10 @@ When `analysis/lever_result.py` is on `main`:
 2. In `wiring/lever_compare.py`, replace `result_from_json(data)` with `LeverResult.model_validate(data)` and `is_result` with a validation attempt (catching `pydantic.ValidationError`). Delete `wiring/_interim_lever_json.py` and its `module_reference.md` row, and drop the "interim" note from the Markdown.
 3. Optionally annotate `compare(results: Sequence[LeverResult], ...)`. Keep the protocol if `analysis.compare` should not import `analysis.lever_result` (both are in `analysis`, so the import is allowed).
 4. If the baseline keys from `analysis/baselines_full.py` differ, change `compare.BASELINES` keys only (labels stay).
-5. Move the 0.35 tenant limit to `sprint.toml` if C puts it there.
+5. ~~Move the 0.35 tenant limit to `sprint.toml` if C puts it there.~~ Done 2026-11-02: `compare(..., max_tenant_share=...)` is required; `scripts/compare_levers.py` reads `[sample] tenant_cap` (`--sprint-config`).
 6. Re-run `tests/unit/analysis/test_compare.py` and `tests/unit/wiring/test_lever_compare.py`. Their fakes must still pass. Add one test with a real `LeverResult`.
 
-When `config/evaluation/sprint.toml` exists:
+`config/evaluation/sprint.toml` is available on main (cb7066e):
 7. The caller of `CacheGuard.shadow_sample` reads the shadow rate from it. No change to `cache_guard.py`.
 
 ## Questions for the owners
@@ -75,9 +83,9 @@ For **S-1 (`LeverResult`, A; seen on `sprint-saba`)**:
 - Q-B6. ~~ADR number collision~~ resolved: `sprint-saba` renumbered its ADRs to 0031 (full-data replay) and 0032 (lever result format). Pipeline B therefore uses 0033 and 0034.
 
 For **S-3 (C)**:
-- Q-B7. The four baseline keys returned by `baseline_costs` (B assumed the keys above).
-- Q-B8. The cost-block column names. The plan lists fees, input, output, cached and other, while `sprint-saba` uses `block_fees` and `block_token_cost`. `requests.parquet` has no per-block cost columns, only `a_bill_totalCost`, the token sums and `a_n_per_call_only_items`. Which split is final, and does "other" (F-2) get its own block?
-- Q-B9. Does `sprint.toml` hold the shadow-check rate (plan: 1%) and the 0.35 tenant limit? Under which keys?
+- Q-B7. The four baseline keys returned by `baseline_costs` (B assumed the keys above). **Answered** (Saba, Pipeline C, 2026-11-02): the four keys are adopted unchanged (`premium_gpt_5_5`, `as_logged`, `todays_models`, `best_single_cheap`, `baselines_full.BASELINE_KEYS`). Each baseline has `total` (which `compare` reads first) plus the counts `n_requests`, `n_known`, `n_unknown`; only the cost keys go into `LeverResult.baseline_cost`. The repriced baselines have no `fees` key (ADR-0036, decisions 5 and 7).
+- Q-B8. The cost-block column names. The plan lists fees, input, output, cached and other, while `sprint-saba` uses `block_fees` and `block_token_cost`. `requests.parquet` has no per-block cost columns, only `a_bill_totalCost`, the token sums and `a_n_per_call_only_items`. Which split is final, and does "other" (F-2) get its own block? **Answered** (Saba, Pipeline C, 2026-11-02): two blocks only, `fees` and `token_cost` (columns `block_fees`, `block_token_cost` from `levers.with_blocks`). F-2's "other" has no block of its own and is reported inside `token_cost` (owner decision 3, 2026-11-02).
+- Q-B9. Does `sprint.toml` hold the shadow-check rate (plan: 1%) and the 0.35 tenant limit? Under which keys? **Answered** (Saba, Pipeline C, 2026-11-02): yes, `[cache_guard] shadow_rate = 0.01` and `[sample] tenant_cap = 0.35` in `config/evaluation/sprint.toml`. B switched `compare` to the cap the same day.
 
 For **T-0 (Parham)**:
 - Q-B10. The `services` marker and extra vs the existing `postgres` marker and `db` extra (see T-3 above).

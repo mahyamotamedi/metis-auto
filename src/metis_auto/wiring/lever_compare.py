@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
+from decimal import Decimal
 from pathlib import Path
 
 from metis_auto.analysis.compare import LeverResultLike, to_markdown
@@ -45,9 +46,16 @@ def collect(
     return results, skipped
 
 
-def write_comparison(paths: Sequence[Path], *, out: Path) -> dict[str, object]:
-    """Write the comparison to ``out``; return content-free counts."""
+def write_comparison(
+    paths: Sequence[Path], *, out: Path, max_tenant_share: Decimal
+) -> dict[str, object]:
+    """Write the comparison to ``out``; return content-free counts.
+
+    ``max_tenant_share`` is ``[sample] tenant_cap`` from ``sprint.toml`` (the
+    script reads it).
+    """
     results, skipped = collect(paths, out=out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(to_markdown(results, note=INTERIM_NOTE), encoding="utf-8")
+    text = to_markdown(results, max_tenant_share=max_tenant_share, note=INTERIM_NOTE)
+    out.write_text(text, encoding="utf-8")
     return {"results": len(results), "skipped": len(skipped), "out": str(out)}

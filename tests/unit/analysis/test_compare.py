@@ -14,6 +14,7 @@ import pytest
 from metis_auto.analysis.compare import BASELINES, compare, to_markdown
 
 D = Decimal
+CAP = D("0.35")  # the sprint.toml [sample] tenant_cap, passed in
 
 
 @dataclass(frozen=True)
@@ -35,7 +36,7 @@ def _slices(tenant_share: str = "0.30") -> dict[str, dict[str, Decimal]]:
 class FakeResult:
     lever_id: str = "cache.synthetic-a"
     step: str = "cache"
-    version: str = "v1"
+    version: str = ""  # empty: the lever_id, so each fake is its own version
     n_requests: int = 1000
     n_eligible: int = 400
     baseline: str = "as_logged"
@@ -53,14 +54,24 @@ class FakeResult:
     overhead_ms_p95: float | None = None
     manifest: FakeManifest = field(default_factory=FakeManifest)
 
+    def __post_init__(self) -> None:
+        if not self.version:
+            object.__setattr__(self, "version", self.lever_id)
+
 
 def _saving(amount: str) -> dict[str, Decimal]:
     return {"total": D(amount)}
 
 
-def _row(frame: pd.DataFrame, lever_id: str, version: str = "v1") -> pd.Series:
-    match = frame[(frame["lever_id"] == lever_id) & (frame["version"] == version)]
-    assert len(match) == 1, f"expected one row for {lever_id} {version}"
+def _row(frame: pd.DataFrame, lever_id: str) -> pd.Series:
+    match = frame[frame["lever_id"] == lever_id]
+    assert len(match) == 1, f"expected one row for {lever_id}"
+    return match.iloc[0]
+
+
+def _version_row(frame: pd.DataFrame, version: str) -> pd.Series:
+    match = frame[frame["version"] == version]
+    assert len(match) == 1, f"expected one row for version {version}"
     return match.iloc[0]
 
 
@@ -74,7 +85,7 @@ def test_orders_versions_by_saving_within_a_step():
             lever_id="context.synthetic-a", step="context", saving=_saving("50")
         ),
     ]
-    frame = compare(results, baseline="as_logged")
+    frame = compare(results, baseline="as_logged", max_tenant_share=CAP)
 
     cache = frame[frame["step"] == "cache"].sort_values("rank")
     assert list(cache["lever_id"]) == [
@@ -100,7 +111,7 @@ def test_shows_unmeasured_correctness():
         FakeResult(lever_id="cache.synthetic-c", correctness_state="measured"),
         FakeResult(lever_id="cache.synthetic-d", correctness_state="0 errors"),
     ]
-    frame = compare(results, baseline="as_logged")
+    frame = compare(results, baseline="as_logged", max_tenant_share=CAP)
 
     unmeasured = _row(frame, "cache.synthetic-a")["correctness"]
     assert "unmeasured" in unmeasured
@@ -110,7 +121,7 @@ def test_shows_unmeasured_correctness():
     # A state outside the three agreed forms is never read as a pass.
     assert _row(frame, "cache.synthetic-d")["correctness"].startswith("unknown")
 
-    text = to_markdown(results)
+    text = to_markdown(results, max_tenant_share=CAP)
     assert "unmeasured" in text
 
 
@@ -121,16 +132,18 @@ def test_four_baselines_present_or_marked_missing():
     results = [FakeResult(baseline=name) for name in present]
 
     for name in present:
-        row = _row(compare(results, baseline=name), "cache.synthetic-a")
+        row = _row(
+            compare(results, baseline=name, max_tenant_share=CAP), "cache.synthetic-a"
+        )
         assert row["status"] == "ranked"
 
-    missing = compare(results, baseline=names[3])
+    missing = compare(results, baseline=names[3], max_tenant_share=CAP)
     assert len(missing) == 1
     row = missing.iloc[0]
     assert row["status"] == "baseline missing"
     assert row["saving"] is None and pd.isna(row["rank"])
 
-    text = to_markdown(results)
+    text = to_markdown(results, max_tenant_share=CAP)
     for baseline in BASELINES:
         assert baseline.label in text
     missing_label = BASELINES[3].label
@@ -138,7 +151,7 @@ def test_four_baselines_present_or_marked_missing():
     assert "Missing" in section.split("\n## ", 1)[0]
 
     with pytest.raises(ValueError, match="not one of the four baselines"):
-        compare(results, baseline="invented-baseline")
+        compare(results, baseline="invented-baseline", max_tenant_share=CAP)
 
 
 def test_results_with_different_baselines_are_not_compared():
@@ -146,10 +159,10 @@ def test_results_with_different_baselines_are_not_compared():
     premium = FakeResult(
         lever_id="cache.synthetic-b", baseline=BASELINES[0].key, saving=_saving("90")
     )
-    frame = compare([logged, premium], baseline="as_logged")
+    frame = compare([logged, premium], baseline="as_logged", max_tenant_share=CAP)
 
     assert _row(frame, "cache.synthetic-a")["rank"] == 1
-    other = _row(frame, "cache.synthetic-b")
+    other = _version_row(frame, "cache.synthetic-b")
     assert other["status"] == "baseline missing"
     assert pd.isna(other["rank"]) and other["saving"] is None
 
@@ -173,7 +186,7 @@ def test_results_with_different_baselines_are_not_compared():
             evidence_class="measured potential",
         ),
     ]
-    grouped = compare(variants, baseline="as_logged")
+    grouped = compare(variants, baseline="as_logged", max_tenant_share=CAP)
     assert grouped["group"].nunique() == 4
     assert set(grouped["rank"]) == {1}
 
@@ -185,7 +198,9 @@ def test_tenant_share_above_35_percent_is_flagged():
         lever_id="cache.synthetic-c",
         slices={k: v for k, v in _slices().items() if not k.startswith("tenant")},
     )
-    frame = compare([over, at_limit, no_tenant], baseline="as_logged")
+    frame = compare(
+        [over, at_limit, no_tenant], baseline="as_logged", max_tenant_share=CAP
+    )
 
     assert _row(frame, "cache.synthetic-a")["tenant_flag"] == "over 35%"
     assert _row(frame, "cache.synthetic-a")["max_tenant_share"] == D("0.36")
@@ -193,7 +208,97 @@ def test_tenant_share_above_35_percent_is_flagged():
     # No tenant slice is unknown, not "ok".
     assert _row(frame, "cache.synthetic-c")["tenant_flag"] == "unknown"
 
-    assert "over 35%" in to_markdown([over])
+    assert "over 35%" in to_markdown([over], max_tenant_share=CAP)
+
+
+# --- Version identity across baselines (lever IDs carry a baseline suffix) ---
+
+
+def _qualified(version: str, baseline: str, saving: str = "10") -> FakeResult:
+    """A result named like ``reports/levers/<lever_id>.json`` of Pipeline B."""
+    return FakeResult(
+        lever_id=f"cache.synthetic-{version}.{baseline}",
+        version=version,
+        baseline=baseline,
+        saving=_saving(saving),
+    )
+
+
+def test_same_version_under_baseline_qualified_lever_ids_is_one_version():
+    premium = BASELINES[0].key
+    results = [
+        _qualified("v1", "as_logged"),
+        _qualified("v1", premium),
+        _qualified("v2", "as_logged", saving="20"),
+        _qualified("v2", premium, saving="30"),
+    ]
+
+    for baseline in ("as_logged", premium):
+        frame = compare(results, baseline=baseline, max_tenant_share=CAP)
+        assert "baseline missing" not in set(frame["status"])
+        assert list(frame["version"]) == ["v2", "v1"]  # ranked by saving
+        assert list(frame["rank"]) == [1, 2]
+        assert all(frame["lever_id"].str.endswith("." + baseline))
+
+
+def test_version_missing_from_the_chosen_baseline_is_still_listed():
+    premium = BASELINES[0].key
+    results = [
+        _qualified("v1", "as_logged"),
+        _qualified("v1", premium),
+        _qualified("v2", premium),  # v2 has no as_logged result
+    ]
+
+    frame = compare(results, baseline="as_logged", max_tenant_share=CAP)
+
+    missing = frame[frame["status"] == "baseline missing"]
+    assert list(missing["version"]) == ["v2"]  # one row, not one per lever_id
+    row = missing.iloc[0]
+    assert row["step"] == "cache" and pd.isna(row["lever_id"])  # blank
+    assert premium in row["notes"] and "baseline-qualified" in row["notes"]
+    assert _version_row(frame, "v1")["status"] == "ranked"
+    text = to_markdown(results, max_tenant_share=CAP)
+    assert "| — | baseline missing | — | v2 |" in text
+
+
+def test_two_results_with_the_same_version_under_one_baseline_are_flagged():
+    # Two pipelines (or two runs) reuse one version label under one baseline.
+    first = FakeResult(lever_id="cache.synthetic-a", version="v1", saving=_saving("9"))
+    second = FakeResult(lever_id="cache.synthetic-b", version="v1", saving=_saving("5"))
+    other = FakeResult(lever_id="cache.synthetic-c", version="v2", saving=_saving("1"))
+
+    frame = compare([first, second, other], baseline="as_logged", max_tenant_share=CAP)
+
+    for lever_id, twin in (
+        ("cache.synthetic-a", "cache.synthetic-b"),
+        ("cache.synthetic-b", "cache.synthetic-a"),
+    ):
+        row = _row(frame, lever_id)
+        assert row["status"] == "duplicate version"
+        assert pd.isna(row["rank"])  # never ranked, never merged
+        assert twin in row["notes"]
+    # The unique version still ranks; the duplicates do not take rank 1 from it.
+    assert _row(frame, "cache.synthetic-c")["rank"] == 1
+    assert "duplicate version" in to_markdown(
+        [first, second, other], max_tenant_share=CAP
+    )
+
+
+def test_tenant_cap_is_an_argument():
+    result = FakeResult(slices=_slices("0.30"))
+
+    strict = compare([result], baseline="as_logged", max_tenant_share=D("0.25"))
+    loose = compare([result], baseline="as_logged", max_tenant_share=D("0.35"))
+
+    assert _row(strict, "cache.synthetic-a")["tenant_flag"] == "over 25%"
+    assert _row(loose, "cache.synthetic-a")["tenant_flag"] == "ok"
+    assert "over 25%" in to_markdown([result], max_tenant_share=D("0.25"))
+
+
+@pytest.mark.parametrize("cap", [0.35, D("0"), D("1.5"), D("NaN")])
+def test_tenant_cap_must_be_a_decimal_share(cap):
+    with pytest.raises((TypeError, ValueError)):
+        compare([FakeResult()], baseline="as_logged", max_tenant_share=cap)
 
 
 # --- Further behaviour from the S-2 spec ---
@@ -208,7 +313,7 @@ def test_insufficient_evidence_is_never_ranked():
         ),
         FakeResult(lever_id="cache.synthetic-d", saving=_saving("97"), n_eligible=0),
     ]
-    frame = compare(results, baseline="as_logged")
+    frame = compare(results, baseline="as_logged", max_tenant_share=CAP)
 
     assert _row(frame, "cache.synthetic-a")["rank"] == 1
     for lever in ("cache.synthetic-b", "cache.synthetic-c", "cache.synthetic-d"):
@@ -223,7 +328,9 @@ def test_n_eligible_below_the_results_own_minimum_is_insufficient():
     class WithMinimum(FakeResult):
         min_n: int | None = 500
 
-    frame = compare([WithMinimum(n_eligible=400)], baseline="as_logged")
+    frame = compare(
+        [WithMinimum(n_eligible=400)], baseline="as_logged", max_tenant_share=CAP
+    )
     row = frame.iloc[0]
     assert row["status"] == "insufficient evidence"
     assert "min_n" in row["notes"]
@@ -234,12 +341,12 @@ def test_unknown_saving_stays_unknown_not_zero():
     nan_cost = FakeResult(
         lever_id="cache.synthetic-b", baseline_cost={"total": D("NaN")}
     )
-    frame = compare([unknown, nan_cost], baseline="as_logged")
+    frame = compare([unknown, nan_cost], baseline="as_logged", max_tenant_share=CAP)
 
     row = _row(frame, "cache.synthetic-a")
     assert row["saving"] is None and row["status"] == "insufficient evidence"
     assert _row(frame, "cache.synthetic-b")["saving_share"] is None
-    text = to_markdown([unknown])
+    text = to_markdown([unknown], max_tenant_share=CAP)
     assert "unknown" in text
 
 
@@ -248,7 +355,7 @@ def test_saving_without_total_is_the_exact_sum_of_its_blocks():
         saving={"fees": D("0.002"), "input": D("1.1"), "output": D("0.0001")},
         baseline_cost={"fees": D("1"), "input": D("2"), "output": D("1")},
     )
-    row = compare([blocks], baseline="as_logged").iloc[0]
+    row = compare([blocks], baseline="as_logged", max_tenant_share=CAP).iloc[0]
     assert row["saving"] == D("1.1021")
     assert row["saving_share"] == D("1.1021") / D("4")
 
@@ -259,7 +366,7 @@ def test_row_shows_slices_overhead_assumptions_and_cost_unit():
         overhead_ms_p95=4.0,
         assumptions=("synthetic fixture", "timestamps naive"),
     )
-    row = compare([result], baseline="as_logged").iloc[0]
+    row = compare([result], baseline="as_logged", max_tenant_share=CAP).iloc[0]
     assert row["llm_only_share"] == D("0.14")
     assert row["traffic_weighted_share"] == D("0.09")
     assert row["overhead"] == "p50 1.5 ms, p95 4.0 ms"
@@ -267,10 +374,15 @@ def test_row_shows_slices_overhead_assumptions_and_cost_unit():
     assert row["cost_unit"] == "recorded cost units"
     half = replace(result, overhead_ms_p50=None)
     none = replace(result, overhead_ms_p50=None, overhead_ms_p95=None)
-    assert compare([half], baseline="as_logged").iloc[0]["overhead"] == (
-        "p50 unknown, p95 4.0 ms"
+    assert compare([half], baseline="as_logged", max_tenant_share=CAP).iloc[0][
+        "overhead"
+    ] == ("p50 unknown, p95 4.0 ms")
+    assert (
+        compare([none], baseline="as_logged", max_tenant_share=CAP).iloc[0]["overhead"]
+        == "not measured"
     )
-    assert compare([none], baseline="as_logged").iloc[0]["overhead"] == "not measured"
     premium = replace(result, baseline=BASELINES[0].key)
-    unit = compare([premium], baseline=BASELINES[0].key).iloc[0]["cost_unit"]
+    unit = compare([premium], baseline=BASELINES[0].key, max_tenant_share=CAP).iloc[0][
+        "cost_unit"
+    ]
     assert "repriced" in unit and "prices-synthetic-1" in unit
