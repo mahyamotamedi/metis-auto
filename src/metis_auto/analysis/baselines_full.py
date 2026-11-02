@@ -36,6 +36,11 @@ capped at the effective input and priced at ``cached_input``; a price row with
 effective input. Token counts are assumed model-independent (tokenizers
 differ): a *simulation*, labelled so by the caller.
 
+Public row-level helpers for lever versions (S-6b): ``token_counts``,
+``lower_uncached_input`` (a context saving comes out of uncached input only)
+and ``repriced_row_costs`` (per-row cost of each repriced baseline, tier chosen
+again by the lowered input). ADR-0038.
+
 Decision record: ADR-0036,
 ``docs/adr/0036-replay-scope-split-and-baselines.md``.
 
@@ -126,6 +131,79 @@ def baseline_costs(
             pd.Series(_price_ref(ctx.catalogue, cheap), index=req.index)
         ),
     }
+
+
+REPRICED_KEYS = ("premium_gpt_5_5", "todays_models", "best_single_cheap")
+
+
+def token_counts(
+    req: pd.DataFrame, cached_separately: frozenset[str] = frozenset()
+) -> pd.DataFrame:
+    """Effective ``input``, ``cached`` (capped at input) and ``output`` tokens per
+    row, by the repricing rule above. Unknown tokens stay NaN."""
+    return _tokens(req, cached_separately)
+
+
+def lower_uncached_input(tokens: pd.DataFrame, wanted: pd.Series) -> pd.DataFrame:
+    """Lower ``input`` by ``wanted`` tokens, taken from the **uncached** part only.
+
+    The saving is capped at ``input - cached``; ``cached`` and ``output`` are
+    unchanged. Adds ``saved``, the tokens actually removed (NaN where the tokens
+    or ``wanted`` are unknown). Rule of ADR-0038.
+    """
+    out = tokens.copy()
+    room = (tokens["input"] - tokens["cached"]).clip(lower=0)
+    want = wanted.reindex(tokens.index).astype(float)
+    saved = np.minimum(want.clip(lower=0), room).where(want.notna() & room.notna())
+    out["saved"] = saved
+    out["input"] = tokens["input"] - saved
+    return out
+
+
+def repriced_row_costs(
+    req: pd.DataFrame,
+    ctx: ReplayContext,
+    *,
+    premium_model: str,
+    cached_separately: frozenset[str] = frozenset(),
+    tokens: pd.DataFrame | None = None,
+    cheap_model: str | None = None,
+) -> pd.DataFrame:
+    """Per-row cost of each repriced baseline (``REPRICED_KEYS``), price-file units.
+
+    Same rule as ``baseline_costs``; the column sums equal its ``token_cost``.
+    ``tokens`` replaces the logged counts (for example after
+    ``lower_uncached_input``), so the tier is chosen again by the new input.
+    ``cheap_model`` fixes the best single cheap model; by default it is chosen
+    on the logged tokens. NaN: workflow row, unknown tokens or no price.
+    """
+    prices, per_tokens = _prices(ctx.price_table)
+    premium_ref = _price_ref(ctx.catalogue, premium_model)
+    if premium_ref not in prices:
+        raise ValueError(f"premium model {premium_model} has no price")
+    if tokens is None:
+        tokens = _tokens(req, cached_separately)
+    if cheap_model is None:
+        cheap_model = best_single_cheap_model(
+            req, ctx, cached_separately=cached_separately
+        )
+    known = _llm(req) & tokens[["input", "cached", "output"]].notna().all(axis=1)
+    refs = {
+        "premium_gpt_5_5": pd.Series(premium_ref, index=req.index),
+        "todays_models": req["bot_provider_model"].map(_price_refs(ctx.catalogue)),
+        "best_single_cheap": pd.Series(
+            _price_ref(ctx.catalogue, cheap_model), index=req.index
+        ),
+    }
+    out = pd.DataFrame(index=req.index)
+    for key in REPRICED_KEYS:
+        ref_of_row = refs[key]
+        priced = known & ref_of_row.isin(list(prices))
+        cost = pd.Series(np.nan, index=req.index)
+        for ref, rows in ref_of_row[priced].groupby(ref_of_row[priced]):
+            cost[rows.index] = _reprice(tokens.loc[rows.index], prices[ref])
+        out[key] = cost / per_tokens
+    return out
 
 
 def _as_logged(req: pd.DataFrame, llm: pd.Series) -> dict[str, Decimal]:
