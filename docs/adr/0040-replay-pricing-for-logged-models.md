@@ -1,4 +1,4 @@
-# ADR-XXXX (replay-pricing-for-logged-models): Price the logged models for replay from same-name pricing-page rows, in new replay-only files
+# ADR-0040: Price the logged models for replay from same-name pricing-page rows, in new replay-only files
 
 - Status: **decided** by the lead, 2026-11-02 (Pipeline B, extra sprint task; sprint.toml change approved by Pipeline C as owner of that file). The amounts are those of the pricing page saved on 2026-10-18 and need re-verifying before any budget decision.
 - Date: 2026-11-02

@@ -1,8 +1,8 @@
 # Model catalogue for REPLAY: the test catalogue plus the logged models of the
-# full dataset, so the todays_models baseline can price them (ADR-XXXX
-# (replay-pricing-for-logged-models); FR-ACCT-02, FR-ACCT-07; ADR-0002, ADR-0026,
-# ADR-0036). Used by config/evaluation/sprint.toml only; the live defaults keep
-# catalogue-metis-test.toml.
+# full dataset, so the todays_models baseline can price them
+# (ADR-0040; FR-ACCT-02, FR-ACCT-07;
+# ADR-0002, ADR-0026, ADR-0036). Used by config/evaluation/sprint.toml only;
+# the live defaults keep catalogue-metis-test.toml.
 #
 # A copy of catalogue-metis-test.toml (its rows unchanged, below) plus one row
 # per logged label priced in prices-metis-2026-10-18-logged.toml:
