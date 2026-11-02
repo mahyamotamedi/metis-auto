@@ -106,6 +106,18 @@ def cut(RerankerCut, rows, req=None, **kw):
     return version.apply(req, ctx())
 
 
+def todays_models(RerankerCut, req, out):
+    """Before and after blocks at the logged model's price."""
+    return RerankerCut.baseline_frames(
+        req,
+        out,
+        ctx(),
+        baseline="todays_models",
+        premium_model="syn-model",
+        cheap_model="syn-model",
+    )
+
+
 # --- the curve ----------------------------------------------------------------------
 
 
@@ -230,7 +242,10 @@ def test_no_chunks_means_no_change(RerankerCut):
     other = out.loc[out["ai_message_id"].eq("m-2")].iloc[0]
     assert not other["rc_eligible"]
     assert other["rc_saved_tokens"] == 0 and other["rc_cut_chars"] == 0
-    assert other["rc_cost_cut"] == other["rc_cost_raw"]
+    before, after = todays_models(RerankerCut, req, out)
+    assert after.loc[other.name, "block_token_cost"] == pytest.approx(
+        before.loc[other.name, "block_token_cost"]
+    )
 
 
 def test_requests_outside_eligibility_are_untouched(RerankerCut):
@@ -246,7 +261,8 @@ def test_requests_outside_eligibility_are_untouched(RerankerCut):
     out = cut(RerankerCut, rows, req, top_k=3)
     assert not out["rc_eligible"].any()
     assert out["rc_saved_tokens"].eq(0).all()
-    assert out.loc[~req["llm_request"], "rc_cost_raw"].isna().all()  # workflow
+    before, _ = todays_models(RerankerCut, req, out)
+    assert before.loc[~req["llm_request"], "block_token_cost"].isna().all()  # workflow
 
 
 def test_combine_skips_cache_hits_and_workflow_rows(RerankerCut):
@@ -299,19 +315,21 @@ def test_saving_comes_from_uncached_input_after_dedup(RerankerCut):
 
 def test_cost_is_repriced_at_the_logged_model_and_kept_apart(RerankerCut):
     req = requests("m-1")
-    out = cut(RerankerCut, six(), req, top_k=3).iloc[0]
+    out = cut(RerankerCut, six(), req, top_k=3)
+    before, after = todays_models(RerankerCut, req, out)
     raw = (10_000 * 1.0 + 100 * 2.0) / 1e6
-    assert out["rc_cost_raw"] == pytest.approx(raw)
-    assert out["rc_cost_dedup"] == pytest.approx(raw)
-    assert out["rc_cost_cut"] == pytest.approx(raw - 750 * 1.0 / 1e6)
-    assert out["block_token_cost"] == 0.05  # recorded block untouched
+    assert before["block_token_cost"].iloc[0] == pytest.approx(raw)
+    assert after["block_token_cost"].iloc[0] == pytest.approx(raw - 750 * 1.0 / 1e6)
+    assert out["block_token_cost"].iloc[0] == 0.05  # recorded block untouched
 
 
 def test_unpriced_model_cost_is_unknown_not_zero(RerankerCut):
     req = requests("m-1", bot_provider_model="unpriced-model")
-    out = cut(RerankerCut, six(), req, top_k=3).iloc[0]
-    assert out["rc_saved_tokens"] == pytest.approx(750)
-    assert pd.isna(out["rc_cost_raw"]) and pd.isna(out["rc_cost_cut"])
+    out = cut(RerankerCut, six(), req, top_k=3)
+    assert out["rc_saved_tokens"].iloc[0] == pytest.approx(750)
+    before, after = todays_models(RerankerCut, req, out)
+    assert pd.isna(before["block_token_cost"].iloc[0])
+    assert pd.isna(after["block_token_cost"].iloc[0])
 
 
 def test_score_mass_kept_is_reported(RerankerCut):

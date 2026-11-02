@@ -48,6 +48,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-02: [Sprint Day 1, Pipeline C: CI on GitHub Actions](progress/2026-11-02-sprint-day-1-pipeline-c-ci-github-actions.md)
 - 2026-11-02: [Sprint Day 1, Pipeline B: comparison, cache guard, Postgres event sink](progress/2026-11-02-sprint-day-1-pipeline-b-comparison-cache-guard-postgres.md)
 - 2026-11-02: [Sharing the golden answers](progress/2026-11-02-sharing-the-golden-answers.md)
+- 2026-11-02: [Reranker cut (R-A2) against all four baselines; T-2 and cut-first (a) not done by decision](progress/2026-11-02-reranker-cut-r-a2-four-baselines.md)
 - 2026-11-02: [Reranker cut (R-A2) and overhead per version (L-1)](progress/2026-11-02-reranker-cut-r-a2-and-lever-overhead-l-1.md)
 - 2026-11-02: [Progress entries as files, ADRs as drafts](progress/2026-11-02-progress-entries-and-adr-drafts.md)
 - 2026-11-02: [Popular-question cache, R-A1: 24-hour TTL variant](progress/2026-11-02-popular-question-cache-r-a1-ttl-24h.md)
