@@ -1,6 +1,6 @@
 """R-B1 retrieval-result cache: reuse an earlier lookup's chunks for the same
 query (final plan R-B1; H-3, FR-XCACHE-01, FR-XCACHE-04, QA-PRIV;
-ADR-XXXX (retrieval-result-cache-accounting)).
+ADR-0037).
 
 A **retrieval** cache is not an answer cache. A reused lookup avoids only that
 lookup's recorded fee; answer generation still runs and still costs input,
@@ -8,7 +8,7 @@ output and cached tokens. So ``apply`` lowers only ``block_fees``, never sets
 ``served_from_cache`` and never touches ``block_token_cost``. Context and
 routing versions still apply to these rows. It adds the B-owned columns
 ``retrieval_reused``, ``retrieval_lookups_skipped`` and ``retrieval_fee_avoided``
-(ADR-XXXX (retrieval-result-cache-accounting), pending the S-1 owner's confirmation).
+(ADR-0037, pending the S-1 owner's confirmation).
 
 Evidence: **measured potential**, conditional on Metis-Auto being able to
 intercept retrieval. A hit is a *candidate* reuse. Agreement with the later real

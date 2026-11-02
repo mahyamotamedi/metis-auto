@@ -1,4 +1,4 @@
-# ADR-XXXX (retrieval-result-cache-accounting): Retrieval-result cache accounting: fee block only, B-owned columns, declared agreement and freshness rules
+# ADR-0037: Retrieval-result cache accounting: fee block only, B-owned columns, declared agreement and freshness rules
 
 - Status: **provisional** (Pipeline B, task R-B1, 2026-11-02; items 6 and 7 updated for ADR-0036 the same day). Items 1 and 2 touch the shared S-1 contract (`analysis/levers.py`, owner A) and need the owner's confirmation. Items 3 to 7 are B's own experiment rules.
 - Date: 2026-11-02
