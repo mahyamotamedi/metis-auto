@@ -1,0 +1,71 @@
+{
+  "assumptions": [
+    "Hits are candidate hits: the logged answer is not checked against the new request (ADR-0006); correctness unmeasured until the K-1 review (X1).",
+    "Saving is the recorded cost of avoided calls, before lookup overhead and before the build cost (regeneration or judging) that ADR-0016 charges.",
+    "Measured potential, not a serving decision: global scope within a bot; every bot has one owner account, so cross-user reuse is unmeasured (ADR-0016).",
+    "Ineligible: no user text, non-STOP or empty answer, attachments, tools, actions, bad times, workflow rows, memory on or unknown, RAG run or unknown.",
+    "No time-sensitivity detector exists (TODO-07): time-dependent questions can be admitted.",
+    "Instructions are a bot snapshot (bot_ins_h_exact): changes over time are not seen, so the instruction key part does not split a bot's traffic.",
+    "Days are naive calendar days of the user timestamp (Q-06).",
+    "Headline variant: only requests with no logged history (n_prior_msgs == 1, the request's own question) are admitted or hit.",
+    "Fees are a proxy: 0.002 per per-call billing item (ADR-0032); it understates the recorded fee block by about 5% and overstates token cost by the same.",
+    "Report period (Aug-Oct 2026) read once; the window may look back into the tune period (owner decision 2026-11-02). Period is from a_timestamp, days from u_timestamp (naive, Q-06).",
+    "Guard: no approval step, empty blocklist, no disabled bot, key version pq-v1; every served key would still need approval before serving.",
+    "Tenant slices: the 10 largest tenants by LLM requests (opaque ranks); traffic_weighted slice not computed.",
+    "The working tree had uncommitted changes when this ran.",
+    "K-1 review (owner, 2026-11-02): 30 of 30 first-turn hits reviewed (15 top keys, 15 seeded random): yes 20, no 4, unsure 6, blank 0.",
+    "Still a candidate saving: answer error <= 1% needs about 300 reviewed hits with no error (decision rules); 30 were reviewed.",
+    "4 of 30 reviewed hits were judged wrong (13%); half the sample is top keys, so this is not a random error rate.",
+    "The review applies to this untimed variant (stored answer = window mode); the 24 h TTL variant serves the latest answer and stays unmeasured.",
+    "Repriced baseline in price-file units, token cost only (fees are not on the price list); no interval computed."
+  ],
+  "baseline": "best_single_cheap",
+  "baseline_cost": {
+    "token_cost": "41.847755950",
+    "total": "41.847755950"
+  },
+  "ci_high": null,
+  "ci_low": null,
+  "correctness_state": "sampled:30",
+  "evidence_class": "simulation",
+  "lever_id": "cache.popular_question.first_turn",
+  "manifest": {
+    "code_commit": "91b330d7b008b83f10d6b4186f5712a11006058f",
+    "config_hash": "ada427120f5c78256413bf584ff21a3e65d0133cd40b5305a59d8910fb193c5a",
+    "created_at": "2026-11-02T13:29:38.763284Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "python_version": "3.13.9",
+    "seed": 20261102
+  },
+  "n_eligible": 2707,
+  "n_requests": 77774,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
+  "saving": {
+    "token_cost": "0.090459352",
+    "total": "0.090459352"
+  },
+  "slices": {
+    "all": {
+      "baseline:total": "41.847755950",
+      "cache_hit_rate": "0.009797619",
+      "n_cache_hits": "762",
+      "n_cost_known": "24598",
+      "n_requests": "77774",
+      "saving:total": "0.090459352",
+      "saving_share": "0.002161630"
+    },
+    "llm_only": {
+      "baseline:total": "41.847755950",
+      "cache_hit_rate": "0.030964281",
+      "n_cache_hits": "762",
+      "n_cost_known": "24598",
+      "n_requests": "24609",
+      "saving:total": "0.090459352",
+      "saving_share": "0.002161630"
+    }
+  },
+  "step": "cache",
+  "version": "pq-v1"
+}

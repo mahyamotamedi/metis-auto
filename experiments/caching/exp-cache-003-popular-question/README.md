@@ -1,0 +1,95 @@
+# EXP-CACHE-002: popular-question cache (nightly curated set)
+
+- **Hypothesis:** H-8 (a curated first-turn cache captures a useful share of requests; EDA §5, `docs/full_eda/full_eda_report.md`). Final plan task R-A1.
+- **Design basis:** [ADR-0016](../../../docs/adr/0016-curated-cache-and-traffic-source-scope.md) Part 1 (**proposed, to be tested**; no serving change). Hits are candidate hits ([ADR-0006](../../../docs/adr/0006-evaluation-metric-definitions.md) point 2); scope is measured, not decided ([ADR-0007](../../../docs/adr/0007-cache-sharing-scope.md)); key components follow [ADR-0011](../../../docs/adr/0011-cache-key-and-lookup-design.md).
+- **Traceability:** H-8, X1 (hit correctness, `docs/full_eda/experiment_plan.md`), FR-XCACHE-02 (key), FR-XCACHE-04 (validity), FR-XCACHE-05 (scope), ADR-0006, ADR-0007, ADR-0016, [ADR-0034](../../../docs/adr/0034-cache-guard-key-encoding-and-check-order.md) (guard key encoding), ADR-0031 (full-data replay path), ADR-0032 (result format), TODO-07, Q-06.
+- **Evidence class:** *simulation* on logged requests. `correctness_state` is `sampled:30` for the untimed `first_turn` result (K-1 review, 2026-11-02) and `unmeasured` for every other result.
+- **Code:** [`version.py`](version.py), class `PopularQuestionCache(window_days, min_count, min_sessions, variant, key_version)`, a `levers.StepVersion` of step `cache`. It is loaded only through `wiring.experiments.load_candidate` (scripts and tests); `metis_auto` never imports it. Tests: `tests/unit/experiments/test_popular_question.py` (all frames [SYNTHETIC]).
+- **Status (2026-11-02):** phase 2 of 3 done: full-data run with B's guard and C's scope; results below and in `reports/levers/`. A 24 h TTL variant (`pq-v2`, `--ttl-only`) is added beside the untimed results. Phase 3 (reading the K-1 review) is next; the review sheet comes from the untimed first_turn hits. Run: `.venv\Scripts\python.exe scripts/run_popular_question.py` (tests: `tests/unit/experiments/test_run_popular_question.py`).
+
+## Design
+
+| Element | Rule | State |
+|---|---|---|
+| Key | `bot_id` + `bot_ins_h_exact` + `u_h_norm`. `u_h_norm` is `fingerprint(normalize_safe(text))` (`analysis/ingest.py`, checked 2026-11-02). | decided |
+| Instruction part | `bot_ins_h_exact` is a hash of the **bot snapshot**, one value per bot, so it never splits a bot's traffic; it is there for ADR-0011 conformance and is a no-op on this data. A per-period instruction history does not exist in the export. | provisional |
+| Nightly set | For each naive day *d* of `u_timestamp`: keys with ≥ `min_count` eligible occurrences in ≥ `min_sessions` distinct sessions on days *d − window_days … d − 1*. No look-ahead, no same-day admission. `1 ≤ window_days ≤ 180`. | decided |
+| Parameters | Arguments, not read from `sprint.toml`; the plan's values are 90, 3, 2 (`[cache.popular_question]` in `sprint.toml`) and are passed by the caller. | decided |
+| Guard key | ADR-0034: a guarded key is `"<key_version>\|<body>"`. `keys()` builds each key with `analysis.cache_guard.versioned_key` under the constructor argument `key_version` (non-empty, no `\|`), which the caller sets to the guard's own `key_version`; any other version is refused (`key_version`). Tested with B's real `CacheGuard`. Owner decision 2026-11-02: a constructor argument. | decided |
+| Hit | Eligible, key in day *d*'s set, and `ctx.guard.allows(key, bot)` when a guard is given. | decided |
+| Shadow check | Plan S-5: every cache version reports the shadow-check result. `CacheGuard.shadow_sample(keys, rate, seed)` has no default rate; the caller passes the rate from `sprint.toml` (Q-B9). The sample is per key, so the rate is a share of distinct keys. | open (phase 2) |
+| Stored answer | Mode of `a_h_norm` over the window's occurrences; ties go to the latest `a_timestamp`, then the smallest hash. | provisional |
+| TTL (`ttl_hours`, version `pq-v2`) | Optional keyword argument; `None` keeps `pq-v1` unchanged (tested). With a TTL the admission set is unchanged, the stored answer is the key's **latest** eligible answer from an earlier day, and a request hits only if that answer was logged less than `ttl_hours` before it (`u_timestamp - a_timestamp`, strictly less). The nightly build never serves a same-day answer. lever_id gets `.ttl<h>h`; `ttl_hours` is in the manifest's config hash. Default 24 h (production TTL, owner 2026-11-02) until `sprint.toml` holds `ttl_hours` (C's file). | decided |
+| Agreement | `pq_answer_agrees`: the hit's own logged answer hash equals the stored one. A diagnostic, never a correctness claim (ADR-0016, `logged_match`). | decided |
+| Effect | Copy with the same index; hit rows get `served_from_cache = True` and zero known `block_fees` and `block_token_cost` (unknown stays unknown). Added columns: `pq_eligible`, `pq_admitted_keys_day` (count), `pq_answer_agrees`. No key, hash or text in the output. | decided |
+
+**Scope of a hit.** Hits are scoped to the same bot and the same system-prompt fingerprint; this is checked at run time. The key holds `bot_id` and `bot_ins_h_exact` (missing instructions are their own value, `-`, and never match present ones), and `apply` compares every hit with the stored entry it reuses: a different bot or instruction fingerprint raises an error and stops the run (`scope_check` holds the counts; the script prints them). The instruction fingerprint is still a bot snapshot, so instruction changes over time are not seen (see Assumptions).
+
+### Variants (same code, `variant=` argument)
+
+- **`first_turn` (headline):** `lever_id = cache.popular_question.first_turn`. Only requests with no logged history may be admitted or hit (ADR-0016 Part 1 point 3). In `requests`, `n_prior_msgs` at an AI row counts every earlier USER/AI message **including the request's own question** (`history_columns`, checked on a synthetic session), so "no history" is `n_prior_msgs == 1` (decided by the owner, 2026-11-02; the EDA's H-8 figures use `turn == 0`, which also counts sessions with two user messages before the first answer).
+- **`all_turns` (upper bound):** `lever_id = cache.popular_question.all_turns`. Any turn, history ignored. Labelled "upper bound, unsafe for follow-up questions" in its assumptions.
+
+### Eligibility funnel (`funnel(req)`, a count per step)
+
+The EDA exact-cache steps, in the EDA's order (`reports/full_eda/tables/exact_cache_funnel.csv`): `has_user_text`, `answer_text_and_STOP`, `no_attachments`, `no_tools`, `no_actions`, `timestamps_valid`. Then:
+
+- `key_known`: `bot_id`, `u_h_norm` and `a_h_norm` present;
+- `llm_request`: workflow rows out (`combine` already skips them);
+- `no_memory`: `bot_memory_enabled` is False; True **and unknown** are out (ADR-0011 point 2, unknown never matches);
+- `no_rag`: `a_rag_n_queries == 0` with `a_rag_state` in `null`/`empty`/`ok`; a request that ran retrieval, or whose RAG field is malformed, is out (EDA §5: unsafe without a state-aware key);
+- `first_turn` (headline variant only).
+
+## Assumptions
+
+- *Current:* hits are **candidate** hits. Cost saved is the **recorded cost of avoided calls**, before lookup overhead and before the build cost (regeneration or judging) that ADR-0016 says must be charged. Units are the unstated recorded units.
+- *Current:* every bot has one owner account, and the EDA shows bot+text `global` equal to `same_user_id` (`exact_cache_variants.csv`), so real end-user identity is unknown and **cross-user reuse is not measured**. ADR-0016 allows `global` scope only for `embedded_bot` traffic with instructions present, and inferred traffic labels are analysis-only, so this result is **measured potential, not a serving decision**.
+- *Current:* no time-sensitivity detector exists (TODO-07); time-dependent questions can be admitted.
+- *Current:* days are naive calendar days (Q-06).
+- *Current:* the instruction key part is a snapshot; instruction changes over time are invisible.
+- *Future:* serving a selected logged answer to other sessions needs a privacy review first (ADR-0016 decision 4); regenerated answers are preferred.
+- *Speculative:* the answer mode is a reasonable stand-in for a curated answer.
+
+## EDA reference numbers (comparison targets)
+
+From `reports/full_eda/tables/exact_cache_variants.csv` (dynamic cold-cache replay, all months, 326,491 eligible requests):
+
+| Variant | Candidate hits / eligible | 95% CI |
+|---|---|---|
+| bot+text, global | 27.97% | 27.4% to 28.5% |
+| bot+full_history, global | 8.28% | 8.0% to 8.5% |
+
+**Why this version should come out lower:** it is a nightly set with frequency limits (≥ 3 occurrences in ≥ 2 sessions in the previous 90 days), not a dynamic cache that can hit on the second occurrence; nothing asked today is served today; memory and RAG requests are out; the headline variant keeps first turns only; and the result is read on the report period (August to October 2026) only.
+
+## Results on the full data (phase 2, 2026-11-02)
+
+Simulation, candidate hits. Correctness: `first_turn` is **sampled:30** (K-1, below); every other row is **unmeasured**. Report period August to October 2026 (77,774 requests, 24,609 LLM requests), read once; thresholds 90 / 3 / 2 from the plan, not tuned. Saving is as-logged recorded cost, fees a proxy (ADR-0032). Intervals are session-clustered 95% bootstrap (`analysis.stats.cluster_bootstrap_ratio`).
+
+| | Eligible | Candidate hits | Hits / eligible | Hits / EDA-step requests¹ | Hits / LLM requests | Cost share saved (95% CI) | Agreement² | Served keys | Correctness |
+|---|---|---|---|---|---|---|---|---|---|
+| `first_turn` (headline) | 2,707 | 762 | 28.15% | 1.06% | 3.10% | 0.31% (0.27% to 0.36%) | 54.2% | 72 | sampled:30, 4 of 30 wrong |
+| `all_turns` (upper bound) | 7,634 | 1,023 | 13.40% | 1.42% | 4.16% | 0.37% (0.33% to 0.42%) | 51.9% | 112 | unmeasured |
+| `first_turn.ttl24h` (headline under the 24 h TTL) | 2,707 | 214 | 7.91% | 0.30% | 0.87% | **0.07%** (0.05% to 0.09%) | 52.8% | 19 | unmeasured |
+| `all_turns.ttl24h` | 7,634 | 274 | 3.59% | 0.38% | 1.11% | 0.08% (0.07% to 0.10%) | 51.5% | 24 | unmeasured |
+| EDA bot+text, global (dynamic, all months) | 326,491 | 91,305 | 27.97% (27.4% to 28.5%) | 27.97% | — | 8.2% | — | — | — |
+| EDA bot+full_history, global | 326,491 | 27,030 | 8.28% (8.0% to 8.5%) | 8.28% | — | 0.8% | — | — | — |
+
+¹ Report-period requests that pass the six EDA exact-cache steps (71,979), the closest like-for-like denominator to the EDA's 326,491. ² Share of hits whose own logged answer has the stored answer's hash: a diagnostic, not correctness (ADR-0016).
+
+**Reading.** On the like-for-like denominator, ours is far below the EDA (1.1% and 1.4% against 28.0%), as expected. Two funnel steps account for most of the gap: **workflow rows** (71,979 → 23,938 after `llm_request`; the EDA funnel kept them) and **RAG requests** (23,005 → 7,634 after `no_rag`). Within what stays eligible, the first-turn hit rate (28.2%) is close to the EDA's dynamic rate, but those rows are cheap first turns: the cost share saved is 0.31%. Only about half of the hits match the stored answer, so many popular questions have several logged answers; K-1 will say whether they are still acceptable.
+
+**Other baselines** (repriced, price-file units, token cost only, no interval): first_turn saves 0.20% (premium gpt-5.5), 0.11% (today's models), 0.22% (best single cheap model); all_turns 0.26%, 0.26%, 0.27%. Files: `reports/levers/<lever_id>__<baseline>.json` (one per baseline; see the questions in the progress entry).
+
+**K-1 hit review** (owner, 2026-11-02; local sheet `data/derived/review/k1_popular_question.csv`, git-ignored). 30 untimed `first_turn` report-period hits: one hit for each of the 15 keys with the most hits, plus 15 seeded random hits. Verdicts: **yes 20, no 4, unsure 6**, none blank. 4 of 30 (13%) were judged wrong and 6 were unclear. Half the sample is top keys, so 13% is not a random error rate. The decision rule (answer error at most 1%) needs about 300 reviewed hits with no error, so this stays a **candidate** saving, and with 4 hits judged wrong the sample already fails that rule. The review applies to the untimed variant, whose stored answer is the window's mode; the 24 h TTL variant serves the latest answer and stays unmeasured.
+
+**Under the 24 h production TTL** (2026-11-02). The untimed rows above have no age limit: the served answer was the 90-day mode, median 104 h old, and only 19.8% of first_turn hits used an answer under 24 h. With the TTL, only hits whose key was answered less than 24 h earlier remain: 214 of 762 first_turn hits (28.1%) and 274 of 1,023 all_turns hits (26.8%). The cost share saved falls from 0.31% to **0.07%** and from 0.37% to 0.08%, so the untimed result overstates the saving under a 24 h TTL by about 4 to 5 times. The admission set is the same (same admitted keys per day). Over all replay hits (tune and report), the latest answer is also the window's most common answer for 83.1% of first_turn and 67.4% of all_turns hits. Repriced, first_turn.ttl24h saves 0.045% (premium gpt-5.5), 0.003% (today's models) and 0.046% (best single cheap model). The untimed results are kept as the upper bound.
+
+**Admission and guard.** Admitted keys per report day: first_turn median 94, p90 144; all_turns 178 and 317. Every served key would need approval before serving (72 and 112 distinct keys). The 1% shadow sample selected **no** key: it samples per key (ADR-0034), and 1% of 72 keys rounds to none, so a 1% rate cannot check this cache; a fixed number of keys would.
+
+**Sensitivity, tune period only** (first_turn, min_sessions 2; 32,165 eligible): hits / eligible ranges from 17.3% (window 30, min_count 5) to 20.6% (window 180, min_count 2); 19.5% at the plan's 90 / 3. Cost share saved 0.27% to 0.39%. Windows beyond 90 days add almost nothing; the result is not sensitive to the thresholds.
+
+## Phases
+
+1. **(this)** tests and implementation on [SYNTHETIC] frames; guard and scope replaced by stand-ins in tests.
+2. Real-data run after the 18:00 merge, with B's guard (versioned keys, shadow-check result) and C's scope; write the local K-1 review sheet (30 items, uncommitted).
+3. Read the reviewed sheet; `correctness_state` becomes `sampled:<n>`. **Done 2026-11-02: sampled:30** (yes 20, no 4, unsure 6).
