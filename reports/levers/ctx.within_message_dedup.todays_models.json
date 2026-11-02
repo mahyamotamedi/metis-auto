@@ -10,8 +10,8 @@
   ],
   "baseline": "todays_models",
   "baseline_cost": {
-    "token_cost": "2.935424858",
-    "total": "2.935424858"
+    "token_cost": "242.621884795",
+    "total": "242.621884795"
   },
   "ci_high": null,
   "ci_low": null,
@@ -19,11 +19,11 @@
   "evidence_class": "hypothetical reconstruction",
   "lever_id": "ctx.within_message_dedup.todays_models",
   "manifest": {
-    "code_commit": "ed8182d59c5d255f6ce11a16ca7891e7a4b601b2",
+    "code_commit": "3ca3d10b76687515b4814cc17802b878166d9067",
     "config_hash": "06d37a6ddd1a218ba529d7f63f088521a4e00901272e60f8db27cb9865a5ff58",
-    "created_at": "2026-11-02T13:52:49Z",
+    "created_at": "2026-11-02T23:07:49Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "prices-metis-2026-10-18-logged",
     "python_version": "3.13.16",
     "seed": 20261102
   },
@@ -33,37 +33,37 @@
   "overhead_ms_p95": null,
   "saving": {
     "fees": "0.000000000",
-    "token_cost": "0.403075750",
-    "total": "0.403075750"
+    "token_cost": "18.075256703",
+    "total": "18.075256703"
   },
   "slices": {
     "all": {
-      "baseline:token_cost": "2.935424858",
-      "baseline:total": "2.935424858",
+      "baseline:token_cost": "242.621884795",
+      "baseline:total": "242.621884795",
       "cache_hit_rate": "0.000000000",
       "n_cache_hits": "0",
-      "n_cost_known": "2874",
+      "n_cost_known": "20707",
       "n_requests": "73063",
       "n_saving_unknown": "0",
-      "saved_input_tokens": "1622773.485767497",
+      "saved_input_tokens": "55135530.695431501",
       "saving:fees": "0.000000000",
-      "saving:token_cost": "0.403075750",
-      "saving:total": "0.403075750",
-      "saving_share": "0.137314280"
+      "saving:token_cost": "18.075256703",
+      "saving:total": "18.075256703",
+      "saving_share": "0.074499696"
     },
     "llm_only": {
-      "baseline:token_cost": "2.935424858",
-      "baseline:total": "2.935424858",
+      "baseline:token_cost": "242.621884795",
+      "baseline:total": "242.621884795",
       "cache_hit_rate": "0.000000000",
       "n_cache_hits": "0",
-      "n_cost_known": "2874",
+      "n_cost_known": "20707",
       "n_requests": "20750",
       "n_saving_unknown": "0",
-      "saved_input_tokens": "1622773.485767497",
+      "saved_input_tokens": "55135530.695431501",
       "saving:fees": "0.000000000",
-      "saving:token_cost": "0.403075750",
-      "saving:total": "0.403075750",
-      "saving_share": "0.137314280"
+      "saving:token_cost": "18.075256703",
+      "saving:total": "18.075256703",
+      "saving_share": "0.074499696"
     }
   },
   "step": "context",
