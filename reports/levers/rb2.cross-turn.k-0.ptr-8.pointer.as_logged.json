@@ -1,0 +1,89 @@
+{
+  "assumptions": [
+    "tokens only, quality not measured / hypothetical reconstruction",
+    "removed tokens priced at the request's recorded ordinary input rate; provider-cached input not repriced (recorded units)",
+    "visibility is assumed (history policy unidentified, EDA section 2)",
+    "chunk tokens = chars x 0.3384 (EDA turn-0 slope)",
+    "fees and output unchanged; within-message copies left to S-6",
+    "rows: period tune (a_timestamp); no fitted parameter, so no split",
+    "timestamps are naive (Q-06)"
+  ],
+  "baseline": "as_logged",
+  "baseline_cost": {
+    "fees": "116.783500000",
+    "token_cost": "230.564142719"
+  },
+  "ci_high": null,
+  "ci_low": null,
+  "correctness_state": "unmeasured",
+  "evidence_class": "hypothetical reconstruction",
+  "lever_id": "rb2.cross-turn.k-0.ptr-8.pointer.as_logged",
+  "manifest": {
+    "code_commit": "91c5b3518e885985f4b8a07f37fd751d9e4144ed",
+    "config_hash": "8b8c744db872cfff6b26de93fcdddc7c58b4c6f4e15586e7093684917400cc41",
+    "created_at": "2026-11-02T12:45:50.886014Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "python_version": "3.13.5",
+    "seed": 20261102
+  },
+  "n_eligible": 220908,
+  "n_requests": 220908,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
+  "saving": {
+    "fees": "0.000000000",
+    "token_cost": "0.000000000"
+  },
+  "slices": {
+    "all": {
+      "baseline:fees": "116.783500000",
+      "baseline:token_cost": "230.564142719",
+      "baseline:total": "347.347642719",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "220394",
+      "n_requests": "220908",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "context_tokens": {
+      "added": "0.000000000",
+      "n_requests_changed": "0",
+      "removed": "0.000000000",
+      "saved": "0.000000000",
+      "saved_share": "0.000000000",
+      "supported_input": "558478939.000000000"
+    },
+    "llm_only": {
+      "baseline:fees": "116.783500000",
+      "baseline:token_cost": "230.564142719",
+      "baseline:total": "347.347642719",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "220394",
+      "n_requests": "220908",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "traffic_weighted": {
+      "baseline:fees": "116.783500000",
+      "baseline:token_cost": "230.564142719",
+      "baseline:total": "347.347642719",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "220394",
+      "n_requests": "220908",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    }
+  },
+  "step": "context",
+  "version": "cross_turn_chunks.ptr8.k0"
+}

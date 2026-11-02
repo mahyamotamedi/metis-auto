@@ -1,0 +1,129 @@
+{
+  "assumptions": [
+    "measured potential, conditional on Metis-Auto being able to intercept retrieval",
+    "fees avoided are recorded per-call amounts of skipped lookups (recorded units); token cost unchanged",
+    "fee block from recorded costBreakdown.per_call, not the 0.002 proxy; the total equals the shared as_logged total",
+    "ci is session-clustered, share of total recorded cost",
+    "candidate reuse; agreement with the later real lookup is in slice 'retrieval'; production correctness not measured",
+    "TTL chosen on split_by_session tune rows only; earlier rows of any split are cache history (owner decision 2026-11-02)",
+    "frequency bias: the tune split drops a family's tune rows if it recurs in the report period, so repeat rates are understated (ADR-0036)",
+    "no corpus-version evidence: every hit is ttl_only",
+    "retrieval settings are a configuration snapshot, not a history",
+    "timestamps are naive (Q-06)"
+  ],
+  "baseline": "as_logged",
+  "baseline_cost": {
+    "fees": "108.097500000",
+    "token_cost": "219.681488324",
+    "total": "327.778988324"
+  },
+  "ci_high": 0.02776092805175732,
+  "ci_low": 0.022476279145067446,
+  "correctness_state": "unmeasured",
+  "evidence_class": "simulation",
+  "lever_id": "rb1.retrieval-cache.ttl-90d.user.tune.as_logged",
+  "manifest": {
+    "code_commit": "91c5b3518e885985f4b8a07f37fd751d9e4144ed",
+    "config_hash": "a4bb9fc8a2ed5f6943e58c5befe03d7bb1d908837d1560c7d7683c763ca37fc0",
+    "created_at": "2026-11-02T12:47:38.117792Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "python_version": "3.13.5",
+    "seed": 20261102
+  },
+  "n_eligible": 209331,
+  "n_requests": 230762,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
+  "saving": {
+    "fees": "8.212000000",
+    "token_cost": "0.000000000"
+  },
+  "slices": {
+    "all": {
+      "baseline:fees": "108.097500000",
+      "baseline:token_cost": "219.681488324",
+      "baseline:total": "327.778988324",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "208825",
+      "n_requests": "230762",
+      "saving:fees": "8.212000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "8.212000000",
+      "saving_share": "0.025053467"
+    },
+    "llm_only": {
+      "baseline:fees": "108.097500000",
+      "baseline:token_cost": "219.681488324",
+      "baseline:total": "327.778988324",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "208825",
+      "n_requests": "209331",
+      "saving:fees": "8.212000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "8.212000000",
+      "saving_share": "0.025053467"
+    },
+    "retrieval": {
+      "agreement_mean": "0.610994488",
+      "n_agreement_evaluable": "4025",
+      "n_agreement_unknown": "0",
+      "n_guard_blocks": "0",
+      "n_hits": "4025",
+      "n_ineligible": "30736",
+      "n_lookups_llm": "80733",
+      "n_requests_reused": "3253",
+      "n_shadow_agree": "23",
+      "n_shadow_sampled": "27",
+      "n_shadow_unknown": "0"
+    },
+    "split": {
+      "excluded": "41257",
+      "excluded_period:report": "716",
+      "excluded_period:tune": "40541",
+      "report": "73063",
+      "tune": "234759"
+    },
+    "tenant_rank:1": {
+      "requests_share": "0.454337364",
+      "share": "0.000000000"
+    },
+    "tenant_rank:2": {
+      "requests_share": "0.207944451",
+      "share": "0.000000000"
+    },
+    "tenant_rank:3": {
+      "requests_share": "0.156283970",
+      "share": "0.000000000"
+    },
+    "tenant_rank:4": {
+      "requests_share": "0.101161259",
+      "share": "1.000000000"
+    },
+    "tenant_rank:5": {
+      "requests_share": "0.038836346",
+      "share": "0.000000000"
+    },
+    "tenant_rank:rest": {
+      "requests_share": "0.041436610",
+      "share": "0.000000000"
+    },
+    "traffic_weighted": {
+      "baseline:fees": "108.097500000",
+      "baseline:token_cost": "219.681488324",
+      "baseline:total": "327.778988324",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "208825",
+      "n_requests": "230762",
+      "saving:fees": "8.212000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "8.212000000",
+      "saving_share": "0.025053467"
+    }
+  },
+  "step": "cache",
+  "version": "retrieval_result_cache.ttl_90d"
+}

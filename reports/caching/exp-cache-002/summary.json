@@ -1,0 +1,592 @@
+{
+  "baseline_units": {
+    "as_logged": "recorded units",
+    "others": "price-file units; R-B1 saving not computed (no fees)"
+  },
+  "baselines": {
+    "as_logged": {
+      "fees": "101.060000000",
+      "n_known": "208825",
+      "n_requests": "209331",
+      "n_unknown": "506",
+      "token_cost": "226.718988324",
+      "total": "327.778988324"
+    },
+    "best_single_cheap": {
+      "n_known": "208825",
+      "n_requests": "209331",
+      "n_unknown": "506",
+      "token_cost": "49.808601860",
+      "total": "49.808601860"
+    },
+    "premium_gpt_5_5": {
+      "n_known": "208825",
+      "n_requests": "209331",
+      "n_unknown": "506",
+      "token_cost": "4466.994047450",
+      "total": "4466.994047450"
+    },
+    "todays_models": {
+      "n_known": "88971",
+      "n_requests": "209331",
+      "n_unknown": "120360",
+      "token_cost": "27.204601969",
+      "total": "27.204601969"
+    }
+  },
+  "by_ttl": {
+    "1d": {
+      "fees": {
+        "fee_avoided": 3.58,
+        "fee_block": 108.0975,
+        "fee_block_share_of_total": 0.32978776508135643,
+        "n_cost_known_llm": 208825,
+        "share_of_fee_block": 0.033118249728254584,
+        "share_of_fee_block_ci": [
+          0.030029464622520312,
+          0.03624195989367328
+        ],
+        "share_of_total_cost": 0.010921993561287322,
+        "share_of_total_cost_ci": [
+          0.009625632059236146,
+          0.012326090311113395
+        ],
+        "total_cost": 327.778988324
+      },
+      "passes_rule": true,
+      "rates": {
+        "lookup_hit_rate_llm": 0.021527751972551495,
+        "n_lookups_llm": 80733,
+        "n_requests_all": 230762,
+        "n_requests_llm": 209331,
+        "n_requests_reused": 1555,
+        "requests_reused_all": 0.006738544474393531,
+        "requests_reused_llm": 0.007428426749979697,
+        "requests_with_lookups_llm": 26709
+      },
+      "summary": {
+        "agreement": {
+          "mean": 0.9763660773442132,
+          "n_evaluable": 1738,
+          "n_hits": 1738,
+          "n_unknown": 0,
+          "p10": 1.0,
+          "p50": 1.0,
+          "share_at_least_0_9": 0.9597238204833142,
+          "share_exact": 0.9597238204833142,
+          "share_zero": 0.00863060989643268
+        },
+        "basis": {
+          "ttl_only": 1738
+        },
+        "fee_avoided": 3.58,
+        "n_lookups": 80733,
+        "reasons": {
+          "cold": 45793,
+          "expired": 2466,
+          "fee_unattributed": 30736
+        },
+        "shadow": {
+          "agree": 18,
+          "disagree": 0,
+          "sampled": 18,
+          "unknown": 0
+        },
+        "status": {
+          "hit": 1738,
+          "ineligible": 30736,
+          "miss": 48259
+        }
+      },
+      "tenants": {
+        "tenant_rank:1": {
+          "requests_share": 0.4543373638213815,
+          "share": 0.0
+        },
+        "tenant_rank:2": {
+          "requests_share": 0.20794445109541482,
+          "share": 0.0
+        },
+        "tenant_rank:3": {
+          "requests_share": 0.15628396983119838,
+          "share": 0.0
+        },
+        "tenant_rank:4": {
+          "requests_share": 0.1011612594277505,
+          "share": 1.0
+        },
+        "tenant_rank:5": {
+          "requests_share": 0.038836346222913924,
+          "share": 0.0
+        },
+        "tenant_rank:rest": {
+          "requests_share": 0.04143660960134078,
+          "share": 0.0
+        }
+      }
+    },
+    "30d": {
+      "fees": {
+        "fee_avoided": 6.69,
+        "fee_block": 108.0975,
+        "fee_block_share_of_total": 0.32978776508135643,
+        "n_cost_known_llm": 208825,
+        "share_of_fee_block": 0.0618885728162076,
+        "share_of_fee_block_ci": [
+          0.057257206070349384,
+          0.06591289706862923
+        ],
+        "share_of_total_cost": 0.020410094113131893,
+        "share_of_total_cost_ci": [
+          0.018196787403309555,
+          0.022705108815116563
+        ],
+        "total_cost": 327.778988324
+      },
+      "passes_rule": false,
+      "rates": {
+        "lookup_hit_rate_llm": 0.04052865618768038,
+        "n_lookups_llm": 80733,
+        "n_requests_all": 230762,
+        "n_requests_llm": 209331,
+        "n_requests_reused": 2736,
+        "requests_reused_all": 0.011856371499640321,
+        "requests_reused_llm": 0.01307020938131476,
+        "requests_with_lookups_llm": 26709
+      },
+      "summary": {
+        "agreement": {
+          "mean": 0.7385106743297453,
+          "n_evaluable": 3272,
+          "n_hits": 3272,
+          "n_unknown": 0,
+          "p10": 0.0,
+          "p50": 1.0,
+          "share_at_least_0_9": 0.6515892420537898,
+          "share_exact": 0.6515892420537898,
+          "share_zero": 0.12286063569682151
+        },
+        "basis": {
+          "ttl_only": 3272
+        },
+        "fee_avoided": 6.69,
+        "n_lookups": 80733,
+        "reasons": {
+          "cold": 45793,
+          "expired": 932,
+          "fee_unattributed": 30736
+        },
+        "shadow": {
+          "agree": 21,
+          "disagree": 1,
+          "sampled": 22,
+          "unknown": 0
+        },
+        "status": {
+          "hit": 3272,
+          "ineligible": 30736,
+          "miss": 46725
+        }
+      },
+      "tenants": {
+        "tenant_rank:1": {
+          "requests_share": 0.4543373638213815,
+          "share": 0.0
+        },
+        "tenant_rank:2": {
+          "requests_share": 0.20794445109541482,
+          "share": 0.0
+        },
+        "tenant_rank:3": {
+          "requests_share": 0.15628396983119838,
+          "share": 0.0
+        },
+        "tenant_rank:4": {
+          "requests_share": 0.1011612594277505,
+          "share": 1.0
+        },
+        "tenant_rank:5": {
+          "requests_share": 0.038836346222913924,
+          "share": 0.0
+        },
+        "tenant_rank:rest": {
+          "requests_share": 0.04143660960134078,
+          "share": 0.0
+        }
+      }
+    },
+    "7d": {
+      "fees": {
+        "fee_avoided": 4.836,
+        "fee_block": 108.0975,
+        "fee_block_share_of_total": 0.32978776508135643,
+        "n_cost_known_llm": 208825,
+        "share_of_fee_block": 0.044737389856379664,
+        "share_of_fee_block_ci": [
+          0.04099593447252594,
+          0.04834531060881069
+        ],
+        "share_of_total_cost": 0.014753843816308796,
+        "share_of_total_cost_ci": [
+          0.013102191660215768,
+          0.016574472846540705
+        ],
+        "total_cost": 327.778988324
+      },
+      "passes_rule": false,
+      "rates": {
+        "lookup_hit_rate_llm": 0.029219773822352694,
+        "n_lookups_llm": 80733,
+        "n_requests_all": 230762,
+        "n_requests_llm": 209331,
+        "n_requests_reused": 2052,
+        "requests_reused_all": 0.008892278624730241,
+        "requests_reused_llm": 0.00980265703598607,
+        "requests_with_lookups_llm": 26709
+      },
+      "summary": {
+        "agreement": {
+          "mean": 0.8969158367420342,
+          "n_evaluable": 2359,
+          "n_hits": 2359,
+          "n_unknown": 0,
+          "p10": 0.5,
+          "p50": 1.0,
+          "share_at_least_0_9": 0.8486646884272997,
+          "share_exact": 0.8486646884272997,
+          "share_zero": 0.0453582026282323
+        },
+        "basis": {
+          "ttl_only": 2359
+        },
+        "fee_avoided": 4.836,
+        "n_lookups": 80733,
+        "reasons": {
+          "cold": 45793,
+          "expired": 1845,
+          "fee_unattributed": 30736
+        },
+        "shadow": {
+          "agree": 19,
+          "disagree": 0,
+          "sampled": 19,
+          "unknown": 0
+        },
+        "status": {
+          "hit": 2359,
+          "ineligible": 30736,
+          "miss": 47638
+        }
+      },
+      "tenants": {
+        "tenant_rank:1": {
+          "requests_share": 0.4543373638213815,
+          "share": 0.0
+        },
+        "tenant_rank:2": {
+          "requests_share": 0.20794445109541482,
+          "share": 0.0
+        },
+        "tenant_rank:3": {
+          "requests_share": 0.15628396983119838,
+          "share": 0.0
+        },
+        "tenant_rank:4": {
+          "requests_share": 0.1011612594277505,
+          "share": 1.0
+        },
+        "tenant_rank:5": {
+          "requests_share": 0.038836346222913924,
+          "share": 0.0
+        },
+        "tenant_rank:rest": {
+          "requests_share": 0.04143660960134078,
+          "share": 0.0
+        }
+      }
+    },
+    "90d": {
+      "fees": {
+        "fee_avoided": 8.212,
+        "fee_block": 108.0975,
+        "fee_block_share_of_total": 0.32978776508135643,
+        "n_cost_known_llm": 208825,
+        "share_of_fee_block": 0.07596845440458845,
+        "share_of_fee_block_ci": [
+          0.07045090576927206,
+          0.08080241517759179
+        ],
+        "share_of_total_cost": 0.025053466794774156,
+        "share_of_total_cost_ci": [
+          0.022476279145067446,
+          0.02776092805175732
+        ],
+        "total_cost": 327.778988324
+      },
+      "passes_rule": false,
+      "rates": {
+        "lookup_hit_rate_llm": 0.049855697174637385,
+        "n_lookups_llm": 80733,
+        "n_requests_all": 230762,
+        "n_requests_llm": 209331,
+        "n_requests_reused": 3253,
+        "requests_reused_all": 0.014096775032284344,
+        "requests_reused_llm": 0.015539982133558814,
+        "requests_with_lookups_llm": 26709
+      },
+      "summary": {
+        "agreement": {
+          "mean": 0.6109944879137427,
+          "n_evaluable": 4025,
+          "n_hits": 4025,
+          "n_unknown": 0,
+          "p10": 0.0,
+          "p50": 1.0,
+          "share_at_least_0_9": 0.5150310559006211,
+          "share_exact": 0.5150310559006211,
+          "share_zero": 0.21341614906832299
+        },
+        "basis": {
+          "ttl_only": 4025
+        },
+        "fee_avoided": 8.212,
+        "n_lookups": 80733,
+        "reasons": {
+          "cold": 45793,
+          "expired": 179,
+          "fee_unattributed": 30736
+        },
+        "shadow": {
+          "agree": 23,
+          "disagree": 4,
+          "sampled": 27,
+          "unknown": 0
+        },
+        "status": {
+          "hit": 4025,
+          "ineligible": 30736,
+          "miss": 45972
+        }
+      },
+      "tenants": {
+        "tenant_rank:1": {
+          "requests_share": 0.4543373638213815,
+          "share": 0.0
+        },
+        "tenant_rank:2": {
+          "requests_share": 0.20794445109541482,
+          "share": 0.0
+        },
+        "tenant_rank:3": {
+          "requests_share": 0.15628396983119838,
+          "share": 0.0
+        },
+        "tenant_rank:4": {
+          "requests_share": 0.1011612594277505,
+          "share": 1.0
+        },
+        "tenant_rank:5": {
+          "requests_share": 0.038836346222913924,
+          "share": 0.0
+        },
+        "tenant_rank:rest": {
+          "requests_share": 0.04143660960134078,
+          "share": 0.0
+        }
+      }
+    },
+    "none": {
+      "passes_rule": false,
+      "summary": {
+        "agreement": {
+          "n_evaluable": 0,
+          "n_hits": 0,
+          "n_unknown": 0
+        },
+        "basis": {},
+        "fee_avoided": 0.0,
+        "n_lookups": 80733,
+        "reasons": {
+          "fee_unattributed": 30736,
+          "no_freshness_evidence": 49997
+        },
+        "shadow": {
+          "agree": 0,
+          "disagree": 0,
+          "sampled": 0,
+          "unknown": 0
+        },
+        "status": {
+          "ineligible": 80733
+        }
+      }
+    }
+  },
+  "chosen_ttl_days": 1,
+  "churn": {
+    "bot_share_changed_max": 0.43859649122807015,
+    "bot_share_changed_p50": 0.0,
+    "bot_share_changed_p90": 0.0,
+    "n_bots": 153,
+    "n_bots_with_change": 2,
+    "n_chunk_ids": 28085,
+    "n_chunk_ids_changed": 126,
+    "n_chunk_ids_hash_unknown": 0,
+    "share_chunk_ids_changed": 0.00448638063022966
+  },
+  "created_at": "2026-11-02T12:47:38.117792+00:00",
+  "data_facts": {
+    "corpus_version_known": 0,
+    "n_lookups_empty": 73,
+    "n_lookups_fee_attributed": 54337,
+    "n_lookups_no_query": 0,
+    "n_lookups_tune_period": 88037,
+    "n_lookups_tune_split": 80733,
+    "n_lookups_with_unknown_hash": 0,
+    "n_requests": 349079,
+    "n_tune_period": 271303,
+    "n_tune_period_llm": 220908,
+    "n_tune_period_llm_with_rag_json": 33089,
+    "n_tune_split_in_report_period_not_read": 3996,
+    "n_tune_split_in_tune_period": 230762,
+    "n_tune_split_llm": 209331
+  },
+  "evidence": "simulation; measured potential, conditional on Metis-Auto being able to intercept retrieval; candidate reuse only",
+  "frequency_bias": {
+    "chosen_ttl_days_tune_period_all_rows": 1,
+    "chosen_ttl_days_tune_split": 1,
+    "differs": false,
+    "note": "comparison only, never used to pick the TTL (ADR-0036)",
+    "passes_rule_tune_period_all_rows": {
+      "1d": true,
+      "30d": false,
+      "7d": false,
+      "90d": false,
+      "none": false
+    }
+  },
+  "lever": "R-B1 retrieval-result cache (exp-cache-002)",
+  "lever_results": [
+    "rb1.retrieval-cache.ttl-1d.user.tune.as_logged",
+    "rb1.retrieval-cache.ttl-1d.user.tune.best_single_cheap",
+    "rb1.retrieval-cache.ttl-1d.user.tune.premium_gpt_5_5",
+    "rb1.retrieval-cache.ttl-1d.user.tune.todays_models",
+    "rb1.retrieval-cache.ttl-30d.user.tune.as_logged",
+    "rb1.retrieval-cache.ttl-30d.user.tune.best_single_cheap",
+    "rb1.retrieval-cache.ttl-30d.user.tune.premium_gpt_5_5",
+    "rb1.retrieval-cache.ttl-30d.user.tune.todays_models",
+    "rb1.retrieval-cache.ttl-7d.user.tune.as_logged",
+    "rb1.retrieval-cache.ttl-7d.user.tune.best_single_cheap",
+    "rb1.retrieval-cache.ttl-7d.user.tune.premium_gpt_5_5",
+    "rb1.retrieval-cache.ttl-7d.user.tune.todays_models",
+    "rb1.retrieval-cache.ttl-90d.user.tune.as_logged",
+    "rb1.retrieval-cache.ttl-90d.user.tune.best_single_cheap",
+    "rb1.retrieval-cache.ttl-90d.user.tune.premium_gpt_5_5",
+    "rb1.retrieval-cache.ttl-90d.user.tune.todays_models"
+  ],
+  "period": "tune (2026-03-01..2026-07-31, naive timestamps, Q-06)",
+  "scope": "shared S-3 scope (ADR-0036): results and the TTL choice on split_by_session tune rows; every tune-period row is cache history",
+  "scope_bot_sensitivity": {
+    "fees": {
+      "fee_avoided": 3.58,
+      "fee_block": 108.0975,
+      "fee_block_share_of_total": 0.32978776508135643,
+      "n_cost_known_llm": 208825,
+      "share_of_fee_block": 0.033118249728254584,
+      "share_of_fee_block_ci": [
+        0.030029464622520312,
+        0.03624195989367328
+      ],
+      "share_of_total_cost": 0.010921993561287322,
+      "share_of_total_cost_ci": [
+        0.009625632059236146,
+        0.012326090311113395
+      ],
+      "total_cost": 327.778988324
+    },
+    "rates": {
+      "lookup_hit_rate_llm": 0.021527751972551495,
+      "n_lookups_llm": 80733,
+      "n_requests_all": 230762,
+      "n_requests_llm": 209331,
+      "n_requests_reused": 1555,
+      "requests_reused_all": 0.006738544474393531,
+      "requests_reused_llm": 0.007428426749979697,
+      "requests_with_lookups_llm": 26709
+    },
+    "summary": {
+      "agreement": {
+        "mean": 0.9763660773442132,
+        "n_evaluable": 1738,
+        "n_hits": 1738,
+        "n_unknown": 0,
+        "p10": 1.0,
+        "p50": 1.0,
+        "share_at_least_0_9": 0.9597238204833142,
+        "share_exact": 0.9597238204833142,
+        "share_zero": 0.00863060989643268
+      },
+      "basis": {
+        "ttl_only": 1738
+      },
+      "fee_avoided": 3.58,
+      "n_lookups": 80733,
+      "reasons": {
+        "cold": 45793,
+        "expired": 2466,
+        "fee_unattributed": 30736
+      },
+      "shadow": {
+        "agree": 18,
+        "disagree": 0,
+        "sampled": 18,
+        "unknown": 0
+      },
+      "status": {
+        "hit": 1738,
+        "ineligible": 30736,
+        "miss": 48259
+      }
+    }
+  },
+  "settings": {
+    "catalogue_version": "cat-metis-test-2026-10-18-s75-g55",
+    "min_n": 30,
+    "premium_model": "gpt-5.5",
+    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "seed": 20261102,
+    "shadow_rate": 0.01,
+    "sprint_config": "sprint-2026-11-02"
+  },
+  "split_counts": {
+    "excluded": 41257,
+    "excluded_period:report": 716,
+    "excluded_period:tune": 40541,
+    "report": 73063,
+    "tune": 234759
+  },
+  "ttl_table": {
+    "scope_bot": {
+      "tune_split": {
+        "1": 0.04823306454609639,
+        "30": 0.10436872158844586,
+        "7": 0.07345199608586328,
+        "90": 0.12138778442520406
+      }
+    },
+    "scope_user": {
+      "tune_period_all_rows": {
+        "1": 0.05250065313447755,
+        "30": 0.11427013641991435,
+        "7": 0.08037529675023002,
+        "90": 0.13245567204698025
+      },
+      "tune_split": {
+        "1": 0.04823306454609639,
+        "30": 0.10436872158844586,
+        "7": 0.07345199608586328,
+        "90": 0.12138778442520406
+      }
+    }
+  }
+}
