@@ -36,6 +36,9 @@ capped at the effective input and priced at ``cached_input``; a price row with
 effective input. Token counts are assumed model-independent (tokenizers
 differ): a *simulation*, labelled so by the caller.
 
+Decision record: ADR-0036,
+``docs/adr/0036-replay-scope-split-and-baselines.md``.
+
 Layer: pure pandas over injected data. No settings, no files.
 """
 

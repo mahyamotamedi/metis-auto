@@ -94,7 +94,7 @@ def test_write_comparison_labels_the_interim_loader(tmp_path):
     result = _write(tmp_path / "cache.synthetic-a.json", _result_json())
     out = tmp_path / "comparison.md"
 
-    summary = write_comparison([result], out=out)
+    summary = write_comparison([result], out=out, max_tenant_share=Decimal("0.35"))
 
     text = out.read_text(encoding="utf-8")
     assert "interim, not the shared implementation" in text
@@ -123,3 +123,28 @@ def test_script_writes_the_comparison(tmp_path):
     report = json.loads(run.stdout)
     assert report["results"] == 2 and report["skipped"] == 1
     assert "cache.synthetic-b" in out.read_text(encoding="utf-8")
+
+
+def test_script_reads_the_tenant_cap_from_the_sprint_config(tmp_path):
+    result = _write(tmp_path / "cache.synthetic-a.json", _result_json())
+    sprint = tmp_path / "sprint-synthetic.toml"
+    sprint.write_text("[sample]\ntenant_cap = 0.25\n", encoding="utf-8")
+    out = tmp_path / "comparison.md"
+
+    subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            str(result),
+            "--out",
+            str(out),
+            "--sprint-config",
+            str(sprint),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    # The synthetic result's top tenant holds 0.30: over a 0.25 cap.
+    assert "over 25%" in out.read_text(encoding="utf-8")

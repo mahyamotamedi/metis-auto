@@ -1,4 +1,4 @@
-# ADR-XXXX (ci-github-actions): CI on GitHub Actions runs lint, format check and the offline test suite on Linux and macOS
+# ADR-0035: CI on GitHub Actions runs lint, format check and the offline test suite on Linux and macOS
 
 - Status: **decided** for the sprint, 2026-11-02 (Pipeline C, task E-1). The action versions are **provisional** (re-check when they are bumped).
 - Date: 2026-11-02

@@ -1,0 +1,509 @@
+{
+  "baseline_units": {
+    "as_logged": "recorded units",
+    "others": "price-file units (before minus after)"
+  },
+  "baselines": {
+    "as_logged": {
+      "fees": "109.740000000",
+      "n_known": "220394",
+      "n_requests": "220908",
+      "n_unknown": "514",
+      "token_cost": "237.607642719",
+      "total": "347.347642719"
+    },
+    "best_single_cheap": {
+      "n_known": "220394",
+      "n_requests": "220908",
+      "n_unknown": "514",
+      "token_cost": "52.340121086",
+      "total": "52.340121086"
+    },
+    "premium_gpt_5_5": {
+      "n_known": "220394",
+      "n_requests": "220908",
+      "n_unknown": "514",
+      "token_cost": "4702.739152100",
+      "total": "4702.739152100"
+    },
+    "todays_models": {
+      "n_known": "90509",
+      "n_requests": "220908",
+      "n_unknown": "130399",
+      "token_cost": "27.635415161",
+      "total": "27.635415161"
+    }
+  },
+  "created_at": "2026-11-02T12:45:50.886014+00:00",
+  "data_facts": {
+    "n_chunk_rows": 461387,
+    "n_hash_unknown": 0,
+    "n_input_cost_unknown": 41847,
+    "n_input_tokens_unknown": 514,
+    "n_requests_with_chunks": 29111,
+    "n_tune_llm": 220908,
+    "s6_within_message_dedup": "not on any branch (2026-11-02); copies left out",
+    "separate_cached_models": 5,
+    "separate_cached_models_equal_eda_table": true,
+    "tokens_per_char": 0.3384048487819899
+  },
+  "evidence": "tokens only, quality not measured / hypothetical reconstruction",
+  "lever": "R-B2 cross-turn chunk policy (exp-ctx-002)",
+  "lever_results": [
+    "rb2.cross-turn.k-0.ptr-8.pointer.as_logged",
+    "rb2.cross-turn.k-0.ptr-8.pointer.best_single_cheap",
+    "rb2.cross-turn.k-0.ptr-8.pointer.premium_gpt_5_5",
+    "rb2.cross-turn.k-0.ptr-8.pointer.todays_models",
+    "rb2.cross-turn.k-1.ptr-8.ledger.as_logged",
+    "rb2.cross-turn.k-1.ptr-8.ledger.best_single_cheap",
+    "rb2.cross-turn.k-1.ptr-8.ledger.premium_gpt_5_5",
+    "rb2.cross-turn.k-1.ptr-8.ledger.todays_models",
+    "rb2.cross-turn.k-1.ptr-8.pointer.as_logged",
+    "rb2.cross-turn.k-1.ptr-8.pointer.best_single_cheap",
+    "rb2.cross-turn.k-1.ptr-8.pointer.premium_gpt_5_5",
+    "rb2.cross-turn.k-1.ptr-8.pointer.todays_models",
+    "rb2.cross-turn.k-3.ptr-16.pointer.as_logged",
+    "rb2.cross-turn.k-3.ptr-16.pointer.best_single_cheap",
+    "rb2.cross-turn.k-3.ptr-16.pointer.premium_gpt_5_5",
+    "rb2.cross-turn.k-3.ptr-16.pointer.todays_models",
+    "rb2.cross-turn.k-3.ptr-8.ledger.as_logged",
+    "rb2.cross-turn.k-3.ptr-8.ledger.best_single_cheap",
+    "rb2.cross-turn.k-3.ptr-8.ledger.premium_gpt_5_5",
+    "rb2.cross-turn.k-3.ptr-8.ledger.todays_models",
+    "rb2.cross-turn.k-3.ptr-8.pointer.as_logged",
+    "rb2.cross-turn.k-3.ptr-8.pointer.best_single_cheap",
+    "rb2.cross-turn.k-3.ptr-8.pointer.premium_gpt_5_5",
+    "rb2.cross-turn.k-3.ptr-8.pointer.todays_models",
+    "rb2.cross-turn.k-all.ptr-8.ledger.as_logged",
+    "rb2.cross-turn.k-all.ptr-8.ledger.best_single_cheap",
+    "rb2.cross-turn.k-all.ptr-8.ledger.premium_gpt_5_5",
+    "rb2.cross-turn.k-all.ptr-8.ledger.todays_models",
+    "rb2.cross-turn.k-all.ptr-8.pointer.as_logged",
+    "rb2.cross-turn.k-all.ptr-8.pointer.best_single_cheap",
+    "rb2.cross-turn.k-all.ptr-8.pointer.premium_gpt_5_5",
+    "rb2.cross-turn.k-all.ptr-8.pointer.todays_models"
+  ],
+  "period": "tune (2026-03-01..2026-07-31, a_timestamp per row, naive timestamps, Q-06), LLM rows",
+  "scenarios": [
+    {
+      "repriced_saving": {
+        "best_single_cheap": {
+          "token_cost": "0.000000000",
+          "total": "0.000000000"
+        },
+        "premium_gpt_5_5": {
+          "token_cost": "0.000000000",
+          "total": "0.000000000"
+        },
+        "todays_models": {
+          "token_cost": "0.000000000",
+          "total": "0.000000000"
+        }
+      },
+      "scenario": {
+        "pointer_tokens": 8,
+        "session_ledger": false,
+        "tokens_per_char": 0.3384048487819899,
+        "visible_window": 0
+      },
+      "summary": {
+        "cost": {
+          "saved": 0.0,
+          "saving_share_of_token_cost": 0.0,
+          "saving_share_of_total": 0.0,
+          "token_cost": 171.9406699892
+        },
+        "n_requests_all": 220908,
+        "n_requests_changed": 0,
+        "n_requests_llm": 220908,
+        "reasons": {
+          "kept_changed_hash": 335,
+          "kept_first_seen": 159752,
+          "kept_not_visible": 145065,
+          "within_message": 156235
+        },
+        "repeat_reference": {
+          "n_chunk_rows": 461387,
+          "share_rows_repeating_in_session": 0.6803139230190708
+        },
+        "tokens": {
+          "added": 0.0,
+          "removed": 0.0,
+          "saved": 0.0,
+          "supported_input": 558478939.0
+        }
+      }
+    },
+    {
+      "repriced_saving": {
+        "best_single_cheap": {
+          "token_cost": "1.641449734",
+          "total": "1.641449734"
+        },
+        "premium_gpt_5_5": {
+          "token_cost": "164.144973415",
+          "total": "164.144973415"
+        },
+        "todays_models": {
+          "token_cost": "0.765462873",
+          "total": "0.765462873"
+        }
+      },
+      "scenario": {
+        "pointer_tokens": 8,
+        "session_ledger": false,
+        "tokens_per_char": 0.3384048487819899,
+        "visible_window": 1
+      },
+      "summary": {
+        "cost": {
+          "saved": 8.72751215027951,
+          "saving_share_of_token_cost": 0.050758858569224526,
+          "saving_share_of_total": 0.03053150474546644,
+          "token_cost": 171.9406699892
+        },
+        "n_requests_all": 220908,
+        "n_requests_changed": 16883,
+        "n_requests_llm": 220908,
+        "reasons": {
+          "dropped": 82302,
+          "kept_changed_hash": 335,
+          "kept_cost_unknown": 13573,
+          "kept_first_seen": 159752,
+          "kept_not_visible": 49190,
+          "within_message": 156235
+        },
+        "repeat_reference": {
+          "n_chunk_rows": 461387,
+          "share_rows_repeating_in_session": 0.6803139230190708
+        },
+        "tokens": {
+          "added": 658416.0,
+          "removed": 30505944.681351047,
+          "saved": 29844540.62086548,
+          "supported_input": 558478939.0
+        }
+      }
+    },
+    {
+      "repriced_saving": {
+        "best_single_cheap": {
+          "token_cost": "1.500248620",
+          "total": "1.500248620"
+        },
+        "premium_gpt_5_5": {
+          "token_cost": "150.024862040",
+          "total": "150.024862040"
+        },
+        "todays_models": {
+          "token_cost": "0.595395794",
+          "total": "0.595395794"
+        }
+      },
+      "scenario": {
+        "pointer_tokens": 8,
+        "session_ledger": true,
+        "tokens_per_char": 0.3384048487819899,
+        "visible_window": 1
+      },
+      "summary": {
+        "cost": {
+          "saved": 8.032152501644832,
+          "saving_share_of_token_cost": 0.04671467490588092,
+          "saving_share_of_total": 0.028098924183385453,
+          "token_cost": 171.9406699892
+        },
+        "n_requests_all": 220908,
+        "n_requests_changed": 15469,
+        "n_requests_llm": 220908,
+        "reasons": {
+          "dropped": 79118,
+          "kept_changed_hash": 335,
+          "kept_cost_unknown": 13574,
+          "kept_first_seen": 159752,
+          "kept_net_nonpositive": 3806,
+          "kept_not_visible": 48567,
+          "within_message": 156235
+        },
+        "repeat_reference": {
+          "n_chunk_rows": 461387,
+          "share_rows_repeating_in_session": 0.6803139230190708
+        },
+        "tokens": {
+          "added": 2933536.0,
+          "removed": 30212571.704201326,
+          "saved": 27277247.643715754,
+          "supported_input": 558478939.0
+        }
+      }
+    },
+    {
+      "repriced_saving": {
+        "best_single_cheap": {
+          "token_cost": "2.221725245",
+          "total": "2.221725245"
+        },
+        "premium_gpt_5_5": {
+          "token_cost": "222.172524475",
+          "total": "222.172524475"
+        },
+        "todays_models": {
+          "token_cost": "1.079149937",
+          "total": "1.079149937"
+        }
+      },
+      "scenario": {
+        "pointer_tokens": 8,
+        "session_ledger": false,
+        "tokens_per_char": 0.3384048487819899,
+        "visible_window": 3
+      },
+      "summary": {
+        "cost": {
+          "saved": 11.795021954585035,
+          "saving_share_of_token_cost": 0.06859937183754088,
+          "saving_share_of_total": 0.041262591512721124,
+          "token_cost": 171.9406699892
+        },
+        "n_requests_all": 220908,
+        "n_requests_changed": 17465,
+        "n_requests_llm": 220908,
+        "reasons": {
+          "dropped": 111643,
+          "kept_changed_hash": 335,
+          "kept_cost_unknown": 16111,
+          "kept_first_seen": 159752,
+          "kept_net_nonpositive": 1,
+          "kept_not_visible": 17310,
+          "within_message": 156235
+        },
+        "repeat_reference": {
+          "n_chunk_rows": 461387,
+          "share_rows_repeating_in_session": 0.6803139230190708
+        },
+        "tokens": {
+          "added": 893144.0,
+          "removed": 41292613.44928063,
+          "saved": 40395004.45001866,
+          "supported_input": 558478939.0
+        }
+      }
+    },
+    {
+      "repriced_saving": {
+        "best_single_cheap": {
+          "token_cost": "2.074251458",
+          "total": "2.074251458"
+        },
+        "premium_gpt_5_5": {
+          "token_cost": "207.425145764",
+          "total": "207.425145764"
+        },
+        "todays_models": {
+          "token_cost": "0.886974716",
+          "total": "0.886974716"
+        }
+      },
+      "scenario": {
+        "pointer_tokens": 8,
+        "session_ledger": true,
+        "tokens_per_char": 0.3384048487819899,
+        "visible_window": 3
+      },
+      "summary": {
+        "cost": {
+          "saved": 11.069722016282663,
+          "saving_share_of_token_cost": 0.06438105665738059,
+          "saving_share_of_total": 0.03872527066723182,
+          "token_cost": 171.9406699892
+        },
+        "n_requests_all": 220908,
+        "n_requests_changed": 16742,
+        "n_requests_llm": 220908,
+        "reasons": {
+          "dropped": 109624,
+          "kept_changed_hash": 335,
+          "kept_cost_unknown": 16111,
+          "kept_first_seen": 159752,
+          "kept_net_nonpositive": 2197,
+          "kept_not_visible": 17133,
+          "within_message": 156235
+        },
+        "repeat_reference": {
+          "n_chunk_rows": 461387,
+          "share_rows_repeating_in_session": 0.6803139230190708
+        },
+        "tokens": {
+          "added": 3375360.0,
+          "removed": 41092127.865453675,
+          "saved": 37713662.86619171,
+          "supported_input": 558478939.0
+        }
+      }
+    },
+    {
+      "repriced_saving": {
+        "best_single_cheap": {
+          "token_cost": "2.172632740",
+          "total": "2.172632740"
+        },
+        "premium_gpt_5_5": {
+          "token_cost": "217.263273993",
+          "total": "217.263273993"
+        },
+        "todays_models": {
+          "token_cost": "1.025178965",
+          "total": "1.025178965"
+        }
+      },
+      "scenario": {
+        "pointer_tokens": 16,
+        "session_ledger": false,
+        "tokens_per_char": 0.3384048487819899,
+        "visible_window": 3
+      },
+      "summary": {
+        "cost": {
+          "saved": 11.559996818139274,
+          "saving_share_of_token_cost": 0.06723247512566623,
+          "saving_share_of_total": 0.04044040175862633,
+          "token_cost": 171.9406699892
+        },
+        "n_requests_all": 220908,
+        "n_requests_changed": 17462,
+        "n_requests_llm": 220908,
+        "reasons": {
+          "dropped": 111632,
+          "kept_changed_hash": 335,
+          "kept_cost_unknown": 16111,
+          "kept_first_seen": 159752,
+          "kept_net_nonpositive": 13,
+          "kept_not_visible": 17309,
+          "within_message": 156235
+        },
+        "repeat_reference": {
+          "n_chunk_rows": 461387,
+          "share_rows_repeating_in_session": 0.6803139230190708
+        },
+        "tokens": {
+          "added": 1786112.0,
+          "removed": 41292502.452490225,
+          "saved": 39502413.45322826,
+          "supported_input": 558478939.0
+        }
+      }
+    },
+    {
+      "repriced_saving": {
+        "best_single_cheap": {
+          "token_cost": "2.547982945",
+          "total": "2.547982945"
+        },
+        "premium_gpt_5_5": {
+          "token_cost": "254.798294455",
+          "total": "254.798294455"
+        },
+        "todays_models": {
+          "token_cost": "1.364532147",
+          "total": "1.364532147"
+        }
+      },
+      "scenario": {
+        "pointer_tokens": 8,
+        "session_ledger": false,
+        "tokens_per_char": 0.3384048487819899,
+        "visible_window": "all"
+      },
+      "summary": {
+        "cost": {
+          "saved": 13.507221936226248,
+          "saving_share_of_token_cost": 0.07855745785493723,
+          "saving_share_of_total": 0.04725239031958867,
+          "token_cost": 171.9406699892
+        },
+        "n_requests_all": 220908,
+        "n_requests_changed": 17652,
+        "n_requests_llm": 220908,
+        "reasons": {
+          "dropped": 127927,
+          "kept_changed_hash": 335,
+          "kept_cost_unknown": 17137,
+          "kept_first_seen": 159752,
+          "kept_net_nonpositive": 1,
+          "within_message": 156235
+        },
+        "repeat_reference": {
+          "n_chunk_rows": 461387,
+          "share_rows_repeating_in_session": 0.6803139230190708
+        },
+        "tokens": {
+          "added": 1023416.0,
+          "removed": 47355848.31901181,
+          "saved": 46326962.62809102,
+          "supported_input": 558478939.0
+        }
+      }
+    },
+    {
+      "repriced_saving": {
+        "best_single_cheap": {
+          "token_cost": "2.394603450",
+          "total": "2.394603450"
+        },
+        "premium_gpt_5_5": {
+          "token_cost": "239.460344982",
+          "total": "239.460344982"
+        },
+        "todays_models": {
+          "token_cost": "1.150124045",
+          "total": "1.150124045"
+        }
+      },
+      "scenario": {
+        "pointer_tokens": 8,
+        "session_ledger": true,
+        "tokens_per_char": 0.3384048487819899,
+        "visible_window": "all"
+      },
+      "summary": {
+        "cost": {
+          "saved": 12.750165381219349,
+          "saving_share_of_token_cost": 0.07415444747319071,
+          "saving_share_of_total": 0.044603975123622505,
+          "token_cost": 171.9406699892
+        },
+        "n_requests_all": 220908,
+        "n_requests_changed": 17281,
+        "n_requests_llm": 220908,
+        "reasons": {
+          "dropped": 126843,
+          "kept_changed_hash": 335,
+          "kept_cost_unknown": 17137,
+          "kept_first_seen": 159752,
+          "kept_net_nonpositive": 1085,
+          "within_message": 156235
+        },
+        "repeat_reference": {
+          "n_chunk_rows": 461387,
+          "share_rows_repeating_in_session": 0.6803139230190708
+        },
+        "tokens": {
+          "added": 3713000.0,
+          "removed": 47255218.561153755,
+          "saved": 43538244.54216616,
+          "supported_input": 558478939.0
+        }
+      }
+    }
+  ],
+  "scope": "shared S-3 scope (ADR-0036): period tune, no split (no fitted parameter)",
+  "settings": {
+    "catalogue_version": "cat-metis-test-2026-10-18-s75-g55",
+    "min_n": 30,
+    "premium_model": "gpt-5.5",
+    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "seed": 20261102,
+    "shadow_rate": 0.01,
+    "sprint_config": "sprint-2026-11-02"
+  }
+}
