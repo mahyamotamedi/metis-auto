@@ -997,12 +997,24 @@ Under the owner's task. Status: **awaiting review**; nothing committed. Decision
 
 ## Golden answers from gpt-5.5 for golden-v2 (2026-11-01)
 
-Under the owner's task. Status: **built and tested offline; awaiting review; no live call made**. Decision: [ADR-0030](../adr/0030-golden-answers-gpt-5-5.md); guide: [golden_answers.md](../evaluation/golden_answers.md).
+Under the owner's task. Status: **run complete (300 of 300 answered, 12.03 USD); awaiting review**. Decision: [ADR-0030](../adr/0030-golden-answers-gpt-5-5.md); guide: [golden_answers.md](../evaluation/golden_answers.md).
 
 - **Built:** `eval.golden_answer` (migration 0006); `evaluation/golden_answers/` (settings, request builder, loop with resume and retries, pilot selection, content-free summary); `wiring/golden_answers.py` and `scripts/golden_answers.py` (`plan`, `pilot`, `run`, `summary`, `runs`); typed `reasoning_effort` option on the OpenAI endpoint; setting `golden_answers.real_data_approved` (default false, runtime layer only). 56 new tests; the full suite passes (1,155 offline). A dry run with a fake client against the real database proved resume (0 calls on a rerun), the local backup, the summary and that `verify` of golden-v1 and golden-v2 still passes with the table filled; its synthetic rows were removed.
-- **Plan (no call):** 300 records, none over the context window, about 1.44 M input tokens (approximate: tokenizer files not fetched), input-only cost at least 7.9 USD, ceiling 89 USD; pilot of 10 records bounded at 0.58 to 3.28 USD. The full run most likely exceeds the 10 USD cap: the owner decides after the pilot.
-- **Pending (owner):** set the pilot caps and `real_data_approved` in `config/local.toml`, type "run", then decide on the full run after the pilot; fetch the tokenizer files for exact counts; the 30-item human spot-check.
+- **Plan (no call):** 300 records, none over the context window, about 1.44 M input tokens , input-only cost at least 7.9 USD, ceiling 89 USD; content counted exactly (o200k_base `exact_local`), framing approximate; pilot of 10 records bounded at 0.58 to 3.28 USD. The pilot ran (0.83 USD, 10 of 10 answered). **Budget decision (owner, 2026-11-01):** ceiling and default lifetime cap both 20 USD, the Metis account credit ([ADR-0018 amendment 2](../adr/0018-live-calls-for-development-under-a-lifetime-budget.md)); the full run (estimated 15 to 19 USD in total) fits; if it runs short it halts and resumes after a top-up.
+- **Pending (owner):** set the pilot caps and `real_data_approved` in `config/local.toml`, type "run", then decide on the full run after the pilot; the 30-item human spot-check.
+- **Run `ga-v2-20261101` (2026-11-01; language-mismatch review tool added 2026-11-02, `review-language`):** pilot 10 records (0.83 USD), then the rest grouped by identical instructions. Halted once on HTTP 402 at a ledger total of 10.04 USD (the old 10 USD Metis dashboard limit; 5 unbilled refusals), resumed after the limit was raised with the new `--retry-failed auth` flag. Result: 300 answered, 0 failed, none truncated, 12.03 USD of provider-reported cost (ledger 12.58 USD including two timeouts charged at their estimates, A-85). Prompt caching passes through Metis (124,160 cached tokens). Summary: `reports/evaluation/golden_v2/answers_ga-v2-20261101_summary.json`. Open: the 30-item human spot-check; compare the Metis dashboard with the ledger (Q-36); the adapter's `auth` label for HTTP 402.
 
+---
+
+## Lever base: StepVersion, combine, LeverResult, Manifest (2026-11-02)
+
+Final-plan tasks S-1 and E-2 (Pipeline A), branch `sprint-saba`. Status: **awaiting review**; nothing committed. Code: `analysis/levers.py`, `analysis/lever_result.py`; tests `tests/unit/analysis/test_levers.py`, `test_lever_manifest.py`; two rows in `module_reference.md`. No model calls, no data rows read.
+
+- **Decided (owner, 2026-11-02):** cost blocks are `fees` (0.002 x per-call items, a proxy) and `token_cost` (recorded total minus fees); input, output and cached costs are not in `requests.parquet`. `created_at` is passed to `build_manifest`. The `all` slice counts every row in `n_requests` but sums cost and hits over LLM rows with known cost. Decision record: [ADR-0032](../adr/0032-lever-result-and-manifest-format.md) and [ADR-0031](../adr/0031-full-data-lever-replay.md) (numbers provisional; 0029 and 0030 are taken on `origin/main`).
+- **Checked on real data (aggregates only):** blocks sum to `a_bill_totalCost` exactly; 104,084 unknown-cost rows stay NaN; the fee proxy is 35.8% of cost against 37.6% in the billing table (908 messages differ), so it understates fees by about 5%.
+- **Open:** exact fees and the input/output/cached split need an upstream change to `billing.py` and the ingest.
+
+---
 
 ## Sprint Day 1, Pipeline B: comparison, cache guard, Postgres event sink (2026-11-02)
 

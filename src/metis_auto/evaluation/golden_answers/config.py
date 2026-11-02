@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from metis_auto.evaluation.golden_answers.request import LAYOUT_VERSION
+from metis_auto.evaluation.golden_answers.request import LAYOUTS
 
 RETRYABLE = frozenset({"timeout", "rate_limited", "unavailable", "connection"})
 """Error classes worth another attempt. Content filter, context overflow, invalid
@@ -25,6 +25,7 @@ class AnswerSettings:
     dataset_id: str
     model_id: str
     reasoning_effort: str | None
+    layout: str
     max_output_tokens: int
     context_window: int
     model_output_limit: int
@@ -44,7 +45,7 @@ class AnswerSettings:
             "max_output_tokens": self.max_output_tokens,
             "retry_max_attempts": self.retry_max_attempts,
             "backoff_seconds": list(self.backoff_seconds),
-            "layout": LAYOUT_VERSION,
+            "layout": self.layout,
             "dataset_id": self.dataset_id,
         }
         text = json.dumps(payload, sort_keys=True, separators=(",", ":"))
@@ -64,7 +65,7 @@ class AnswerSettings:
             "retry_max_attempts": self.retry_max_attempts,
             "backoff_seconds": list(self.backoff_seconds),
             "pilot_size": self.pilot_size,
-            "layout": LAYOUT_VERSION,
+            "layout": self.layout,
             "settings_hash": self.settings_hash,
         }
 
@@ -75,6 +76,7 @@ def parse_settings(raw: Mapping[str, Any]) -> AnswerSettings:
         dataset_id=run["dataset_id"],
         model_id=run["model_id"],
         reasoning_effort=run.get("reasoning_effort"),
+        layout=run["layout"],
         max_output_tokens=run["max_output_tokens"],
         context_window=limits["context_window"],
         model_output_limit=limits["max_output_tokens"],
@@ -88,6 +90,8 @@ def parse_settings(raw: Mapping[str, Any]) -> AnswerSettings:
         raise SettingsError("max_output_tokens must be within the model's output limit")
     if out.max_output_tokens >= out.context_window:
         raise SettingsError("max_output_tokens must be below the context window")
+    if out.layout not in LAYOUTS:
+        raise SettingsError(f"run.layout must be one of {LAYOUTS}")
     if out.retry_max_attempts < 1:
         raise SettingsError("retry.max_attempts must be at least 1")
     if len(out.backoff_seconds) < out.retry_max_attempts - 1:
