@@ -48,7 +48,6 @@ from metis_auto.adapters.providers import (
     QualityInjectingClient,
 )
 from metis_auto.adapters.sinks import InMemoryEventSink
-from metis_auto.adapters.stores import InMemoryCacheStore
 from metis_auto.adapters.system import FileSpendLedger
 from metis_auto.application.accounting import AccountingService
 from metis_auto.application.pipeline import (
@@ -78,12 +77,13 @@ from metis_auto.contracts import (
 )
 from metis_auto.contracts.events import AttemptFinished, FeaturesExtracted
 from metis_auto.domain.accounting import sum_decompositions
-from metis_auto.ports import ModelClient, TextCompressor
+from metis_auto.ports import CacheStore, ModelClient, TextCompressor
 from metis_auto.settings import LoadedSettings, load_settings
 
 from .from_settings import (
     build_accounting_service,
     build_pipeline_from_settings,
+    cache_store,
     fingerprint_key,
     spend_ledger,
 )
@@ -181,7 +181,7 @@ class ChatSession:
         self.users = 0
         self._new_refs()
         self.history: list[Turn] = []
-        self._store = InMemoryCacheStore()
+        self._store: CacheStore | None = None
         self._sink = InMemoryEventSink()
         self._decompositions: list[SavingsDecomposition] = []
         self._tokenizers: TokenizerSet | None = None
@@ -235,6 +235,8 @@ class ChatSession:
             raise ValueError(f"unknown model {self.model_id!r}")
         self._tokenizers = self._tokenizers or build_tokenizers(loaded)
         self._fp_key = self._fp_key or fingerprint_key(loaded)
+        if self._store is None:
+            self._store = cache_store(loaded)
         client = self._client_factory(loaded, self.run_id)
         if self._degrade_next:
             client = QualityInjectingClient(client, [Quality.TRUNCATED])
