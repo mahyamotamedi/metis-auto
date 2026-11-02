@@ -17,11 +17,22 @@ needs a quality check. Without an ``h_norm`` column the normalised figures are
 message's figures missing.
 
 ``apply`` adds per-request counts (``REQUEST_COLUMNS``) joined on
-``ai_message_id``; a request with no chunk rows has 0. It does **not** change
-``block_token_cost`` yet: turning duplicate characters into a cost saving needs
-a tokens-per-character conversion and a price basis that the owner has not
-chosen (README). Evidence class: *observed* for the counts; any saving would be
-a *simulation*, tokens only, quality not measured.
+``ai_message_id``; a request with no chunk rows has 0. Without
+``tokens_per_char`` it changes no cost.
+
+**Saving (S-6b; ADR-XXXX (context-token-saving-conversion)).** With
+``tokens_per_char`` (the owner's choice: ledger ``recon.t0rag.coef_rag``),
+duplicate characters become wanted tokens, taken from **uncached** input only
+(``baselines_full.lower_uncached_input``), once per request however many calls
+it made: ``SAVED_TOKENS``. With ``input_rate_per_m`` (each model's implied
+input rate per 1M tokens, recorded units) ``apply`` also lowers
+``block_token_cost`` (the ``as_logged`` saving). A request with a saving but no
+rate keeps its cost and gets ``SAVING_KNOWN`` False: unknown, never zero.
+``block_fees`` is never changed. ``baseline_frames`` gives the before and
+after cost blocks for one baseline (repriced baselines lower the input and
+reprice, so a tier can change); ``lever_result`` turns them into a
+``LeverResult``. Evidence class: *observed* for the counts, *hypothetical
+reconstruction* for the saving; quality not measured (FR-CTX-03).
 
 Candidate code: loaded by file path only (scripts, tests); ``metis_auto`` never
 imports it.
@@ -29,10 +40,28 @@ imports it.
 
 from __future__ import annotations
 
+import math
+from collections.abc import Mapping, Sequence
+from decimal import Decimal
+
 import numpy as np
 import pandas as pd
 
-from metis_auto.analysis.levers import ReplayContext, Step
+from metis_auto.analysis.baselines_full import (
+    REPRICED_KEYS,
+    best_single_cheap_model,
+    lower_uncached_input,
+    repriced_row_costs,
+    token_counts,
+)
+from metis_auto.analysis.lever_result import LeverResult, Manifest
+from metis_auto.analysis.levers import (
+    BLOCKS,
+    ReplayContext,
+    Step,
+    block_column,
+    summarise_slices,
+)
 
 EXACT_COLUMNS = (
     "n_chunks",
@@ -52,6 +81,11 @@ REQUEST_COLUMNS = {
     "dup_chars_norm": "ctx_dup_chars_norm",
 }
 TOTAL = "__total__"
+SAVED_TOKENS = "ctx_saved_input_tokens"
+SAVING_KNOWN = "ctx_saving_known"
+SAVING_UNKNOWN = "ctx_saving_unknown"
+VERSION_ID = "ctx.within_message_dedup"
+EVIDENCE = "hypothetical reconstruction"
 
 
 def within_message_duplicates(chunks: pd.DataFrame) -> pd.DataFrame:
@@ -91,14 +125,27 @@ def within_message_duplicates(chunks: pd.DataFrame) -> pd.DataFrame:
 
 
 class WithinMessageDedup:
-    """Context version: count the chunk copies inside one message (no saving yet)."""
+    """Context version: count the chunk copies inside one message and, with a
+    conversion, the input tokens and recorded cost they would save."""
 
     name = "exp-ctx-001-within-message-dedup"
     step: Step = "context"
 
-    def __init__(self, chunks: pd.DataFrame) -> None:
+    def __init__(
+        self,
+        chunks: pd.DataFrame,
+        *,
+        tokens_per_char: float | None = None,
+        input_rate_per_m: Mapping[str, float] | None = None,
+        cached_separately: frozenset[str] = frozenset(),
+    ) -> None:
+        if input_rate_per_m is not None and tokens_per_char is None:
+            raise ValueError("input_rate_per_m needs tokens_per_char")
         self._per_message = within_message_duplicates(chunks)
         self._norm_computed = "h_norm" in chunks
+        self._tokens_per_char = tokens_per_char
+        self._rates = input_rate_per_m
+        self._cached_separately = cached_separately
 
     def apply(self, req: pd.DataFrame, ctx: ReplayContext) -> pd.DataFrame:
         out = req.copy()
@@ -112,7 +159,136 @@ class WithinMessageDedup:
                 continue
             values[~logged] = 0
             out[column] = pd.array(values, dtype="Int64")
+        if self._tokens_per_char is None:
+            return out
+        wanted = out["ctx_dup_chars_exact"].astype(float) * self._tokens_per_char
+        tokens = token_counts(req, self._cached_separately)
+        saved = lower_uncached_input(tokens, wanted)["saved"]
+        out[SAVED_TOKENS] = saved.where(wanted > 0, 0.0)  # no copy: exactly 0
+        if self._rates is None:
+            return out
+        rate = req["bot_provider_model"].map(self._rates).astype(float)
+        cut = np.minimum(out[SAVED_TOKENS] * rate / 1e6, out["block_token_cost"])
+        out[SAVING_KNOWN] = out[SAVED_TOKENS].eq(0) | cut.notna()
+        out["block_token_cost"] = out["block_token_cost"] - cut.where(
+            out[SAVED_TOKENS] > 0, 0.0
+        ).fillna(0.0)
         return out
+
+
+def baseline_frames(
+    req: pd.DataFrame,
+    out: pd.DataFrame,
+    ctx: ReplayContext,
+    *,
+    baseline: str,
+    premium_model: str,
+    cached_separately: frozenset[str] = frozenset(),
+    cheap_model: str | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Before and after cost blocks of one baseline, for ``summarise_slices``.
+
+    ``req`` is the frame before ``apply`` (with ``levers.with_blocks``), ``out``
+    after it. ``as_logged``: the recorded blocks; a row whose saving is unknown
+    (no implied rate) leaves both sides, so the baseline and the saving cover
+    the same rows. Repriced baselines (price-file units): the logged tokens and
+    the tokens less ``SAVED_TOKENS`` are repriced, so the tier is chosen again;
+    ``block_fees`` is 0 on both sides only so the slices can be summed, and
+    ``lever_result`` drops the baseline fee (ADR-0036: not priced). ``after``
+    carries ``SAVED_TOKENS`` and ``SAVING_UNKNOWN`` (LLM rows with a known
+    baseline cost whose saving is unknown).
+    """
+    llm = req["llm_request"].astype(bool)
+    before = req[["llm_request"]].copy()
+    after = before.copy()
+    saved = out[SAVED_TOKENS]
+    cols = [block_column(b) for b in BLOCKS]
+    if baseline == "as_logged":
+        if SAVING_KNOWN not in out:
+            raise ValueError("as_logged needs input_rate_per_m in the version")
+        unknown = ~out[SAVING_KNOWN].fillna(False).astype(bool)
+        base_known = req[cols].notna().all(axis=1)
+        for col in cols:
+            before[col] = req[col].where(~unknown)
+            after[col] = out[col].where(~unknown)
+    elif baseline in REPRICED_KEYS:
+        tokens = token_counts(req, cached_separately)
+        if cheap_model is None:
+            cheap_model = best_single_cheap_model(
+                req, ctx, cached_separately=cached_separately
+            )
+        costs = [
+            repriced_row_costs(
+                req,
+                ctx,
+                premium_model=premium_model,
+                cached_separately=cached_separately,
+                tokens=t,
+                cheap_model=cheap_model,
+            )[baseline]
+            for t in (tokens, tokens.assign(input=tokens["input"] - saved))
+        ]
+        base_known = costs[0].notna()
+        unknown = costs[1].isna()
+        for frame, cost in zip((before, after), costs, strict=True):
+            cost = cost.where(~unknown)
+            frame[cols[0]] = (cost * 0.0).where(cost.notna())
+            frame[cols[1]] = cost
+    else:
+        raise ValueError(f"unknown baseline {baseline}")
+    after[SAVED_TOKENS] = saved
+    after[SAVING_UNKNOWN] = llm & base_known & unknown
+    return before, after
+
+
+def _decimal(value: float) -> Decimal:
+    """Fixed nine-decimal Decimal (and no negative zero), as in ``levers``."""
+    return Decimal(f"{value + 0.0:.9f}")
+
+
+def lever_result(
+    before: pd.DataFrame,
+    after: pd.DataFrame,
+    *,
+    baseline: str,
+    manifest: Manifest,
+    assumptions: Sequence[str] = (),
+) -> LeverResult:
+    """One ``LeverResult`` from ``baseline_frames``: slices ``all`` and
+    ``llm_only`` plus ``n_saving_unknown`` and ``saved_input_tokens``; top-level
+    blocks and totals from ``llm_only``. Fees saving is always 0."""
+    slices = summarise_slices(before, after)
+    llm = before["llm_request"].astype(bool)
+    known = before[[block_column(b) for b in BLOCKS]].notna().all(axis=1) & llm
+    saved = after[SAVED_TOKENS]
+    repriced = baseline in REPRICED_KEYS
+    for name, rows in (("all", pd.Series(True, index=llm.index)), ("llm_only", llm)):
+        s = slices[name]
+        s["n_saving_unknown"] = Decimal(int((rows & after[SAVING_UNKNOWN]).sum()))
+        s["saved_input_tokens"] = _decimal(
+            math.fsum(saved[rows & known].to_numpy(dtype=float))
+        )
+        if repriced:
+            del s["baseline:fees"]
+    top = slices["llm_only"]
+    names = (*BLOCKS, "total")
+    baseline_cost = {b: top[f"baseline:{b}"] for b in names if f"baseline:{b}" in top}
+    saving = {b: top[f"saving:{b}"] for b in names}
+    return LeverResult(
+        lever_id=f"{VERSION_ID}.{baseline}",
+        step="context",
+        version=VERSION_ID,
+        n_requests=len(before),
+        n_eligible=int((llm & (saved > 0)).sum()),
+        baseline=baseline,
+        baseline_cost=baseline_cost,
+        saving=saving,
+        slices=slices,
+        evidence_class=EVIDENCE,
+        correctness_state="unmeasured",
+        assumptions=tuple(assumptions),
+        manifest=manifest,
+    )
 
 
 def _share(num: object, den: float) -> float:

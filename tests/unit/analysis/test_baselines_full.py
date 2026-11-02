@@ -140,6 +140,22 @@ def test_cached_convention_detected_from_billed_rows():
     assert cached_reported_separately(req) == frozenset({"m-sep"})
 
 
+def test_repriced_row_costs_sum_to_baseline_costs():
+    from metis_auto.analysis.baselines_full import repriced_row_costs
+
+    req = frame()
+    sep = frozenset({"syn-small"})
+    totals = baseline_costs(
+        req, ctx(), premium_model="syn-premium", cached_separately=sep
+    )
+    rows = repriced_row_costs(
+        req, ctx(), premium_model="syn-premium", cached_separately=sep
+    )
+    for key in ("premium_gpt_5_5", "todays_models", "best_single_cheap"):
+        assert Decimal(str(rows[key].sum())) == totals[key]["token_cost"]
+        assert int(rows[key].notna().sum()) == int(totals[key]["n_known"])
+
+
 def test_unpriced_premium_model_is_refused():
     with pytest.raises(ValueError, match="price"):
         baseline_costs(frame(), ctx(), premium_model="syn-unpriced")
