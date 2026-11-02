@@ -62,6 +62,11 @@ price_table = "config/reference/prices-metis-2026-10-18-logged.toml"
 candidates = ["gpt-5-nano", "gpt-4.1-nano", "gpt-4o-mini", "deepseek-v4-flash", "mimo-v2.5"]
 # J-3 (Parham) fills this after J-1/J-2; JEV is not in the catalogue yet.
 candidates_jev = []
+# R-0 (analysis/routing_base): exclude a candidate when this request's input
+# falls into a long-context price tier of that model (a price row with
+# min_input_tokens > 0). Owner decision 2026-11-03. No candidate has such a
+# tier in the current price table, so this is inert today.
+avoid_long_context_tier = true
 
 [[routing.retiring]]
 # Only sourced entries. A retirement without a source and a date is not added.

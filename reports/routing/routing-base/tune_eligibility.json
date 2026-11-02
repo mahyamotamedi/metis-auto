@@ -1,0 +1,114 @@
+{
+ "what": "routing base (R-0) eligibility and free candidate cost replay",
+ "scope": "split_by_session tune rows inside the tune period, LLM rows; report period not read; naive timestamps (Q-06)",
+ "evidence": "simulation: logged tokens assumed model-independent; price-file USD; quality not measured",
+ "settings": {
+  "sprint_config": "sprint-2026-11-02",
+  "catalogue_version": "cat-metis-replay-2026-11-02",
+  "price_version": "prices-metis-2026-10-18-logged",
+  "candidates": [
+   "gpt-5-nano",
+   "gpt-4.1-nano",
+   "gpt-4o-mini",
+   "deepseek-v4-flash",
+   "mimo-v2.5"
+  ],
+  "retiring": [
+   "grok-4-1-fast"
+  ],
+  "avoid_long_context_tier": true,
+  "separate_cached_models": 5
+ },
+ "n_llm_rows": 209331,
+ "any_eligible": 202610,
+ "any_eligible_share": 0.967893,
+ "request_first_failing_reasons": {
+  "attachments": 2676,
+  "functions": 2277,
+  "attachments_unknown": 1262,
+  "unknown_tokens": 506
+ },
+ "per_candidate": {
+  "gpt-5-nano": {
+   "eligible": 202610,
+   "eligible_share": 0.967893,
+   "first_failing_reasons": {
+    "attachments": 2676,
+    "functions": 2277,
+    "attachments_unknown": 1262,
+    "unknown_tokens": 506
+   },
+   "cost_usd_on_eligible_rows": 46.64091,
+   "n_costed": 202610
+  },
+  "gpt-4.1-nano": {
+   "eligible": 202599,
+   "eligible_share": 0.96784,
+   "first_failing_reasons": {
+    "attachments": 2676,
+    "functions": 2277,
+    "attachments_unknown": 1262,
+    "unknown_tokens": 506,
+    "over_output_limit": 11
+   },
+   "cost_usd_on_eligible_rows": 74.490295,
+   "n_costed": 202599
+  },
+  "gpt-4o-mini": {
+   "eligible": 202577,
+   "eligible_share": 0.967735,
+   "first_failing_reasons": {
+    "attachments": 2676,
+    "functions": 2277,
+    "attachments_unknown": 1262,
+    "unknown_tokens": 506,
+    "over_output_limit": 17,
+    "over_context_window": 16
+   },
+   "cost_usd_on_eligible_rows": 113.485205,
+   "n_costed": 202577
+  },
+  "deepseek-v4-flash": {
+   "eligible": 202610,
+   "eligible_share": 0.967893,
+   "first_failing_reasons": {
+    "attachments": 2676,
+    "functions": 2277,
+    "attachments_unknown": 1262,
+    "unknown_tokens": 506
+   },
+   "cost_usd_on_eligible_rows": 110.092734,
+   "n_costed": 202610
+  },
+  "mimo-v2.5": {
+   "eligible": 202610,
+   "eligible_share": 0.967893,
+   "first_failing_reasons": {
+    "attachments": 2676,
+    "functions": 2277,
+    "attachments_unknown": 1262,
+    "unknown_tokens": 506
+   },
+   "cost_usd_on_eligible_rows": 89.172295,
+   "n_costed": 202610
+  }
+ },
+ "compare_b_interim": {
+  "b_readme": {
+   "n_scored_llm": 209331,
+   "unknown_tokens": 506
+  },
+  "unknown_tokens_here": 506,
+  "any_eligible_with_b_meaning": 203772,
+  "rows_only_b_allows": 1162,
+  "rows_only_here": 0,
+  "per_candidate_with_b_meaning": {
+   "gpt-5-nano": 203772,
+   "gpt-4.1-nano": 203761,
+   "gpt-4o-mini": 203738,
+   "deepseek-v4-flash": 203772,
+   "mimo-v2.5": 203772
+  }
+ },
+ "eligibility_frame_seconds": 0.02
+}
