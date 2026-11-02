@@ -35,18 +35,17 @@ saving is what dedup + cut remove minus what dedup alone removes, both capped
 at ``input - cached``. Effective input adds cached tokens back for the models
 in ``cached_separately`` (Review Focus 3).
 
-**Cost.** Repriced at the logged model's price (``todays_models``) with the
-tier chosen again by the new input: ``rc_cost_raw``, ``rc_cost_dedup`` and
-``rc_cost_cut`` in price-file units. The recorded blocks are never changed, so
-recorded and repriced cost are never mixed. The repricing below repeats S-6's
-``baselines_full.repriced_row_costs`` for one baseline until that branch is
-merged; then it should call the shared function.
+**Cost (ADR-0038).** ``apply`` changes no cost. ``RerankerCut.baseline_frames``
+prices the cut for each of the four baselines, as S-6b does: the three repriced
+baselines with ``baselines_full.repriced_row_costs`` (price-file units, tier
+chosen again by the new input, no fees), ``as_logged`` with each model's implied
+input rate (recorded units; no rate is unknown, never zero; fees never change).
 
 Eligible: an LLM request (``llm_request``) not served from cache, with
 ``a_rag_state == "ok"`` and chunk rows. Every other row keeps zero counts and
 savings; workflow rows get no cost. ``apply`` returns a copy with the same
-index; it adds only ``rc_*`` columns (counts, characters, tokens, scores
-summed per request, repriced cost). No ID, hash or text leaves memory.
+index; it adds only ``rc_*`` columns (counts, characters, tokens and scores
+summed per request). No ID, hash or text leaves memory.
 """
 
 from __future__ import annotations
@@ -60,12 +59,12 @@ import numpy as np
 import pandas as pd
 
 from metis_auto.analysis.baselines_full import (
-    _price_refs,
-    _prices,
-    _reprice,
-    _tokens,
+    REPRICED_KEYS,
+    lower_uncached_input,
+    repriced_row_costs,
+    token_counts,
 )
-from metis_auto.analysis.levers import ReplayContext
+from metis_auto.analysis.levers import BLOCKS, ReplayContext, block_column
 from metis_auto.analysis.text_features import normalize_safe
 
 Scorer = Callable[[str, list[str]], list[float]]
@@ -83,7 +82,7 @@ COUNT_COLUMNS = (
 )
 TOKEN_COLUMNS = ("rc_raw_chunk_tokens", "rc_dedup_tokens", "rc_saved_tokens")
 SCORE_COLUMNS = ("rc_score_total", "rc_score_kept")
-COST_COLUMNS = ("rc_cost_raw", "rc_cost_dedup", "rc_cost_cut")
+SAVING_UNKNOWN = "rc_saving_unknown"
 
 _COMMON = (
     "Token sizing, not a quality result: removing a chunk can remove the one the "
@@ -92,8 +91,8 @@ _COMMON = (
     "are collapsed before ranking; their tokens are S-6's, not counted here.",
     "Tokens = removed chunk characters x 0.3384 tokens per character (EDA "
     "recon.t0rag.coef_rag, hypothetical reconstruction), from uncached input only.",
-    "Cost is repriced at the logged model's price (todays_models, price-file units); "
-    "recorded cost is not changed or mixed in.",
+    "One result per baseline; recorded and repriced cost are never mixed, and each "
+    "result states its unit in a 'Unit:' line (ADR-0036, ADR-0038).",
     "A chunk without a score is kept and counted, never treated as 0; the floor "
     "keeps at least that many unique chunks per request.",
     "The real bge-reranker-v2-m3 run (cut-first item a) was not done.",
@@ -345,37 +344,86 @@ class RerankerCut:
         for col in SCORE_COLUMNS:
             out[col] = joined[col].where(ok)
 
-        tokens = _tokens(req, self.cached_separately)
-        room = (tokens["input"] - tokens["cached"]).clip(lower=0)
-        want_dup = out["rc_dup_chars"] * self.tokens_per_char
-        want_all = (out["rc_dup_chars"] + out["rc_cut_chars"]) * self.tokens_per_char
-        dedup = np.minimum(want_dup, room)
-        both = np.minimum(want_all, room)
+        tokens = token_counts(req, self.cached_separately)
+        dup_chars = out["rc_dup_chars"]
+        dedup = lower_uncached_input(tokens, dup_chars * self.tokens_per_char)
+        both = lower_uncached_input(
+            tokens, (dup_chars + out["rc_cut_chars"]) * self.tokens_per_char
+        )
         out["rc_raw_chunk_tokens"] = out["rc_raw_chars"] * self.tokens_per_char
-        out["rc_dedup_tokens"] = dedup.where(ok, 0.0)
-        out["rc_saved_tokens"] = (both - dedup).where(ok, 0.0)
-
-        llm = req["llm_request"].fillna(False).astype(bool)
-        for col, saved in (
-            ("rc_cost_raw", 0.0),
-            ("rc_cost_dedup", out["rc_dedup_tokens"]),
-            ("rc_cost_cut", out["rc_dedup_tokens"] + out["rc_saved_tokens"]),
-        ):
-            lowered = tokens.assign(input=tokens["input"] - saved)
-            out[col] = self._todays_models(req, lowered, ctx).where(llm)
+        out["rc_dedup_tokens"] = dedup["saved"].where(ok, 0.0)
+        out["rc_saved_tokens"] = (both["saved"] - dedup["saved"]).where(ok, 0.0)
         return out
 
     @staticmethod
-    def _todays_models(
-        req: pd.DataFrame, tokens: pd.DataFrame, ctx: ReplayContext
-    ) -> pd.Series:
-        """Per-row cost at the logged model's price (S-6's ``repriced_row_costs``,
-        ``todays_models`` only); NaN for unknown tokens or an unpriced model."""
-        prices, per_tokens = _prices(ctx.price_table)
-        ref = req["bot_provider_model"].map(_price_refs(ctx.catalogue))
-        known = tokens[["input", "cached", "output"]].notna().all(axis=1)
-        priced = known & ref.isin(list(prices))
-        cost = pd.Series(np.nan, index=req.index)
-        for r, rows in ref[priced].groupby(ref[priced]):
-            cost[rows.index] = _reprice(tokens.loc[rows.index], prices[r])
-        return cost / per_tokens
+    def baseline_frames(
+        req: pd.DataFrame,
+        out: pd.DataFrame,
+        ctx: ReplayContext,
+        *,
+        baseline: str,
+        premium_model: str,
+        cheap_model: str,
+        input_rate_per_m: Mapping[str, float] | None = None,
+        cached_separately: frozenset[str] = frozenset(),
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Before and after cost blocks of one baseline for the cut's own saving
+        (S-6's tokens are taken first and never counted), for
+        ``levers.summarise_slices``. ``req`` is the frame given to ``apply``
+        (with ``levers.with_blocks``), ``out`` what it returned.
+
+        Repriced baselines (``REPRICED_KEYS``, price-file units): the logged
+        tokens, the tokens less dedup and the tokens less dedup and cut are
+        repriced with ``baselines_full.repriced_row_costs`` (tier chosen again);
+        the saving is the second minus the third. ``block_fees`` is 0 on both
+        sides only so the blocks can be summed (fees are not priced, ADR-0036).
+
+        ``as_logged`` (recorded units, ADR-0038): the recorded blocks; the saving
+        is the cut's tokens x the logged model's ``input_rate_per_m`` / 1e6, taken
+        off ``block_token_cost`` after S-6's share and capped at what is left.
+        A row with a cut but no rate has an unknown saving; a row with nothing cut
+        saves exactly 0. ``block_fees`` never changes.
+
+        ``after`` carries ``SAVING_UNKNOWN``: LLM rows with a known baseline
+        whose saving is unknown; such rows leave both sides.
+        """
+        fees, token = (block_column(b) for b in BLOCKS)
+        llm = req["llm_request"].fillna(False).astype(bool)
+        dedup, cut = out["rc_dedup_tokens"], out["rc_saved_tokens"]
+        before = req[["llm_request"]].copy()
+        after = before.copy()
+        if baseline in REPRICED_KEYS:
+            tokens = token_counts(req, cached_separately)
+
+            def cost(saved: pd.Series | float) -> pd.Series:
+                return repriced_row_costs(
+                    req,
+                    ctx,
+                    premium_model=premium_model,
+                    cached_separately=cached_separately,
+                    tokens=tokens.assign(input=tokens["input"] - saved),
+                    cheap_model=cheap_model,
+                )[baseline]
+
+            base = cost(0.0)
+            saving = cost(dedup) - cost(dedup + cut)
+            base_known = base.notna()
+            known = base_known & saving.notna()
+            before[fees] = (base * 0.0).where(known)
+        elif baseline == "as_logged":
+            if input_rate_per_m is None:
+                raise ValueError("as_logged needs input_rate_per_m (ADR-0038)")
+            rate = req["bot_provider_model"].map(input_rate_per_m).astype(float) / 1e6
+            base = req[token]
+            left = (base - dedup * rate).clip(lower=0)  # what S-6's saving leaves
+            saving = np.minimum(cut * rate, left).where(cut > 0, 0.0)
+            base_known = req[[fees, token]].notna().all(axis=1)
+            known = base_known & saving.notna()
+            before[fees] = req[fees].where(known)
+        else:
+            raise ValueError(f"unknown baseline {baseline}")
+        before[token] = base.where(known)
+        after[fees] = before[fees]
+        after[token] = (base - saving).where(known)
+        after[SAVING_UNKNOWN] = llm & base_known & ~known
+        return before, after

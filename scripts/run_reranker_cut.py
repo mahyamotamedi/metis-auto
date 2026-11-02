@@ -16,9 +16,12 @@ For each scorer: thresholds are quantiles of the unique-chunk scores of the
 none) x every threshold (and none), with the floor, on both periods; the
 headline point is chosen on the tune period by the rule in ``config.toml`` and
 reported on the report period, read once per point. Outputs (content-free):
-one ``LeverResult`` per scorer, baseline ``todays_models`` (repriced at the
-logged model; recorded cost is not changed), and the curve as
-``reports/levers/context.reranker_cut.curve.csv``. S-6 dedup runs first and its
+one ``LeverResult`` per scorer and baseline (``BASELINE_KEYS``), written as
+``context.reranker_cut.<scorer>.<baseline>.json``: ``as_logged`` at each model's
+implied input rate (recorded units), the three repriced baselines with
+``baselines_full.repriced_row_costs`` (price-file units; ADR-0038), and the
+curve as ``reports/levers/context.reranker_cut.curve.csv`` (cost at
+``todays_models``). S-6 dedup runs first and its
 tokens are reported apart, never in the saving.
 
 Traces: H-2, X5, FR-CTX-02, FR-CTX-03, ADR-0031, ADR-0032. Usage:
@@ -33,6 +36,8 @@ import math
 import platform
 import sys
 import tomllib
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -40,7 +45,12 @@ from pathlib import Path
 import pandas as pd
 import pyarrow.dataset as ds
 
-from metis_auto.analysis.baselines_full import cached_reported_separately
+from metis_auto.analysis.baselines_full import (
+    BASELINE_KEYS,
+    REPRICED_KEYS,
+    best_single_cheap_model,
+    cached_reported_separately,
+)
 from metis_auto.analysis.lever_result import LeverResult, Manifest, build_manifest
 from metis_auto.analysis.levers import (
     ReplayContext,
@@ -62,8 +72,12 @@ EXPERIMENT_DIR = ROOT / "experiments" / "context" / "exp-ctx-003-reranker-cut"
 CONFIG = EXPERIMENT_DIR / "config.toml"
 OUT_DIR = ROOT / "reports" / "levers"
 CURVE_NAME = "context.reranker_cut.curve.csv"
+RATES = ROOT / "reports" / "full_eda" / "tables" / "implied_unit_rates.csv"
+RATES_VERSION = "full-eda-implied-unit-rates"  # as S-6b's as_logged manifests
 
-BASELINE = "todays_models"
+BASELINE = "todays_models"  # the curve's cost
+COST_KEYS = ("fees", "token_cost", "total")
+SAVING_UNKNOWN = "rc_saving_unknown"  # set by RerankerCut.baseline_frames
 SCORERS = ("observed_relevancy", "lexical_overlap")
 CHUNK_COLUMNS = ["message_id", "chunk_id", "h_exact", "n_chars", "relevancy"]
 NONE = "none"
@@ -157,6 +171,13 @@ def read_queries(req: pd.DataFrame) -> dict[str, str]:
 # --- pure helpers (tested) -----------------------------------------------------------
 
 
+def implied_input_rates(table: pd.DataFrame) -> dict[str, float]:
+    """``implied_input_per_M`` by model (recorded units); a model without one is
+    left out, so its as_logged saving is unknown (ADR-0038)."""
+    rates = table.dropna(subset=["implied_input_per_M"]).set_index("model")
+    return rates["implied_input_per_M"].astype(float).to_dict()
+
+
 def attach_content(derived: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
     """Join raw ``content`` to derived rows by message and position (the derived
     table keeps the raw order, checked 2026-11-02); ``chunk_id`` must agree."""
@@ -195,33 +216,54 @@ def grid_points(top_ks, thresholds: dict[str, float]) -> list[tuple]:
     return [(k, rule, value) for k in (*top_ks, None) for rule, value in rules]
 
 
-def _cost_frames(req: pd.DataFrame, out: pd.DataFrame):
-    """Before/after repriced blocks for ``summarise_slices`` (fees 0 so blocks can
-    be summed; a row with unknown cost is unknown on both sides)."""
-    raw = out["rc_cost_raw"]
-    saving = (out["rc_cost_dedup"] - out["rc_cost_cut"]).where(raw.notna())
-    before = req[["llm_request"]].copy()
-    after = before.copy()
-    before["block_fees"] = (raw * 0.0).where(raw.notna())
-    before["block_token_cost"] = raw
-    after["block_fees"] = before["block_fees"]
-    after["block_token_cost"] = raw - saving.fillna(0.0)
-    return before, after
+@dataclass(frozen=True)
+class Pricing:
+    """What ``RerankerCut.baseline_frames`` needs besides the frames."""
+
+    ctx: ReplayContext
+    premium_model: str
+    cheap_model: str
+    cached_separately: frozenset[str] = frozenset()
+    rates: Mapping[str, float] | None = None
+    """Implied input rate per 1M tokens by model (recorded units), for as_logged."""
+
+    def frames(self, version, req: pd.DataFrame, out: pd.DataFrame, baseline: str):
+        return version.baseline_frames(
+            req,
+            out,
+            self.ctx,
+            baseline=baseline,
+            premium_model=self.premium_model,
+            cheap_model=self.cheap_model,
+            input_rate_per_m=self.rates,
+            cached_separately=self.cached_separately,
+        )
+
+
+def _row_saving(before: pd.DataFrame, after: pd.DataFrame):
+    """Rows with a known cost on both sides: (known, saving, baseline total)."""
+    cols = ["block_fees", "block_token_cost"]
+    known = before["llm_request"].astype(bool) & before[cols].notna().all(axis=1)
+    base = before.loc[known, cols].sum(axis=1)
+    return known, base - after.loc[known, cols].sum(axis=1), base
 
 
 def _ratio(num: float, den: float) -> float:
     return num / den if den else math.nan
 
 
-def point_metrics(req: pd.DataFrame, out: pd.DataFrame, *, seed: int) -> dict:
-    """Aggregates of one curve point (LLM rows with a known repriced cost)."""
+def point_metrics(
+    version, req: pd.DataFrame, out: pd.DataFrame, *, seed: int, pricing: Pricing
+) -> dict:
+    """Aggregates of one curve point; cost at ``todays_models`` (LLM rows with a
+    known repriced cost)."""
     ok = out["rc_eligible"].fillna(False).astype(bool)
     e = out[ok]
     unique_chars = float((e["rc_raw_chars"] - e["rc_dup_chars"]).sum())
-    raw = out["rc_cost_raw"]
-    known = req["llm_request"].astype(bool) & raw.notna()
-    saving = (out["rc_cost_dedup"] - out["rc_cost_cut"])[known].to_numpy(float)
-    base = raw[known].to_numpy(float)
+    known, row_saving, row_base = _row_saving(
+        *pricing.frames(version, req, out, BASELINE)
+    )
+    saving, base = row_saving.to_numpy(float), row_base.to_numpy(float)
     sessions = req.loc[known, "session_id"].astype(str).to_numpy()
     est, lo, hi = cluster_bootstrap_ratio(saving, base, sessions, seed=seed)
     return {
@@ -250,6 +292,7 @@ def curve(
     top_ks,
     floor: int,
     seed: int,
+    pricing: Pricing,
 ) -> pd.DataFrame:
     rows = []
     for top_k, rule, value in grid_points(top_ks, thresholds):
@@ -257,7 +300,7 @@ def curve(
         out = combine(req, None, v, None, ctx)
         rows.append(
             {"top_k": top_k, "threshold_rule": rule, "threshold": value, "floor": floor}
-            | point_metrics(req, out, seed=seed)
+            | point_metrics(v, req, out, seed=seed, pricing=pricing)
         )
     return pd.DataFrame(rows).astype({"top_k": object, "threshold": object})
 
@@ -293,18 +336,27 @@ def headline_result(
     out: pd.DataFrame,
     manifest: Manifest,
     *,
+    pricing: Pricing,
     extra: tuple[str, ...],
+    baseline: str = BASELINE,
 ) -> LeverResult:
-    """The scorer's ``LeverResult`` against ``todays_models`` (price-file units)."""
-    before, after = _cost_frames(req, out)
+    """The scorer's ``LeverResult`` against one baseline. ``as_logged`` is in
+    recorded units with ``fees``; a repriced baseline is in price-file units and
+    its ``baseline_cost`` has no ``fees`` key (ADR-0036). ``saving.fees`` is 0."""
+    before, after = pricing.frames(version, req, out, baseline)
     slices = summarise_slices(before, after)
     llm = req["llm_request"].astype(bool)
-    known = llm & out["rc_cost_raw"].notna()
+    known, row_saving, row_base = _row_saving(before, after)
     ok = out["rc_eligible"].fillna(False).astype(bool)
+    unknown = after[SAVING_UNKNOWN]
+    drop = ("n_cache_hits", "cache_hit_rate")
+    if baseline in REPRICED_KEYS:
+        drop += ("baseline:fees",)
     for name, rows in (("all", pd.Series(True, index=req.index)), ("llm_only", llm)):
         s = slices[name]
-        for key in ("baseline:fees", "saving:fees", "n_cache_hits", "cache_hit_rate"):
+        for key in drop:
             s.pop(key, None)
+        s["n_saving_unknown"] = Decimal(int((rows & unknown).sum()))
         e = out[rows & ok]  # tokens need no price: every eligible row
         s["n_eligible"] = Decimal(int((rows & ok).sum()))
         s["n_eligible_cost_known"] = Decimal(int((rows & ok & known).sum()))
@@ -313,27 +365,91 @@ def headline_result(
         s["saved_input_tokens"] = _dec(float(e["rc_saved_tokens"].sum()))
         s["unscored_chunks"] = Decimal(int(out.loc[rows & ok, "rc_n_unscored"].sum()))
     top = slices["llm_only"]
-    saving = (out["rc_cost_dedup"] - out["rc_cost_cut"])[known].to_numpy(float)
-    base = out.loc[known, "rc_cost_raw"].to_numpy(float)
     sessions = req.loc[known, "session_id"].astype(str).to_numpy()
-    _, lo, hi = cluster_bootstrap_ratio(saving, base, sessions, seed=manifest.seed)
+    _, lo, hi = cluster_bootstrap_ratio(
+        row_saving.to_numpy(float),
+        row_base.to_numpy(float),
+        sessions,
+        seed=manifest.seed,
+    )
     return LeverResult(
         lever_id=version.lever_id,
         step="context",
         version=version.version,
         n_requests=len(req),
         n_eligible=int(ok.sum()),
-        baseline=BASELINE,
-        baseline_cost={b: top[f"baseline:{b}"] for b in ("token_cost", "total")},
-        saving={b: top[f"saving:{b}"] for b in ("token_cost", "total")},
+        baseline=baseline,
+        baseline_cost={
+            b: top[f"baseline:{b}"] for b in COST_KEYS if f"baseline:{b}" in top
+        },
+        saving={b: top[f"saving:{b}"] for b in COST_KEYS},
         ci_low=None if math.isnan(lo) else lo,
         ci_high=None if math.isnan(hi) else hi,
         slices=slices,
         evidence_class=version.evidence_class,
         correctness_state="unmeasured",
-        assumptions=tuple(version.assumptions) + extra,
+        assumptions=tuple(version.assumptions)
+        + baseline_assumptions(baseline, pricing)
+        + extra,
         manifest=manifest,
     )
+
+
+def baseline_assumptions(baseline: str, pricing: Pricing) -> tuple[str, ...]:
+    """The ``Unit:`` line of one baseline and how the cut is priced in it."""
+    if baseline == "as_logged":
+        return (
+            "Unit: recorded units (as_logged). Fees never change (ADR-0038).",
+            "as_logged saving = the cut's tokens x the logged model's "
+            "implied_input_per_M / 1e6 (reports/full_eda/tables/implied_unit_rates.csv)"
+            ", off the recorded token block after S-6's share.",
+            "A model without an implied rate makes the saving unknown: the row leaves "
+            "both sides (n_saving_unknown), never zero.",
+        )
+    priced_at = {
+        "premium_gpt_5_5": f"{pricing.premium_model}'s price: an estimate only, the "
+        "model is never called (ADR-0026).",
+        "todays_models": "its logged model's price. Only sprint-catalogue models are "
+        "priced (n_eligible_cost_known); gemini-2.5-flash is not, so the cost share "
+        "is of a small, unrepresentative subset.",
+        "best_single_cheap": f"{pricing.cheap_model}, the cheapest callable model "
+        "over the report period (cost only; capability and quality not checked).",
+    }[baseline]
+    return (
+        f"Unit: price-file units ({baseline}). Fees are not priced, so baseline_cost "
+        "has no fees key (ADR-0036).",
+        "Logged tokens less the removed tokens are repriced with the price table's "
+        f"tiers (tier chosen again); every request at {priced_at}",
+    )
+
+
+def write_results(
+    version,
+    req: pd.DataFrame,
+    out: pd.DataFrame,
+    manifest_for: Callable[[str], Manifest],
+    *,
+    pricing: Pricing,
+    extra: tuple[str, ...],
+    out_dir: Path,
+) -> list[Path]:
+    """One ``LeverResult`` per baseline, written as
+    ``<lever_id>.<baseline>.json`` (the file naming of S-6b's results)."""
+    paths = []
+    for baseline in BASELINE_KEYS:
+        result = headline_result(
+            version,
+            req,
+            out,
+            manifest_for(baseline),
+            pricing=pricing,
+            extra=extra,
+            baseline=baseline,
+        )
+        path = out_dir / f"{result.lever_id}.{baseline}.json"
+        path.write_text(result.to_json(), encoding="utf-8")
+        paths.append(path)
+    return paths
 
 
 def run_assumptions(
@@ -344,17 +460,13 @@ def run_assumptions(
         f"Headline chosen on the tune period (Mar-Jul 2026): {rule}; most tokens "
         f"saved with score mass kept >= {min_mass} (tune {mass:.3f}); rule met: "
         f"{passed}. Reported on Aug-Oct 2026.",
-        "Baseline todays_models: logged tokens repriced at the logged model, tier "
-        "chosen again; slices all and llm_only; workflow rows have no cost.",
+        "Slices all and llm_only; workflow rows have no cost. Tokens cover every "
+        "eligible request; cost only those with a known cost (n_eligible_cost_known).",
         "Cached tokens: the saving uses characters, not a_bill_inputTokens; the "
-        "baseline adds cached tokens back for the five models (Review Focus 3).",
+        "repriced baselines add cached tokens back for the five models (Review "
+        "Focus 3).",
         "Removed tokens are priced as uncached input (chunks assumed after the "
         "cached prefix); the saving is capped at input minus cached tokens.",
-        "No as_logged (recorded) result: recorded input cost per model is not "
-        "derived here (S-6 uses implied rates; open question).",
-        "Cost covers only requests whose logged model is in the sprint catalogue "
-        "(n_eligible_cost_known); gemini-2.5-flash is not, so the cost share is of a "
-        "small, unrepresentative subset. Tokens cover every eligible request.",
     )
     if sample is not None:
         notes += (
@@ -377,6 +489,11 @@ def _rule_text(point: pd.Series) -> str:
     thr = point["threshold_rule"]
     value = "" if thr == NONE else f" ({float(point['threshold']):.4f})"
     return f"top_k {k}, threshold {thr}{value}, floor {int(point['floor'])}"
+
+
+def _shown(path: Path) -> Path:
+    """Path relative to the repository when inside it (``--out`` may be outside)."""
+    return path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -406,6 +523,16 @@ def main(argv: list[str] | None = None) -> int:
             f"{p}: {len(f):,} requests, {int(f['llm_request'].sum()):,} LLM, "
             f"{int(rag_candidates(f).sum()):,} RAG candidates"
         )
+    premium = sprint["baselines"]["premium_model"]
+    cheap = best_single_cheap_model(
+        periods["report"], ctx, cached_separately=cached_sep
+    )
+    rates = implied_input_rates(pd.read_csv(RATES))
+    pricing = Pricing(ctx, premium, cheap, cached_sep, rates)
+    print(
+        f"premium model {premium}; best single cheap (report period) {cheap}; "
+        f"implied input rates for {len(rates)} models"
+    )
     out_dir: Path = args.out
     out_dir.mkdir(parents=True, exist_ok=True)
     curves = []
@@ -460,6 +587,7 @@ def main(argv: list[str] | None = None) -> int:
                 top_ks=tuple(cfg["top_k_grid"]),
                 floor=int(cfg["floor"]),
                 seed=ctx.seed,
+                pricing=pricing,
             )
             c.insert(0, "period", p)
             c.insert(0, "scorer", scorer_name)
@@ -499,17 +627,29 @@ def main(argv: list[str] | None = None) -> int:
             "sample": cfg["lexical_sample"]
             if scorer_name == "lexical_overlap"
             else None,
-            "baseline": BASELINE,
             "price_table": sprint["baselines"]["price_table"],
             "catalogue": sprint["baselines"]["catalogue"],
+            "premium_model": premium,
+            "best_single_cheap": cheap,
+            "implied_rates": str(RATES.relative_to(ROOT).as_posix()),
         }
-        manifest = build_manifest(
-            config,
-            ctx,
-            code_commit=commit,
-            python_version=platform.python_version(),
-            created_at=datetime.now(UTC),
-        )
+        created = datetime.now(UTC)
+
+        def manifest_for(baseline: str, config=config, created=created) -> Manifest:
+            # as_logged is priced with the implied rates, not the price table
+            run_ctx = (
+                replace(ctx, price_table={"version": RATES_VERSION})
+                if baseline == "as_logged"
+                else ctx
+            )
+            return build_manifest(
+                config | {"baseline": baseline},
+                run_ctx,
+                code_commit=commit,
+                python_version=platform.python_version(),
+                created_at=created,
+            )
+
         extra = run_assumptions(
             rule,
             mass=float(pick["score_mass_kept"]),
@@ -517,9 +657,15 @@ def main(argv: list[str] | None = None) -> int:
             passed=passed,
             sample=len(report) if scorer_name == "lexical_overlap" else None,
         )
-        result = headline_result(point, report, after, manifest, extra=extra + dirty)
-        path = out_dir / f"{point.lever_id}__{BASELINE}.json"
-        path.write_text(result.to_json(), encoding="utf-8")
+        paths = write_results(
+            point,
+            report,
+            after,
+            manifest_for,
+            pricing=pricing,
+            extra=extra + dirty,
+            out_dir=out_dir,
+        )
         m = grids["report"][grids["report"]["headline"]].iloc[0]
         print(
             f"report headline: eligible {int(m['eligible_requests']):,}; raw chunk "
@@ -529,7 +675,18 @@ def main(argv: list[str] | None = None) -> int:
             f"{m['chunk_share_removed']:.4f}; cost share saved "
             f"{m['cost_share_saved']:.4f} ({m['ci_low']:.4f} to {m['ci_high']:.4f})"
         )
-        print(f"wrote {path.relative_to(ROOT)}")
+        for path in paths:
+            r = LeverResult.from_json(path.read_text(encoding="utf-8"))
+            llm = r.slices["llm_only"]
+            print(
+                f"  {r.baseline:18s} eligible cost known "
+                f"{int(llm['n_eligible_cost_known']):,}/{int(llm['n_eligible']):,}; "
+                f"saving unknown {int(llm['n_saving_unknown']):,}; baseline total "
+                f"{r.baseline_cost['total']}; saving token_cost "
+                f"{r.saving['token_cost']}; share {llm.get('saving_share')}; CI "
+                f"{r.ci_low} to {r.ci_high}"
+            )
+            print(f"wrote {_shown(path)}")
 
     table = pd.concat(curves, ignore_index=True)
     curve_path = out_dir / CURVE_NAME
@@ -555,7 +712,7 @@ def main(argv: list[str] | None = None) -> int:
     ]
     print("\ncurve, REPORT period:")
     print(show.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
-    print(f"wrote {curve_path.relative_to(ROOT)}")
+    print(f"wrote {_shown(curve_path)}")
     return 0
 
 
