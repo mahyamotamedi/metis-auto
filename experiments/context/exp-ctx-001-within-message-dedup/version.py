@@ -20,7 +20,7 @@ message's figures missing.
 ``ai_message_id``; a request with no chunk rows has 0. Without
 ``tokens_per_char`` it changes no cost.
 
-**Saving (S-6b; ADR-XXXX (context-token-saving-conversion)).** With
+**Saving (S-6b; ADR-0038).** With
 ``tokens_per_char`` (the owner's choice: ledger ``recon.t0rag.coef_rag``),
 duplicate characters become wanted tokens, taken from **uncached** input only
 (``baselines_full.lower_uncached_input``), once per request however many calls

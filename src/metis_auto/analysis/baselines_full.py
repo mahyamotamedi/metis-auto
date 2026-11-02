@@ -39,7 +39,7 @@ differ): a *simulation*, labelled so by the caller.
 Public row-level helpers for lever versions (S-6b): ``token_counts``,
 ``lower_uncached_input`` (a context saving comes out of uncached input only)
 and ``repriced_row_costs`` (per-row cost of each repriced baseline, tier chosen
-again by the lowered input). ADR-XXXX (context-token-saving-conversion).
+again by the lowered input). ADR-0038.
 
 Decision record: ADR-0036,
 ``docs/adr/0036-replay-scope-split-and-baselines.md``.
@@ -149,7 +149,7 @@ def lower_uncached_input(tokens: pd.DataFrame, wanted: pd.Series) -> pd.DataFram
 
     The saving is capped at ``input - cached``; ``cached`` and ``output`` are
     unchanged. Adds ``saved``, the tokens actually removed (NaN where the tokens
-    or ``wanted`` are unknown). Rule of ADR-XXXX (context-token-saving-conversion).
+    or ``wanted`` are unknown). Rule of ADR-0038.
     """
     out = tokens.copy()
     room = (tokens["input"] - tokens["cached"]).clip(lower=0)

@@ -8,7 +8,7 @@ priced at each model's ``implied_input_per_M`` from
 ``reports/full_eda/tables/implied_unit_rates.csv``) and writes one
 ``LeverResult`` per baseline to ``reports/levers/`` plus an aggregate table to
 ``reports/context/exp-ctx-001/saving.csv``. No IDs, hashes or text are written
-or printed. Rule: ADR-XXXX (context-token-saving-conversion).
+or printed. Rule: ADR-0038.
 
     .venv/bin/python scripts/context_dedup_levers.py
 """

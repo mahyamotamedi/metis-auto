@@ -1,4 +1,4 @@
-# ADR-XXXX: A context saving is characters x a ledger coefficient, taken from uncached input, priced per baseline
+# ADR-0038: A context saving is characters x a ledger coefficient, taken from uncached input, priced per baseline
 
 - Status: **decided** by the project owner, 2026-11-02 (Pipeline C, sprint task S-6b). The coefficient and the implied rates are **provisional** (hypothetical reconstruction).
 - Date: 2026-11-02
