@@ -1,0 +1,71 @@
+{
+  "assumptions": [
+    "Tokens = duplicate characters x 0.3384 (claims ledger recon.t0rag.coef_rag, OLS over turn-0 single-call billed RAG requests): a hypothetical reconstruction, not a tokenizer count.",
+    "Saved tokens come out of uncached input only (chunks follow the target message, A-84, outside the cacheable prefix), capped at the row's uncached input.",
+    "A multi-call request saves once, not once per call.",
+    "Repriced: logged tokens less saved tokens at the price table's tiers; a lower input can move a request to a cheaper tier. Fees are not priced in price-file units (ADR-0036), so baseline_cost has no fees key.",
+    "Fees unchanged: a context version never changes fees.",
+    "Whether Metis actually sent the duplicate copies is unknown (U-04); the quality of dropping a copy is unmeasured (FR-CTX-03).",
+    "Report split only (replay_scope.split_by_session); workflow rows are in no numerator."
+  ],
+  "baseline": "premium_gpt_5_5",
+  "baseline_cost": {
+    "token_cost": "3737.892572150",
+    "total": "3737.892572150"
+  },
+  "ci_high": null,
+  "ci_low": null,
+  "correctness_state": "unmeasured",
+  "evidence_class": "hypothetical reconstruction",
+  "lever_id": "ctx.within_message_dedup.premium_gpt_5_5",
+  "manifest": {
+    "code_commit": "unknown",
+    "config_hash": "1fef35dee342ce70180bc7c36fb0c32ff5b2819b7f6eb3cf42a6090ec3ca77e1",
+    "created_at": "2026-11-02T13:17:29Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "python_version": "3.13.16",
+    "seed": 20261102
+  },
+  "n_eligible": 14519,
+  "n_requests": 73063,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
+  "saving": {
+    "fees": "0.000000000",
+    "token_cost": "305.557843867",
+    "total": "305.557843867"
+  },
+  "slices": {
+    "all": {
+      "baseline:token_cost": "3737.892572150",
+      "baseline:total": "3737.892572150",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "20744",
+      "n_requests": "73063",
+      "n_saving_unknown": "0",
+      "saved_input_tokens": "55135530.695431501",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "305.557843867",
+      "saving:total": "305.557843867",
+      "saving_share": "0.081746021"
+    },
+    "llm_only": {
+      "baseline:token_cost": "3737.892572150",
+      "baseline:total": "3737.892572150",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "20744",
+      "n_requests": "20750",
+      "n_saving_unknown": "0",
+      "saved_input_tokens": "55135530.695431501",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "305.557843867",
+      "saving:total": "305.557843867",
+      "saving_share": "0.081746021"
+    }
+  },
+  "step": "context",
+  "version": "ctx.within_message_dedup"
+}
