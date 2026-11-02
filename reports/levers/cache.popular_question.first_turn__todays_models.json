@@ -17,7 +17,9 @@
     "Still a candidate saving: answer error <= 1% needs about 300 reviewed hits with no error (decision rules); 30 were reviewed.",
     "4 of 30 reviewed hits were judged wrong (13%); half the sample is top keys, so this is not a random error rate.",
     "The review applies to this untimed variant (stored answer = window mode); the 24 h TTL variant serves the latest answer and stays unmeasured.",
-    "Repriced baseline in price-file units, token cost only (fees are not on the price list); no interval computed."
+    "Repriced baseline in price-file units, token cost only (fees are not on the price list); no interval computed.",
+    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 42.1441 ms, p95 51.7891 ms, max 94.7981 ms; 2026-11-02, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
+    "Overhead caveat: on a one-row frame the nightly window is empty, so this times eligibility, keying and the guard path, not the nightly build (batch work) or a lookup in a built set."
   ],
   "baseline": "todays_models",
   "baseline_cost": {
@@ -40,8 +42,8 @@
   },
   "n_eligible": 2707,
   "n_requests": 77774,
-  "overhead_ms_p50": null,
-  "overhead_ms_p95": null,
+  "overhead_ms_p50": 42.1441,
+  "overhead_ms_p95": 51.7891,
   "saving": {
     "token_cost": "0.004006235",
     "total": "0.004006235"
