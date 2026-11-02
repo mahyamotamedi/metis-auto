@@ -1,0 +1,30 @@
+# Pipeline B: interim contracts, sprint Day 3
+
+Status: **interim**, 2026-11-02. Continues [`pipeline_b_interim_contracts.md`](pipeline_b_interim_contracts.md) (Day 1 and Day 2), kept as a separate file so this branch does not edit the Day 2 text that `main` holds as a squash (#19): an appended section there would conflict on merge. Fold it in once `main` is merged into this branch.
+
+## Day 3 (2026-11-02): R-B3, T-1, I-1
+
+**Shared files at Day 3** (every remote ref after `git fetch`, 2026-11-02): `analysis/routing_base.py` (R-0, Parham), the `services` extra, lock and pytest marker (T-0), a Redis service in `compose.yaml` (T-4), `scripts/measure_lever_overhead.py` (L-1, Pipeline A), `experiments/pipelines/sprint-final.toml` and `docs/experiments/sprint_decisions.md` exist on **no ref**. R-A1 (`exp-cache-003`) is on `main` since `c17f184`. `baselines_full` row-level helpers (`token_counts`, `lower_uncached_input`, `repriced_row_costs`) exist only on `origin/context-within-message-dedup`.
+
+### Stand-ins (B's experiment folders only)
+
+| Stand-in | Shape | Replaced by | Switch-over |
+|---|---|---|---|
+| `experiments/routing/exp-route-011-knn-router/eligibility_interim.py` (`interim_eligible_models`, `LABEL`) | `(row, catalogue, prices, rules) -> tuple[str, ...]`, the plan's R-0 shape; `row` carries `input_tokens` (effective), `output_tokens`, `u_att_n`, `bot_n_functions`, `bot_provider_model`; `rules` carries `candidates` and `retiring` | `analysis.routing_base.eligible_models` (R-0) | 1. Confirm the row keys and the `rules` shape with Parham. 2. Inject the real function in `scripts/run_pipeline_b_day3.py` (`_factory`). 3. Drop `LABEL` from the assumptions, delete the file and its `module_reference.md` row. 4. Re-run `rb3`. |
+| `version.candidate_costs` (per-row cost of a model, the public `baselines_full` pricing rule; sums tested equal to `baseline_costs`) | `(req, models, ctx, cached_separately) -> DataFrame` | `baselines_full.repriced_row_costs` / `token_counts` (S-6b, Pipeline C), once on `main` | Replace the body with the shared helper; keep the test that sums match `baseline_costs`. |
+
+No stand-in is under `src/` or in a teammate's file. Every R-B3 result says "interim eligibility, not the shared routing base" and must stay out of any final comparison until step 4.
+
+### T-1: `[cache] store` and the `services` patch (not applied; `pyproject.toml` and the locks are Parham's)
+
+- **Setting added** (shared files, smallest change): `settings/model.py` `CacheStoreSettings` and `Settings.cache` (`store = "memory" | "redis"`, `redis_host`, `redis_port`, `redis_db`, `redis_namespace`), `"cache"` added to `HASH_EXCLUDED_SECTIONS`; `wiring/from_settings.cache_store`; `wiring/chat.py` builds its store with it once per session. Default `"memory"`: same store, same config hash (tested). `config/defaults.toml` is not edited: like `[events] sink`, the default lives in the model. The password comes only from `METIS_REDIS_PASSWORD` in the process environment.
+- **Patch for T-0:** add `redis` (version at lock time under `constraints-min-age.txt`) to the `services` extra and `requirements-services.lock`; register the marker `services: real-server tests (Redis, Postgres, MLflow), opt-in`; put `pytestmark = pytest.mark.services` in `tests/integration/test_redis_store_live.py` (today it skips unless `redis` imports and the server answers); `test_redis_imported_only_in_redis_store` holds already (the only `import redis` is inside `redis_store.redis_client`).
+- **Patch for T-4:** a `redis` service in `compose.yaml`, port bound to `127.0.0.1:6379`, with a health check (`redis-cli ping`), in the `services` profile; the demo then sets `[cache] store = "redis"` in `config/local.toml`.
+
+### I-1 (B-only dry run): findings for the `combine` owner (Pipeline A)
+
+- **Q-B20 (routing after context).** `combine` hands routing the frame context returned. R-B2 lowers `block_token_cost` and adds `ctx_tokens_saved` / `input_tokens_after`, but leaves `a_bill_inputTokens` as logged, so a routing version that reprices from `a_bill_inputTokens` prices the pre-context tokens: the context saving vanishes from the combined repriced figure (`combined_today.*` in the dry run). The dry run's stated assumption is `PostContextRouting` (input lowered by R-B2's net tokens, R-B2's cached-token floor). Please decide the shared column a context version lowers (P-B3) so routing reads it.
+- **Q-B21 (one definition of a repriced saving).** R-B2 (Day 2) reports, per repriced baseline, the baseline re-priced before minus after (the effect priced at the baseline's model). R-B3 reports baseline cost minus the pipeline's routed cost (the prompt's `todays_models` method), which includes the baseline's own difference from today's models. Both are valid alone, but a waterfall that adds them double counts that difference. The dry run uses one definition (baseline minus pipeline cost) and checks the sum rule on the increment over today's models. Please fix one definition for I-2.
+- **Q-B22 (two cache versions).** `combine` takes one cache version. R-A1 (answer cache: `served_from_cache = True`, known blocks zeroed, `pq_*` columns; `exp-cache-003` on `main`) and R-B1 (retrieval cache: `served_from_cache` stays false, only `block_fees` lowered, `retrieval_*` columns) target different blocks and their columns do not collide, so the representations do not conflict. Running both needs either two cache slots or a composite cache version, applied answer cache first (a served row then has no lookup to skip).
+- **No `LeverResult` for a combined pipeline:** `LeverResult.step` is one of cache, context, routing, so the dry run writes a content-free summary instead (`reports/pipelines/b-only-dry-run/summary.json`). I-2's `final.json` needs a shape for it.
+- **Q-B23 (`compare` and interim results).** `compare` ranks within a step and baseline by evidence class; nothing marks R-B3's interim eligibility. Until R-0 lands, R-B3 must not be ranked against R-A3 / R-C3 in a final comparison. Add an `interim` flag, or the team leaves R-B3 out.
