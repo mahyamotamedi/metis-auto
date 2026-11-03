@@ -28,11 +28,11 @@ Both sit behind one port, `ports.BaseRouter`. Decision record: [ADR-0047](../adr
 | Price (Metis) | input **0.0462** USD and output **0.0000** USD per 1M tokens. The output price of zero is confirmed by the owner from the Metis pricing page. The page's own example reports non-zero `output_tokens` (65), which therefore cost nothing | Metis pricing page, family `typesafe`, model `jev-latest`, checked by the owner 2026-11-02 | recorded in `config/reference/prices-metis-router-2026-11-02.toml` (`metis-jev-latest`) |
 | Price (TypeSafe direct) | 0.042 USD per 1M input tokens, output free | Zuplo gateway catalogue, 2026-11-02 | **never used** (owner decision) |
 | Context window, output limit | Not stated | — | *unverified* |
-| Persian support | Not stated. The router's states and questions are Persian or English | — | *unverified*; to be measured by the shadow evaluation once Jev may see dataset text (it may not yet, Q-55) |
+| Persian support | Not stated. The router's states and questions are Persian or English | — | *unverified* on real traffic. **First signal (2026-11-03):** on 100 SYNTHETIC requests with owner labels, Jev's tier accuracy was 69% on Persian, 87% on English and 73% on mixed text, ahead of the rules and THX-01 in each ([exp-route-013, synthetic check](../../experiments/routing/exp-route-013-decision-router/README.md#synthetic-decision-quality-check-jev-synth-v1-2026-11-03)). The shadow evaluation on the dev slice waits for Q-55 |
 | Tokenizer | Not published | — | *unverified*. The router's pre-call estimate is an upper bound (questions' characters / 2), not a count |
 | Thinking tokens billed | Jev generates no text; `output_tokens` is priced at 0.0000 | Metis pricing page | documented |
 | Rate limits, error format | Not stated | Metis TypeSafe page | *unverified*. `429` maps to `rate_limited`; other statuses map by code |
-| Latency | No source | — | *unverified*. It is not needed inline: Jev is shadow and labelling only (owner, A-89) |
+| Latency | No source | — | Measured from the owner's network: 3.5 s for one call (R6); p50 0.97 s and p90 1.1 s over 100 calls (synthetic check, 2026-11-03). It is not needed inline: Jev is shadow and labelling only (owner, A-89) |
 | Licence of data sent | Dataset text may **not** go to TypeSafe until Metis confirms it in writing. Mode 1 uses SYNTHETIC or the owner's own text only (`router.real_data_approved` stays false) | owner, 2026-11-02 (Q-53, Q-55) | decided |
 
 ## Configuration (J-2)

@@ -160,7 +160,7 @@ Jev is a System-One decision model. It is **not** a chat model: it answers routi
 
 `plan` prints each call's upper-bound cost and the total. It makes no call and needs no key.
 
-To run the check (one SYNTHETIC state each to Jev, gpt-4.1-nano, gpt-4o-mini, mimo-v2.5, plus a `json_schema` probe; under 0.05 USD):
+To run the check (one SYNTHETIC state each to Jev, gpt-4o-mini and mimo-v2.5, plus a `json_schema` probe on gpt-4o-mini; under 0.05 USD; gpt-4.1-nano is no longer called, TODO-17):
 
 ```powershell
 $env:METIS__LIVE__ENABLED = "true"; $env:METIS__BUDGET__RUN_CAP = "0.05"
@@ -198,6 +198,14 @@ No labels exist yet, so agreement is not accuracy.
 ```powershell
 .venv\Scripts\python scripts\evaluate_router_slice.py --offline --out runs\finish_router_2\shadow_offline.json
 ``` Details: `experiments\routing\exp-route-013-decision-router\README.md`.
+
+**Decision quality on SYNTHETIC requests (jev-synth-v1).** Rules, THX-01 and Jev on 100 SYNTHETIC requests with owner tier labels. It prints the plan first, runs Jev live with a 0.02 USD run cap (about 0.003 USD) and switches live off afterwards; about 15–20 minutes:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File experiments\routing\exp-route-013-decision-router\synthetic_v1\run.ps1
+```
+
+Report: `reports\routing\exp-route-013\synthetic_v1\report.md`; results and limits in the experiment README.
 
 ## 12. Everything native in one go
 
