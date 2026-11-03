@@ -45,8 +45,11 @@ def make_loader(tmp_path, *, live_enabled=False, key=None, run_cap=None):
     return load
 
 
-def page(tmp_path, *, loader=None, client_factory=None) -> AppTest:
+def page(tmp_path, *, loader=None, client_factory=None, lang="en") -> AppTest:
+    """The chat page in English (``?lang=en``): the default is Persian since
+    Stage 2 (UI-V06); the assertions below read the English strings."""
     at = AppTest.from_file(PAGE, default_timeout=60)
+    at.query_params["lang"] = lang
     at.session_state["_test_settings_loader"] = loader or make_loader(tmp_path)
     at.session_state["_test_client_factory"] = client_factory or (
         lambda _l, _r: FakeModelClient()
@@ -140,6 +143,7 @@ def test_a_failed_toggle_is_reported_and_reverted(tmp_path):
         raise ValueError("compression unavailable: [SYNTHETIC] test")
 
     at = AppTest.from_file(PAGE, default_timeout=60)
+    at.query_params["lang"] = "en"
     at.session_state["_test_settings_loader"] = make_loader(tmp_path)
     at.session_state["_test_client_factory"] = lambda _l, _r: FakeModelClient()
     at.session_state["_test_compressor_factory"] = broken
@@ -284,26 +288,30 @@ def _page_text(at: AppTest) -> str:
         for e in getattr(at, kind)
     ]
     parts += [f"{m.label} {m.value}" for m in at.metric]
+    # st.html fragments (empty states, header), not the style sheet (Stage 2)
+    parts += [
+        e.proto.body for e in at.get("html") if not e.proto.body.startswith("<style>")
+    ]
     return " ".join(parts)
 
 
 def test_results_page_renders_in_fake_mode(tmp_path):
     at = results_page(tmp_path, _synthetic_levers(tmp_path / "levers"))
     assert not at.exception
-    at.segmented_control(key="res_lang").set_value("en").run()
+    at.segmented_control(key="ui_lang").set_value("en").run()
     assert not at.exception
     assert at.title[0].value == "Results"
     assert any(m.label == "Saving" for m in at.metric)
     at.selectbox(key="res_baseline").set_value("todays_models").run()
     assert not at.exception
-    at.segmented_control(key="res_lang").set_value("fa").run()
+    at.segmented_control(key="ui_lang").set_value("fa").run()
     assert not at.exception and at.title[0].value != "Results"
 
 
 def test_results_page_empty_state(tmp_path):
     at = results_page(tmp_path, tmp_path / "no-results")
     assert not at.exception
-    at.segmented_control(key="res_lang").set_value("en").run()
+    at.segmented_control(key="ui_lang").set_value("en").run()
     assert "No lever results yet" in _page_text(at)
     assert not at.metric
 
@@ -315,10 +323,130 @@ def test_results_page_on_the_committed_results_shows_no_ids(tmp_path):
     at = results_page(tmp_path, REAL_LEVERS)
     assert not at.exception
     for lang in ("en", "fa"):
-        at.segmented_control(key="res_lang").set_value(lang).run()
+        at.segmented_control(key="ui_lang").set_value(lang).run()
         for baseline in ("as_logged", "todays_models", "premium_gpt_5_5"):
             at.selectbox(key="res_baseline").set_value(baseline).run()
             assert not at.exception, (lang, baseline)
             text = _page_text(at)
             assert not re.search(r"\b[0-9a-f]{16,}\b", text)
             assert not re.search(r"\b(bot|tenant|user)_(rank|id)\b", text)
+
+
+# --- Design system (UI spec Stage 2) ---------------------------------------------
+
+LRI, PDI = "\u2066", "\u2069"
+RTL_LAYOUT = '[data-testid="stAppViewContainer"] { direction: rtl; }'
+
+
+def _html(at: AppTest) -> list[str]:
+    """``st.html`` bodies other than the style sheet (header, states)."""
+    return [
+        e.proto.body for e in at.get("html") if not e.proto.body.startswith("<style>")
+    ]
+
+
+def _css(at: AppTest) -> str:
+    """The theme style sheet. A style-only ``st.html`` goes to Streamlit's event
+    container, outside the main tree, so AppTest cannot see its position; the
+    page emits it before anything else (checked in the browser)."""
+    sheets = [
+        e.proto.body for e in at.get("html") if e.proto.body.startswith("<style>")
+    ]
+    assert len(sheets) == 1
+    return sheets[0]
+
+
+def _visible_text(at: AppTest) -> str:
+    return _page_text(at) + " " + " ".join(_html(at))
+
+
+def _app(tmp_path, *, theme: str, lang: str, levers: Path | None = None) -> AppTest:
+    at = AppTest.from_file(PAGE, default_timeout=60)
+    at.query_params["theme"] = theme
+    at.query_params["lang"] = lang
+    at.session_state["_test_settings_loader"] = make_loader(tmp_path)
+    at.session_state["_test_client_factory"] = lambda _l, _r: FakeModelClient()
+    at.session_state["_test_levers_dir"] = str(
+        levers or _synthetic_levers(tmp_path / "levers")
+    )
+    return at.run()
+
+
+@pytest.mark.parametrize("theme", ["dark", "light"])
+@pytest.mark.parametrize("lang", ["fa", "en"])
+def test_both_pages_render_in_every_theme_and_language(tmp_path, theme, lang):
+    at = _app(tmp_path, theme=theme, lang=lang)
+    assert not at.exception
+    assert at.session_state["ui_theme"] == theme
+    assert at.session_state["ui_lang"] == lang
+    css = _css(at)  # the theme CSS (UI-T04)
+    assert "--bg:" in css
+    assert (RTL_LAYOUT in css) == (lang == "fa")
+    at = send(at, "سلام")
+    assert not at.exception
+    at = at.switch_page(RESULTS_PAGE).run()
+    assert not at.exception
+    assert "--bg:" in _css(at)
+    assert at.title[0].value == ("Results" if lang == "en" else "نتایج")
+
+
+def test_query_parameters_restore_theme_and_language(tmp_path):
+    at = _app(tmp_path, theme="light", lang="en")
+    assert at.toggle(key="ui_dark").value is False
+    assert at.segmented_control(key="ui_lang").value == "en"
+    assert at.query_params["theme"] == "light" and at.query_params["lang"] == "en"
+    at.toggle(key="ui_dark").set_value(True).run()
+    assert at.session_state["ui_theme"] == "dark"
+    assert at.query_params["theme"] == "dark"  # a reload keeps the choice
+    at.segmented_control(key="ui_lang").set_value("fa").run()
+    assert at.query_params["lang"] == "fa"
+    assert RTL_LAYOUT in _css(at)
+
+
+def test_default_is_dark_and_persian(tmp_path):
+    at = AppTest.from_file(PAGE, default_timeout=60)
+    at.session_state["_test_settings_loader"] = make_loader(tmp_path)
+    at.session_state["_test_client_factory"] = lambda _l, _r: FakeModelClient()
+    at.run()
+    assert not at.exception
+    assert at.session_state["ui_theme"] == "dark"
+    assert at.session_state["ui_lang"] == "fa"
+    assert at.toggle(key="ui_dark").value is True
+
+
+def test_numbers_and_model_ids_are_ltr_isolated(tmp_path):
+    """UI-V07: money, percentages, counts and model ids never reorder in RTL."""
+    at = _app(tmp_path, theme="dark", lang="fa")
+    at = send(at, "How do I export my notes to PDF?")
+    assert not at.exception
+    report = at.session_state["messages"][-1]["report"]
+    values = [m.value for m in at.metric]
+    assert values and all(v.startswith(LRI) and v.endswith(PDI) for v in values)
+    badge = _texts(at)
+    assert f"{LRI}{report.model_id}{PDI}" in badge
+    assert 'class="mx-brand-sub mx-ltr"' in " ".join(_html(at))
+    at = at.switch_page(RESULTS_PAGE).run()
+    values = [m.value for m in at.metric]
+    assert values and all(v.startswith(LRI) and v.endswith(PDI) for v in values)
+
+
+def test_header_has_brand_mode_chip_budget_and_no_login(tmp_path):
+    at = _app(tmp_path, theme="dark", lang="fa")
+    html = " ".join(_html(at))
+    assert "متیس" in html and "Metis-Auto prototype" in html
+    assert "حالت آزمایشی" in html  # fake mode instead of a balance
+    text = html.lower()
+    for absent in ("login", "sign up", "ورود", "avatar", "+</"):
+        assert absent not in text, absent
+    links = at.get("page_link")
+    assert len(links) == 2
+
+
+def test_streamlit_chrome_is_hidden_and_colours_come_from_tokens(tmp_path):
+    import re
+
+    at = _app(tmp_path, theme="light", lang="en")
+    css = _css(at)
+    assert '[data-testid="stToolbar"]' in css and "display: none" in css
+    body = css.split("}", 1)[1]
+    assert not re.search(r"#[0-9a-fA-F]{6}\b", body.replace("#vg-tooltip-element", ""))

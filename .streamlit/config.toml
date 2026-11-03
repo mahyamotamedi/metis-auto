@@ -24,5 +24,18 @@ magicEnabled = false
 level = "warning"
 
 [theme]
-# Blue (data-viz palette slot 1) instead of Streamlit's red: red reads as an error.
-primaryColor = "#2a78d6"
+# First paint in the default (dark) theme, before the page's style sheet loads
+# (UI spec Stage 2, UI-T04). These are the dark tokens of config/demo/theme.toml,
+# the single source; tests/unit/wiring/test_ui_theme.py keeps them equal. The
+# light theme is applied by the page's CSS (Streamlit 1.65 cannot switch its
+# base theme from Python).
+base = "dark"
+primaryColor = "#4560F6"             # dark.accent
+backgroundColor = "#111113"          # dark.bg
+secondaryBackgroundColor = "#18191B" # dark.header
+textColor = "#FFFFFF"                # dark.text
+borderColor = "#212936"              # dark.border
+linkColor = "#70A3F3"                # dark.accent_text
+font = "Vazirmatn, sans-serif"       # bundled, declared by the page's CSS (UI-V08)
+baseRadius = "8px"                   # size.radius_control
+baseFontSize = 15                    # font.size_base
