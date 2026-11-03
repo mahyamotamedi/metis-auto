@@ -191,6 +191,19 @@ def test_budget_view_reads_the_caps_and_warnings(loader, tmp_path):
     assert view.run_spent == 0
 
 
+def test_header_budget_is_unknown_when_the_ledger_cannot_be_read(loader, tmp_path):
+    """Stage 2b point 2: an unreadable ledger is shown as unknown, never as a
+    number, and the page does not fail."""
+    from metis_auto.wiring.demo_ui import header_budget
+
+    session = chat(loader)
+    assert header_budget(session).lifetime_cap == Decimal("20")
+    ledger = tmp_path / "spend" / "ledger.jsonl"
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    ledger.write_text("not a ledger line\n", encoding="utf-8")
+    assert header_budget(session) is None
+
+
 def test_live_check_lists_why_live_is_blocked(loader):
     allowed, reasons = live_check(lambda o: loader(o))
     assert not allowed

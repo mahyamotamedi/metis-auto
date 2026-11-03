@@ -20,6 +20,11 @@ what the demo page shows, with no Streamlit import and no replay logic:
   ``compare.compare`` (UI-R23), the cache monitor (UI-R25), the greeting
   gate's token part (UI-R27), routing per bot (UI-R26), evidence labels
   (UI-R28), direction (UI-R29) and the empty state (UI-R30).
+- ``display_name`` (UI Stage 2b): a short name per version from
+  ``config/demo/lever_names.toml`` with its owner pipeline, e.g. "Retrieval
+  cache, 90 days (B)"; the raw id goes to a muted caption or tooltip only. An id
+  with no name shows the raw id and a "no display name" marker. Numbers are
+  formatted by ``wiring.ui_format.fmt`` (ADR-0052 Amendment 1).
 
 Display rules (ADR-0050):
 - A repriced baseline has no fees (ADR-0036): its fees row is "not priced",
@@ -39,7 +44,8 @@ Traceability: QA-PRIV (content- and ID-free screens), QA-COST and FR-ACCT-05
 unknown, never 0), QA-REPRO (results carry their manifest), FR-EVAL-02 (like
 with like), FR-FIN-02 (demo dashboard).
 Called by: tests; scripts/demo_pages/results.py (D-2). Calls:
-analysis.{lever_result, levers, compare} (read only), wiring.ui_config.
+analysis.{lever_result, levers, compare} (read only), wiring.ui_config,
+wiring.ui_format.
 """
 
 from __future__ import annotations
@@ -57,10 +63,14 @@ from pydantic import ValidationError
 from metis_auto.analysis.compare import BASELINES, compare
 from metis_auto.analysis.lever_result import LeverResult
 from metis_auto.analysis.levers import BLOCKS
-from metis_auto.wiring.ui_config import Strings, direction
+from metis_auto.wiring.ui_config import Strings, Text, direction
+from metis_auto.wiring.ui_format import fmt
+
+LRI, PDI = "\u2066", "\u2069"
 
 LEVERS_DIR = Path("reports") / "levers"
 SPRINT_TOML = Path("config") / "evaluation" / "sprint.toml"
+LEVER_NAMES_PATH = Path("config") / "demo" / "lever_names.toml"
 FINAL_JSON = "final.json"
 STEPS = ("cache", "context", "routing")
 RESULT_SLICE = "result"
@@ -233,6 +243,68 @@ def slice_rows(result: LeverResult) -> list[tuple[str, dict[str, Decimal]]]:
     return rows
 
 
+# --- display names (UI Stage 2b, owner review point 3) ----------------------
+
+
+@dataclass(frozen=True)
+class LeverName:
+    pattern: re.Pattern[str]
+    owner: str
+    fa: str
+    en: str
+
+
+@dataclass(frozen=True)
+class DisplayName:
+    text: str
+    """``name (owner)``, or the raw id with the "no display name" marker."""
+    id: str
+    """The version id (the lever_id without its baseline suffix)."""
+    missing: bool = False
+
+
+_PERSIAN_DIGITS = str.maketrans("0123456789,", "۰۱۲۳۴۵۶۷۸۹٬")
+
+
+def load_lever_names(path: Path | None = None) -> tuple[LeverName, ...]:
+    """The ``[[name]]`` table of ``config/demo/lever_names.toml``, in file
+    order; a pattern that does not compile or an entry without fa, en or owner
+    refuses the file."""
+    data = tomllib.loads((path or LEVER_NAMES_PATH).read_text(encoding="utf-8"))
+    names = []
+    for n, entry in enumerate(data.get("name", ())):
+        missing = [k for k in ("pattern", "owner", "fa", "en") if not entry.get(k)]
+        if missing:
+            raise ValueError(f"lever name {n} lacks {', '.join(missing)}")
+        names.append(
+            LeverName(
+                re.compile(entry["pattern"]), entry["owner"], entry["fa"], entry["en"]
+            )
+        )
+    return tuple(names)
+
+
+def _field(value: str, lang: str) -> str:
+    text = f"{int(value):,}" if value.isdigit() else value
+    return text.translate(_PERSIAN_DIGITS) if lang == "fa" else text
+
+
+def display_name(
+    lever_id: str, lang: str, t: Text, names: Sequence[LeverName]
+) -> DisplayName:
+    """The short name of a version in ``lang`` with its owner, e.g.
+    ``حافظه‌ی بازیابی، ۹۰ روز (B)``; the first pattern that matches the whole
+    id (baseline suffix removed) wins."""
+    key = _SUFFIX.sub("", lever_id)
+    for name in names:
+        match = name.pattern.fullmatch(key)
+        if match:
+            fields = {k: _field(v, lang) for k, v in match.groupdict().items()}
+            template = name.fa if lang == "fa" else name.en
+            return DisplayName(f"{template.format(**fields)} ({name.owner})", key)
+    return DisplayName(f"{key} ({t('name_missing')})", key, missing=True)
+
+
 # --- D-2 results dashboard (spec UI-S07) ------------------------------------
 
 
@@ -268,6 +340,8 @@ class Card:
     value: Decimal | None
     """The stored (or summed) figure; None is unknown or not applicable."""
     text: str
+    note: str = ""
+    """Words about the figure (not isolated): shown as the card's caption."""
 
 
 @dataclass(frozen=True)
@@ -282,6 +356,12 @@ class StepView:
     waterfall: Waterfall | None = None
     chart: tuple[dict[str, object], ...] = ()
     """Waterfall bars; empty when a value is unknown (UI-G08)."""
+    blocks: tuple[dict[str, object], ...] = ()
+    """Stacked bars (UI-G03): the cost before and after the step by priced
+    block; empty when a value is unknown."""
+    breakdown: tuple[dict[str, object], ...] = ()
+    """Donut (UI-G04): the cost left after the step and each block's saving,
+    adding up to the baseline cost; empty when a value is unknown or negative."""
     unit: str = ""
     unit_note: str | None = None
     evidence: str = ""
@@ -306,6 +386,8 @@ class ComparisonRow:
     evidence_class: str
     tenant_flag: str
     unit: str
+    name: str = ""
+    """The version's display name (``display_name``)."""
 
 
 @dataclass(frozen=True)
@@ -337,6 +419,7 @@ class GateView:
     text: str = ""
     """``token_saving`` formatted (``unknown`` when absent)."""
     skipped_text: str = ""
+    name: str = ""
 
 
 @dataclass(frozen=True)
@@ -371,6 +454,7 @@ class RoutingTable:
     caveats: tuple[str, ...]
     message: str | None = None
     traffic_weighted_text: str = ""
+    name: str = ""
 
 
 @dataclass(frozen=True)
@@ -395,6 +479,18 @@ class Dashboard:
     tables: Mapping[str, tuple[dict[str, str], ...]] = ()  # type: ignore[assignment]
     """Display tables, cells formatted and headers translated: ``waterfall:<step>``,
     ``comparison:<step>``, ``cache``, ``bots``, ``tenants``."""
+    names: Mapping[str, DisplayName] = ()  # type: ignore[assignment]
+    """Display name per version key (UI Stage 2b)."""
+    summaries: Mapping[str, str] = ()  # type: ignore[assignment]
+    """One-line summary per table key: the label of its folded expander."""
+    cache_cards: tuple[Card, ...] = ()
+    """The chosen cache version's monitor counts as KPI cards."""
+    routing_cards: tuple[Card, ...] = ()
+    """Per-bot tab KPI cards: traffic-weighted saving, bots, tenants over cap."""
+    bot_chart: tuple[dict[str, object], ...] = ()
+    """Share of the routing saving per bot rank (bars); bots with a value."""
+    tenant_chart: tuple[dict[str, object], ...] = ()
+    """Share of requests per tenant rank, flagged over the cap (bars)."""
 
 
 def dashboard(
@@ -407,6 +503,7 @@ def dashboard(
     slice_name: str = RESULT_SLICE,
     choices: Mapping[str, str] | None = None,
     final_present: bool = False,
+    lever_names: Sequence[LeverName] | None = None,
 ) -> Dashboard:
     """The Results page for one baseline, slice and language; nothing invented.
 
@@ -432,7 +529,11 @@ def dashboard(
     slices = _slice_options(results, t)
     if slice_name not in {o.key for o in slices}:
         slice_name = RESULT_SLICE
-    rows = _comparison_rows(view, baseline, tenant_cap, t)
+    known = load_lever_names() if lever_names is None else lever_names
+    names = {
+        version_key(r): display_name(r.lever_id, lang, t, known) for r in view.results
+    }
+    rows = _comparison_rows(view, baseline, tenant_cap, t, names)
     chosen = _choices(results, rows, choices or {})
     by_key = {version_key(r): r for r in results}
     overview = tuple(
@@ -444,7 +545,18 @@ def dashboard(
         for row in cache_monitor(results)
     )
     routing_key = chosen.get("routing")
-    routing = _routing(by_key[routing_key], tenant_cap, t) if routing_key else None
+    routing = (
+        replace(
+            _routing(by_key[routing_key], tenant_cap, t),
+            name=names[routing_key].text,
+        )
+        if routing_key
+        else None
+    )
+    gate = _gate(results, t)
+    if gate is not None:
+        gate = replace(gate, name=names[gate.version].text)
+    tables = _tables(overview, rows, cache, routing, t, names)
     return Dashboard(
         lang=lang,
         direction=direction(lang),
@@ -457,12 +569,18 @@ def dashboard(
         combined_note=t("combined_unformatted" if final_present else "combined_absent"),
         overview=overview,
         comparison=rows,
-        comparison_chart={step: _comparison_chart(r) for step, r in rows.items()},
+        comparison_chart={step: _comparison_chart(r, t) for step, r in rows.items()},
         cache=cache,
-        gate=_gate(results, t),
+        gate=gate,
         routing=routing,
         skipped_note=skipped,
-        tables=_tables(overview, rows, cache, routing, t),
+        tables=tables,
+        names=names,
+        summaries=_summaries(tables, rows, routing, t),
+        cache_cards=_cache_cards(cache, chosen.get("cache"), t),
+        routing_cards=_routing_cards(routing, t),
+        bot_chart=_bot_chart(routing, t),
+        tenant_chart=_tenant_chart(routing, t),
     )
 
 
@@ -471,18 +589,27 @@ class _Text:
         self.strings, self.lang = strings, lang
 
     def __call__(self, key: str, **fields: object) -> str:
-        return self.strings.text(key, self.lang, **fields)
+        """A string with every number field LTR-isolated (UI-V07), so a count in
+        a Persian sentence never reorders."""
+        isolated = {
+            k: f"{LRI}{v}{PDI}"
+            if isinstance(v, (int, float, Decimal)) and not isinstance(v, bool)
+            else v
+            for k, v in fields.items()
+        }
+        return self.strings.text(key, self.lang, **isolated)
 
     def amount(self, value: Decimal | None) -> str:
-        return self("unknown") if value is None else f"{value:,.4f}"
+        return fmt(value, "money", unknown=self("unknown"))
 
     def share(self, value: Decimal | float | None) -> str:
-        return self("unknown") if value is None else f"{float(value):.2%}"
+        return fmt(value, "percent", unknown=self("unknown"))
+
+    def count(self, value: int | None) -> str:
+        return fmt(value, "count", unknown=self("not_reported"))
 
     def interval(self, ci: tuple[float, float] | None) -> str:
-        if ci is None:
-            return self("interval_none")
-        return f"[{ci[0]:.2%}, {ci[1]:.2%}]"
+        return fmt(ci, "interval", unknown=self("interval_none"))
 
     def unit(self, result: LeverResult) -> str:
         if cost_unit(result.baseline) == "recorded":
@@ -507,11 +634,18 @@ def _slice_options(results: Sequence[LeverResult], t: _Text) -> tuple[Option, ..
     options = [Option(RESULT_SLICE, t("slice_result"))]
     options += [Option(n, t(f"slice_{n}")) for n in _PLAIN_SLICES if n in present]
     options += [
-        Option(n, t("slice_lang", code=n.removeprefix("lang:")))
+        Option(n, t("slice_lang", code=_lang_name(n.removeprefix("lang:"), t)))
         for n in sorted(present)
         if _LANG.match(n)
     ]
     return tuple(options)
+
+
+def _lang_name(code: str, t: _Text) -> str:
+    """A language slice's code in words (``lang_code_<code>``); a code without
+    an entry stays as it is."""
+    key = f"lang_code_{code}"
+    return t(key) if key in t.strings.table else code
 
 
 # --- comparison (UI-R23) ---
@@ -534,7 +668,11 @@ _STATUS_KEYS = {
 
 
 def _comparison_rows(
-    view: LeverView, baseline: str, cap: Decimal, t: _Text
+    view: LeverView,
+    baseline: str,
+    cap: Decimal,
+    t: _Text,
+    names: Mapping[str, DisplayName],
 ) -> dict[str, tuple[ComparisonRow, ...]]:
     frame = compare(view.results, baseline=baseline, max_tenant_share=cap)
     # Some writers reuse one lever_id under all four baselines (only the file
@@ -563,7 +701,7 @@ def _comparison_rows(
             group = t(
                 "group_text",
                 n=n,
-                requests=f"{result.n_requests:,}",
+                requests=t.count(result.n_requests),
                 pv=result.manifest.price_version,
             )
         ci = (
@@ -582,27 +720,49 @@ def _comparison_rows(
                 saving=row["saving"],  # type: ignore[arg-type]
                 saving_share=row["saving_share"],  # type: ignore[arg-type]
                 interval=ci,
-                eligible=str(row["eligible"] or "—"),
+                eligible=t(
+                    "eligible_of",
+                    a=t.count(result.n_eligible),
+                    b=t.count(result.n_requests),
+                )
+                if result
+                else str(row["eligible"] or "—"),
                 correctness=t.correctness(result.correctness_state) if result else "—",
                 evidence_class=(
                     t.evidence(result.evidence_class, result.correctness_state)
                     if result
                     else "—"
                 ),
-                tenant_flag=str(row["tenant_flag"] or t("unknown")),
+                tenant_flag=_tenant_flag(row["tenant_flag"], cap, t),
                 unit=t.unit(result) if result else "",
+                name=names[version].text if version in names else version,
             )
         )
     return {step: tuple(rows) for step, rows in out.items()}
 
 
-def _comparison_chart(rows: Sequence[ComparisonRow]) -> tuple[dict[str, object], ...]:
+def _tenant_flag(flag: object, cap: Decimal, t: _Text) -> str:
+    """``compare``'s tenant flag (``ok``, ``over N%``, ``unknown``) in words."""
+    if flag == "ok":
+        return t("flag_ok")
+    if isinstance(flag, str) and flag.startswith("over "):
+        return t("flag_over_cap", cap=f"\u2066{t.share(cap)}\u2069")
+    return t("unknown")
+
+
+def _comparison_chart(
+    rows: Sequence[ComparisonRow], t: _Text
+) -> tuple[dict[str, object], ...]:
+    """One bar per version with a saving share: the display name on the axis,
+    the raw id and the formatted share only in the tooltip."""
     return tuple(
         {
-            "version": r.version,
+            "version": r.name or r.version,
+            "id": r.version,
             "saving_share": float(r.saving_share),
             "ranked": r.status == "ranked",
             "status": r.status_label,
+            "text": t.share(r.saving_share),
         }
         for r in rows
         if r.saving_share is not None
@@ -615,9 +775,12 @@ def _tables(
     cache: Sequence[CacheRow],
     routing: RoutingTable | None,
     t: _Text,
+    names: Mapping[str, DisplayName],
 ) -> dict[str, tuple[dict[str, str], ...]]:
-    def count(n: int | None) -> str:
-        return t("not_reported") if n is None else f"{n:,}"
+    count = t.count
+
+    def name(version: str) -> str:
+        return names[version].text if version in names else version
 
     out: dict[str, tuple[dict[str, str], ...]] = {}
     for step in overview:
@@ -641,7 +804,7 @@ def _tables(
             {
                 t("col_rank"): "—" if r.rank is None else str(r.rank),
                 t("col_status"): r.status_label,
-                t("col_version"): r.version,
+                t("col_version"): r.name or r.version,
                 t("saving"): t.amount(r.saving),
                 t("saving_share"): t.share(r.saving_share),
                 t("interval"): t.interval(r.interval),
@@ -654,7 +817,7 @@ def _tables(
         )
     out["cache"] = tuple(
         {
-            t("col_version"): r.version,
+            t("col_version"): name(r.version),
             t("lookups"): count(r.lookups),
             t("hits"): count(r.hits),
             t("misses"): count(r.misses),
@@ -776,8 +939,7 @@ def _step_view(
     if share is None and wf.saving_total is not None and wf.baseline_total:
         share = wf.saving_total / wf.baseline_total
     interval_text = t.interval(ci)
-    if slice_name != RESULT_SLICE:
-        interval_text = f"{interval_text} — {t('interval_result_only')}"
+    interval_note = t("interval_result_only") if slice_name != RESULT_SLICE else ""
     cards = (
         Card(
             "baseline_cost",
@@ -787,10 +949,60 @@ def _step_view(
         ),
         Card("saving", t("saving"), wf.saving_total, t.amount(wf.saving_total)),
         Card("saving_share", t("saving_share"), share, t.share(share)),
-        Card("interval", t("interval"), None, interval_text),
+        Card("interval", t("interval"), None, interval_text, interval_note),
     )
     return replace(
-        base, cards=cards, interval=ci, waterfall=wf, chart=_waterfall_chart(wf, t)
+        base,
+        cards=cards,
+        interval=ci,
+        waterfall=wf,
+        chart=_waterfall_chart(wf, t),
+        blocks=_block_bars(wf, t),
+        breakdown=_breakdown(wf, t),
+    )
+
+
+def _block_bars(wf: Waterfall, t: _Text) -> tuple[dict[str, object], ...]:
+    """Before and after by priced block (fees not priced and ``other``, which is
+    part of token cost, are left out); none if a value is unknown."""
+    priced = [r for r in wf.rows if r.priced and r.part_of is None]
+    if not priced or any(r.baseline is None or r.after is None for r in priced):
+        return ()
+    bars = []
+    for stage, field in (("row_before", "baseline"), ("row_after", "after")):
+        for order, row in enumerate(priced):
+            value = getattr(row, field)
+            bars.append(
+                {
+                    "stage": t(stage),
+                    "block": t(f"block_{row.block}"),
+                    "order": order,
+                    "value": float(value),
+                    "text": t.amount(value),
+                }
+            )
+    return tuple(bars)
+
+
+def _breakdown(wf: Waterfall, t: _Text) -> tuple[dict[str, object], ...]:
+    """The after-cost and each priced block's saving: slices of the baseline
+    cost. None when a value is unknown, or a saving or the after-cost is negative
+    (an extra cost is no slice of the baseline)."""
+    priced = [r for r in wf.rows if r.priced and r.part_of is None]
+    if wf.after_total is None or wf.after_total < 0 or not priced:
+        return ()
+    if any(r.saving is None or r.saving < 0 for r in priced):
+        return ()
+    parts = [("part_remaining", None, wf.after_total)]
+    parts += [("part_saved", r.block, r.saving) for r in priced if r.saving]
+    return tuple(
+        {
+            "part": t(key, block=t(f"block_{block}")) if block else t(key),
+            "order": order,
+            "value": float(value),
+            "text": t.amount(value),
+        }
+        for order, (key, block, value) in enumerate(parts)
     )
 
 
@@ -936,9 +1148,7 @@ def _gate(results: Sequence[LeverResult], t: _Text) -> GateView | None:
             unit=t.unit(r),
             note=t("gate_lower_bound") if repriced else "",
             text=t.amount(value),
-            skipped_text=t("not_reported")
-            if _count(s, "n_skipped_phatic") is None
-            else f"{_count(s, 'n_skipped_phatic'):,}",
+            skipped_text=t.count(_count(s, "n_skipped_phatic")),
         )
     return None
 
@@ -980,7 +1190,7 @@ def _routing(result: LeverResult, cap: Decimal, t: _Text) -> RoutingTable:
                     n_requests=_count(s, "n_requests"),
                     share=share,
                     flagged=flagged,
-                    flag_text=t("flag_over_cap", cap=f"{float(cap):.0%}")
+                    flag_text=t("flag_over_cap", cap=f"\u2066{t.share(cap)}\u2069")
                     if flagged
                     else t("flag_ok"),
                     saving_share=s.get("saving_share"),
@@ -1009,3 +1219,110 @@ def _routing(result: LeverResult, cap: Decimal, t: _Text) -> RoutingTable:
 def _rank_order(name: str) -> tuple[str, int]:
     match = _RANK.match(name)
     return (match[1], int(match[2])) if match else ("", 0)
+
+
+# --- compact layout (UI Stage 2b, owner review point 5) ---
+
+BOT_CHART_MAX = 15
+"""Bars in the per-bot chart: the first ranks only; the full list stays in the
+folded table."""
+
+
+def _summaries(
+    tables: Mapping[str, Sequence[dict[str, str]]],
+    comparison: Mapping[str, Sequence[ComparisonRow]],
+    routing: RoutingTable | None,
+    t: _Text,
+) -> dict[str, str]:
+    """One line per table, the label of its folded expander."""
+    out = {}
+    for key, rows in tables.items():
+        kind, _, step = key.partition(":")
+        if kind == "waterfall":
+            out[key] = t("sum_waterfall", n=len(rows))
+        elif kind == "comparison":
+            ranked = sum(r.status == "ranked" for r in comparison.get(step, ()))
+            out[key] = t("sum_comparison", n=len(rows), ranked=ranked)
+        elif kind == "cache":
+            out[key] = t("sum_cache", n=len(rows))
+    if routing is not None:
+        few = sum(b.insufficient for b in routing.bots)
+        over = sum(r.flagged for r in routing.tenants)
+        out["bots"] = t("sum_bots", n=len(routing.bots), few=few)
+        out["tenants"] = t("sum_tenants", n=len(routing.tenants), over=over)
+    return out
+
+
+def _count_card(key: str, label: str, n: int | None, t: _Text) -> Card:
+    return Card(key, label, None if n is None else Decimal(n), t.count(n))
+
+
+def _cache_cards(
+    cache: Sequence[CacheRow], chosen: str | None, t: _Text
+) -> tuple[Card, ...]:
+    """The chosen cache version's counts, as stored (``cache_monitor``)."""
+    row = next((r for r in cache if r.version == chosen), None)
+    if row is None:
+        return ()
+    cards = [
+        _count_card(k, t(k), getattr(row, k), t)
+        for k in ("lookups", "hits", "misses", "guard_blocks")
+    ]
+    if row.gate_skips is not None:
+        cards.append(_count_card("gate_skips", t("gate_skips"), row.gate_skips, t))
+    return tuple(cards)
+
+
+def _routing_cards(routing: RoutingTable | None, t: _Text) -> tuple[Card, ...]:
+    if routing is None:
+        return ()
+    share = routing.traffic_weighted_share
+    return (
+        Card(
+            "traffic_weighted_share",
+            t("traffic_weighted_share"),
+            share,
+            t.share(share),
+        ),
+        _count_card("bots_count", t("bots_count"), len(routing.bots), t),
+        _count_card(
+            "tenants_over_cap",
+            t("tenants_over_cap"),
+            sum(r.flagged for r in routing.tenants),
+            t,
+        ),
+    )
+
+
+def _bot_chart(routing: RoutingTable | None, t: _Text) -> tuple[dict[str, object], ...]:
+    """Share of the saving per bot rank, in rank order; bots without the value
+    are left out (UI-G08)."""
+    if routing is None:
+        return ()
+    rows = [b for b in routing.bots if b.share_of_saving is not None]
+    return tuple(
+        {
+            "label": b.label,
+            "value": float(b.share_of_saving),  # type: ignore[arg-type]
+            "text": t.share(b.share_of_saving),
+        }
+        for b in rows[:BOT_CHART_MAX]
+    )
+
+
+def _tenant_chart(
+    routing: RoutingTable | None, t: _Text
+) -> tuple[dict[str, object], ...]:
+    if routing is None:
+        return ()
+    return tuple(
+        {
+            "label": r.label,
+            "value": float(r.share),
+            "text": t.share(r.share),
+            "flag": r.flag_text,
+            "flagged": r.flagged,
+        }
+        for r in routing.tenants
+        if r.share is not None
+    )

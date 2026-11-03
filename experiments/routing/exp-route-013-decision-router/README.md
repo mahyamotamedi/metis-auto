@@ -1,10 +1,10 @@
-# EXP-ROUTE-012: the System-One decision router (Parham; J-3 remapped; R8)
+# EXP-ROUTE-013: the System-One decision router (Parham; J-3 remapped; R8)
 
 - **Hypothesis:** H-1 (part of the traffic can run on a cheaper model). Here a System-One decision model (THX-01 local, Jev hosted) answers typed questions about each request, and a pure policy maps the answers to a tier. Traces: FR-FEAT-02 (a semantic signal), FR-ROUTE-03 (comparable, swappable strategies), FR-ROUTE-04 (router overhead), FR-ROUTE-05 (unknown limits exclude), FR-EVAL-04/06 (stratified, leakage-safe evaluation), QA-LAT (the 60 ms p95 budget inside the 100 ms overhead), QA-PRIV.
 - **Decision record:** [ADR-0047](../../../docs/adr/0047-system-one-decision-router.md); the routing base is [ADR-0045](../../../docs/adr/0045-routing-base-eligibility-and-failover.md).
 - **ID:** `exp-route-013`. `exp-route-011` is Pipeline B's kNN router; the routing plan reserves 001 to 008 and 010; R9 of the routing plan is this experiment.
 - **Evidence class:** *simulation*. There are **no quality labels yet**, so agreement with the rules is not accuracy. Every result says "quality not proven".
-- **Status (2026-11-03):** harness, routing step version and tests done; the THX-01 shadow run and the latency benchmark were run on the owner's machine (results below). The L1 labelling plan is prepared, not run.
+- **Status (2026-11-03):** harness, routing step version and tests done; the THX-01 shadow run and the latency benchmark were run on the owner's machine (results below). The L1 labelling plan is prepared, not run. A first measurement of **decision quality** against owner labels on 100 SYNTHETIC requests (rules, THX-01 and Jev) is in [Synthetic decision-quality check](#synthetic-decision-quality-check-jev-synth-v1-2026-11-03).
 
 ## Parts
 
@@ -71,9 +71,44 @@ L3 = human review of the slice: the review template is `reports/routing/dev_slic
   - neither changes a check decision.
 - **Conclusion:** no saving over the rules on the slice. Whether THX-01 is right needs labels; L1 is the next step.
 
+## Synthetic decision-quality check (jev-synth-v1, 2026-11-03)
+
+The first measurement of **decision quality** (not answer quality) with labels, using text that may go to Jev today. Owner request and approval in chat, 2026-11-03.
+
+- **Set:** 100 SYNTHETIC requests written for this check, never copied or paraphrased from the dataset ([`synthetic_v1/labels_frozen.csv`](synthetic_v1/labels_frozen.csv)): 70 Persian, 15 English, 15 mixed. They cover greetings, short follow-ups (with the previous user turn), factual, support, translation, writing, code, math and multi-step reasoning, with easy and hard cases in each category.
+- **Labels:** an expected tier per request, 0 (a small model is enough) or 1 (needs a stronger model), with a one-line reason. The owner, a Persian speaker, reviewed the set and approved it as is: 60 tier 0, 40 tier 1, 5 marked borderline. Frozen with sha256 in [`synthetic_v1/labels_frozen.json`](synthetic_v1/labels_frozen.json); the runner refuses a changed file.
+- **Routers**, all through the real pipeline with the fake answering client:
+  - `rules`: the `decision_router` policy with the router off (the R8 baseline): gate, then a matching rule, else the safe tier (1);
+  - `rule_based`: the plain rule-based policy (ADR-0023 demo rules);
+  - `thx01` (local) and `jev` (Metis, live): the model is asked on every row, with the fast gate off and the offline settings of R8;
+  - `*_with_gate`: the router as configured, i.e. the fast gate's tier where it fires (14 rows), else the model's.
+- **Text sent:** the `[SYNTHETIC]` marker is removed before routing for every router, because it made the language detector call 21 of the 70 Persian requests "mixed". `--keep-marker` sends it.
+- **Run:** `powershell -ExecutionPolicy Bypass -File experiments\routing\exp-route-013-decision-router\synthetic_v1\run.ps1`. It prints the plan (Jev upper bound 0.0069 USD for 100 calls), runs the local routers, then Jev live with a 0.02 USD run cap through the spend guard and the ledger, and switches live off afterwards. Report: [`reports/routing/exp-route-013/synthetic_v1/report.md`](../../../reports/routing/exp-route-013/synthetic_v1/report.md) (tiers and IDs only).
+
+**Results** (owner's run on Windows, 2026-11-03; Jev reported `jev-1.14.0`):
+
+| Router | Accuracy (all, n = 100) | Persian (70) | English (15) | Mixed (15) | Under-routed, 1 → 0 (quality risk) | Over-routed, 0 → 1 (cost) |
+|---|---|---|---|---|---|---|
+| rules | 43% | 41% | 47% | 47% | 0 | 57 |
+| rule_based | 59% | 61% | 53% | 53% | 35 | 6 |
+| thx01 | 41% | 39% | 47% | 47% | 0 | 59 |
+| **jev** | **72%** | **69%** | **87%** | **73%** | **1** | 27 |
+| thx01_with_gate | 44% | 43% | 47% | 47% | 0 | 56 |
+| jev_with_gate | 70% | 67% | 87% | 67% | 1 | 29 |
+
+- **Trivial baselines:** always tier 0 scores 60% on this set, always tier 1 scores 40%. `rule_based` behaves almost like always-0 (89 rows to tier 0), and `rules` and THX-01 almost like always-1. Only Jev is above both; the Wilson 95% interval of its 72% is about 63–80%, which only just clears 60%.
+- **Jev:** it missed 1 of the 40 tier-1 requests (a short humorous Persian couplet). Its errors are mostly easy requests sent to tier 1, which costs money but not quality. Where its own answers decided (85 rows; on 15 rows no mapping rule fired and the safe tier decided), it was right on 84.7%. Its weakest category is support (43%): simple procedural questions go to tier 1. It reports a confidence only for `complexity` (p50 0.83) and `intent` (p50 1.0); the yes/no answers carry probabilities only, as in R6. Decision latency p50 0.97 s, p90 1.1 s (about 10× the 100 ms overhead budget). Cost 0.0032 USD for 100 calls (0.0000325 per call, about 700 input tokens).
+- **THX-01:** it sent 1 of the 60 tier-0 requests to tier 0. `cheap_model_ok` sits around 0.59 (p50), under `tau_ok` 0.7, so the low tier almost never fires; on 40 rows no rule fired and the safe tier decided. Where its own answers decided (60 rows): 63%. Whether this is the model or the placeholder thresholds needs tuning on a separate set, never this one. Decision latency p50 4.1 s on the owner's CPU, as in R5.
+- **Borderline rows (5):** every router got 2 right. **Rows changed by the owner:** none (approved as is), so that slice is empty.
+- **Agreement (tier 0/1):** Jev with THX-01 65/100, with `rules` 69/100, with `rule_based` 41/100; `rules` with THX-01 96/100.
+
+**Limits:** SYNTHETIC requests, not real traffic (lengths, topics and phrasing differ from the dataset); one rater, with no agreement measure; n = 100, so per-language and per-category numbers rest on 15 or fewer rows each; tiers 0/1 only (router tiers ≥ 1 count as 1); accuracy against labels, not answer quality. **A first signal, not proof.** This set is now an evaluation set: no threshold may be tuned on it.
+
+**Next:** a second rater on the same 100, labelling without seeing these labels (free; gives the agreement between raters); Q-55, so Jev can be measured on the dev slice; THX-01's mapping thresholds studied on separate data.
+
 ## Open
 
 - **A full-data tier per request** (for `version.py` on the full replay) needs THX-01 run on full-data text. That is local and allowed, but is several hours on CPU. Not in the sprint.
-- **Jev's shadow answers on dataset text** wait for Q-55.
+- **Jev's shadow answers on dataset text** wait for Q-55. The synthetic check above (Jev 72% vs rules 43% and THX-01 41% against owner labels) is the case for asking.
 - **A-97:** the tier-0 safe tier vs tier 1 comparison waits for labels.
 - **A-103:** escalation on low confidence needs a chain of two local backends; Mizan is skipped (A-117).
