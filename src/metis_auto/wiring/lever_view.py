@@ -21,7 +21,7 @@ what the demo page shows, with no Streamlit import and no replay logic:
   gate's token part (UI-R27), routing per bot (UI-R26), evidence labels
   (UI-R28), direction (UI-R29) and the empty state (UI-R30).
 
-Display rules (ADR-XXXX (results-dashboard-display-rules)):
+Display rules (ADR-0050):
 - A repriced baseline has no fees (ADR-0036): its fees row is "not priced",
   never unknown, and its totals are the token cost ("token cost only, fees not
   priced"). A slice that holds ``baseline:fees`` inside a repriced result is in

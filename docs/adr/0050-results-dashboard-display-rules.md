@@ -1,4 +1,4 @@
-# ADR-XXXX (results-dashboard-display-rules): The Results dashboard shows each step on its own, hides recorded-unit slices under repriced baselines, and prices repriced totals as token cost only
+# ADR-0050: The Results dashboard shows each step on its own, hides recorded-unit slices under repriced baselines, and prices repriced totals as token cost only
 
 - Status: **provisional**, the agent's reading of the approved UI spec (Pipeline C, sprint task D-2, 2026-11-03), until the owner reviews it. The owner already decided points 2 (D-2 follow-up of 2026-11-02) and 3 (S-3 decision 3, 2026-11-02); this ADR records how the page applies them.
 - Date: 2026-11-03
