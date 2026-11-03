@@ -13,28 +13,62 @@ what the demo page shows, with no Streamlit import and no replay logic:
 - ``slice_rows``: the slices to display. Rank slices become labels such as
   ``bot-07``; a slice name outside the known forms is dropped, so no bot or
   user ID can reach a screen (licence: aggregates only).
+- ``dashboard`` (D-2, spec UI-S07): everything the Results page draws, for one
+  baseline, one slice and one language (strings from ``wiring.ui_config``):
+  the savings overview per step with a version switch (UI-R21, UI-R24), the
+  waterfall by cost block (UI-R22), the version comparison of
+  ``compare.compare`` (UI-R23), the cache monitor (UI-R25), the greeting
+  gate's token part (UI-R27), routing per bot (UI-R26), evidence labels
+  (UI-R28), direction (UI-R29) and the empty state (UI-R30).
+
+Display rules (ADR-XXXX (results-dashboard-display-rules)):
+- A repriced baseline has no fees (ADR-0036): its fees row is "not priced",
+  never unknown, and its totals are the token cost ("token cost only, fees not
+  priced"). A slice that holds ``baseline:fees`` inside a repriced result is in
+  recorded units and is not shown.
+- An ``other`` block (F-2) is shown as part of ``token_cost`` (owner decision
+  2026-11-02) and is not added to the totals a second time.
+- The overview shows each step's chosen version; steps are never added up
+  (they can overlap, Review Focus 1). No combined result exists until
+  ``final.json`` has an agreed format (I-2).
+- Ranks come from ``compare.compare`` only (one step, one group, one baseline);
+  the group label leaves out the data revision hash.
 
 Traceability: QA-PRIV (content- and ID-free screens), QA-COST and FR-ACCT-05
 (savings per block against a named baseline), FR-REQ-04 (unknown is shown as
-unknown, never 0), QA-REPRO (results carry their manifest).
-Called by: tests; scripts/demo_ui.py in D-2. Calls: analysis.{lever_result,
-levers, compare} (read only).
+unknown, never 0), QA-REPRO (results carry their manifest), FR-EVAL-02 (like
+with like), FR-FIN-02 (demo dashboard).
+Called by: tests; scripts/demo_pages/results.py (D-2). Calls:
+analysis.{lever_result, levers, compare} (read only), wiring.ui_config.
 """
 
 from __future__ import annotations
 
+import math
 import re
-from dataclasses import dataclass
+import tomllib
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from pathlib import Path
 
 from pydantic import ValidationError
 
-from metis_auto.analysis.compare import BASELINES
+from metis_auto.analysis.compare import BASELINES, compare
 from metis_auto.analysis.lever_result import LeverResult
 from metis_auto.analysis.levers import BLOCKS
+from metis_auto.wiring.ui_config import Strings, direction
 
 LEVERS_DIR = Path("reports") / "levers"
+SPRINT_TOML = Path("config") / "evaluation" / "sprint.toml"
+FINAL_JSON = "final.json"
+STEPS = ("cache", "context", "routing")
+RESULT_SLICE = "result"
+"""The slice option that shows the result's own totals (with its interval)."""
+EXTRA_BLOCKS = ("other",)
+"""F-2's block: part of ``token_cost`` (owner decision 2026-11-02)."""
+NOT_PRICED = "token cost only, fees not priced"
+DEFAULT_BASELINE = "as_logged"
 
 EMPTY_MESSAGE = (
     "No lever results yet. A replay writes them to reports/levers/<lever_id>.json."
@@ -44,6 +78,9 @@ _RANK = re.compile(r"^(bot|tenant)_rank:([1-9][0-9]{0,3})$")
 _LANG = re.compile(r"^lang:[a-z_]{1,16}$")
 _PLAIN_SLICES = ("all", "llm_only", "traffic_weighted", "over_8k")
 _UNITS = {b.key: "recorded" if b.recorded else "repriced" for b in BASELINES}
+_SUFFIX = re.compile(
+    r"(\.|__)(" + "|".join(re.escape(b.key) for b in BASELINES) + r")$"
+)
 
 
 @dataclass(frozen=True)
@@ -93,6 +130,10 @@ class WaterfallRow:
     baseline: Decimal | None
     saving: Decimal | None
     after: Decimal | None
+    priced: bool = True
+    """False for fees under a repriced baseline: not priced, not unknown."""
+    part_of: str | None = None
+    """``token_cost`` for F-2's ``other``: shown, never added to the totals."""
 
 
 @dataclass(frozen=True)
@@ -104,6 +145,8 @@ class Waterfall:
     baseline_total: Decimal | None
     saving_total: Decimal | None
     after_total: Decimal | None
+    note: str | None = None
+    """``NOT_PRICED`` (or its translation) under a repriced baseline."""
 
 
 def _total(values: list[Decimal | None], declared: Decimal | None) -> Decimal | None:
@@ -116,26 +159,55 @@ def _total(values: list[Decimal | None], declared: Decimal | None) -> Decimal | 
 
 
 def waterfall(result: LeverResult) -> Waterfall:
-    """Rows per cost block; a missing block is unknown, and so is every total."""
+    """Rows per cost block; a missing block is unknown, and so is every total.
+
+    Under a repriced baseline the fees row is not priced and the totals are the
+    token cost (ADR-0036)."""
+    return _waterfall(
+        result.lever_id, result.baseline, result.baseline_cost, result.saving
+    )
+
+
+def _after(base: Decimal | None, save: Decimal | None) -> Decimal | None:
+    return None if base is None or save is None else base - save
+
+
+def _waterfall(
+    lever_id: str,
+    baseline: str,
+    base: Mapping[str, Decimal],
+    save: Mapping[str, Decimal],
+    *,
+    note: str = NOT_PRICED,
+) -> Waterfall:
+    repriced = cost_unit(baseline) == "repriced"
     rows = []
     for block in BLOCKS:
-        base = result.baseline_cost.get(block)
-        save = result.saving.get(block)
-        after = None if base is None or save is None else base - save
-        rows.append(WaterfallRow(block, base, save, after))
-    baseline_total = _total(
-        [r.baseline for r in rows], result.baseline_cost.get("total")
-    )
-    saving_total = _total([r.saving for r in rows], result.saving.get("total"))
-    after_total = _total([r.after for r in rows], None)
+        if repriced and block == "fees":
+            rows.append(WaterfallRow(block, None, None, None, priced=False))
+            continue
+        b, s = base.get(block), save.get(block)
+        if repriced and block == "token_cost":  # a repriced total is token cost
+            b = base.get("total") if b is None else b
+            s = save.get("total") if s is None else s
+        rows.append(WaterfallRow(block, b, s, _after(b, s)))
+    priced = [r for r in rows if r.priced]
+    baseline_total = _total([r.baseline for r in priced], base.get("total"))
+    saving_total = _total([r.saving for r in priced], save.get("total"))
+    after_total = _total([r.after for r in priced], None)
+    for block in EXTRA_BLOCKS:
+        if block in base or block in save:
+            b, s = base.get(block), save.get(block)
+            rows.append(WaterfallRow(block, b, s, _after(b, s), part_of="token_cost"))
     return Waterfall(
-        lever_id=result.lever_id,
-        baseline=result.baseline,
-        unit=cost_unit(result.baseline),
+        lever_id=lever_id,
+        baseline=baseline,
+        unit=cost_unit(baseline),
         rows=tuple(rows),
         baseline_total=baseline_total,
         saving_total=saving_total,
         after_total=after_total,
+        note=note if repriced else None,
     )
 
 
@@ -159,3 +231,781 @@ def slice_rows(result: LeverResult) -> list[tuple[str, dict[str, Decimal]]]:
         if label is not None:
             rows.append((label, dict(result.slices[name])))
     return rows
+
+
+# --- D-2 results dashboard (spec UI-S07) ------------------------------------
+
+
+def tenant_cap(path: Path = SPRINT_TOML) -> Decimal:
+    """``[sample] tenant_cap`` of the sprint config (plan decision rule)."""
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    cap = Decimal(str(data["sample"]["tenant_cap"]))
+    if not Decimal(0) < cap <= Decimal(1):
+        raise ValueError("tenant_cap must be a share in (0, 1]")
+    return cap
+
+
+def has_final(folder: Path) -> bool:
+    return (folder / FINAL_JSON).is_file()
+
+
+def version_key(result: LeverResult) -> str:
+    """The result's name without its baseline suffix: the same across the four
+    baselines, so a chosen version survives a baseline switch."""
+    return _SUFFIX.sub("", result.lever_id)
+
+
+@dataclass(frozen=True)
+class Option:
+    key: str
+    label: str
+
+
+@dataclass(frozen=True)
+class Card:
+    key: str
+    label: str
+    value: Decimal | None
+    """The stored (or summed) figure; None is unknown or not applicable."""
+    text: str
+
+
+@dataclass(frozen=True)
+class StepView:
+    step: str
+    title: str
+    options: tuple[str, ...]
+    chosen: str | None
+    result_id: str | None
+    cards: tuple[Card, ...] = ()
+    interval: tuple[float, float] | None = None
+    waterfall: Waterfall | None = None
+    chart: tuple[dict[str, object], ...] = ()
+    """Waterfall bars; empty when a value is unknown (UI-G08)."""
+    unit: str = ""
+    unit_note: str | None = None
+    evidence: str = ""
+    quality: str | None = None
+    message: str | None = None
+
+
+@dataclass(frozen=True)
+class ComparisonRow:
+    rank: int | None
+    status: str
+    """The ``compare`` status (``ranked``, ``insufficient evidence``, ...)."""
+    status_label: str
+    version: str
+    baseline: str
+    group: str
+    saving: Decimal | None
+    saving_share: Decimal | None
+    interval: tuple[float, float] | None
+    eligible: str
+    correctness: str
+    evidence_class: str
+    tenant_flag: str
+    unit: str
+
+
+@dataclass(frozen=True)
+class CacheRow:
+    version: str
+    source: str
+    """``retrieval``, ``session_memo`` or ``requests``: where the counts are."""
+    lookups: int | None = None
+    hits: int | None = None
+    misses: int | None = None
+    guard_blocks: int | None = None
+    gate_skips: int | None = None
+    shadow_sampled: int | None = None
+    shadow_agree: int | None = None
+    shadow_unknown: int | None = None
+    guard_reasons: Mapping[str, int] | None = None
+    """None: no result carries reasons yet."""
+    misses_note: str = ""
+
+
+@dataclass(frozen=True)
+class GateView:
+    version: str
+    token_saving: Decimal | None
+    lower_bound: bool
+    skipped: int | None
+    unit: str
+    note: str
+    text: str = ""
+    """``token_saving`` formatted (``unknown`` when absent)."""
+    skipped_text: str = ""
+
+
+@dataclass(frozen=True)
+class BotRow:
+    label: str
+    n_requests: int | None
+    n_moved: int | None
+    moved_share: Decimal | None
+    saving: Decimal | None
+    saving_share: Decimal | None
+    share_of_saving: Decimal | None
+    insufficient: bool
+
+
+@dataclass(frozen=True)
+class TenantRow:
+    label: str
+    n_requests: int | None
+    share: Decimal | None
+    flagged: bool
+    flag_text: str
+    saving_share: Decimal | None
+    share_of_saving: Decimal | None
+
+
+@dataclass(frozen=True)
+class RoutingTable:
+    version: str
+    bots: tuple[BotRow, ...]
+    tenants: tuple[TenantRow, ...]
+    traffic_weighted_share: Decimal | None
+    caveats: tuple[str, ...]
+    message: str | None = None
+    traffic_weighted_text: str = ""
+
+
+@dataclass(frozen=True)
+class Dashboard:
+    lang: str
+    direction: str
+    labels: Mapping[str, str]
+    empty: bool
+    empty_message: str | None = None
+    baseline: str | None = None
+    baselines: tuple[Option, ...] = ()
+    slice_name: str = RESULT_SLICE
+    slices: tuple[Option, ...] = ()
+    combined_note: str | None = None
+    overview: tuple[StepView, ...] = ()
+    comparison: Mapping[str, tuple[ComparisonRow, ...]] = ()  # type: ignore[assignment]
+    comparison_chart: Mapping[str, tuple[dict[str, object], ...]] = ()  # type: ignore[assignment]
+    cache: tuple[CacheRow, ...] = ()
+    gate: GateView | None = None
+    routing: RoutingTable | None = None
+    skipped_note: str | None = None
+    tables: Mapping[str, tuple[dict[str, str], ...]] = ()  # type: ignore[assignment]
+    """Display tables, cells formatted and headers translated: ``waterfall:<step>``,
+    ``comparison:<step>``, ``cache``, ``bots``, ``tenants``."""
+
+
+def dashboard(
+    view: LeverView,
+    *,
+    strings: Strings,
+    tenant_cap: Decimal,
+    lang: str = "fa",
+    baseline: str | None = None,
+    slice_name: str = RESULT_SLICE,
+    choices: Mapping[str, str] | None = None,
+    final_present: bool = False,
+) -> Dashboard:
+    """The Results page for one baseline, slice and language; nothing invented.
+
+    An unknown ``baseline``, ``slice_name`` or chosen version falls back to the
+    default, so a stale widget value never breaks the page."""
+    t = _Text(strings, lang)
+    labels = {k: strings.text(k, lang) for k in strings.keys()}
+    skipped = t("skipped_files", n=view.skipped) if view.skipped else None
+    if view.empty:
+        return Dashboard(
+            lang=lang,
+            direction=direction(lang),
+            labels=labels,
+            empty=True,
+            empty_message=f"{t('empty_title')} {t('empty_message')}",
+            comparison={},
+            comparison_chart={},
+            skipped_note=skipped,
+        )
+    keys = [b.key for b in BASELINES]
+    baseline = baseline if baseline in keys else DEFAULT_BASELINE
+    results = view.for_baseline(baseline)
+    slices = _slice_options(results, t)
+    if slice_name not in {o.key for o in slices}:
+        slice_name = RESULT_SLICE
+    rows = _comparison_rows(view, baseline, tenant_cap, t)
+    chosen = _choices(results, rows, choices or {})
+    by_key = {version_key(r): r for r in results}
+    overview = tuple(
+        _step_view(step, results, chosen.get(step), by_key, slice_name, t)
+        for step in STEPS
+    )
+    cache = tuple(
+        replace(row, misses_note=t(f"misses_{row.source}"))
+        for row in cache_monitor(results)
+    )
+    routing_key = chosen.get("routing")
+    routing = _routing(by_key[routing_key], tenant_cap, t) if routing_key else None
+    return Dashboard(
+        lang=lang,
+        direction=direction(lang),
+        labels=labels,
+        empty=False,
+        baseline=baseline,
+        baselines=tuple(Option(k, t(f"baseline_{k}")) for k in keys),
+        slice_name=slice_name,
+        slices=slices,
+        combined_note=t("combined_unformatted" if final_present else "combined_absent"),
+        overview=overview,
+        comparison=rows,
+        comparison_chart={step: _comparison_chart(r) for step, r in rows.items()},
+        cache=cache,
+        gate=_gate(results, t),
+        routing=routing,
+        skipped_note=skipped,
+        tables=_tables(overview, rows, cache, routing, t),
+    )
+
+
+class _Text:
+    def __init__(self, strings: Strings, lang: str) -> None:
+        self.strings, self.lang = strings, lang
+
+    def __call__(self, key: str, **fields: object) -> str:
+        return self.strings.text(key, self.lang, **fields)
+
+    def amount(self, value: Decimal | None) -> str:
+        return self("unknown") if value is None else f"{value:,.4f}"
+
+    def share(self, value: Decimal | float | None) -> str:
+        return self("unknown") if value is None else f"{float(value):.2%}"
+
+    def interval(self, ci: tuple[float, float] | None) -> str:
+        if ci is None:
+            return self("interval_none")
+        return f"[{ci[0]:.2%}, {ci[1]:.2%}]"
+
+    def unit(self, result: LeverResult) -> str:
+        if cost_unit(result.baseline) == "recorded":
+            return self("unit_recorded")
+        return self("unit_repriced", pv=result.manifest.price_version)
+
+    def evidence(self, evidence_class: str, correctness_state: str) -> str:
+        ev = self("ev_" + re.sub(r"[ -]", "_", evidence_class))
+        return f"{ev} · {self.correctness(correctness_state)}"
+
+    def correctness(self, state: str) -> str:
+        if state in ("unmeasured", "measured"):
+            return self(f"corr_{state}")
+        sampled = re.fullmatch(r"sampled:([0-9]+)", state)
+        return (
+            self("corr_sampled", n=int(sampled[1])) if sampled else self("corr_unknown")
+        )
+
+
+def _slice_options(results: Sequence[LeverResult], t: _Text) -> tuple[Option, ...]:
+    present = {name for r in results for name in r.slices}
+    options = [Option(RESULT_SLICE, t("slice_result"))]
+    options += [Option(n, t(f"slice_{n}")) for n in _PLAIN_SLICES if n in present]
+    options += [
+        Option(n, t("slice_lang", code=n.removeprefix("lang:")))
+        for n in sorted(present)
+        if _LANG.match(n)
+    ]
+    return tuple(options)
+
+
+# --- comparison (UI-R23) ---
+
+
+def _clean(value: object) -> object:
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return None
+    if type(value).__name__ == "NAType":  # pandas' missing marker
+        return None
+    return value
+
+
+_STATUS_KEYS = {
+    "ranked": "status_ranked",
+    "insufficient evidence": "status_insufficient",
+    "baseline missing": "status_missing",
+    "duplicate version": "status_duplicate",
+}
+
+
+def _comparison_rows(
+    view: LeverView, baseline: str, cap: Decimal, t: _Text
+) -> dict[str, tuple[ComparisonRow, ...]]:
+    frame = compare(view.results, baseline=baseline, max_tenant_share=cap)
+    # Some writers reuse one lever_id under all four baselines (only the file
+    # names differ), so the lookup is per baseline.
+    by_id = {r.lever_id: r for r in view.for_baseline(baseline)}
+    groups: dict[object, int] = {}
+    out: dict[str, list[ComparisonRow]] = {}
+    for raw in frame.astype(object).to_dict("records"):
+        row = {k: _clean(v) for k, v in raw.items()}
+        step = str(row["step"])
+        result = by_id.get(str(row["lever_id"])) if row["lever_id"] else None
+        if result is None:  # baseline missing: name it by another baseline's file
+            twin = next(
+                (
+                    r
+                    for r in view.results
+                    if (r.step, r.version) == (step, row["version"])
+                ),
+                None,
+            )
+            version = version_key(twin) if twin else str(row["version"])
+            group = ""
+        else:
+            version = version_key(result)
+            n = groups.setdefault(row["group"], len(groups) + 1)
+            group = t(
+                "group_text",
+                n=n,
+                requests=f"{result.n_requests:,}",
+                pv=result.manifest.price_version,
+            )
+        ci = (
+            (float(row["ci_low"]), float(row["ci_high"]))
+            if row["ci_low"] is not None and row["ci_high"] is not None
+            else None
+        )
+        out.setdefault(step, []).append(
+            ComparisonRow(
+                rank=None if row["rank"] is None else int(row["rank"]),
+                status=str(row["status"]),
+                status_label=t(_STATUS_KEYS.get(str(row["status"]), "unknown")),
+                version=version,
+                baseline=baseline,
+                group=group,
+                saving=row["saving"],  # type: ignore[arg-type]
+                saving_share=row["saving_share"],  # type: ignore[arg-type]
+                interval=ci,
+                eligible=str(row["eligible"] or "—"),
+                correctness=t.correctness(result.correctness_state) if result else "—",
+                evidence_class=(
+                    t.evidence(result.evidence_class, result.correctness_state)
+                    if result
+                    else "—"
+                ),
+                tenant_flag=str(row["tenant_flag"] or t("unknown")),
+                unit=t.unit(result) if result else "",
+            )
+        )
+    return {step: tuple(rows) for step, rows in out.items()}
+
+
+def _comparison_chart(rows: Sequence[ComparisonRow]) -> tuple[dict[str, object], ...]:
+    return tuple(
+        {
+            "version": r.version,
+            "saving_share": float(r.saving_share),
+            "ranked": r.status == "ranked",
+            "status": r.status_label,
+        }
+        for r in rows
+        if r.saving_share is not None
+    )
+
+
+def _tables(
+    overview: Sequence[StepView],
+    comparison: Mapping[str, Sequence[ComparisonRow]],
+    cache: Sequence[CacheRow],
+    routing: RoutingTable | None,
+    t: _Text,
+) -> dict[str, tuple[dict[str, str], ...]]:
+    def count(n: int | None) -> str:
+        return t("not_reported") if n is None else f"{n:,}"
+
+    out: dict[str, tuple[dict[str, str], ...]] = {}
+    for step in overview:
+        if step.waterfall is None:
+            continue
+        out[f"waterfall:{step.step}"] = tuple(
+            {
+                t("row_block"): t(f"block_{r.block}"),
+                t("row_before"): t.amount(r.baseline)
+                if r.priced
+                else t("not_priced_cell"),
+                t("row_saving"): t.amount(r.saving)
+                if r.priced
+                else t("not_priced_cell"),
+                t("row_after"): t.amount(r.after) if r.priced else t("not_priced_cell"),
+            }
+            for r in step.waterfall.rows
+        )
+    for step, rows in comparison.items():
+        out[f"comparison:{step}"] = tuple(
+            {
+                t("col_rank"): "—" if r.rank is None else str(r.rank),
+                t("col_status"): r.status_label,
+                t("col_version"): r.version,
+                t("saving"): t.amount(r.saving),
+                t("saving_share"): t.share(r.saving_share),
+                t("interval"): t.interval(r.interval),
+                t("col_eligible"): r.eligible,
+                t("col_evidence"): r.evidence_class,
+                t("col_tenant"): r.tenant_flag,
+                t("col_group"): r.group,
+            }
+            for r in rows
+        )
+    out["cache"] = tuple(
+        {
+            t("col_version"): r.version,
+            t("lookups"): count(r.lookups),
+            t("hits"): count(r.hits),
+            t("misses"): count(r.misses),
+            t("guard_blocks"): count(r.guard_blocks),
+            t("gate_skips"): count(r.gate_skips),
+            t("shadow"): t("not_reported")
+            if r.shadow_sampled is None
+            else " / ".join(
+                count(n) for n in (r.shadow_sampled, r.shadow_agree, r.shadow_unknown)
+            ),
+            t("misses_how"): r.misses_note,
+        }
+        for r in cache
+    )
+    if routing is not None:
+        out["bots"] = tuple(
+            {
+                t("bot"): b.label,
+                t("requests"): count(b.n_requests),
+                t("moved"): count(b.n_moved),
+                t("moved_share"): t.share(b.moved_share),
+                t("saving"): t.amount(b.saving),
+                t("saving_share"): t.share(b.saving_share),
+                t("share_of_saving"): t.share(b.share_of_saving),
+                t("insufficient"): "✓" if b.insufficient else "",
+            }
+            for b in routing.bots
+        )
+        out["tenants"] = tuple(
+            {
+                t("tenant"): r.label,
+                t("requests"): count(r.n_requests),
+                t("tenant_share"): t.share(r.share),
+                t("col_tenant"): r.flag_text,
+                t("saving_share"): t.share(r.saving_share),
+                t("share_of_saving"): t.share(r.share_of_saving),
+            }
+            for r in routing.tenants
+        )
+    return out
+
+
+def _choices(
+    results: Sequence[LeverResult],
+    rows: Mapping[str, Sequence[ComparisonRow]],
+    wanted: Mapping[str, str],
+) -> dict[str, str]:
+    """Per step: the wanted version if it exists, else the first rank 1, else
+    the first version."""
+    chosen = {}
+    for step in STEPS:
+        options = sorted({version_key(r) for r in results if r.step == step})
+        if not options:
+            continue
+        if wanted.get(step) in options:
+            chosen[step] = wanted[step]
+            continue
+        first = next(
+            (r.version for r in rows.get(step, ()) if r.rank == 1),
+            None,
+        )
+        chosen[step] = first if first in options else options[0]
+    return chosen
+
+
+# --- overview and waterfall (UI-R21, UI-R22, UI-R24, UI-R28) ---
+
+
+def _split(values: Mapping[str, Decimal], prefix: str) -> dict[str, Decimal]:
+    return {
+        k.removeprefix(prefix): v for k, v in values.items() if k.startswith(prefix)
+    }
+
+
+def _step_view(
+    step: str,
+    results: Sequence[LeverResult],
+    chosen: str | None,
+    by_key: Mapping[str, LeverResult],
+    slice_name: str,
+    t: _Text,
+) -> StepView:
+    options = tuple(sorted({version_key(r) for r in results if r.step == step}))
+    base = StepView(step, t(f"step_{step}"), options, chosen, None)
+    if chosen is None:
+        return replace(base, message=t("step_none"))
+    result = by_key[chosen]
+    repriced = cost_unit(result.baseline) == "repriced"
+    base = replace(
+        base,
+        result_id=result.lever_id,
+        unit=t.unit(result),
+        unit_note=t("not_priced") if repriced else None,
+        evidence=t.evidence(result.evidence_class, result.correctness_state),
+        quality=t("quality_line") if result.correctness_state != "measured" else None,
+    )
+    if slice_name == RESULT_SLICE:
+        cost, save, stored_share = result.baseline_cost, result.saving, None
+        ci = (
+            (result.ci_low, result.ci_high)
+            if result.ci_low is not None and result.ci_high is not None
+            else None
+        )
+    else:
+        values = result.slices.get(slice_name)
+        if values is None:
+            return replace(base, message=t("slice_missing"))
+        if repriced and "baseline:fees" in values:
+            return replace(base, message=t("slice_other_units"))
+        cost, save = _split(values, "baseline:"), _split(values, "saving:")
+        stored_share, ci = values.get("saving_share"), None
+    try:
+        wf = _waterfall(
+            result.lever_id, result.baseline, cost, save, note=t("not_priced")
+        )
+    except ValueError:
+        return replace(base, message=t("inconsistent"))
+    share = stored_share
+    if share is None and wf.saving_total is not None and wf.baseline_total:
+        share = wf.saving_total / wf.baseline_total
+    interval_text = t.interval(ci)
+    if slice_name != RESULT_SLICE:
+        interval_text = f"{interval_text} — {t('interval_result_only')}"
+    cards = (
+        Card(
+            "baseline_cost",
+            t("baseline_cost"),
+            wf.baseline_total,
+            t.amount(wf.baseline_total),
+        ),
+        Card("saving", t("saving"), wf.saving_total, t.amount(wf.saving_total)),
+        Card("saving_share", t("saving_share"), share, t.share(share)),
+        Card("interval", t("interval"), None, interval_text),
+    )
+    return replace(
+        base, cards=cards, interval=ci, waterfall=wf, chart=_waterfall_chart(wf, t)
+    )
+
+
+def _waterfall_chart(wf: Waterfall, t: _Text) -> tuple[dict[str, object], ...]:
+    """Bars from the baseline down to the after-cost; none if a value is unknown
+    (UI-G08: no invented data)."""
+    priced = [r for r in wf.rows if r.priced and r.part_of is None]
+    if wf.baseline_total is None or wf.after_total is None:
+        return ()
+    if any(r.saving is None for r in priced):
+        return ()
+    bars: list[dict[str, object]] = [
+        _bar(t("row_before"), 0, wf.baseline_total, "total", t)
+    ]
+    running = wf.baseline_total
+    for row in priced:
+        assert row.saving is not None
+        bars.append(
+            _bar(
+                f"{t('row_saving')}: {t('block_' + row.block)}",
+                running - row.saving,
+                running,
+                "saving",
+                t,
+                value=row.saving,
+            )
+        )
+        running -= row.saving
+    bars.append(_bar(t("row_after"), 0, wf.after_total, "total", t))
+    return tuple(bars)
+
+
+def _bar(
+    label: str,
+    start: Decimal | int,
+    end: Decimal,
+    kind: str,
+    t: _Text,
+    *,
+    value: Decimal | None = None,
+) -> dict[str, object]:
+    shown = end - start if value is None else value
+    return {
+        "label": label,
+        "start": float(start),
+        "end": float(end),
+        "kind": kind,
+        "text": t.amount(Decimal(shown)),
+    }
+
+
+# --- cache monitor (UI-R25) and greeting gate (UI-R27) ---
+
+
+def _count(values: Mapping[str, Decimal], key: str) -> int | None:
+    value = values.get(key)
+    return None if value is None else int(value)
+
+
+def cache_monitor(results: Sequence[LeverResult]) -> tuple[CacheRow, ...]:
+    """Counts from the cache results' own slices; absent counts stay None.
+
+    - ``retrieval`` slice (retrieval-result cache): misses = lookups − hits −
+      guard blocks − ineligible (its four lookup statuses).
+    - ``session_memo`` slice (session memo + greeting gate): hits = reused,
+      misses = lookups that ran (``n_performed``).
+    - otherwise the ``all`` slice's ``n_cache_hits``: misses = eligible requests
+      not served from the cache.
+    No result carries guard-block reasons yet, so ``guard_reasons`` is None.
+    """
+    rows = []
+    for r in sorted(results, key=version_key):
+        if r.step != "cache":
+            continue
+        if "retrieval" in r.slices:
+            s = r.slices["retrieval"]
+            parts = [
+                _count(s, k)
+                for k in ("n_lookups_llm", "n_hits", "n_guard_blocks", "n_ineligible")
+            ]
+            lookups, hits, guard, ineligible = parts
+            misses = (
+                lookups - hits - guard - ineligible  # type: ignore[operator]
+                if None not in parts
+                else None
+            )
+            rows.append(
+                CacheRow(
+                    version_key(r),
+                    "retrieval",
+                    lookups=lookups,
+                    hits=hits,
+                    misses=misses,
+                    guard_blocks=guard,
+                    shadow_sampled=_count(s, "n_shadow_sampled"),
+                    shadow_agree=_count(s, "n_shadow_agree"),
+                    shadow_unknown=_count(s, "n_shadow_unknown"),
+                )
+            )
+        elif "session_memo" in r.slices:
+            s = r.slices["session_memo"]
+            rows.append(
+                CacheRow(
+                    version_key(r),
+                    "session_memo",
+                    lookups=_count(s, "n_retrieval_turns"),
+                    hits=_count(s, "n_reused"),
+                    misses=_count(s, "n_performed"),
+                    guard_blocks=_count(s, "n_guard_block"),
+                    gate_skips=_count(s, "n_skipped_phatic"),
+                )
+            )
+        else:
+            hits = _count(r.slices["all"], "n_cache_hits")
+            misses = (
+                r.n_eligible - hits
+                if hits is not None and hits <= r.n_eligible
+                else None
+            )
+            rows.append(CacheRow(version_key(r), "requests", hits=hits, misses=misses))
+    return tuple(rows)
+
+
+def _gate(results: Sequence[LeverResult], t: _Text) -> GateView | None:
+    """The greeting gate's token part (ADR-0039): recorded baseline → the
+    result's token-cost saving (the memo saves fees only); repriced → the
+    slice's ``token_saving_lower_bound``."""
+    for r in sorted(results, key=version_key):
+        if r.step != "cache" or "session_memo" not in r.slices:
+            continue
+        s = r.slices["session_memo"]
+        repriced = cost_unit(r.baseline) == "repriced"
+        value = (
+            s.get("token_saving_lower_bound")
+            if repriced
+            else r.saving.get("token_cost")
+        )
+        return GateView(
+            version=version_key(r),
+            token_saving=value,
+            lower_bound=repriced,
+            skipped=_count(s, "n_skipped_phatic"),
+            unit=t.unit(r),
+            note=t("gate_lower_bound") if repriced else "",
+            text=t.amount(value),
+            skipped_text=t("not_reported")
+            if _count(s, "n_skipped_phatic") is None
+            else f"{_count(s, 'n_skipped_phatic'):,}",
+        )
+    return None
+
+
+# --- routing per bot (UI-R26) ---
+
+
+def _routing(result: LeverResult, cap: Decimal, t: _Text) -> RoutingTable:
+    repriced = cost_unit(result.baseline) == "repriced"
+    bots, tenants, other_units = [], [], False
+    for name in sorted(result.slices, key=_rank_order):
+        match = _RANK.match(name)
+        if not match:
+            continue
+        s, label = result.slices[name], rank_label(match[1], int(match[2]))
+        if match[1] == "bot":
+            other_units |= repriced and "baseline:fees" in s
+            n, moved = _count(s, "n_requests"), _count(s, "n_moved")
+            bots.append(
+                BotRow(
+                    label=label,
+                    n_requests=n,
+                    n_moved=moved,
+                    moved_share=Decimal(moved) / Decimal(n)
+                    if n and moved is not None
+                    else None,
+                    saving=None if other_units else s.get("saving:total"),
+                    saving_share=s.get("saving_share"),
+                    share_of_saving=s.get("share_of_saving"),
+                    insufficient=s.get("insufficient", Decimal(0)) != 0,
+                )
+            )
+        else:
+            share = s.get("share")
+            flagged = share is not None and share > cap
+            tenants.append(
+                TenantRow(
+                    label=label,
+                    n_requests=_count(s, "n_requests"),
+                    share=share,
+                    flagged=flagged,
+                    flag_text=t("flag_over_cap", cap=f"{float(cap):.0%}")
+                    if flagged
+                    else t("flag_ok"),
+                    saving_share=s.get("saving_share"),
+                    share_of_saving=s.get("share_of_saving"),
+                )
+            )
+    message = None
+    if not bots:
+        message = t("routing_none")
+    elif other_units:
+        message = t("slice_other_units")
+    traffic = result.slices.get("traffic_weighted", {}).get("saving_share")
+    return RoutingTable(
+        traffic_weighted_text=t.share(traffic),
+        version=version_key(result),
+        bots=tuple(bots),
+        tenants=tuple(tenants),
+        traffic_weighted_share=result.slices.get("traffic_weighted", {}).get(
+            "saving_share"
+        ),
+        caveats=tuple(result.assumptions),
+        message=message,
+    )
+
+
+def _rank_order(name: str) -> tuple[str, int]:
+    match = _RANK.match(name)
+    return (match[1], int(match[2])) if match else ("", 0)
