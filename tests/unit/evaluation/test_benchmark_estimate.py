@@ -166,3 +166,20 @@ def test_scope_selects_pilot_or_main_records(monkeypatch):
     assert len(pilot) == bench.config.pilot.size and set(pilot) <= set(main)
     with pytest.raises(BenchmarkRefused):
         bench.record_ids("everything")
+
+
+def test_cut_first_d_plans_refuse_with_counts_while_gates_are_open(monkeypatch, capsys):
+    bench = _script("benchmark.py")
+    monkeypatch.setattr(
+        sys, "argv", ["benchmark.py", "cache-hit-plan", "--hits", "300"]
+    )
+    assert bench.main() == 1
+    refused = json.loads(capsys.readouterr().out)["refused"]
+    assert "set by owner: judges.models" in refused
+    assert any("O-1" in r for r in refused)
+    assert any("'judge_calls': 1200" in r for r in refused)
+    monkeypatch.setattr(
+        sys, "argv", ["benchmark.py", "ablation-plan", "--records", "10"]
+    )
+    assert bench.main() == 1
+    assert "--versions" in capsys.readouterr().out
