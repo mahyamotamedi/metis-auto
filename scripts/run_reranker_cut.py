@@ -409,9 +409,9 @@ def baseline_assumptions(baseline: str, pricing: Pricing) -> tuple[str, ...]:
     priced_at = {
         "premium_gpt_5_5": f"{pricing.premium_model}'s price: an estimate only, the "
         "model is never called (ADR-0026).",
-        "todays_models": "its logged model's price. Only sprint-catalogue models are "
-        "priced (n_eligible_cost_known); gemini-2.5-flash is not, so the cost share "
-        "is of a small, unrepresentative subset.",
+        "todays_models": "its logged model's price (the [baselines] price table, "
+        "replay prices of ADR-0041); a logged model without a price leaves the row "
+        "out (n_eligible_cost_known), never zero.",
         "best_single_cheap": f"{pricing.cheap_model}, the cheapest callable model "
         "over the report period (cost only; capability and quality not checked).",
     }[baseline]

@@ -1,0 +1,11 @@
+bot_rank,incumbent,candidate,fit_reason,reassigned_in:todays_models,reassigned_in:premium_gpt_5_5,reassigned_in:best_single_cheap,reassigned_in:as_logged,n_requests,n_cost_known,n_switched,cost_per_request_before,cost_per_request_after,share_of_cost,quality
+bot-01,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,5809,5809,0,0.0241576096,0.0241576096,0.578396108,not proven
+bot-02,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,1559,1559,0,0.0159240526,0.0159240526,0.102322171,not proven
+bot-03,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,1406,1406,0,0.0106944143,0.0106944143,0.0619744031,not proven
+bot-04,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,926,926,0,0.0117360848,0.0117360848,0.044792392,not proven
+bot-05,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,1323,1323,0,0.0046848689,0.0046848689,0.0255462592,not proven
+bot-06,gemini-2.5-flash,gpt-4.1-nano,chosen,True,True,False,True,401,401,400,0.0120476696,0.00334606339,0.0199121177,not proven
+bot-07,gemini-2.5-flash,gpt-4.1-nano,chosen,True,True,False,True,220,220,220,0.0189514935,0.004892527,0.0171844703,not proven
+bot-08,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,898,898,0,0.00443633332,0.00443633332,0.016419901,not proven
+bot-09,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,204,204,0,0.0189243385,0.0189243385,0.0159118583,not proven
+bot-10,gemini-2.5-flash,gpt-4.1-nano,chosen,True,True,False,True,988,988,988,0.00340459441,0.000629488138,0.0138641215,not proven

@@ -43,6 +43,8 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-03: [Sprint Day 3, Pipeline C: routing base, eligibility, failover and candidate cost replay](progress/2026-11-03-sprint-day-3-pipeline-c-routing-base-eligibility-failover.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: D-2 results dashboard, UI spec Stages 0 and 1](progress/2026-11-03-sprint-day-3-pipeline-c-results-dashboard.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: CI on pinned Ubuntu, macOS on main only, ADR-numbering check](progress/2026-11-03-sprint-day-3-pipeline-c-ci-pin-ubuntu-macos-main-adr-check.md)
+- 2026-11-03: [Sprint Day 3, Pipeline A: R-A1 and R-A2 today's-models results repriced with the replay prices](progress/2026-11-03-sprint-day-3-pipeline-a-reprice-todays-models.md)
+- 2026-11-03: [Sprint Day 3, Pipeline A: R-A3 per-bot reassignment on R-0, accounted per ADR-0046](progress/2026-11-03-sprint-day-3-pipeline-a-per-bot-reassignment-r-a3.md)
 - 2026-11-03: [Pipeline B, Day 3 decision records: kNN router and Redis cache store](progress/2026-11-03-pipeline-b-day-3-decision-records.md)
 - 2026-11-03: [Jev tasks J-1 to J-4: the note, the configuration, and the remapping](progress/2026-11-03-jev-tasks-j1-to-j4.md)
 - 2026-11-03: [Decision router: second sync with main, and R-0's routing base](progress/2026-11-03-decision-router-sync-with-main-routing-base.md)

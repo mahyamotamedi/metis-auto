@@ -327,6 +327,31 @@ def _reranker_cut(load: Loader, m: re.Match, sprint: dict, req, rows):
     )
 
 
+def _per_bot_reassignment(load: Loader, m: re.Match, sprint: dict, req, rows):
+    """R-A3 fitted on the tune rows by ``scripts/run_per_bot_reassignment.py``
+    (its loader and R-0 eligibility); the fit is not timed. ``apply`` makes the
+    ``todays_models`` decision, so the other baselines' gates are not needed."""
+    import importlib.util
+
+    from metis_auto.analysis.baselines_full import cached_reported_separately
+
+    spec = importlib.util.spec_from_file_location(
+        "run_per_bot_reassignment_for_overhead",
+        ROOT / "scripts" / "run_per_bot_reassignment.py",
+    )
+    rp = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = rp
+    spec.loader.exec_module(rp)
+    ctx = make_context(sprint, None)
+    return rp.fit_version(
+        sprint,
+        rp.tune_rows(req, ctx),
+        ctx,
+        cached_reported_separately(req),
+        with_reasoning=m["set"] is not None,
+    )
+
+
 TARGETS = (
     Target(
         pattern=r"^cache\.popular_question\.(?P<variant>first_turn|all_turns)"
@@ -348,6 +373,19 @@ TARGETS = (
             "the headline point; chunks (and text) of the sampled rows are loaded "
             "before timing, so reading data is not timed; scoring and the cut are. "
             "Not a reranker model's latency."
+        ),
+    ),
+    Target(
+        pattern=r"^route\.per_bot(?P<set>\.with_reasoning_models)?$",
+        experiment=ROOT
+        / "experiments"
+        / "routing"
+        / "exp-route-001-per-bot-reassignment",
+        build=_per_bot_reassignment,
+        caveat=(
+            "the per-bot choice is fitted on the tune split before timing (batch "
+            "work); apply times the repricing and the eligibility check of the "
+            "bot's choice (R-0 candidate_costs)."
         ),
     ),
 )
