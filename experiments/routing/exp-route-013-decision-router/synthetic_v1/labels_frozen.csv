@@ -1,0 +1,101 @@
+﻿id,language,category,turn_depth,previous_user_turn,message,proposed_tier,final_tier,changed_by_owner,borderline,reason
+SYN-FA-001,fa,greeting,0,,[SYNTHETIC] سلام,0,0,0,0,"Greeting only, no task"
+SYN-FA-002,fa,greeting,0,,[SYNTHETIC] سلام وقت بخیر، خوبی؟,0,0,0,0,Small talk
+SYN-FA-003,fa,greeting,0,,[SYNTHETIC] صبح بخیر,0,0,0,0,Greeting only
+SYN-FA-004,fa,greeting,0,,[SYNTHETIC] ممنون از راهنماییت,0,0,0,0,"Thanks, no task"
+SYN-FA-005,fa,greeting,0,,[SYNTHETIC] خداحافظ، روز خوبی داشته باشی,0,0,0,0,Farewell
+SYN-FA-006,fa,greeting,0,,[SYNTHETIC] مرسی، عالی بود 🙏,0,0,0,0,Thanks with emoji
+SYN-FA-007,fa,greeting,0,,[SYNTHETIC] درود، می‌تونی کمکم کنی؟,0,0,0,0,"Opening line, the task has not been stated yet"
+SYN-FA-008,fa,follow_up,1,[SYNTHETIC] یه برنامه غذایی ساده برای یک هفته بهم بده,[SYNTHETIC] کوتاه‌ترش کن,0,0,0,0,Reformat the previous answer
+SYN-FA-009,fa,follow_up,1,[SYNTHETIC] فرق سرمایه‌گذاری در طلا و سهام چیه؟,[SYNTHETIC] یه مثال هم بزن,0,0,0,0,Add one example to a simple answer
+SYN-FA-010,fa,follow_up,1,[SYNTHETIC] یک تابع پایتون بنویس که اعداد اول تا n را برگرداند,[SYNTHETIC] حالا برای n خیلی بزرگ بهینه‌اش کن,1,1,0,0,"Algorithm optimisation (sieve, memory) needs a stronger model"
+SYN-FA-011,fa,follow_up,1,[SYNTHETIC] معنی کلمه «اعتماد به نفس» چیه؟,[SYNTHETIC] خب، مترادفش؟,0,0,0,0,Simple vocabulary follow-up
+SYN-FA-012,fa,follow_up,1,[SYNTHETIC] یک ایمیل رسمی برای درخواست مرخصی بنویس,[SYNTHETIC] لحنش رو کمی صمیمی‌تر کن,0,0,0,0,Tone tweak of a short text
+SYN-FA-013,fa,follow_up,1,[SYNTHETIC] این مسئله رو حل کن: قطاری با سرعت ۸۰ کیلومتر بر ساعت از تهران راه می‌افته و دو ساعت بعد قطار دیگه‌ای با سرعت ۱۲۰ دنبالش میره,[SYNTHETIC] چرا جواب مرحله دوم ۱۲۰ شد؟ توضیح بده,1,1,0,0,Explaining a step of a multi-step solution
+SYN-FA-014,fa,follow_up,1,[SYNTHETIC] قوانین بازگشت کالا در فروشگاه شما چیه؟,[SYNTHETIC] باشه، متوجه شدم,0,0,0,0,"Acknowledgement, no task"
+SYN-FA-015,fa,follow_up,1,[SYNTHETIC] یه طرح کسب‌وکار برای یه کافه کوچیک بنویس,[SYNTHETIC] بخش تحلیل مالی رو با جزئیات و پیش‌بینی سه‌ساله اضافه کن,1,1,0,0,Detailed multi-year financial projection
+SYN-FA-016,fa,factual,0,,[SYNTHETIC] پایتخت استرالیا کجاست؟,0,0,0,0,Single well-known fact
+SYN-FA-017,fa,factual,0,,[SYNTHETIC] دمای جوش آب در سطح دریا چند درجه است؟,0,0,0,0,Single well-known fact
+SYN-FA-018,fa,factual,0,,[SYNTHETIC] حافظ در چه قرنی زندگی می‌کرد؟,0,0,0,0,Single well-known fact
+SYN-FA-019,fa,factual,0,,[SYNTHETIC] فرق ویروس و باکتری چیه؟ کوتاه بگو,0,0,0,0,Short standard explanation
+SYN-FA-020,fa,factual,0,,[SYNTHETIC] چرا آسمان آبی است؟,0,0,0,0,Common short explanation
+SYN-FA-021,fa,factual,0,,[SYNTHETIC] علت‌های اصلی فروپاشی امپراتوری روم غربی را با دیدگاه‌های مختلف مورخان مقایسه کن,1,1,0,0,Comparative analysis of several schools of thought
+SYN-FA-022,fa,factual,0,,[SYNTHETIC] تورم چیه؟,0,0,0,0,Basic definition
+SYN-FA-023,fa,factual,0,,[SYNTHETIC] نحوه کار سیستم ایمنی بدن در برابر ویروس‌ها را مرحله‌به‌مرحله و دقیق توضیح بده,1,1,0,0,"Detailed, accurate multi-step explanation"
+SYN-FA-024,fa,factual,0,,[SYNTHETIC] چند قاره روی زمین هست؟,0,0,0,0,Single well-known fact
+SYN-FA-025,fa,factual,0,,[SYNTHETIC] تفاوت نظام‌های حقوقی کامن‌لا و حقوق نوشته را با مثال توضیح بده و مزایا و معایب هرکدام را بگو,1,1,0,0,Specialist comparison with examples and trade-offs
+SYN-FA-026,fa,support,0,,[SYNTHETIC] رمز عبورم رو فراموش کردم، چطور عوضش کنم؟,0,0,0,0,Standard procedure
+SYN-FA-027,fa,support,0,,[SYNTHETIC] سفارشم هنوز نرسیده، کد پیگیری رو کجا ببینم؟,0,0,0,0,Standard procedure
+SYN-FA-028,fa,support,0,,[SYNTHETIC] ساعت کاری پشتیبانی تا چنده؟,0,0,0,0,Simple lookup
+SYN-FA-029,fa,support,0,,[SYNTHETIC] چطوری اشتراکم رو لغو کنم؟,0,0,0,0,Standard procedure
+SYN-FA-030,fa,support,0,,[SYNTHETIC] پرداختم انجام شد و پول از حسابم کم شده ولی سفارش ثبت نشده، چیکار کنم؟,0,0,0,1,Common case with a standard answer (borderline)
+SYN-FA-031,fa,support,0,,[SYNTHETIC] اپلیکیشن بعد از آپدیت آخر موقع باز شدن بسته میشه؛ گوشیم اندرویده و حافظه هم خالی دارم. قبلاً پاک کردن کش رو امتحان کردم. دیگه چه کارهایی بکنم؟,1,1,0,1,Troubleshooting under several stated constraints (borderline)
+SYN-FA-032,fa,support,0,,[SYNTHETIC] می‌خوام آدرس تحویل سفارشم رو عوض کنم,0,0,0,0,Standard procedure
+SYN-FA-033,fa,support,0,,[SYNTHETIC] دو بار از کارتم پول کم شده؛ یکی برای اشتراک ماهانه و یکی هم نمی‌دونم برای چی. فاکتورها هم با هم نمی‌خونه. لطفاً بگو چی شده و چطور پیگیری کنم,1,1,0,0,Several issues to untangle at once
+SYN-FA-034,fa,support,0,,[SYNTHETIC] شماره تماس پشتیبانی چنده؟,0,0,0,0,Simple lookup
+SYN-FA-035,fa,support,0,,[SYNTHETIC] برای شرکتمون ۳۰ کاربر داریم؛ بعضی‌ها فقط گزارش می‌بینن و بعضی‌ها دسترسی کامل می‌خوان. کدوم پلن و چه ساختار دسترسی‌ای پیشنهاد می‌کنی؟,1,1,0,0,Recommendation that weighs several requirements
+SYN-FA-036,fa,translation,0,,[SYNTHETIC] این جمله را به انگلیسی ترجمه کن: من فردا به دانشگاه می‌روم.,0,0,0,0,Short literal sentence
+SYN-FA-037,fa,translation,0,,[SYNTHETIC] «خسته نباشید» رو به انگلیسی چی بگم؟,0,0,0,0,Common idiom with a known rendering
+SYN-FA-038,fa,translation,0,,[SYNTHETIC] این بند قرارداد را به انگلیسی حقوقی دقیق ترجمه کن: «در صورت عدم ایفای تعهدات از سوی طرف دوم ظرف سی روز از تاریخ ابلاغ، طرف اول مجاز به فسخ یک‌جانبه قرارداد و مطالبه خسارت خواهد بود.»,1,1,0,0,Precise legal register
+SYN-FA-039,fa,translation,0,,[SYNTHETIC] کلمه «پنجره» به انگلیسی چی میشه؟,0,0,0,0,Single word
+SYN-FA-040,fa,translation,0,,[SYNTHETIC] این بیت حافظ را به انگلیسی ترجمه کن طوری که حس شعری‌اش حفظ شود: «الا یا ایها الساقی ادر کأساً و ناولها / که عشق آسان نمود اول ولی افتاد مشکل‌ها»,1,1,0,0,Literary translation that keeps the poetry
+SYN-FA-041,fa,translation,0,,[SYNTHETIC] این جمله رو به عربی ترجمه کن: «جلسه ساعت ده صبح برگزار می‌شود.»,0,0,0,0,Short literal sentence
+SYN-FA-042,fa,writing,0,,[SYNTHETIC] یه کپشن کوتاه برای عکس غروب دریا بنویس,0,0,0,0,One short creative line
+SYN-FA-043,fa,writing,0,,[SYNTHETIC] یک پیام تبریک تولد کوتاه برای همکارم بنویس,0,0,0,0,Short template text
+SYN-FA-044,fa,writing,0,,[SYNTHETIC] یک مقاله ۸۰۰ کلمه‌ای درباره تأثیر هوش مصنوعی بر بازار کار ایران بنویس، با مقدمه، سه استدلال و نتیجه‌گیری,1,1,0,0,Long structured argument
+SYN-FA-045,fa,writing,0,,[SYNTHETIC] یه دوبیتی طنز درباره ترافیک تهران بگو,1,1,0,0,Persian verse with metre and rhyme is hard for small models
+SYN-FA-046,fa,writing,0,,[SYNTHETIC] یه نامه رسمی به شهرداری بنویس و از خرابی آسفالت کوچه‌مون شکایت کن؛ مؤدبانه ولی محکم,0,0,0,1,Standard formal letter (borderline)
+SYN-FA-047,fa,writing,0,,[SYNTHETIC] یک متن تبلیغاتی متقاعدکننده برای یک اپلیکیشن یادگیری زبان بنویس، جداگانه برای سه گروه: دانش‌آموز، کارمند و بازنشسته,1,1,0,0,Three tailored persuasive texts
+SYN-FA-048,fa,writing,0,,[SYNTHETIC] یه جمله انگیزشی کوتاه برای شروع روز بگو,0,0,0,0,One short line
+SYN-FA-049,fa,writing,0,,[SYNTHETIC] خلاصه‌ای سه‌خطی از داستان «شازده کوچولو» بنویس,0,0,0,0,Short summary of a well-known book
+SYN-FA-050,fa,writing,0,,[SYNTHETIC] یک داستان کوتاه با پایان غیرمنتظره بنویس که راوی آن غیرقابل‌اعتماد باشد,1,1,0,0,Literary craft: unreliable narrator and twist
+SYN-FA-051,fa,code,0,,[SYNTHETIC] در پایتون چطور طول یک لیست را بگیرم؟,0,0,0,0,One built-in function
+SYN-FA-052,fa,code,0,,[SYNTHETIC] یک تابع بنویس که تشخیص بدهد یک رشته پالیندروم است یا نه,0,0,0,0,Classic beginner exercise
+SYN-FA-053,fa,code,0,,[SYNTHETIC] برنامه‌ای بنویس که یک فایل لاگ بزرگ را خط‌به‌خط بخواند، خطاها را بر اساس نوع گروه‌بندی کند و ده خطای پرتکرار را با تعدادشان گزارش بدهد,1,1,0,0,"Streaming, parsing and aggregation"
+SYN-FA-054,fa,code,0,,[SYNTHETIC] فرق لیست و تاپل در پایتون چیه؟,0,0,0,0,Basic concept
+SYN-FA-055,fa,code,0,,[SYNTHETIC] یک صف پیام ساده با تلاش مجدد و صف خطا طراحی کن و کدش را بنویس,1,1,0,0,Design plus implementation
+SYN-FA-056,fa,code,0,,[SYNTHETIC] وقتی روی یک لیست حلقه می‌زنم و همزمان عنصر حذف می‌کنم خطای ایندکس خارج از محدوده می‌گیرم؛ چرا و چطور درستش کنم؟,0,0,0,1,Well-known pitfall with a standard fix (borderline)
+SYN-FA-057,fa,code,0,,[SYNTHETIC] الگوریتمی برای پیدا کردن کوتاه‌ترین مسیر در گرافی با یال‌های وزن منفی پیاده‌سازی کن و پیچیدگی زمانی‌اش را تحلیل کن,1,1,0,0,"Algorithm choice, implementation and analysis"
+SYN-FA-058,fa,math,0,,[SYNTHETIC] ۱۲ ضرب در ۸ چند میشه؟,0,0,0,0,Simple arithmetic
+SYN-FA-059,fa,math,0,,[SYNTHETIC] ۱۵ درصد از ۲۴۰ هزار تومان چقدر است؟,0,0,0,0,One-step percentage
+SYN-FA-060,fa,math,0,,[SYNTHETIC] اگر قیمت کالایی اول ۲۰٪ زیاد و بعد ۲۰٪ کم شود، قیمت نهایی نسبت به قیمت اول چه تغییری کرده؟ توضیح بده,1,1,0,1,Classic trap; small models often say 'no change' (borderline)
+SYN-FA-061,fa,math,0,,[SYNTHETIC] مساحت دایره‌ای به شعاع ۵ سانتی‌متر چقدر است؟,0,0,0,0,One formula
+SYN-FA-062,fa,math,0,,[SYNTHETIC] ثابت کن که رادیکال ۲ عدد گنگ است,1,1,0,0,Proof
+SYN-FA-063,fa,math,0,,[SYNTHETIC] وامی به مبلغ ۲۰۰ میلیون تومان با سود سالانه ۲۳ درصد و بازپرداخت ۳۶ ماهه دارم؛ قسط ماهانه را حساب کن و مراحل را نشان بده,1,1,0,0,"Amortisation formula, several steps"
+SYN-FA-064,fa,math,0,,[SYNTHETIC] معادله ۲x + ۶ = ۱۸ را حل کن,0,0,0,0,One-step linear equation
+SYN-FA-065,fa,reasoning,0,,[SYNTHETIC] سه جعبه داریم که برچسب همه‌شان اشتباه است: سیب، پرتقال و مخلوط. با برداشتن فقط یک میوه از یک جعبه چطور همه برچسب‌ها را درست کنیم؟,1,1,0,0,Logic puzzle
+SYN-FA-066,fa,reasoning,0,,[SYNTHETIC] اگر امروز سه‌شنبه باشد، ۱۰۰ روز بعد چه روزی است؟,1,1,0,0,Modular counting; small models slip
+SYN-FA-067,fa,reasoning,0,,[SYNTHETIC] بین دو پیشنهاد کاری مانده‌ام: یکی حقوق بیشتر با رفت‌وآمد دو ساعته، دیگری حقوق کمتر ولی دورکاری و فرصت یادگیری. با در نظر گرفتن هزینه‌ها و رشد شغلی یک چارچوب تصمیم‌گیری بده و جمع‌بندی کن,1,1,0,0,Weighing several factors
+SYN-FA-068,fa,reasoning,0,,[SYNTHETIC] علی از رضا بلندتر است و رضا از مریم بلندتر است. چه کسی از همه کوتاه‌تر است؟,0,0,0,0,One-step transitive inference
+SYN-FA-069,fa,reasoning,0,,[SYNTHETIC] یک برنامه سفر پنج‌روزه به اصفهان و کاشان با بودجه محدود بچین و ترتیب بازدیدها را بهینه کن,1,1,0,0,Planning under constraints
+SYN-FA-070,fa,reasoning,0,,[SYNTHETIC] یک برنامه مطالعه شش‌ماهه برای کنکور بچین که ضعفم در فیزیک و ریاضی را جبران کند و زمان مرور هم داشته باشد,1,1,0,0,Planning under constraints
+SYN-EN-001,en,greeting,0,,[SYNTHETIC] Hi there!,0,0,0,0,Greeting only
+SYN-EN-002,en,follow_up,1,[SYNTHETIC] Give me three tips for better sleep,"[SYNTHETIC] Thanks, can you make it a bit shorter?",0,0,0,0,Reformat the previous answer
+SYN-EN-003,en,factual,0,,[SYNTHETIC] What is the capital of Canada?,0,0,0,0,Single well-known fact
+SYN-EN-004,en,factual,0,,[SYNTHETIC] Explain step by step how public-key cryptography lets two strangers agree on a secret over an open channel.,1,1,0,0,Accurate multi-step technical explanation
+SYN-EN-005,en,support,0,,[SYNTHETIC] How do I change the email address on my account?,0,0,0,0,Standard procedure
+SYN-EN-006,en,support,0,,"[SYNTHETIC] My invoice shows a charge for a plan I downgraded last month, and the proration looks wrong. Can you walk me through how it should have been calculated?",1,1,0,0,Billing reasoning across periods
+SYN-EN-007,en,translation,0,,[SYNTHETIC] Translate into Persian: 'The meeting has been moved to Thursday.',0,0,0,0,Short literal sentence
+SYN-EN-008,en,writing,0,,[SYNTHETIC] Write a two-line thank-you note to a teacher.,0,0,0,0,Short template text
+SYN-EN-009,en,writing,0,,[SYNTHETIC] Draft an op-ed that weighs the case for and against a four-day work week and ends with a balanced conclusion.,1,1,0,0,Long structured argument
+SYN-EN-010,en,code,0,,[SYNTHETIC] How do I reverse a string in JavaScript?,0,0,0,0,One-liner
+SYN-EN-011,en,code,0,,"[SYNTHETIC] Write a thread-safe LRU cache in Python with O(1) get and put, and explain the locking strategy.",1,1,0,0,"Data structure, concurrency and explanation"
+SYN-EN-012,en,math,0,,[SYNTHETIC] What is 7 squared?,0,0,0,0,Simple arithmetic
+SYN-EN-013,en,math,0,,"[SYNTHETIC] Pipe A fills a tank in 6 hours and pipe B empties it in 9 hours. With both open, how long until the tank is full? Show the steps.",1,1,0,0,"Rates word problem, several steps"
+SYN-EN-014,en,reasoning,0,,"[SYNTHETIC] If all bloops are razzies and some razzies are lazzies, must some bloops be lazzies? Explain.",1,1,0,0,Syllogism with a common trap
+SYN-EN-015,en,reasoning,0,,[SYNTHETIC] Plan a migration of a 2 TB PostgreSQL database to a new server with under five minutes of downtime; list the steps and the risks.,1,1,0,0,Operational planning with constraints
+SYN-MI-001,mixed,follow_up,1,[SYNTHETIC] یه query SQL بنویس که ده مشتری با بیشترین خرید رو برگردونه,[SYNTHETIC] حالا با window function برای هر شهر جداگانه بنویسش,1,1,0,0,Window functions and per-group ranking
+SYN-MI-002,mixed,factual,0,,[SYNTHETIC] API چیه؟ ساده توضیح بده,0,0,0,0,Basic definition
+SYN-MI-003,mixed,factual,0,,[SYNTHETIC] فرق RAM و ROM چیه؟,0,0,0,0,Basic concept
+SYN-MI-004,mixed,support,0,,[SYNTHETIC] توی Gmail چطوری فیلتر بسازم که ایمیل‌های یه فرستنده مستقیم برن آرشیو؟,0,0,0,0,Standard procedure
+SYN-MI-005,mixed,support,0,,[SYNTHETIC] سرور Nginx من بعد از تمدید SSL خطای 502 Bad Gateway میده و backend روی Docker هست. از کجا شروع کنم به debug؟,1,1,0,0,Multi-component troubleshooting
+SYN-MI-006,mixed,translation,0,,[SYNTHETIC] این جمله رو فارسی کن: 'Please find the attached report for your review.',0,0,0,0,Short literal sentence
+SYN-MI-007,mixed,translation,0,,[SYNTHETIC] اصطلاحات 'inter-rater reliability' و 'construct validity' رو به فارسی دقیق معادل‌سازی کن و فرقشون رو توضیح بده,1,1,0,0,Specialist terminology and explanation
+SYN-MI-008,mixed,writing,0,,[SYNTHETIC] یه پست LinkedIn کوتاه بنویس که شروع کار جدیدم رو اعلام کنه,0,0,0,0,Short template text
+SYN-MI-009,mixed,code,0,,[SYNTHETIC] توی Python چطور یه dictionary رو بر اساس value مرتب کنم؟,0,0,0,0,One-liner
+SYN-MI-010,mixed,code,0,,[SYNTHETIC] یه REST API با FastAPI بنویس که CRUD کامل برای کاربران داشته باشه، با validation و authentication مبتنی بر JWT,1,1,0,0,Multi-part implementation
+SYN-MI-011,mixed,code,0,,[SYNTHETIC] فرق async و threading در Python رو بگو، بگو کی کدوم رو استفاده کنم و یه مثال benchmark هم بزن,1,1,0,0,"Concepts, trade-offs and an experiment"
+SYN-MI-012,mixed,code,0,,[SYNTHETIC] این خطا یعنی چی: ModuleNotFoundError: No module named 'pandas',0,0,0,0,Common error with a one-line fix
+SYN-MI-013,mixed,math,0,,[SYNTHETIC] میانگین و median این اعداد رو حساب کن: ۳، ۷، ۷، ۱۰، ۱۳,0,0,0,0,Simple statistics
+SYN-MI-014,mixed,reasoning,0,,[SYNTHETIC] برای یه startup کوچیک با تیم سه‌نفره و بودجه کم، معماری microservices بهتره یا monolith؟ استدلال کن,1,1,0,0,Trade-off reasoning
+SYN-MI-015,mixed,reasoning,0,,[SYNTHETIC] یه A/B test طراحی کن که اثر تغییر رنگ دکمه خرید روی conversion rate رو بسنجه؛ حجم نمونه و معیار توقف رو هم مشخص کن,1,1,0,0,Experiment design with statistics

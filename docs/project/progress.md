@@ -47,6 +47,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-03: [Sprint Day 3, Pipeline A: R-A3 per-bot reassignment on R-0, accounted per ADR-0046](progress/2026-11-03-sprint-day-3-pipeline-a-per-bot-reassignment-r-a3.md)
 - 2026-11-03: [Pipeline B, Day 3 decision records: kNN router and Redis cache store](progress/2026-11-03-pipeline-b-day-3-decision-records.md)
 - 2026-11-03: [Jev tasks J-1 to J-4: the note, the configuration, and the remapping](progress/2026-11-03-jev-tasks-j1-to-j4.md)
+- 2026-11-03: [Decision router: first decision-quality check on SYNTHETIC requests](progress/2026-11-03-decision-router-synthetic-decision-quality.md)
 - 2026-11-03: [Decision router: second sync with main, and R-0's routing base](progress/2026-11-03-decision-router-sync-with-main-routing-base.md)
 - 2026-11-03: [Decision router R9: closing audit](progress/2026-11-03-decision-router-r9-closing-audit.md)
 - 2026-11-03: [Decision router R8: the evaluation harness and exp-route-013](progress/2026-11-03-decision-router-r8-shadow-evaluation.md)
