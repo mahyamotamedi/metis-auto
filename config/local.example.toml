@@ -41,3 +41,20 @@
 #
 # [model_options."deepseek-v4-flash"]
 # thinking = "disabled"             # unset = DeepSeek's default (thinking on)
+
+
+# --- Decision router (ADR-0047; guide: docs/guides/router_quickstart.md) ----
+# [router]
+# mode = "local"                    # off | local | hosted | hybrid_local_first | hybrid_hosted_first
+# real_data_approved = false        # RUNTIME ONLY. Owner decision 2026-11-02: keep false
+#                                   # (no dataset text to hosted backends).
+# allow_unpriced = false            # RUNTIME ONLY. Lets an unpriced hosted call run once.
+# [router.backends.thx01]
+# enabled = true
+# threads = 4
+#
+# --- Where the full dataset is on THIS machine (never committed) -------------
+# [data]
+# full_data_root = "data/full_data/raw"   # or an absolute path, e.g. "C:/Users/<you>/Desktop/metis-data"
+# Same thing as an environment override (PowerShell):
+#   $env:METIS__DATA__FULL_DATA_ROOT = "C:\Users\<you>\Desktop\metis-data"

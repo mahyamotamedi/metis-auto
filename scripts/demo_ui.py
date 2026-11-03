@@ -74,6 +74,14 @@ ROUTING_LABELS = {
     RoutingMode.STICKY_V1.value: "Sticky v1",
     RoutingMode.PER_REQUEST.value: "Per request",
     RoutingMode.FIXED.value: "Fixed model",
+    RoutingMode.DECISION_ROUTER.value: "Decision router",
+}
+ROUTER_LABELS = {
+    "off": "Off (rules only)",
+    "local": "Local (THX-01)",
+    "hosted": "Hosted (Jev via Metis)",
+    "hybrid_local_first": "Local, then Jev",
+    "hybrid_hosted_first": "Jev, then local",
 }
 COMPRESSION_LABELS = {
     CompressionMode.OFF.value: "Off",
@@ -122,6 +130,7 @@ def _init() -> None:
     s.next_doc = 0
     s.mode = FAKE
     s.routing = RoutingMode.STICKY_V1.value
+    s.router_mode = "local"
     s.compression = CompressionMode.OFF.value
     s.bot_cache = False
     s.seed = False
@@ -155,6 +164,7 @@ def _build_chat(*, live: bool) -> ChatSession:
         client_factory=_injected("client_factory"),
         compressor_factory=_injected("compressor_factory"),
         seed_path=_injected("seed_path"),
+        router_mode=s.get("router_mode", "local"),
     )
 
 
@@ -213,6 +223,12 @@ def _on_routing() -> None:
             chat.set_routing(RoutingMode(value))
 
     _apply("routing", change, chat.routing.value)
+
+
+def _on_router_mode() -> None:
+    s = _s()
+    chat: ChatSession = s.chat
+    _apply("router_mode", chat.set_router_mode, chat.router_mode)
 
 
 def _on_fixed_model() -> None:
@@ -364,8 +380,20 @@ def _sidebar() -> None:
             horizontal=True,
             help="Sticky v1: the first real question anchors the conversation on a "
             "model; similar follow-ups stay, very different ones re-route. Per "
-            "request: the rules on every message. Fixed: one model.",
+            "request: the rules on every message. Fixed: one model. Decision "
+            "router: a System-One model answers routing questions first.",
         )
+        if s.routing == RoutingMode.DECISION_ROUTER.value:
+            st.selectbox(
+                "Decision backends",
+                list(ROUTER_LABELS),
+                key="router_mode",
+                format_func=ROUTER_LABELS.get,
+                on_change=_on_router_mode,
+                help="Placeholder demo component (no evidence yet). Local needs "
+                "the router-local extra and the pinned THX-01 files; hosted needs "
+                "live mode and sends your own text only.",
+            )
         if s.routing == RoutingMode.FIXED.value:
             models = [
                 e.model_id for e in chat.loaded.reference.catalogue.entries if e.enabled

@@ -397,7 +397,7 @@ def test_live_runs_need_a_cap_and_live_sources_need_live_runs():
 
 
 def test_event_envelope_rules():
-    event = ex.events()[2]
+    event = next(e for e in ex.events() if e.event_type == "routing_decided")
     data = event.model_dump()
     with pytest.raises(ValidationError):
         Event.model_validate(data | {"event_type": "cache_lookup"})

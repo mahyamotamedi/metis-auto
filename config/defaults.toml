@@ -81,6 +81,90 @@ user = "metis"
 # Without METIS_FINGERPRINT_KEY, use a random key per process (A-44).
 ephemeral_fingerprint_key = true
 
+# --- Decision router, System One (ADR-0047). Infrastructure only: the routing
+# POLICY knobs (gate rules, mapping thresholds, criteria, hysteresis, state
+# truncation, safe tier) arrive in R3 under [pipeline.routing.decision_router].
+# Every value is a PLACEHOLDER until exp-route-013 gives evidence. Serving
+# default: mode = "off" (no router is built; routing is unchanged).
+# Switch per run: config/local.toml, or the environment override
+#   PowerShell:  $env:METIS__ROUTER__MODE = "local"
+# router.real_data_approved and router.allow_unpriced are RUNTIME-ONLY keys:
+# this file and experiment files may not set them (the loader refuses).
+[router]
+mode = "off"                 # off | hosted | local | hybrid_local_first | hybrid_hosted_first
+deadline_ms = 60             # local router's own p95 budget inside the 100 ms overhead (Q-14)
+deadline_grace_ms = 10
+reserved_pipeline_ms = 0
+min_confidence = 0.6
+keep_soft_signals = false
+escalate_on_low_confidence = false   # A-103: true = ask the next backend (R8 compares)
+confidence_questions = "mapping"     # Q-61 (owner 2026-11-03): gate on complexity, needs_reasoning, cheap_model_ok; "all" adds intent
+question_set = "routing_qs_v1"
+question_language = "en"     # en | fa (A/B)
+
+[router.cache]
+enabled = true
+max_entries = 10000
+ttl_s = 86400
+normalisation = "persian_fold_v1"   # an ADR-0025 treatment
+
+[router.circuit]
+failure_threshold = 3
+window_s = 60
+cooldown_s = 30
+
+# Backends. `type` selects the adapter; all disabled by default.
+[router.backends.jev_metis]
+# Jev via https://api.metisai.ir/typesafe/v1/systemone (Metis page saved
+# 2026-11-02). Shadow runs and labelling only (owner, 2026-11-02); SYNTHETIC
+# or owner-written text only. Price: reference/prices-metis-router-2026-11-02.toml
+# (Metis pricing page, checked by the owner 2026-11-02; never TypeSafe's direct
+# price). Only jev-latest is offered: every result records the version the
+# response reports (model_revision); a change of version invalidates the
+# router cache (ADR-0047).
+type = "jev_metis"
+enabled = false
+base_url = "https://api.metisai.ir/typesafe"   # posts to /v1/systemone; not OpenAI-compatible
+model = "jev-latest"
+price_ref = "metis-jev-latest"
+timeout_ms = 1500
+
+[router.backends.llm_system_one]
+# Backup for Mode 1: a chat model answering in JSON (uncalibrated).
+# gpt-4o-mini since 2026-11-03: Metis answered gpt-4.1-nano with HTTP 404
+# model_not_found in the R6 live check (TODO-17).
+type = "llm_system_one"
+enabled = false
+model_id = "gpt-4o-mini"
+max_output_tokens = 300
+timeout_ms = 2000
+
+[router.backends.thx01]
+# Mode 2 default: THX-01 (multilingual mmBERT model), in-process, offline (R5).
+type = "thx01"
+enabled = false
+asset = "thx01"              # row in reference/routers.toml (sha256 pins)
+runtime = "torch"            # torch | onnx (int8 fallback, only if torch misses 60 ms)
+threads = 4
+timeout_ms = 60
+
+[router.backends.mizan_http]
+# Mizan-1.5-4B on a local llama-server (loopback only). Shadow and offline
+# evaluation only: never inline on CPU (owner, 2026-11-02).
+type = "systemone_http"
+enabled = false
+base_url = "http://127.0.0.1:8080"
+model = "mizan-1.5-4b-q4_k_m"
+health_path = "/health"
+health_timeout_ms = 200
+timeout_ms = 400
+
+[router.chains]
+local = ["thx01"]
+hosted = ["jev_metis"]
+hybrid_local_first = ["thx01", "jev_metis"]
+hybrid_hosted_first = ["jev_metis", "thx01"]
+
 # --- Provider request options per model (Stage 7.5, Q-34; ADR-0021). None
 # are set: every model runs with its provider's default (DeepSeek and MiMo:
 # thinking enabled). Allowed per family by `request_options` in
@@ -109,11 +193,63 @@ model_id = "gpt-4o-mini"
 [pipeline.routing.sticky]
 # sticky_v1 (owner brief §7) or per_request (the rules on every message).
 mode = "sticky_v1"
+# Router for first and re-routed messages: rule_based (unchanged) or
+# decision_router (ADR-0047: adds hysteresis from [pipeline.routing.decision_router.hysteresis]).
+inner = "rule_based"
 # "Very different" message → re-route and re-anchor: code appears or
 # disappears, a coding intent appears (A-71), an attachment appears, the language switches, or the length
 # bucket moves by at least this many buckets (placeholder).
 length_bucket_jump = 2
 language_switch = true
+
+[pipeline.routing.decision_router]
+# System-One decision router POLICY (ADR-0047; infrastructure is [router]).
+# Selected with policy = "decision_router" (or as sticky's inner router). Every
+# number is a PLACEHOLDER (A-43 style), tuned on the dev slice's tune split only.
+# Path: gate (fast) → answers (slow or router cache) → rules → safe tier.
+version = "0.1.0"
+safe_tier = 1                   # when no answer fires and only the default rule matches
+undetermined = "safe_tier"      # or "rules_default"
+
+[pipeline.routing.decision_router.gate]
+greeting_tier = 0               # greeting or small talk (configured phrase list)
+code_tier = 1                   # code present, or coding intent without code
+attachment_tier = 1
+long_message_chars = 2000
+long_message_tier = 1
+
+[pipeline.routing.decision_router.state]
+max_message_chars = 1000
+max_previous_turn_chars = 300   # 0 = never send the previous user turn
+# fold = "persian_fold_v1"      # unset: the text as written
+
+[pipeline.routing.decision_router.mapping]
+tau_complex = 2.0               # complexity score (0..3) at or above → high tier
+tau_reason = 0.6                # P(needs multi-step reasoning) at or above → high tier
+tau_ok = 0.7                    # P(a small model is enough) at or above, with ...
+tau_conf = 0.6                  # ... the complexity answer's confidence at or above → low tier
+high_tier_intents = ["code", "math_reasoning", "analysis"]
+low_tier = 0
+high_tier = 1
+use_soft_signals = false
+
+[pipeline.routing.decision_router.criteria]
+long_context_tokens = 32000     # known input at or above → at least long_context_min_tier
+long_context_min_tier = 1
+# fast_model_deadline_ms = 3000 # unset: off (no catalogue model has a verified low_latency capability)
+# max_effective_cost_per_answer = "0.002"   # unset: off (flag only)
+# max_tier = 1
+
+[pipeline.routing.decision_router.effort]
+models = ["gpt-5-nano"]         # where reasoning_effort is sent (OpenAI family)
+low_below = 0.3                 # P(needs reasoning) under this → low_effort
+low_effort = "minimal"
+# high_effort = "medium"        # unset: the model's default
+
+[pipeline.routing.decision_router.hysteresis]
+downgrade_after_n = 2           # low-complexity user turns before going down
+tau_hist = 0.5                  # P(depends on history) at or above → stay on the anchor
+low_turn_max_length_bucket = 1
 
 [pipeline.routing.rule_based]
 # PLACEHOLDER rules (A-43 style; not tuned, no quality evidence). First match

@@ -1,0 +1,92 @@
+# Local decision-router models (ADR-0047 point 7; decision router R5).
+#
+# Model files are fetched ONCE by `python scripts/fetch_router_assets.py`
+# (network, explicit) into paths.router_assets (default data/routers/,
+# git-ignored), into <ref>/<revision>/, and checked by sha256 before every
+# load. Nothing is downloaded at run time or in tests: the THX-01 adapter sets
+# the Hugging Face libraries offline and refuses an unpinned or incomplete
+# checkpoint (thx01 would otherwise fall back to a Hub download).
+#
+# Pinning (the owner's machine; the project's own network cannot reach the Hub):
+#   plan  - metadata only: resolves the revision, lists files and sizes.
+#   pin   - downloads those files at that revision, verifies each against the
+#           Hub's own tree at that commit (the LFS sha256 for large files, the
+#           git blob id for small ones), computes sha256, and rewrites this
+#           file with the pins (a dated version). Nothing is trusted on first
+#           download.
+#   fetch - downloads missing files of a pinned asset and checks sha256.
+#   check - verifies the local files, no network.
+#
+# Until `pin` has run, the assets below are UNPINNED (no revision, no files)
+# and the thx01 backend reports itself unavailable (missing_assets).
+
+# THX-01: the repository root IS the multilingual model (mmBERT-base encoder,
+# post-trained in 18 languages including Persian). There is no "multilingual"
+# subfolder: R0 read that from a stale docstring of thx01.load() (corrected
+# 2026-11-02, router_r0_findings.md §5). The asset lists exactly the files
+# thx01 1.0.0 reads (agent.py, common.py); config.json is in thx01's own
+# download allow-list but never read, so it is fetched (283 bytes) and not
+# required. Only the root, encoder/ and tokenizer/ are listed: the demo and
+# training folders (doom, snake, gen, bench, train, results, assets,
+# .eval_results, thx01) are never listed or fetched.
+#
+# This header is kept when `pin` rewrites the file; the data below is not.
+
+version = "routers-2026-11-03"
+
+[[assets]]
+ref = "thx01"
+backend = "thx01"
+model = "doofz/THX-01"
+include = ["config.json", "rl_agent_config.json", "model.safetensors", "encoder/config.json", "tokenizer/tokenizer.json", "tokenizer/tokenizer_config.json"]
+required = ["rl_agent_config.json", "model.safetensors", "encoder/config.json", "tokenizer/tokenizer.json", "tokenizer/tokenizer_config.json"]
+revision = "b323afcef149f9288a9d0daef4badd67b9b87c61"
+licence = "Apache-2.0"
+library = "thx01==1.0.0"
+evidence = { source = "Model card https://huggingface.co/doofz/THX-01 (read 2026-11-02: Apache-2.0, multilingual, base_model jhu-clsp/mmBERT-base, language list includes fa, post-trained in 18 languages with Persian among them, 0.3B params, F16 safetensors, up to 1,024 tokens per question, GPU latency about 10 ms, CPU latency not stated; MASSIVE-scenario fa 89.0, ECE 0.052, self-reported). Owner's browser 2026-11-02: main at commit b323afc, about 679 MB; root model.safetensors 644 MB, encoder/ holds only config.json, tokenizer/ holds tokenizer.json (34.4 MB) and tokenizer_config.json; no multilingual folder. Package thx01 1.0.0 (sdist sha256 6d1013b900ab30d4b8848b9c57e03e54e389e25c5f797df2aea9c6a69b18c8c3, read without running it): Agent reads rl_agent_config.json and model.safetensors (every weight, encoder included: it requires encoder.* tensors and loads strictly), builds the encoder from encoder/config.json (AutoModel.from_config, no weights) and the tokenizer from tokenizer/; a missing tokenizer/ or encoder/ would trigger a Hub download, which the pins and the offline flags prevent", checked_on = 2026-11-02 }
+
+[[assets.files]]
+path = "config.json"
+sha256 = "196d51451253599d993ce980d0e6c1470a8dc7dd90ba034eb04317b04911f2ad"
+size_bytes = 283
+verified_by = "git_blob_sha1"
+
+[[assets.files]]
+path = "encoder/config.json"
+sha256 = "83f6916d13ef0f556ac461f28308dc2bffa7ebeadee8ec9e2db5812020ea5bb4"
+size_bytes = 1938
+verified_by = "git_blob_sha1"
+
+[[assets.files]]
+path = "model.safetensors"
+sha256 = "52ce834b2a4d265fbc351338655977023ddb61b0363f5f6a4fd096e6c70154b0"
+size_bytes = 643835524
+verified_by = "lfs_sha256"
+
+[[assets.files]]
+path = "rl_agent_config.json"
+sha256 = "1bb5c62b14c0029fea4891fd6f82ae882f81dae2ba5786a813a8d8de2c02f930"
+size_bytes = 2199
+verified_by = "git_blob_sha1"
+
+[[assets.files]]
+path = "tokenizer/tokenizer.json"
+sha256 = "609d8f4c067cd3950f88594c5a802616cea245823836ef5848ee4fc40aab5b6f"
+size_bytes = 34363188
+verified_by = "lfs_sha256"
+
+[[assets.files]]
+path = "tokenizer/tokenizer_config.json"
+sha256 = "6c6b2d8e3c84ce0e671c129cd6b374b235d6f9863042a5836358d00a89bbb5a1"
+size_bytes = 524
+verified_by = "git_blob_sha1"
+
+[[assets]]
+ref = "mizan-1.5-4b-q4-k-m"
+backend = "gguf"
+model = "xmanii/Mizan-1.5-4B-GGUF"
+include = ["mizan-1.5-4b-Q4_K_M.gguf"]
+required = ["mizan-1.5-4b-Q4_K_M.gguf"]
+licence = "Apache-2.0"
+optional = true
+evidence = { source = "Model card of Mizan-1.5-4B (read 2026-11-02: Apache-2.0, Qwen3.5-4B base; GGUF mizan-1.5-4b-Q4_K_M.gguf about 2.7 GB in xmanii/Mizan-1.5-4B-GGUF; llama.cpp b11443 or newer serves /v1/systemone; whether llama-server applies the calibration in unsloth_decision_config.json is not stated). Optional: never inline on CPU (owner); served by the owner's own llama-server", checked_on = 2026-11-02 }

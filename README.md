@@ -21,7 +21,7 @@ The project explores:
 - `tests/` — automated tests, all offline by default
 - `docs/` — documentation; start at [`docs/README.md`](docs/README.md)
 
-Evaluation dataset and local PostgreSQL: [`docs/evaluation/golden_v1.md`](docs/evaluation/golden_v1.md); teammate setup: [`docs/guides/team_setup.md`](docs/guides/team_setup.md).
+Evaluation dataset and local PostgreSQL: [`docs/evaluation/golden_v1.md`](docs/evaluation/golden_v1.md); teammate setup: [`docs/guides/team_setup.md`](docs/guides/team_setup.md). System-One decision router (in progress, off by default): [`docs/guides/router_quickstart.md`](docs/guides/router_quickstart.md), [ADR-0047](docs/adr/0047-system-one-decision-router.md).
 
 Where new files go and what each package may import: [`docs/architecture/repository_structure.md`](docs/architecture/repository_structure.md).
 

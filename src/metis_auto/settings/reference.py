@@ -40,6 +40,8 @@ from .model import (
     LabelMapping,
     ReferenceData,
     ReferenceSettings,
+    RouterAssetTable,
+    RouterQuestionTable,
     TokenizerTable,
 )
 
@@ -84,11 +86,53 @@ def load_reference(config_dir: Path, paths: ReferenceSettings) -> ReferenceData:
     compressors = (
         read_compressors(config_dir / paths.compressors) if paths.compressors else None
     )
+    router_prices = (
+        read_prices(config_dir / paths.router_prices) if paths.router_prices else None
+    )
+    router_questions = (
+        read_router_questions(config_dir / paths.router_questions)
+        if paths.router_questions
+        else None
+    )
+    routers = read_router_assets(config_dir / paths.routers) if paths.routers else None
     data = ReferenceData(
-        catalogue, prices, endpoints, baselines, tokenizers, label_mapping, compressors
+        catalogue,
+        prices,
+        endpoints,
+        baselines,
+        tokenizers,
+        label_mapping,
+        compressors,
+        router_prices,
+        router_questions,
+        routers,
     )
     check_consistency(data)
     return data
+
+
+def read_router_assets(path: Path) -> RouterAssetTable:
+    """``version`` plus ``[[assets]]`` with their ``[[assets.files]]`` pins
+    (ADR-0047 point 7; written by
+    scripts/fetch_router_assets.py pin)."""
+    raw = _read(path)
+    return _validated(
+        path, RouterAssetTable, version=raw.get("version"), assets=raw.get("assets")
+    )
+
+
+def read_router_questions(path: Path) -> RouterQuestionTable:
+    """``version``, ``[intent_mapping]`` and ``[[sets]]`` with their questions
+    (ADR-0047). Choice options are ``{name, description}``
+    tables."""
+    raw = _read(path)
+    return _validated(
+        path,
+        RouterQuestionTable,
+        version=raw.get("version"),
+        sets=raw.get("sets", []),
+        intent_mapping=raw.get("intent_mapping", {}),
+    )
 
 
 def read_catalogue(path: Path) -> ModelCatalogue:
@@ -201,6 +245,17 @@ def check_consistency(data: ReferenceData) -> None:
     priced: dict[str, set[TokenType]] = {}
     for entry in data.prices.entries:
         priced.setdefault(entry.price_ref, set()).add(entry.token_type)
+    if data.router_prices is not None:
+        router_priced: dict[str, set[TokenType]] = {}
+        for entry in data.router_prices.entries:
+            router_priced.setdefault(entry.price_ref, set()).add(entry.token_type)
+        for ref, types in router_priced.items():
+            missing = {TokenType.INPUT, TokenType.OUTPUT} - types
+            if missing:
+                raise ReferenceDataError(
+                    f"router price {ref!r} lacks {sorted(t.value for t in missing)} "
+                    "prices (price output explicitly, even at zero)"
+                )
     model_ids = {e.model_id for e in data.catalogue.entries}
     for entry in data.catalogue.entries:
         if (

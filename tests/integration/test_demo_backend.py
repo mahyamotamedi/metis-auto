@@ -274,3 +274,20 @@ def test_seed_without_the_sample_file_is_a_settings_error(loader, tmp_path):
     with pytest.raises(SettingsError, match="demo seed needs the sample file"):
         chat.set_seed(True)
     assert chat.seed is False
+
+
+def test_the_decision_router_is_a_chat_routing_mode(loader):
+    """R7: the chat (and the UI's radio, which lists the same modes) can use the
+    decision router; offline, THX-01 is unavailable without its files, so the
+    request falls back to the rules and the report says which path decided."""
+    chat = session(loader, routing=RoutingMode.DECISION_ROUTER, router_mode="local")
+    assert chat.settings()["router"] == "local"
+    assert chat.pipeline.decision_router is not None
+    _, report = chat.ask("[SYNTHETIC] What are your opening hours?")
+    assert report.status == "ok"
+    assert report.routing["policy"].startswith("decision_router@")
+    assert "decision router [DEMO]" in report.routing["decision"]
+    chat.set_router_mode("off")
+    assert chat.pipeline.decision_router is None
+    with pytest.raises(ValueError):
+        chat.set_router_mode("everywhere")

@@ -1,0 +1,14 @@
+{
+  "fingerprint_version": 1,
+  "slice_id": "router-dev-slice-v1",
+  "revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+  "seed": 20261102,
+  "config_hash": "sha256:e99584d892abfb22342d13ced58939f618fb2f605e71eaac9bdf398f6d106cc6",
+  "source_files_hash": "sha256:72a420695f57574a84e83aa0366e30f6af936a95640077457894bb098726b02e",
+  "records": 150,
+  "splits": {
+    "check": 45,
+    "tune": 105
+  },
+  "ids_hash": "sha256:6bb5504f3c1e80094e69d462f2079ffadbfddca435ee63b65c35fa71b02ece07"
+}

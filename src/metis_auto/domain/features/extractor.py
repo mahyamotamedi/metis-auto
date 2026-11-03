@@ -42,6 +42,19 @@ from .detectors import (
 )
 
 FEATURE_SET_VERSION = "fs-0.3.0-demo"
+ROUTER_FEATURE_SET_VERSION = "fs-0.4.0-router"
+"""The feature set when the decision router fills ``RequestFeatures.decision``
+(ADR-0047, R4). Used only when ``router.mode`` is not
+``off``, so a run with the router off keeps ``FEATURE_SET_VERSION`` and identical
+output."""
+
+
+def router_feature_set(version: str) -> str:
+    """The feature-set version with the decision slot filled: the router
+    version for the default set, else the configured one marked ``+router``."""
+    if version == FEATURE_SET_VERSION:
+        return ROUTER_FEATURE_SET_VERSION
+    return version if version.endswith("+router") else f"{version}+router"
 
 
 class FeatureConfig(ContractModel):
@@ -99,6 +112,7 @@ def extract_features(
         traffic_source_provenance=traffic.value.provenance if traffic.value else None,
         history_turns=history_turn_features(request, config),
         extra=dict(measurements.model_features),
+        deadline_ms=request.deadline_ms,
     )
 
 

@@ -43,6 +43,10 @@ HTTP_ALLOWED = {
     GEMINI,
     # Pre-existing (golden dataset, ADR-0028): the Hugging Face token check.
     SRC / "wiring" / "db_ingest.py",
+    # Decision router R5 (ADR-0047 point 7): the
+    # read-only Hugging Face client that pins router model files; never on the
+    # request path (scripts/fetch_router_assets.py only).
+    SRC / "adapters" / "routers" / "hub.py",
 }
 NOT_DECLARED = {"google", "httpx", "requests", "aiohttp", "urllib3"}
 """Gemini SDK and HTTP clients that are not declared dependencies."""
@@ -76,11 +80,34 @@ def test_the_gemini_adapter_uses_stdlib_http_and_no_sdk():
     assert not _roots(tree) & (NOT_DECLARED | LIVE_LIBRARIES)
 
 
+# Decision router (TODO-18, owner 2026-11-03): httpx is declared in the
+# router-local extra and imported only by the router's two HTTP adapters
+# (tests/architecture/test_router_imports.py holds that rule).
+HTTPX_DECLARED_FOR = {
+    SRC / "adapters" / "routers" / "systemone_http.py",
+    SRC / "adapters" / "routers" / "jev_metis.py",
+}
+
+
+def _declared(package: str) -> bool:
+    import tomllib  # noqa: PLC0415
+
+    project = tomllib.loads(
+        (SRC.parents[1] / "pyproject.toml").read_text(encoding="utf-8")
+    )["project"]
+    specs = list(project.get("dependencies", []))
+    for extra in project.get("optional-dependencies", {}).values():
+        specs += extra
+    return any(s.split(">")[0].split("=")[0].split("<")[0] == package for s in specs)
+
+
 def test_no_gemini_sdk_or_undeclared_http_client_anywhere():
+    assert _declared("httpx")
     offenders = [
         path.relative_to(SRC).as_posix()
         for path in SRC.rglob("*.py")
-        if _roots(ast.parse(path.read_text(encoding="utf-8"))) & NOT_DECLARED
+        if _roots(ast.parse(path.read_text(encoding="utf-8")))
+        & (NOT_DECLARED - {"httpx"} if path in HTTPX_DECLARED_FOR else NOT_DECLARED)
     ]
     assert offenders == []
 

@@ -32,6 +32,7 @@ from .accounting import CostEstimate, Money
 from .attempts import AttemptRecord, DetectorVerdict
 from .caching import CacheLookupResult, ScopeKind, StoreSkipReason
 from .context import CompositionRecord
+from .decision import DecisionOutcome
 from .evaluation import ExclusionCount, MetricValue
 from .features import RequestFeatures
 from .measurement import ComponentMeasurement, ComponentName, MeasurementRecord
@@ -77,6 +78,36 @@ class FeaturesExtracted(ContractModel):
     features: RequestFeatures = field(Privacy.DERIVED, "Features.")
     measurements: tuple[MeasurementRecord, ...] = field(
         Privacy.OPERATIONAL, "Measurement overhead.", default=()
+    )
+
+
+class CircuitState(StrEnum):
+    CLOSED = "closed"
+    OPEN = "open"
+    HALF_OPEN = "half_open"
+
+
+class BackendCircuit(ContractModel):
+    """One decision backend's circuit-breaker state when the step began."""
+
+    backend: Name = field(Privacy.OPERATIONAL, "Configured backend name.")
+    state: CircuitState = field(Privacy.OPERATIONAL, "Closed, open, or half open.")
+
+
+class DecisionMeasured(ContractModel):
+    """The decision-router step (ADR-0047). Never carries
+    the state."""
+
+    event_type: Literal["decision_measured"] = _type("decision_measured")
+    outcome: DecisionOutcome = field(Privacy.DERIVED, "Answers or why none.")
+    router_mode: Name = field(Privacy.OPERATIONAL, "Configured router.mode.")
+    circuits: tuple[BackendCircuit, ...] = field(
+        Privacy.OPERATIONAL, "Circuit states of the configured chain.", default=()
+    )
+    measurement: MeasurementRecord | None = field(
+        Privacy.OPERATIONAL,
+        "Router overhead: duration and cost (FR-ROUTE-04, FR-ACCT-03).",
+        default=None,
     )
 
 
@@ -221,6 +252,7 @@ class RunFinished(ContractModel):
 EventPayload = Annotated[
     RequestReceived
     | FeaturesExtracted
+    | DecisionMeasured
     | RoutingDecided
     | CacheLookedUp
     | CacheStored
@@ -243,6 +275,7 @@ EventPayload = Annotated[
 PAYLOAD_TYPES: tuple[type[ContractModel], ...] = (
     RequestReceived,
     FeaturesExtracted,
+    DecisionMeasured,
     RoutingDecided,
     CacheLookedUp,
     CacheStored,

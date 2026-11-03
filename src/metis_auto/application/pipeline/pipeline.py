@@ -14,6 +14,13 @@ attempts, accounting}; application.{measurement, events}; ports
 via the spend guard). Built by: wiring. Config: ``PipelineConfig``.
 Traces: FR-API-01, FR-OBS-01, FR-ACCT-03…05, FR-CASC-*, FR-FAIL-*, ADR-0010.
 
+Decision router (ADR-0047, R4): with an optional
+``RouterCascade`` the features stage also runs the decision step (span ``route.decide``,
+event ``decision_measured``); its answers fill ``RequestFeatures.decision`` before
+``features_extracted`` and routing, and its duration and cost are router overhead
+(``overhead_cost``). Without a cascade (``router.mode = "off"``) nothing changes: no
+event, no span, the same bytes (tested).
+
 Status: walking skeleton. TODO markers name the missing pieces: semantic tier,
 re-route on context overflow, savings per baseline, model-based measurements.
 Demo milestone (ADR-0023): ``handle_traced`` also returns a ``RequestTrace``
@@ -28,6 +35,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from metis_auto.contracts import (
     ActionKind,
@@ -53,6 +61,7 @@ from metis_auto.contracts import (
     Identifier,
     LatencySource,
     LookupOutcome,
+    MeasurementRecord,
     ModelError,
     ModelInvocation,
     ModelNoAnswer,
@@ -79,6 +88,7 @@ from metis_auto.contracts.events import (
     CacheStoreSkipped,
     ContextBuilt,
     ContextCompressed,
+    DecisionMeasured,
     EscalationTriggered,
     FailoverTriggered,
     FeaturesExtracted,
@@ -97,6 +107,9 @@ from ..events import EventRecorder
 from ..measurement import MeasurementService, request_roles
 from .config import PipelineConfig
 from .spend_guard import SpendGuard
+
+if TYPE_CHECKING:  # the cascade imports the spend guard from this package
+    from ..routing import RouterCascade
 
 _LATENCY_SOURCE = {
     AnswerSource.FAKE: LatencySource.SIMULATED,
@@ -126,6 +139,8 @@ class _Run:
     sent: Request | None = None
     """The request after compression; None until computed (or not compressed)."""
     compressed: ContextCompressed | None = None
+    overhead: list[MeasurementRecord] = field(default_factory=list)
+    """Measurements that cost time or money (the decision router)."""
 
 
 SEED_PRODUCER = "demo-seed"
@@ -160,6 +175,7 @@ class RequestPipeline:
         ids: IdSource,
         spend_guard: SpendGuard | None = None,
         compressor: TextCompressor | None = None,
+        decision_router: RouterCascade | None = None,
     ) -> None:
         if model_client.source == AnswerSource.LIVE and spend_guard is None:
             raise ValueError("a live model client needs a spend guard (ADR-0003)")
@@ -175,9 +191,15 @@ class RequestPipeline:
         self._ids = ids
         self._guard = spend_guard
         self._compressor = compressor
+        self._router = decision_router
         self._entries = {e.model_id: e for e in config.catalogue.entries}
         if config.context.compression.enabled and compressor is None:
             raise ValueError("context.compression.enabled needs a compressor")
+
+    @property
+    def decision_router(self) -> RouterCascade | None:
+        """The decision-router cascade, or None when ``router.mode = "off"``."""
+        return self._router
 
     @property
     def live_stopped(self) -> str | None:
@@ -297,6 +319,8 @@ class RequestPipeline:
             run.request, measurements, self._config.features
         )
         duration = self._span(run, SpanName.FEATURES, start)
+        if self._router is not None:
+            feats = self._decide(run, feats)
         self._emit(
             run,
             FeaturesExtracted(features=feats, measurements=measurements.records),
@@ -304,6 +328,28 @@ class RequestPipeline:
             duration_ms=duration,
         )
         return feats
+
+    def _decide(self, run: _Run, feats: RequestFeatures) -> RequestFeatures:
+        """The decision-router step (ADR-0047): answers
+        into the features, its overhead into the run. Never raises for expected
+        failures."""
+        assert self._router is not None
+        start = self._clock.monotonic_ms()
+        step = self._router.decide(run.request, feats)
+        duration = self._span(run, SpanName.ROUTE_DECIDE, start)
+        run.overhead.append(step.measurement)
+        self._emit(
+            run,
+            DecisionMeasured(
+                outcome=step.outcome,
+                router_mode=self._router.mode,
+                circuits=step.circuits,
+                measurement=step.measurement,
+            ),
+            span=SpanName.ROUTE_DECIDE,
+            duration_ms=duration,
+        )
+        return feats.model_copy(update={"decision": step.outcome})
 
     # --- stage 3: route ---
 
@@ -400,7 +446,7 @@ class RequestPipeline:
         avoided = accounting.cost_of(
             usage, target, self._config.prices, CostBasis.AVOIDED_ESTIMATE
         )
-        overhead = self._overhead_cost()
+        overhead = self._overhead_cost(run)
         metadata = self._metadata(
             run,
             served_by=ServedBy.CACHE,
@@ -751,7 +797,7 @@ class RequestPipeline:
 
     def _respond(self, run: _Run, action: AttemptAction) -> FinalResponse:
         attempt_costs = [r.cost for r in run.records if r.cost is not None]
-        overhead = self._overhead_cost()
+        overhead = self._overhead_cost(run)
         total = accounting.total_cost(
             [*attempt_costs, overhead],
             CostBasis.ACTUAL,
@@ -806,11 +852,15 @@ class RequestPipeline:
             return None
         return next(r for r in run.records if r.attempt_id == action.return_attempt_id)
 
-    def _overhead_cost(self) -> Cost:
-        """Router, embedder, judge, verifier calls (FR-ACCT-03). None exist yet:
-        TODO(Stage 8) sum the costs on ``MeasurementRecord``s."""
+    def _overhead_cost(self, run: _Run) -> Cost:
+        """Router, embedder, judge, verifier calls (FR-ACCT-03): the sum of the
+        costs on this request's overhead ``MeasurementRecord``s (today the
+        decision router only; embedder, judge, verifier: TODO(Stage 8))."""
         return accounting.total_cost(
-            [], CostBasis.ACTUAL, self._config.prices, self._config.accounting
+            [m.cost for m in run.overhead if m.cost is not None],
+            CostBasis.ACTUAL,
+            self._config.prices,
+            self._config.accounting,
         )
 
     def _metadata(

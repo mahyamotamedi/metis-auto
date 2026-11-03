@@ -13,12 +13,14 @@ Traces: QA-REPL ("one interface + one config entry"), ADR-0003, ADR-0009.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from typing import TYPE_CHECKING
 
 from metis_auto.adapters.system import SequentialIdSource, SystemClock
 from metis_auto.adapters.tokenizers import ApproxCharsTokenizer
 from metis_auto.application.events import EventRecorder
 from metis_auto.application.measurement import Fingerprinter, MeasurementService
 from metis_auto.application.pipeline import PipelineConfig, RequestPipeline, SpendGuard
+from metis_auto.application.routing import CASCADE_VERSION, RouterCascade
 from metis_auto.contracts import (
     AnswerSource,
     ChatTemplate,
@@ -28,7 +30,10 @@ from metis_auto.contracts import (
 )
 from metis_auto.domain.attempts import Detector, EmptyOutputDetector, TruncationDetector
 from metis_auto.domain.context import ContextStrategy, PassThroughStrategy
+from metis_auto.domain.features import router_feature_set
 from metis_auto.domain.routing import (
+    DecisionRouterConfig,
+    DecisionRouterPolicy,
     FixedModelPolicy,
     RoutingPolicy,
     RuleBasedConfig,
@@ -47,6 +52,9 @@ from metis_auto.ports import (
     Tokenizer,
 )
 
+if TYPE_CHECKING:
+    from .routers import RouterSpec
+
 
 def _fixed_model(config: PipelineConfig) -> RoutingPolicy:
     if config.routing.fixed_model is None:
@@ -59,12 +67,29 @@ def _rule_based(config: PipelineConfig) -> RoutingPolicy:
     return RuleBasedPolicy(rules, config.catalogue, config.prices)
 
 
-def _sticky(config: PipelineConfig) -> RoutingPolicy:
-    return StickyPolicy(
-        config.routing.sticky or StickyConfig(),
+def _decision_router_policy(config: PipelineConfig) -> DecisionRouterPolicy:
+    return DecisionRouterPolicy(
+        config.routing.decision_router or DecisionRouterConfig(),
         config.routing.rule_based or RuleBasedConfig(),
         config.catalogue,
         config.prices,
+    )
+
+
+def _decision_router(config: PipelineConfig) -> RoutingPolicy:
+    return _decision_router_policy(config)
+
+
+def _sticky(config: PipelineConfig) -> RoutingPolicy:
+    sticky = config.routing.sticky or StickyConfig()
+    return StickyPolicy(
+        sticky,
+        config.routing.rule_based or RuleBasedConfig(),
+        config.catalogue,
+        config.prices,
+        decision_router=_decision_router_policy(config)
+        if sticky.inner == "decision_router"
+        else None,
     )
 
 
@@ -75,6 +100,10 @@ ROUTING_POLICIES: dict[str, Callable[[PipelineConfig], RoutingPolicy]] = {
     # experiments/ only.
     "rule_based": _rule_based,
     "sticky": _sticky,
+    # Decision router (ADR-0047): placeholder until
+    # exp-route-013 gives evidence; without decision answers (router.mode = "off") it
+    # falls back to the rules, then the safe tier.
+    "decision_router": _decision_router,
 }
 CONTEXT_STRATEGIES: dict[str, Callable[[], ContextStrategy]] = {
     "pass_through": PassThroughStrategy,
@@ -134,6 +163,7 @@ def build_pipeline(
     context_strategy: ContextStrategy | None = None,
     candidate_versions: Mapping[str, str] | None = None,
     compressor: TextCompressor | None = None,
+    router: RouterSpec | None = None,
 ) -> RequestPipeline:
     """Assemble a pipeline. ``fingerprint_key`` is a secret (ADR-0015): it goes
     to the measurement service only. ``routing_policy`` / ``context_strategy``
@@ -141,7 +171,11 @@ def build_pipeline(
     from ``experiments/`` only) in place of the configured promoted one;
     ``candidate_versions`` (name → version) then goes into ``Versions``.
     ``compressor`` is needed when ``context.compression.enabled`` (built by
-    ``wiring.compression``)."""
+    ``wiring.compression``). ``router`` (``wiring.routers.router_spec``)
+    builds the decision-router cascade; None (``router.mode = "off"``)
+    leaves the pipeline exactly as without it. With a router, the feature
+    set becomes ``fs-0.4.0-router`` and the versions name the cascade and
+    each backend."""
     clock = clock or SystemClock()
     ids = ids or SequentialIdSource(run_id)
     guard = None
@@ -149,6 +183,11 @@ def build_pipeline(
         if spend_ledger is None or spend_ledger.remaining() is None:
             raise ValueError("live calls need a spending cap (ADR-0003)")
         guard = SpendGuard(spend_ledger)
+    if router is not None:
+        features = config.features.model_copy(
+            update={"version": router_feature_set(config.features.version)}
+        )
+        config = config.model_copy(update={"features": features})
     fingerprinter = Fingerprinter(fingerprint_key)
     measurement = MeasurementService(
         fingerprinter,
@@ -182,6 +221,12 @@ def build_pipeline(
                 }
             }
         )
+    cascade = None
+    if router is not None:
+        cascade, router_versions = _build_cascade(router, clock, fingerprinter)
+        versions = versions.model_copy(
+            update={"policies": {**versions.policies, **router_versions}}
+        )
     recorder = EventRecorder(sink, clock, ids, run_id, run_mode, versions)
     return RequestPipeline(
         config=config,
@@ -196,4 +241,39 @@ def build_pipeline(
         ids=ids,
         spend_guard=guard,
         compressor=compressor if config.context.compression.enabled else None,
+        decision_router=cascade,
     )
+
+
+def _build_cascade(
+    router: RouterSpec, clock: Clock, fingerprinter: Fingerprinter
+) -> tuple[RouterCascade, dict[str, str]]:
+    """The cascade over the spec's backends; hosted ones need a capped ledger
+    (ADR-0003) and get their own spend guard over it."""
+    backends = router.backends(clock)
+    hosted = router.hosted(backends)
+    guard = None
+    if hosted:
+        ledger = router.spend_ledger
+        if ledger is None or ledger.remaining() is None:
+            raise ValueError(
+                f"hosted decision backends {list(hosted)} need a spending cap "
+                "(ADR-0003)"
+            )
+        guard = SpendGuard(ledger)
+    cascade = RouterCascade(
+        router.config,
+        backends=backends,
+        questions=router.questions,
+        clock=clock,
+        fingerprinter=fingerprinter,
+        tokenizer=ApproxCharsTokenizer(),
+        spend_guard=guard,
+    )
+    versions = {f"router.{router.config.mode}": CASCADE_VERSION}
+    for name in router.config.chain:
+        versions[f"router.backend.{name}"] = backends[name].ref.version
+    versions["router.questions"] = (
+        f"{router.questions.version}/{router.questions.language_variant.value}"
+    )
+    return cascade, versions

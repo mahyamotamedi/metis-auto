@@ -131,6 +131,7 @@ Every component has an owner responsibility, inputs, outputs, and dependencies. 
 | CMP-15 | `Judge` | Fake judge | LLM judge (uses a `ModelClient`), human-label import | Scoring an answer on a rubric, with judge ID and version. | provisional | FR-EVAL-05, FR-CASC-02 |
 | CMP-16 | `Clock`, `IdSource` | System clock, fake clock; random and seeded ID sources | — | Wall time (UTC), monotonic durations, IDs. Seeded sources make replay reproducible. | decided | FR-REQ-02, QA-REPRO |
 | CMP-26 | `SpendLedger` | In-memory per run (tests); **file ledger, cumulative across runs** (Stage 6) | Database ledger | The running total of live spend; lifetime and per-run caps. | provisional | ADR-0003, ADR-0018 |
+| CMP-27 | `BaseRouter` (`ports/decision.py`) | Scripted fake decision backend (R1) | THX-01 in-process and a loopback `/v1/systemone` client (R5); Jev via Metis and an LLM answering in JSON (R6); recording and replay decorators | Answering typed System-One questions about a minimised request state with probabilities; never picking a model; returning, not raising, expected failures ([ADR-0047](../adr/0047-system-one-decision-router.md)). | provisional | FR-FEAT-02, FR-ROUTE-04, FR-FAIL-04, QA-REPL |
 
 ### 3.3 Data, configuration, evaluation, composition
 

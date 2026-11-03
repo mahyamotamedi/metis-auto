@@ -257,7 +257,7 @@ Where the money went, per message or per session (brief §6, ADR-0020).
 
 - **`CostStatus`**: `computed`, `not_computed`
 - **`NotComputedReason`**: `price_unknown`, `model_unmapped`, `usage_unknown`, `baseline_unset`, `currency_mismatch`, `component_not_computed`
-- **`CostBasis`**: `actual`, `pre_call_estimate`, `avoided_estimate`, `baseline_estimate`. What the cost describes.
+- **`CostBasis`**: `actual`, `pre_call_estimate`, `avoided_estimate`, `baseline_estimate`, `local_compute`. What the cost describes.
 - **`CostCaveat`**: `reasoning_not_counted`, `answer_length_assumed`, `template_overhead_approximated`, `context_tier_boundary_uncertain`, `cached_input_not_reported`. Why a computed cost may differ from the bill (token_accounting.md §5). Shown with the figure; never silently dropped.
 - **`DecompositionTerm`**: `premium_baseline`, `routing_saving`, `compression_saving`, `cache_saving`, `provider_cache_saving`, `extra_cost`, `actually_paid`. Terms of the savings decomposition, in their fixed order (brief §6).
 
@@ -344,6 +344,151 @@ Counts with the target's tokenizer, for the context stage (stage 5).
 
 - **`ComponentName`**: `message`, `history`, `instructions`, `retrieved`, `attachments`, `structured_input`. Request components, as named in keys, records, and events.
 
+## `contracts.decision`
+
+System-One decision contracts (ADR-0047; FR-FEAT-02, FR-ROUTE-02/04, FR-ACCT-03).
+
+### `DecisionOption`
+
+One option of a ``choice`` question.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `name` | `Name` | yes | operational | Option code, returned as the choice. |
+| `description` | `QuestionText` | yes | operational | What the option means (configured wording). |
+
+### `DecisionQuestion`
+
+One configured question. Adapters map ``options`` / ``levels`` onto the wire's ``criteria``.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `id` | `Name` | yes | operational | Question ID, the answer's key. |
+| `type` | `DecisionQuestionType` | yes | operational | Question type. |
+| `instructions` | `QuestionText` | yes | operational | The question or condition (configured wording). |
+| `options` | `tuple[DecisionOption, ...]` |  | operational | Choice options; empty for other types. |
+| `levels` | `tuple[QuestionText, ...]` |  | operational | Score levels, lowest first (level i scores i); empty for other types. |
+| `required` | `bool` |  | operational | A result missing this answer is an invalid response. |
+
+### `DecisionQuestionSet`
+
+A versioned set of questions asked together in one backend call.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `version` | `Version` | yes | operational | e.g. routing_qs_v1. |
+| `language_variant` | `QuestionLanguage` | yes | operational | Language of the wording. |
+| `questions` | `tuple[DecisionQuestion, ...]` | yes | operational | The questions, in a stable order. |
+
+### `DecisionAnswer`
+
+One typed answer. Exactly the fields of its type are set.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `question_id` | `Name` | yes | operational | Which question. |
+| `type` | `DecisionQuestionType` | yes | operational | Question type. |
+| `choice` | `Name \| None` |  | derived | Chosen option (choice only). |
+| `score` | `NonNegFloat \| None` |  | derived | Fractional level, 0 = lowest (score only). |
+| `p_yes` | `Probability \| None` |  | derived | Probability of yes (noul only). |
+| `probabilities` | `dict[Name, Probability]` |  | derived | Per option (choice) or per level index as a string (score); empty if the backend did not return them. |
+| `confidence` | `Probability \| None` |  | derived | Backend-reported confidence; never derived from the probabilities. |
+
+### `DecisionResult`
+
+What one backend answered for one state (derived, content-free).
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `answers` | `tuple[DecisionAnswer, ...]` | yes | derived | One per question. |
+| `backend` | `PolicyRef` | yes | operational | Backend name and version. |
+| `backend_kind` | `BackendKind` | yes | operational | Hosted or local. |
+| `model_revision` | `Version` | yes | operational | Model version reported by the backend (e.g. jev-1.13.0) or the pinned weights revision. |
+| `question_set_version` | `Version` | yes | operational | Questions asked. |
+| `state_fingerprint` | `Fingerprint \| None` |  | fingerprint | Keyed fingerprint of the normalised state (ADR-0015); router-cache key part. |
+| `latency_ms` | `NonNegFloat` | yes | operational | Duration of the call. |
+| `latency_source` | `DecisionLatencySource` | yes | operational | How it was measured. |
+| `usage` | `TokenUsage \| None` |  | derived | Token usage as reported by the backend; None if not reported. |
+| `cost` | `Cost` | yes | operational | Hosted: priced from usage, or not computed. Local: zero, basis local_compute. |
+| `cache_hit` | `bool` |  | operational | Served from the router-result cache. |
+| `calibrated` | `bool` | yes | operational | The backend applies a fitted calibration to its probabilities. |
+
+### `DecisionError`
+
+An expected backend failure. Backends return it; they never raise for timeouts, transport, provider or parsing failures (ADR-0047).
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `outcome` | `Literal['error']` |  | operational | Discriminator. |
+| `backend` | `PolicyRef` | yes | operational | Backend name and version. |
+| `error_class` | `ErrorClass \| None` |  | operational | Normalised transport or provider error; None for an invalid response. |
+| `invalid_response` | `bool` |  | operational | The backend answered, but the answer failed validation. |
+| `provider_error_code` | `Name \| None` |  | operational | e.g. http_429 or http_400:invalid_field; never a provider message. |
+| `latency_ms` | `NonNegFloat` | yes | operational | Time spent before failing. |
+
+### `BackendAvailability`
+
+Whether a backend can be called; checked at build time and per request.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `available` | `bool` | yes | operational | Usable now. |
+| `reason` | `AvailabilityReason \| None` |  | operational | Why not; set iff unavailable. |
+
+### `BackendAttempt`
+
+One backend tried for one request, in chain order.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `backend` | `PolicyRef` | yes | operational | Backend name and version. |
+| `answered` | `bool` | yes | operational | True if it returned a valid result. |
+| `failure_reason` | `DecisionFailureReason \| None` |  | operational | Set iff not answered. |
+| `error_class` | `ErrorClass \| None` |  | operational | Set iff failure_reason is error. |
+| `latency_ms` | `NonNegFloat` | yes | operational | Time spent on this backend (0 if never called). |
+| `overran_deadline` | `bool` |  | operational | An in-process call that cannot be pre-empted finished after its deadline. |
+
+### `DecisionOutcome`
+
+The router cascade's measured result for one request (derived, content-free). Unknown never satisfies a mapping rule (P-6): only an answered outcome feeds the decision policy.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `status` | `DecisionStatus` | yes | operational | Answered, skipped, failed. |
+| `question_set_version` | `Version \| None` |  | operational | Questions asked, if any. |
+| `result` | `DecisionResult \| None` |  | derived | Set iff answered. |
+| `skip_reason` | `DecisionSkipReason \| None` |  | operational | Set iff skipped. |
+| `rule_id` | `Name \| None` |  | operational | Gate rule that decided (rules_decisive only). |
+| `failure_reason` | `DecisionFailureReason \| None` |  | operational | Set iff failed: the last backend's reason. |
+| `error_class` | `ErrorClass \| None` |  | operational | Set iff failure_reason is error. |
+| `soft_result` | `DecisionResult \| None` |  | derived | Low-confidence answers kept as soft signals (failed low_confidence only, if configured). |
+| `attempts` | `tuple[BackendAttempt, ...]` |  | operational | Backends tried, in order. |
+| `total_ms` | `NonNegFloat` |  | operational | Wall time of the whole decision step. |
+
+### `RouterSummary`
+
+The decision router's part of a ``RoutingDecision`` (content-free).
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `path` | `RouterPath` | yes | operational | Path that decided. |
+| `backend` | `PolicyRef \| None` |  | operational | Backend whose answers were used, if any. |
+| `mapped_tier` | `NonNegInt \| None` |  | operational | Tier the mapping chose, before eligibility. |
+| `thresholds_fired` | `tuple[Name, ...]` |  | operational | Mapping rules and criteria that fired, in order (e.g. tau_reason). |
+| `reasoning_effort` | `Name \| None` |  | operational | Reasoning-effort hint for the target (None = the model's default). |
+
+**Enumerations**
+
+- **`DecisionQuestionType`**: `choice`, `score`, `noul`. Question types used for routing (System-One wire names).
+- **`QuestionLanguage`**: `en`, `fa`. Language the question set is phrased in (an A/B dimension).
+- **`BackendKind`**: `hosted`, `local`
+- **`DecisionLatencySource`**: `measured_local`, `measured_remote`
+- **`AvailabilityReason`**: `missing_extra`, `missing_assets`, `sha_mismatch`, `server_unreachable`, `disabled`, `not_configured`
+- **`DecisionStatus`**: `answered`, `skipped`, `failed`
+- **`DecisionSkipReason`**: `rules_decisive`, `mode_off`, `not_needed`, `ineligible_state`
+- **`DecisionFailureReason`**: `timeout`, `circuit_open`, `unavailable`, `invalid_response`, `budget_blocked`, `error`, `low_confidence`, `no_backend`, `real_data_not_approved`
+- **`RouterPath`**: `fast_rules`, `fast_cache`, `slow_local`, `slow_hosted`, `fallback_rules`, `fallback_safe_tier`. Which path decided the tier (routing.md §7).
+
 ## `contracts.features`
 
 Derived request features (CMP-04 output; FR-FEAT-01…05).
@@ -393,10 +538,38 @@ Features of one request. None means unknown (the component's state was unknown),
 | `traffic_source_provenance` | `Provenance \| None` |  | operational | Declared or inferred. |
 | `history_turns` | `tuple[TurnFeatures, ...]` |  | derived | Earlier user turns, oldest first, with their producers (sticky routing). |
 | `extra` | `dict[Name, FeatureValue]` |  | derived | Experimental or measured features (e.g. semantic intent). |
+| `deadline_ms` | `PosInt \| None` |  | operational | The request's time budget, copied from the request (the decision router's latency criterion, ADR-0047); None if not set. |
+| `decision` | `DecisionOutcome \| None` |  | derived | System-One decision answers (FR-FEAT-02 semantic slot; ADR-0047); None when the decision router is off. |
 
 **Enumerations**
 
 - **`Language`**: `fa`, `en`, `mixed`, `other`, `undetermined`. Output of the tested language detector (FR-FEAT-03).
+
+## `contracts.decision_state`
+
+The state sent to a System-One decision backend (ADR-0047; QA-PRIV).
+
+### `DecisionState`
+
+The minimised state for one decision call. Content (in memory only).
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `message` | `str` | yes | content | The current user message, truncated to the configured length. |
+| `message_truncated` | `bool` |  | derived | The message was cut to fit. |
+| `previous_user_turn` | `Component[str]` |  | content | The previous user turn, truncated; absent on a first turn, unknown if history is unknown. |
+| `previous_user_turn_truncated` | `bool` |  | derived | The previous turn was cut to fit. |
+| `last_assistant_turn_kind` | `LastAssistantTurnKind` | yes | derived | Derived label for the last assistant turn. |
+| `retrieved_state` | `ComponentState` | yes | derived | Whether retrieved context is present (never its text). |
+| `attachment_modalities` | `tuple[Modality, ...]` |  | derived | Attachment modalities present. |
+| `language` | `Language` | yes | derived | Detected language of the message. |
+| `turn_depth` | `NonNegInt \| None` | yes | derived | User turns before this one; None if unknown. |
+| `bot_role_class` | `Name \| None` |  | derived | Derived class of the bot's role (a code); never instruction text. |
+| `dataset_derived` | `bool` |  | operational | Built from a dataset record (replay, dev slice): hosted backends refuse it unless router.real_data_approved is set for the run. |
+
+**Enumerations**
+
+- **`LastAssistantTurnKind`**: `none`, `answer`, `structured_input`, `unknown`. A derived label for the turn before the current message.
 
 ## `contracts.reference_data`
 
@@ -529,6 +702,7 @@ The chosen target and why (FR-ROUTE-02). Content-free.
 | `min_context_window` | `PosInt \| None` |  | operational | Constraint applied on a re-route. |
 | `flags` | `tuple[RoutingFlag, ...]` |  | operational | Flags. |
 | `anchor_model_id` | `Name \| None` |  | operational | Sticky routing: the session's anchor model before this request, if any. |
+| `router_summary` | `RouterSummary \| None` |  | operational | Decision-router path, backend, mapped tier and thresholds (ADR-0047); None for policies that use no decision router. |
 
 **Enumerations**
 
@@ -907,7 +1081,7 @@ What the pipeline returns. Expected failures are an error status, not an excepti
 
 **Enumerations**
 
-- **`SpanName`**: `request`, `measure`, `features`, `route`, `cache_lookup.exact`, `cache_lookup.semantic`, `embed`, `context`, `context.compress`, `attempt`, `model_call`, `measurement_call`, `cache_store`, `respond`
+- **`SpanName`**: `request`, `measure`, `features`, `route`, `route.decide`, `cache_lookup.exact`, `cache_lookup.semantic`, `embed`, `context`, `context.compress`, `attempt`, `model_call`, `measurement_call`, `cache_store`, `respond`
 - **`LatencyCategory`**: `overhead`, `model`, `end_to_end`, `container`, `post_response`. ADR-0006 latency split.
 - **`LatencySource`**: `measured_local`, `provider_reported`, `recorded`, `simulated`
 - **`ResponseStatus`**: `ok`, `error`
@@ -933,6 +1107,27 @@ Events: the single measurement record (ADR-0012, observability.md §3).
 | `event_type` | `Literal['features_extracted']` |  | operational | Discriminator. |
 | `features` | `RequestFeatures` | yes | derived | Features. |
 | `measurements` | `tuple[MeasurementRecord, ...]` |  | operational | Measurement overhead. |
+
+### `BackendCircuit`
+
+One decision backend's circuit-breaker state when the step began.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `backend` | `Name` | yes | operational | Configured backend name. |
+| `state` | `CircuitState` | yes | operational | Closed, open, or half open. |
+
+### `DecisionMeasured`
+
+The decision-router step (ADR-0047). Never carries the state.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `event_type` | `Literal['decision_measured']` |  | operational | Discriminator. |
+| `outcome` | `DecisionOutcome` | yes | derived | Answers or why none. |
+| `router_mode` | `Name` | yes | operational | Configured router.mode. |
+| `circuits` | `tuple[BackendCircuit, ...]` |  | operational | Circuit states of the configured chain. |
+| `measurement` | `MeasurementRecord \| None` |  | operational | Router overhead: duration and cost (FR-ROUTE-04, FR-ACCT-03). |
 
 ### `RoutingDecided`
 
@@ -1114,6 +1309,7 @@ Envelope plus payload (FR-OBS-02). Written by the event recorder.
 **Enumerations**
 
 - **`RunMode`**: `replayed`, `simulated`, `live`. FR-OBS-03: one schema for replay and online.
+- **`CircuitState`**: `closed`, `open`, `half_open`
 
 ## `contracts.replay`
 

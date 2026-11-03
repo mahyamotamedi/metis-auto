@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import logging
 import secrets
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +37,7 @@ from metis_auto.contracts import (
     RunMode,
 )
 from metis_auto.data_access.postgres import event_store
+from metis_auto.domain.routing import DecisionRouterConfig
 from metis_auto.ports import (
     CacheStore,
     Clock,
@@ -50,9 +51,11 @@ from metis_auto.settings import (
     LoadedSettings,
     SettingsError,
     ThinkingMode,
+    backend_kind,
 )
 
 from .pipeline import build_pipeline
+from .routers import BackendFactory, router_spec
 from .tokenizers import TokenizerSet, build_tokenizers
 
 log = logging.getLogger(__name__)
@@ -187,6 +190,8 @@ def build_pipeline_from_settings(
     tokenizers: TokenizerSet | None = None,
     compressor: TextCompressor | None = None,
     fingerprint_key_bytes: bytes | None = None,
+    router_backends: BackendFactory | None = None,
+    states_dataset_derived: bool = True,
     **candidates: Any,
 ) -> RequestPipeline:
     """``build_pipeline`` from settings. ``candidates`` are passed through
@@ -198,7 +203,13 @@ def build_pipeline_from_settings(
     and the fetched model files; a SettingsError says what is missing).
     ``fingerprint_key_bytes`` keeps one key across rebuilds (a chat session
     that rebuilds its pipeline keeps its cache reachable); default: from
-    settings (``fingerprint_key``)."""
+    settings (``fingerprint_key``).
+
+    Decision router (ADR-0047): built when ``router.mode``
+    is not ``off``, from the configured backends or ``router_backends``. A chain with a
+    hosted backend needs the live permission and gets the file ledger (the same one as a
+    live answering client). ``states_dataset_derived`` is True (the safe side) unless
+    the caller sends only SYNTHETIC or owner-written text."""
     tokens = tokenizers or build_tokenizers(loaded)
     config = pipeline_config(loaded)
     if config.context.compression.enabled and compressor is None:
@@ -211,6 +222,20 @@ def build_pipeline_from_settings(
         if not permission.allowed:
             raise SettingsError("live calls refused: " + "; ".join(permission.reasons))
         ledger = spend_ledger(loaded, run_id)
+    router = router_spec(
+        loaded,
+        config.routing.decision_router or DecisionRouterConfig(),
+        backends=router_backends,
+        states_dataset_derived=states_dataset_derived,
+    )
+    if router is not None and _chain_has_hosted(loaded):
+        permission = live_permission(loaded)
+        if not permission.allowed:
+            raise SettingsError(
+                "hosted decision backends refused: " + "; ".join(permission.reasons)
+            )
+        ledger = ledger or spend_ledger(loaded, run_id)
+        router = replace(router, spend_ledger=ledger)
     return build_pipeline(
         config,
         model_client=model_client,
@@ -226,7 +251,16 @@ def build_pipeline_from_settings(
         templates=model_templates(loaded, tokens),
         config_hash=loaded.config_hash,
         compressor=compressor,
+        router=router,
         **candidates,
+    )
+
+
+def _chain_has_hosted(loaded: LoadedSettings) -> bool:
+    router = loaded.settings.router
+    return any(
+        backend_kind(router.backends[name]) == "hosted"
+        for name in router.active_chain()
     )
 
 

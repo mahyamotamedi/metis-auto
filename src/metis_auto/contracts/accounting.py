@@ -52,6 +52,10 @@ class CostBasis(StrEnum):
     """Counterfactual cost avoided by a cache hit (FR-ACCT-04)."""
     BASELINE_ESTIMATE = "baseline_estimate"
     """A baseline's cost on the same composition (FR-ACCT-05)."""
+    LOCAL_COMPUTE = "local_compute"
+    """Work done on this machine with no billed price (a local router): the
+    amount is zero by definition and no price table applies. CPU time is
+    reported as latency, not cost (ADR-0047)."""
 
 
 class CostCaveat(StrEnum):
@@ -105,7 +109,10 @@ class Cost(ContractModel):
     @model_validator(mode="after")
     def _check_status(self) -> Cost:
         if self.status == CostStatus.COMPUTED:
-            if self.amount is None or self.price_table_version is None:
+            if self.basis == CostBasis.LOCAL_COMPUTE:
+                if self.amount is None or self.amount.amount != 0:
+                    raise ValueError("a local_compute cost is computed and zero")
+            elif self.amount is None or self.price_table_version is None:
                 raise ValueError("a computed cost needs amount and price_table_version")
             if self.reason is not None:
                 raise ValueError("a computed cost has no not-computed reason")

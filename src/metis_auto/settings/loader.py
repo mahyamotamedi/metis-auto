@@ -31,7 +31,15 @@ from typing import Any
 
 from pydantic import SecretBytes, SecretStr
 
-from .model import HASH_EXCLUDED_SECTIONS, LoadedSettings, Secrets, Settings
+from metis_auto.contracts import QuestionLanguage
+
+from .model import (
+    HASH_EXCLUDED_SECTIONS,
+    LoadedSettings,
+    ReferenceData,
+    Secrets,
+    Settings,
+)
 from .reference import load_reference
 
 CONFIG_DIR_ENV = "METIS_CONFIG_DIR"
@@ -47,9 +55,22 @@ MIN_FINGERPRINT_KEY_BYTES = 32  # ADR-0015 amendment 1
 DEFAULTS_ONLY = {("budget", "lifetime_ceiling")}
 """Keys only ``config/defaults.toml`` may set: raising them is a reviewed
 commit plus a decision record, never a local edit (ADR-0018)."""
-NOT_IN_EXPERIMENT = ("live", "budget", "paths", "dev", "golden_answers", "events")
+NOT_IN_EXPERIMENT = (
+    "live",
+    "budget",
+    "paths",
+    "dev",
+    "golden_answers",
+    "data",
+    "events",
+)
 """Sections an experiment file may not set: the runtime decides what this
 machine allows (configuration.md §3 rules 1 and 2)."""
+RUNTIME_ONLY = {("router", "real_data_approved"), ("router", "allow_unpriced")}
+"""Keys only the runtime layers (``config/local.toml``, environment overrides,
+explicit overrides) may set: per-machine, per-run approvals that a committed
+file must never grant (ADR-0047; mirrors
+``golden_answers.real_data_approved``)."""
 SECRET_NAMES = {"api_key", "password", "secret", "fingerprint_key", "token"}
 SECRET_SUFFIXES = ("_api_key", "_password", "_secret")
 """Leaf key names refused in every settings layer: secrets never go in files
@@ -124,6 +145,9 @@ def load_settings(
         raise SettingsError(f"invalid settings: {exc}") from None
 
     reference = load_reference(cfg_dir, settings.reference)
+    _check_router_prices(settings, reference)
+    _check_router_questions(settings, reference)
+    _check_router_assets(settings, reference)
     return LoadedSettings(
         settings=settings,
         secrets=read_secrets(env),
@@ -261,6 +285,56 @@ def _leaf_paths(data: Mapping[str, Any], prefix: tuple[str, ...] = ()):
             yield path
 
 
+def _check_router_prices(settings: Settings, reference: ReferenceData) -> None:
+    """Every ``price_ref`` named by a router backend exists in the router price
+    table (ADR-0047): a typo must not silently become "not
+    computed"."""
+    table = reference.router_prices
+    known = {e.price_ref for e in table.entries} if table is not None else set()
+    for name, backend in settings.router.backends.items():
+        ref = getattr(backend, "price_ref", None)
+        if ref is not None and ref not in known:
+            raise SettingsError(
+                f"router.backends.{name}.price_ref {ref!r} is not in the router "
+                "price table (reference.router_prices)"
+            )
+
+
+def _check_router_assets(settings: Settings, reference: ReferenceData) -> None:
+    """Every THX-01 backend names a THX-01 row of the router asset table
+    (ADR-0047 point 7). Pinning is checked when the backend
+    loads, so an unpinned asset is a clear "not available" rather than a settings
+    error."""
+    table = reference.routers
+    for name, backend in settings.router.backends.items():
+        if backend.type != "thx01":
+            continue
+        spec = table.get(backend.asset) if table is not None else None
+        if spec is None or spec.backend.value != "thx01":
+            raise SettingsError(
+                f"router.backends.{name}.asset {backend.asset!r} is not a thx01 row "
+                "of the router asset table (reference.routers)"
+            )
+
+
+def _check_router_questions(settings: Settings, reference: ReferenceData) -> None:
+    """The configured question set exists in both languages
+    (ADR-0047), so an A/B switch of
+    ``router.question_language`` never fails at request time."""
+    table = reference.router_questions
+    if table is None:
+        return
+    version = settings.router.question_set
+    missing = [
+        lang.value for lang in QuestionLanguage if table.get(version, lang) is None
+    ]
+    if missing:
+        raise SettingsError(
+            f"router.question_set {version!r} has no {missing} variant in "
+            "reference.router_questions"
+        )
+
+
 def _check_layer(name: str, data: Mapping[str, Any]) -> None:
     kind = name.split(":", 1)[0]
     for path in _leaf_paths(data):
@@ -270,6 +344,11 @@ def _check_layer(name: str, data: Mapping[str, Any]) -> None:
             raise SettingsError(
                 f"{name}: {dotted!r} looks like a secret; secrets come only from "
                 "the environment or .env"
+            )
+        if kind in ("defaults", "experiment") and path[:2] in RUNTIME_ONLY:
+            raise SettingsError(
+                f"{name}: {dotted!r} may be set only in config/local.toml or an "
+                "environment override (a per-run approval, never committed)"
             )
         if kind != "defaults" and path[:2] in DEFAULTS_ONLY:
             raise SettingsError(f"{name}: {dotted!r} may be set only in defaults.toml")

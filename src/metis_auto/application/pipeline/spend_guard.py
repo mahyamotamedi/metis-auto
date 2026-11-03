@@ -53,6 +53,18 @@ class SpendGuard:
             return False
         return amount.currency == left.currency and amount.amount <= left.amount
 
+    def stop(self, reason: str) -> None:
+        """Stop live calls for the rest of the run (an unpriced router call
+        that ``router.allow_unpriced`` let through,
+        ADR-0047 point 6)."""
+        if self._stopped is None:
+            self._stopped = reason
+            log.warning("spend guard: %s", reason)
+
+    def charge_amount(self, amount: Money) -> None:
+        """Charge a computed actual cost that had no computed estimate."""
+        self._ledger.charge(amount)
+
     def charge(self, cost: Cost | None, estimate: CostEstimate) -> None:
         """Charge an allowed attempt: its actual cost, or, when that is not
         computed, its pre-call estimate, and then stop live calls."""

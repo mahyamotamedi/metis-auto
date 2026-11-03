@@ -101,6 +101,20 @@ class RoutingMode(StrEnum):
     STICKY_V1 = "sticky_v1"
     PER_REQUEST = "per_request"
     FIXED = "fixed"
+    DECISION_ROUTER = "decision_router"
+    """The System-One decision router (ADR-0047, R7):
+    ``router_mode`` picks its chain (``local`` = THX-01, ``hosted`` = Jev via
+    Metis, or a hybrid); ``off`` keeps the policy but asks no backend (the
+    rules decide). A placeholder demo component, never evidence."""
+
+
+ROUTER_MODES = (
+    "off",
+    "local",
+    "hosted",
+    "hybrid_local_first",
+    "hybrid_hosted_first",
+)
 
 
 class CompressionMode(StrEnum):
@@ -163,6 +177,7 @@ class ChatSession:
         compressor_factory: CompressorFactory | None = None,
         seed_path: Path | None = None,
         seed_size: int = 5,
+        router_mode: str = "local",
     ) -> None:
         """``model_id`` without ``routing`` means fixed routing (Stage 7.5);
         no model means sticky routing v1."""
@@ -200,6 +215,9 @@ class ChatSession:
         self.bot_cache = bot_cache
         self.seed = seed
         self.deepseek_thinking = deepseek_thinking
+        if router_mode not in ROUTER_MODES:
+            raise ValueError(f"unknown router mode {router_mode!r}")
+        self.router_mode = router_mode
         self._rebuild()
 
     # --- configuration ---
@@ -213,7 +231,14 @@ class ChatSession:
         )
         if not self._live:
             overrides.pop("experiment.counterfactual_source")
-        if not fixed:
+        if self.routing == RoutingMode.DECISION_ROUTER:
+            overrides["pipeline.routing.policy"] = "decision_router"
+            overrides["router.mode"] = self.router_mode
+            if self.router_mode != "off":
+                loaded = self._load({})
+                for name in loaded.settings.router.chains.get(self.router_mode, ()):
+                    overrides[f"router.backends.{name}.enabled"] = True
+        elif not fixed:
             overrides["pipeline.routing.policy"] = "sticky"
             overrides["pipeline.routing.sticky.mode"] = self.routing.value
         if self.compression != CompressionMode.OFF:
@@ -250,6 +275,9 @@ class ChatSession:
             tokenizers=self._tokenizers,
             compressor=self._compressor(loaded),
             fingerprint_key_bytes=self._fp_key,
+            # Typed messages are the owner's own; the seeded sample is dataset
+            # content, so hosted decision backends refuse it (licence).
+            states_dataset_derived=self.seed,
         )
         self.loaded = loaded
         self.accounting: AccountingService = build_accounting_service(
@@ -308,6 +336,12 @@ class ChatSession:
 
     def set_routing(self, mode: RoutingMode) -> None:
         self._set(routing=mode)
+
+    def set_router_mode(self, mode: str) -> None:
+        """The decision router's chain (R7); applies with ``decision_router``."""
+        if mode not in ROUTER_MODES:
+            raise ValueError(f"unknown router mode {mode!r}")
+        self._set(router_mode=mode)
 
     def set_compression(self, mode: CompressionMode) -> None:
         self._set(compression=mode)
@@ -480,6 +514,9 @@ class ChatSession:
         return {
             "routing": self.routing.value
             + (f" ({self.model_id})" if self.routing == RoutingMode.FIXED else ""),
+            "router": self.router_mode
+            if self.routing == RoutingMode.DECISION_ROUTER
+            else "off",
             "compression": self.compression.value,
             "cache_scope": "bot-level [DEMO]" if self.bot_cache else "session",
             "seed": "on [DEMO]" if self.seed else "off",
@@ -525,6 +562,14 @@ class ChatSession:
             label = f"re-routed ({why}) and re-anchored → {final}"
         elif code.startswith("per_request"):
             label = "per-request rules (no anchor)"
+        elif decision.router_summary is not None:
+            summary = decision.router_summary
+            backend = summary.backend.name if summary.backend else "no backend"
+            tier = "-" if summary.mapped_tier is None else str(summary.mapped_tier)
+            label = (
+                f"decision router [DEMO] ({summary.path.value}, {backend}, "
+                f"tier {tier}) → {final}"
+            )
         else:
             label = code
         if meta.escalations:

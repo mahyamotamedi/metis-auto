@@ -40,14 +40,15 @@ output = "2"
 def reference(tmp_path):
     endpoints = (REFERENCE / "endpoints-metis.toml").read_text(encoding="utf-8")
     (tmp_path / "endpoints.toml").write_text(
-        endpoints.replace('status = "deferred"', 'status = "enabled"')
+        endpoints.replace('status = "deferred"', 'status = "enabled"'),
+        encoding="utf-8",
     )
     catalogue = (REFERENCE / "catalogue-metis-test.toml").read_text(encoding="utf-8")
-    (tmp_path / "catalogue.toml").write_text(catalogue + GEMINI_ROW)
+    (tmp_path / "catalogue.toml").write_text(catalogue + GEMINI_ROW, encoding="utf-8")
     prices = (REFERENCE / "prices-metis-2026-10-18-g55.toml").read_text(
         encoding="utf-8"
     )
-    (tmp_path / "prices.toml").write_text(prices + PRICE_ROW)
+    (tmp_path / "prices.toml").write_text(prices + PRICE_ROW, encoding="utf-8")
     return {
         "reference.endpoints": str(tmp_path / "endpoints.toml"),
         "reference.catalogue": str(tmp_path / "catalogue.toml"),

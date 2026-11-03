@@ -1,6 +1,11 @@
 """Database libraries (extra ``db``) are imported only in ``data_access/postgres``
 (ADR-0027), so offline code never needs them. ``scripts/full_eda_*`` predate the rule
-and are outside ``src``. Static check (``ast``)."""
+and are outside ``src``. Static check (``ast``).
+
+Widened on purpose (ADR-0047 point 10, owner-approved
+2026-11-02): **pyarrow** may also be imported in ``data_access/full``, the Parquet
+reader of the routing dev slice, which projects columns and filters rows one file at a
+time without a database. The SQL libraries stay in ``data_access/postgres`` only."""
 
 import ast
 from pathlib import Path
@@ -8,6 +13,8 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parents[2] / "src" / "metis_auto"
 DB_LIBRARIES = {"sqlalchemy", "psycopg", "alembic", "pyarrow"}
 ALLOWED_DIR = SRC / "data_access" / "postgres"
+PARQUET_DIR = SRC / "data_access" / "full"
+PARQUET_ALLOWED = {"pyarrow"}
 # Composition passes engines around; it may name the engine type, nothing else.
 COMPOSITION = {
     SRC / "wiring" / "golden.py",
@@ -35,9 +42,17 @@ def test_database_libraries_only_in_postgres_package():
         used = _roots(ast.parse(path.read_text(encoding="utf-8"))) & DB_LIBRARIES
         if path in COMPOSITION:
             used -= COMPOSITION_ALLOWED
+        if path.is_relative_to(PARQUET_DIR):
+            used -= PARQUET_ALLOWED
         if used:
             offenders.append(path.relative_to(SRC).as_posix())
     assert offenders == []
+
+
+def test_the_parquet_reader_uses_no_sql_library():
+    for path in PARQUET_DIR.rglob("*.py"):
+        used = _roots(ast.parse(path.read_text(encoding="utf-8"))) & DB_LIBRARIES
+        assert used <= PARQUET_ALLOWED, path.name
 
 
 def test_data_access_init_does_not_import_postgres_eagerly():

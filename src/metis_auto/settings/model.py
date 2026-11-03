@@ -24,14 +24,19 @@ from pydantic import Field, SecretBytes, SecretStr, field_validator, model_valid
 from metis_auto.contracts import (
     ChatTemplate,
     ContractModel,
+    DecisionQuestionSet,
+    DecisionQuestionType,
     Fidelity,
     MetricName,
     ModelCatalogue,
     Name,
     PriceTable,
+    QuestionLanguage,
     Sourced,
     Version,
 )
+
+from .router import DevSliceSettings, RouterSettings
 
 
 class PathSettings(ContractModel):
@@ -48,6 +53,10 @@ class PathSettings(ContractModel):
     compressor_assets: str = "data/compressors"
     """Context-compressor model files (LLMLingua-2) fetched once by
     scripts/fetch_compressor_assets.py (git-ignored; Demo milestone)."""
+    router_assets: str = "data/routers"
+    """Decision-router model files (THX-01, optional Mizan GGUF) fetched once
+    by scripts/fetch_router_assets.py (git-ignored;
+    ADR-0047, R5)."""
 
 
 class LoggingSettings(ContractModel):
@@ -111,6 +120,16 @@ class ReferenceSettings(ContractModel):
     (Stage 8; contracts.md O-3)."""
     compressors: str | None = "reference/compressors.toml"
     """Pinned context-compressor models (Demo milestone, experimental)."""
+    router_questions: str | None = "reference/router-questions-v1.toml"
+    """System-One question sets of the decision router
+    (ADR-0047)."""
+    router_prices: str | None = "reference/prices-metis-router-2026-11-02.toml"
+    """Prices of hosted decision-router backends
+    (ADR-0047), apart from the answering-model table so its
+    version does not change."""
+    routers: str | None = "reference/routers.toml"
+    """Pinned local decision-router model files (ADR-0047
+    point 7, R5)."""
 
 
 class CounterfactualSource(StrEnum):
@@ -358,6 +377,11 @@ class Settings(ContractModel):
     cache: CacheStoreSettings = CacheStoreSettings()
     dev: DevSettings = DevSettings()
     golden_answers: GoldenAnswersSettings = GoldenAnswersSettings()
+    router: RouterSettings = RouterSettings()
+    """Decision-router infrastructure (ADR-0047); ``mode =
+    "off"`` by default."""
+    data: DevSliceSettings = DevSliceSettings()
+    """Machine-local dataset location (left out of the config hash)."""
     model_options: dict[str, ModelRequestOptions] = {}
     """Per catalogue model ID, e.g. ``[model_options."deepseek-v4-flash"]``."""
     pipeline: dict[str, dict[str, Any]] = {}
@@ -365,7 +389,7 @@ class Settings(ContractModel):
     ``features``, ``accounting``), opaque here; wiring validates them."""
 
 
-HASH_EXCLUDED_SECTIONS = ("paths", "logging", "reference", "events", "cache")
+HASH_EXCLUDED_SECTIONS = ("paths", "logging", "reference", "data", "events", "cache")
 """Sections left out of the config hash: machine-local or replaced by
 reference version IDs (configuration.md §3 rule 6)."""
 
@@ -639,6 +663,168 @@ class CompressorTable(ContractModel):
         return next((c for c in self.compressors if c.ref == ref), None)
 
 
+class RouterAssetBackend(StrEnum):
+    THX01 = "thx01"
+    """THX-01 checkpoint loaded in process (``thx01`` package, extra
+    ``router-local``): ``rl_agent_config.json``, ``model.safetensors``,
+    ``tokenizer/`` and ``encoder/``."""
+    GGUF = "gguf"
+    """A GGUF file served by the owner's own ``llama-server`` (Mizan); the
+    project only fetches and checks it."""
+
+
+_SAFE_PATH = r"^[A-Za-z0-9_\-][A-Za-z0-9_.\-]*(/[A-Za-z0-9_\-][A-Za-z0-9_.\-]*)*$"
+"""A relative path whose segments never start with a dot: no ``..``, no
+absolute path, no hidden files."""
+
+
+class RouterAssetFile(ContractModel):
+    """One pinned file. Verified against the pinned commit's own tree when it
+    was pinned (``verified_by``), then by sha256 before every load."""
+
+    path: str = Field(pattern=_SAFE_PATH)
+    """Relative to the asset's subfolder (and to its local directory)."""
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    size_bytes: int = Field(gt=0)
+    verified_by: Literal["lfs_sha256", "git_blob_sha1"]
+    """How the download was checked against the Hub's tree at ``revision``:
+    the LFS sha256 the Hub lists, or the git blob ID of a small file."""
+
+
+class RouterAssetSpec(ContractModel):
+    """A pinned decision-router model (ADR-0047 point 7).
+    Unpinned (no ``revision``, no files) until ``scripts/fetch_router_assets.py pin``
+    writes the pins; an unpinned asset is never loaded."""
+
+    ref: Name
+    backend: RouterAssetBackend
+    model: str = Field(pattern=r"^[A-Za-z0-9_.\-]+/[A-Za-z0-9_.\-]+$")
+    """Hugging Face repository ID."""
+    subfolder: str | None = Field(default=None, pattern=_SAFE_PATH)
+    include: tuple[str, ...] = Field(min_length=1)
+    """Glob patterns, relative to ``subfolder``, of the files to fetch."""
+    required: tuple[str, ...] = ()
+    """Files (or directories, ending in ``/``) the loader needs; checked when
+    pinning, so a partial checkpoint (and a Hub download at load) is refused."""
+    revision: str | None = Field(default=None, pattern=r"^[0-9a-f]{40}$")
+    licence: str
+    library: str | None = None
+    optional: bool = False
+    """Not needed by the default local router (Mizan)."""
+    evidence: Sourced
+    files: tuple[RouterAssetFile, ...] = ()
+
+    @model_validator(mode="after")
+    def _check(self) -> RouterAssetSpec:
+        if (self.revision is None) != (not self.files):
+            raise ValueError(
+                f"router asset {self.ref!r}: a revision and its files are pinned "
+                "together (scripts/fetch_router_assets.py pin)"
+            )
+        paths = [f.path for f in self.files]
+        if len(set(paths)) != len(paths):
+            raise ValueError(f"router asset {self.ref!r}: a file is listed twice")
+        for need in self.required if self.files else ():
+            if need.endswith("/"):
+                ok = any(p.startswith(need) for p in paths)
+            else:
+                ok = need in paths
+            if not ok:
+                raise ValueError(f"router asset {self.ref!r}: {need!r} is not pinned")
+        return self
+
+    @property
+    def pinned(self) -> bool:
+        return self.revision is not None
+
+    @property
+    def directory(self) -> str:
+        """Relative to ``paths.router_assets``: ``<ref>/<revision>``."""
+        if self.revision is None:
+            raise ValueError(f"router asset {self.ref!r} is not pinned")
+        return f"{self.ref}/{self.revision}"
+
+    @property
+    def total_bytes(self) -> int:
+        return sum(f.size_bytes for f in self.files)
+
+
+class RouterAssetTable(ContractModel):
+    version: Version
+    assets: tuple[RouterAssetSpec, ...]
+
+    @model_validator(mode="after")
+    def _unique(self) -> RouterAssetTable:
+        refs = [a.ref for a in self.assets]
+        if len(set(refs)) != len(refs):
+            raise ValueError("router asset refs must be unique")
+        return self
+
+    def get(self, ref: str) -> RouterAssetSpec | None:
+        return next((a for a in self.assets if a.ref == ref), None)
+
+
+MAX_CHOICE_OPTIONS = 10
+"""At most 10 options per choice question (owner decision 2026-11-02): THX-01's
+calibration bucket for 11+ options is broken (R0 findings §5)."""
+
+
+class RouterQuestionTable(ContractModel):
+    """Question sets of the decision router, each in English and Persian with
+    the same IDs, types, option names and level counts
+    (ADR-0047 point 9)."""
+
+    version: Version
+    sets: tuple[DecisionQuestionSet, ...]
+    intent_mapping: dict[Name, tuple[str, ...]] = {}
+    """Intent option → ``analysis.prompt_labels`` categories (approximate)."""
+
+    @model_validator(mode="after")
+    def _check(self) -> RouterQuestionTable:
+        seen: dict[tuple[str, str], DecisionQuestionSet] = {}
+        for qs in self.sets:
+            key = (qs.version, qs.language_variant.value)
+            if key in seen:
+                raise ValueError(f"question set {key} is listed twice")
+            seen[key] = qs
+            for q in qs.questions:
+                if (
+                    q.type == DecisionQuestionType.CHOICE
+                    and len(q.options) > MAX_CHOICE_OPTIONS
+                ):
+                    raise ValueError(
+                        f"{qs.version}/{q.id}: {len(q.options)} options; at most "
+                        f"{MAX_CHOICE_OPTIONS} (THX-01 calibration, owner decision)"
+                    )
+        for version in {v for v, _ in seen}:
+            shapes = {
+                lang: tuple(
+                    (q.id, q.type.value, q.option_names, len(q.levels))
+                    for q in seen[(v, lang)].questions
+                )
+                for v, lang in seen
+                if v == version
+            }
+            if len(set(shapes.values())) > 1:
+                raise ValueError(
+                    f"{version}: the language variants differ in questions, "
+                    "types, options or levels"
+                )
+        return self
+
+    def get(
+        self, version: str, language: QuestionLanguage
+    ) -> DecisionQuestionSet | None:
+        return next(
+            (
+                s
+                for s in self.sets
+                if s.version == version and s.language_variant == language
+            ),
+            None,
+        )
+
+
 @dataclass(frozen=True)
 class ReferenceData:
     """Reference data loaded from ``config/`` (configuration.md §1)."""
@@ -650,6 +836,9 @@ class ReferenceData:
     tokenizers: TokenizerTable | None = None
     label_mapping: LabelMapping | None = None
     compressors: CompressorTable | None = None
+    router_prices: PriceTable | None = None
+    router_questions: RouterQuestionTable | None = None
+    routers: RouterAssetTable | None = None
 
     def versions(self) -> dict[str, str]:
         found = {"catalogue": self.catalogue.version, "prices": self.prices.version}
@@ -663,6 +852,12 @@ class ReferenceData:
             found["label_mapping"] = self.label_mapping.version
         if self.compressors is not None:
             found["compressors"] = self.compressors.version
+        if self.router_prices is not None:
+            found["router_prices"] = self.router_prices.version
+        if self.router_questions is not None:
+            found["router_questions"] = self.router_questions.version
+        if self.routers is not None:
+            found["routers"] = self.routers.version
         return found
 
 

@@ -8,6 +8,7 @@ data/derived/
 data/recorded/
 data/spend/
 data/tokenizers/
+data/routers/
 runs/
 .git/
 .venv/

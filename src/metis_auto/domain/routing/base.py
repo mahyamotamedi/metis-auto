@@ -12,7 +12,12 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
-from metis_auto.contracts import CatalogueEntry, PolicyRef, RequestFeatures
+from metis_auto.contracts import (
+    CatalogueEntry,
+    PolicyRef,
+    RequestFeatures,
+    RouterSummary,
+)
 
 
 class RequestedModelMode(StrEnum):
@@ -36,6 +41,9 @@ class PolicyChoice:
     """Escalation chain chosen by the policy; None = ``RoutingConfig.chain``."""
     anchor_model_id: str | None = None
     """Sticky routing: the session's anchor before this request."""
+    router_summary: RouterSummary | None = None
+    """Decision router (ADR-0047): path, backend, tier,
+    thresholds, effort."""
 
 
 class RoutingPolicy(Protocol):

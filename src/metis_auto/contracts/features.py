@@ -15,10 +15,12 @@ from ._base import (
     Fingerprint,
     Name,
     NonNegInt,
+    PosInt,
     Privacy,
     Version,
     field,
 )
+from .decision import DecisionOutcome
 from .request import Modality, Provenance
 from .tokens import TokenCount
 
@@ -138,4 +140,18 @@ class RequestFeatures(ContractModel):
         Privacy.DERIVED,
         "Experimental or measured features (e.g. semantic intent).",
         default_factory=dict,
+    )
+    deadline_ms: PosInt | None = field(
+        Privacy.OPERATIONAL,
+        "The request's time budget, copied from the request (the decision "
+        "router's latency criterion, ADR-0047); None if "
+        "not set.",
+        default=None,
+    )
+    decision: DecisionOutcome | None = field(
+        Privacy.DERIVED,
+        "System-One decision answers (FR-FEAT-02 semantic slot; "
+        "ADR-0047); None "
+        "when the decision router is off.",
+        default=None,
     )
