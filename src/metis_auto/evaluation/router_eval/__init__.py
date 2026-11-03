@@ -9,21 +9,27 @@ FR-ROUTE-03/04, QA-PRIV, ADR-0047.
 """
 
 from .metrics import (
+    DIFFERENCE_COLUMNS,
     GATE_KEEP_SHARE,
     LANGUAGE_ORDER,
     ShadowRow,
     against_labels,
     answer_distributions,
+    differences,
     propose_gate,
+    skip_breakdown,
     summarise,
 )
 
 __all__ = [
+    "DIFFERENCE_COLUMNS",
     "GATE_KEEP_SHARE",
     "LANGUAGE_ORDER",
     "ShadowRow",
     "against_labels",
     "answer_distributions",
+    "differences",
     "propose_gate",
+    "skip_breakdown",
     "summarise",
 ]

@@ -88,6 +88,12 @@ R3 adds `RequestFeatures.deadline_ms` (schema 0.8): a routing policy sees only f
   - **Cost and latency:** Jev cost 0.0032 USD for 100 calls; p50 0.97 s, about 10× the overhead budget, so **still never inline**.
   - **Limits:** synthetic requests, one rater, n = 100. **A first signal, not proof.** Quality on real traffic stays unproven until Metis allows dataset text (Q-55) and labels exist (L1, the paid benchmark). The set is an evaluation set: no threshold is tuned on it.
   - **What it changes:** nothing in serving (`router.mode` stays `off`). It is the case for asking Q-55, and Jev's shadow role (Mode 1) is now the stronger candidate for labelling (A-125).
+- **Q-55 answered (2026-11-03): Metis allows dataset text to go to Jev through its wrapper for evaluation.** The shadow evaluation gained a hosted backend: `scripts/evaluate_router_slice.py --backend jev --offline` runs Jev on the 150 dev-slice records, with a plan printed first (no call), `router.real_data_approved` set in the runtime for that run only, every call under the spend guard and ledger (run cap at most 0.05 USD), and models Metis no longer serves disabled in memory. Its cost view prices the same logged tokens on today's model, the rules' model and Jev's model with the team's replay pricing (ADR-0041): a cost simulation, quality not proven.
+- **Jev on the 150 real dev-slice records (run 1, 2026-11-03; [jev_dev_slice](../../experiments/routing/exp-route-013-decision-router/jev_dev_slice/README.md)): a cost simulation, quality not proven.**
+  - **Run:** 124 Jev calls (`jev-1.14.0`) cost 0.00448 USD; 18 decisions were skipped by the gate's fast rules and 8 had no eligible model under the rules (the same 8 are unpriced).
+  - **Saving:** over today's models 57.7% (logged tokens) or 57.4% (with the reasoning allowance), of which the rules alone give 56.7%. **Jev adds about 2% over the rules** (2.35% / 1.87%); tune 0.6% and check 6.7%.
+  - **Not significant on this sample:** 16 of 142 records differ, all toward tier 0 (gpt-5-nano, the only tier-0 model left); counting Jev's own calls the saving over the rules is +0.3% / −0.2%.
+  - **Consequences:** this does not change serving (`router.mode` stays `off`) and does not support routing on Jev's tier without labels. Next: owner labels (L3) or the paid benchmark (gate 2).
 
 ## Alternatives considered
 - **RouteLLM router weights.** Trained on other domains and English chat; poor transfer to short Persian follow-ups. Rejected; RouteLLM's threshold calibration and APGR/CPT metrics are adopted instead (exp-route-013).

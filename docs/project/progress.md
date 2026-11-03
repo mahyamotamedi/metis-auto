@@ -57,6 +57,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-03: [Decision router: the owner's native run and its follow-up](progress/2026-11-03-decision-router-r6-follow-up-owner-run.md)
 - 2026-11-03: [Decision router R5 finished, R6: Jev via Metis, the LLM backup, the live check](progress/2026-11-03-decision-router-r5-finish-and-r6-hosted-backends.md)
 - 2026-11-03: [Decision router: the Jev synthetic result recorded in ADR-0047 and the register](progress/2026-11-03-decision-router-jev-result-in-adr-and-register.md)
+- 2026-11-03: [Decision router: Jev on the 150 real dev-slice records](progress/2026-11-03-decision-router-jev-on-the-dev-slice.md)
 - 2026-11-03: [Decision router: final results and decisions](progress/2026-11-03-decision-router-final-results.md)
 - 2026-11-02: [Replay pricing for the logged models](progress/2026-11-02-sprint-pipeline-b-replay-pricing-logged-models.md)
 - 2026-11-02: [Sprint Day 3, Pipeline B: kNN router, Redis cache store, B-only combined dry run](progress/2026-11-02-sprint-day-3-pipeline-b-knn-router-redis-store-combined-replay.md)

@@ -50,6 +50,21 @@ class ShadowRow:
     """Lowest reported confidence over the gate's questions (mapping, Q-61)."""
     gate_probability: float | None = None
     """Lowest probability strength over the same questions."""
+    skip_reason: str | None = None
+    """Why the decision was skipped (``rules_decisive``, ``ineligible_state``)."""
+    rules_reason: str | None = None
+    """The rules' ``reason_code`` (``no_eligible_model`` when nothing fits)."""
+    rules_exclusions: tuple[str, ...] = ()
+    """Sorted distinct reasons the rules' eligibility filter removed models."""
+    rules_target: str | None = None
+    """The model the rules alone routed to (cost comparison, ``costs``)."""
+    router_target: str | None = None
+    """The model routed to with the decision router."""
+    decision_cost_usd: str | None = None
+    """A hosted decision's computed cost (decimal string); None when local or
+    not computed."""
+    model_revision: str | None = None
+    """The version the backend reported (Jev: ``jev-1.14.0`` …)."""
 
 
 def _share(counter: Counter, total: float) -> dict[str, float]:
@@ -280,3 +295,59 @@ def propose_gate(
             else None,
         }
     return out
+
+
+DIFFERENCE_COLUMNS = (
+    "record_id",
+    "split",
+    "rules_tier",
+    "jev_tier",
+    "jev_probability",
+    "jev_confidence",
+    "rules_model",
+    "jev_model",
+)
+"""Content-free: opaque record ID, tiers, the lowest probability strength and
+reported confidence over the questions that decide the tier, model IDs."""
+
+
+def differences(rows: Iterable[ShadowRow]) -> list[dict[str, object]]:
+    """Only the requests where the router and the rules chose different models
+    (both chose one). No text; sorted by split then record ID."""
+    out = [
+        {
+            "record_id": r.record_id,
+            "split": r.split,
+            "rules_tier": r.rules_tier,
+            "jev_tier": r.router_tier,
+            "jev_probability": r.gate_probability,
+            "jev_confidence": r.gate_reported,
+            "rules_model": r.rules_target,
+            "jev_model": r.router_target,
+        }
+        for r in rows
+        if r.rules_target is not None
+        and r.router_target is not None
+        and r.rules_target != r.router_target
+    ]
+    return sorted(out, key=lambda d: (str(d["split"]), str(d["record_id"])))
+
+
+def skip_breakdown(rows: Iterable[ShadowRow]) -> dict[str, object]:
+    """Why decisions were skipped and why the rules had no model (counts)."""
+    rows = list(rows)
+    skipped = Counter(
+        f"{r.router_path}/{r.skip_reason or 'none'}"
+        for r in rows
+        if r.decision_status == "skipped"
+    )
+    no_model = Counter(r.rules_reason for r in rows if r.rules_target is None)
+    excl: Counter = Counter()
+    for r in rows:
+        if r.rules_target is None:
+            excl.update(r.rules_exclusions)
+    return {
+        "skipped_by_path_and_reason": dict(sorted(skipped.items())),
+        "rules_no_model_by_reason": dict(sorted(no_model.items(), key=str)),
+        "rules_no_model_exclusions": dict(sorted(excl.items())),
+    }

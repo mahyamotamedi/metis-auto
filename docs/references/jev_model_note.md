@@ -33,7 +33,7 @@ Both sit behind one port, `ports.BaseRouter`. Decision record: [ADR-0047](../adr
 | Thinking tokens billed | Jev generates no text; `output_tokens` is priced at 0.0000 | Metis pricing page | documented |
 | Rate limits, error format | Not stated | Metis TypeSafe page | *unverified*. `429` maps to `rate_limited`; other statuses map by code |
 | Latency | No source | — | Measured from the owner's network: 3.5 s for one call (R6); p50 0.97 s and p90 1.1 s over 100 calls (synthetic check, 2026-11-03). It is not needed inline: Jev is shadow and labelling only (owner, A-89) |
-| Licence of data sent | Dataset text may **not** go to TypeSafe until Metis confirms it in writing. Mode 1 uses SYNTHETIC or the owner's own text only (`router.real_data_approved` stays false) | owner, 2026-11-02 (Q-53, Q-55) | decided |
+| Licence of data sent | Metis confirmed in writing (2026-11-03, Q-55) that dataset text may go to TypeSafe through the wrapper for evaluation. `router.real_data_approved` stays false by default and is set in the runtime for an approved run only | owner, 2026-11-02 (Q-53); owner, 2026-11-03 (Q-55 answered) | decided |
 
 ## Configuration (J-2)
 
@@ -69,7 +69,7 @@ The plan asks "what is JEV, and are its limits and price right?". From the Metis
 1. Context and output limits.
 2. Rate limits.
 3. Whether Persian is supported.
-4. Whether dataset text may be sent to TypeSafe through the wrapper (Q-55).
+4. ~~Whether dataset text may be sent to TypeSafe through the wrapper (Q-55).~~ **Answered 2026-11-03: yes**, in writing (owner); used for the Jev run on the dev slice.
 
 This note is the answer; the O-1 owner forwards it. O-1 itself is not edited here.
 

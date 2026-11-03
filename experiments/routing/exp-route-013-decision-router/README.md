@@ -106,6 +106,10 @@ The first measurement of **decision quality** (not answer quality) with labels, 
 
 **Next:** a second rater on the same 100, labelling without seeing these labels (free; gives the agreement between raters); Q-55, so Jev can be measured on the dev slice; THX-01's mapping thresholds studied on separate data.
 
+## Jev on the real dev slice (2026-11-03)
+
+Run, results and limits: [jev_dev_slice/README.md](jev_dev_slice/README.md). In short: a cost simulation on the 150 records; Jev adds about 2% over the rules, not significant on this sample; quality not proven (A-126).
+
 ## Open
 
 - **A full-data tier per request** (for `version.py` on the full replay) needs THX-01 run on full-data text. That is local and allowed, but is several hours on CPU. Not in the sprint.
