@@ -197,7 +197,7 @@ def test_header_budget_is_unknown_when_the_ledger_cannot_be_read(loader, tmp_pat
     from metis_auto.wiring.demo_ui import header_budget
 
     session = chat(loader)
-    assert header_budget(session).lifetime_cap == Decimal("20")
+    assert header_budget(session).lifetime_cap == Decimal("92")
     ledger = tmp_path / "spend" / "ledger.jsonl"
     ledger.parent.mkdir(parents=True, exist_ok=True)
     ledger.write_text("not a ledger line\n", encoding="utf-8")

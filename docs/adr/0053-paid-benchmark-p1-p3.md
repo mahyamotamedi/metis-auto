@@ -47,6 +47,6 @@ Facts that shape the design (all checked 2026-11-03):
 ## Consequences
 
 - A pilot can start on the database machine once the owner sets the values and the gates open; until then every paid step refuses with all its reasons.
-- **Budget:** at most about 7.97 USD remains under the 20 USD ceiling (golden answers 12.03 USD, Parham's router checks 0.0049 USD; other machines unknown until their summaries exist). The 300-request main run does not fit; the pilot's printed bound decides whether it does.
+- **Budget:** at most about 7.97 USD remains under the 20 USD ceiling (golden answers 12.03 USD, Parham's router checks 0.0049 USD; other machines unknown until their summaries exist). The 300-request main run does not fit; the pilot's printed bound decides whether it does. **Update 2026-11-03:** [ADR-0018 amendment 3](0018-live-calls-for-development-under-a-lifetime-budget.md) raised the ceiling and lifetime cap to 92 USD (80 USD credit left plus the 12.03 USD already spent, an upper bound), so the 7.97 USD bound above no longer applies.
 - Labels from golden-v2 are training labels for R-B3 / R-C3; any "quality" claim stays conditional on the judges' Persian validation (the E5 gate, owner) and the 60-item spot-check.
 - Not changed: E4, E5, the golden-answers code, the ledger, R-B3 and R-C3 (used, not edited); the catalogue and `sprint.toml` (their owners' changes, TODO-17).
