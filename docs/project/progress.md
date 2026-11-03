@@ -40,6 +40,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-03: [Sprint Day 3, Pipeline C: small classifier, strict content rules](progress/2026-11-03-sprint-day-3-pipeline-c-small-classifier-strict.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: small classifier routing, threshold rule and logistic mode](progress/2026-11-03-sprint-day-3-pipeline-c-small-classifier-routing.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: routing base, eligibility, failover and candidate cost replay](progress/2026-11-03-sprint-day-3-pipeline-c-routing-base-eligibility-failover.md)
+- 2026-11-03: [Sprint Day 3, Pipeline C: D-2 results dashboard, UI spec Stages 0 and 1](progress/2026-11-03-sprint-day-3-pipeline-c-results-dashboard.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: CI on pinned Ubuntu, macOS on main only, ADR-numbering check](progress/2026-11-03-sprint-day-3-pipeline-c-ci-pin-ubuntu-macos-main-adr-check.md)
 - 2026-11-03: [Sprint Day 3, Pipeline A: R-A1 and R-A2 today's-models results repriced with the replay prices](progress/2026-11-03-sprint-day-3-pipeline-a-reprice-todays-models.md)
 - 2026-11-03: [Sprint Day 3, Pipeline A: R-A3 per-bot reassignment on R-0, accounted per ADR-0046](progress/2026-11-03-sprint-day-3-pipeline-a-per-bot-reassignment-r-a3.md)

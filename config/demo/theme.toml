@@ -1,0 +1,12 @@
+# Chart colours of the demo UI (spec UI-V03, UI-T05), read through
+# metis_auto.wiring.ui_config.chart_theme; no page names a colour (tested).
+# STAGE 1 PLACEHOLDER: Stage 2 replaces this file with the full token table
+# (dark and light, from the screenshots in docs/design/metis-screens/).
+# Values: data-viz palette slots 1 and 2, the same as the chat's cost panel
+# (scripts/demo_ui.py KIND_COLOURS), so the two pages agree.
+
+[chart]
+total = "#2a78d6"   # baseline and after-cost bars
+saving = "#1baf7a"  # saving bars
+grid_opacity = 0.25    # subtle grid lines (UI-G05)
+domain_opacity = 0.4   # subtle axis lines (UI-G05)

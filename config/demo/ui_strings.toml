@@ -1,0 +1,117 @@
+# UI strings of the demo (spec UI-V06): one key, every language (fa, en).
+# Read through metis_auto.wiring.ui_config.load_strings; pages hold no text of
+# their own. Stage 1 holds the Results page (D-2); Stage 2 adds the rest.
+# Persian strings are [PLACEHOLDER: Persian review] until reviewed (K-2/K-3):
+# written by the agent, not by a Persian reviewer. Format fields in braces.
+
+[meta]
+persian_review = "[PLACEHOLDER: Persian review]"
+
+[results]
+title = { en = "Results", fa = "نتایج" }
+subtitle = { en = "Offline results of the project's methods, replayed on logged data (reports/levers).", fa = "نتایج آفلاین روش‌های پروژه، بازپخش روی داده‌های ثبت‌شده." }
+results_not_toggles = { en = "These are results, not live switches. The chat page's toggles drive demo rules, which are not evidence.", fa = "این‌ها نتیجه‌اند، نه کلید زنده. کلیدهای صفحه گفتگو قواعد نمایشی را اجرا می‌کنند و شاهد نیستند." }
+persian_note = { en = "Persian labels are placeholders, not yet reviewed.", fa = "برچسب‌های فارسی موقت‌اند و هنوز بازبینی نشده‌اند." }
+language = { en = "Language", fa = "زبان" }
+baseline = { en = "Baseline", fa = "خط مبنا" }
+slice = { en = "Slice", fa = "برش داده" }
+overview = { en = "Savings overview", fa = "خلاصه صرفه‌جویی" }
+combined_absent = { en = "No combined result (final.json) yet: each step is shown on its own. Savings of different steps are never added up here; they can overlap.", fa = "هنوز نتیجه ترکیبی وجود ندارد؛ هر مرحله جدا نشان داده می‌شود. صرفه‌جویی مرحله‌های مختلف این‌جا جمع زده نمی‌شود، چون ممکن است هم‌پوشانی داشته باشند." }
+combined_unformatted = { en = "final.json is present, but its format is not agreed yet (I-2): each step is shown on its own.", fa = "فایل نتیجه نهایی هست، ولی قالب آن هنوز توافق نشده؛ هر مرحله جدا نشان داده می‌شود." }
+baseline_cost = { en = "Baseline cost", fa = "هزینه مبنا" }
+saving = { en = "Saving", fa = "صرفه‌جویی" }
+saving_share = { en = "Saving %", fa = "درصد صرفه‌جویی" }
+interval = { en = "Interval (saving share)", fa = "بازه اطمینان سهم صرفه‌جویی" }
+interval_none = { en = "not computed", fa = "محاسبه نشده" }
+interval_result_only = { en = "The interval belongs to the result totals, not to this slice.", fa = "بازه اطمینان مربوط به کل نتیجه است، نه این برش." }
+unknown = { en = "unknown", fa = "نامعلوم" }
+not_priced = { en = "token cost only, fees not priced", fa = "فقط هزینه توکن؛ کارمزدها قیمت‌گذاری نشده‌اند" }
+unit_recorded = { en = "recorded cost units", fa = "واحد هزینه ثبت‌شده" }
+unit_repriced = { en = "price-file units ({pv})", fa = "واحد فایل قیمت‌ها ({pv})" }
+waterfall = { en = "Waterfall by cost block", fa = "آبشار هزینه بر اساس بخش" }
+block_fees = { en = "Fees", fa = "کارمزدها" }
+block_token_cost = { en = "Token cost", fa = "هزینه توکن" }
+block_other = { en = "Other (part of token cost)", fa = "سایر (بخشی از هزینه توکن)" }
+row_before = { en = "Before", fa = "قبل" }
+row_saving = { en = "Saving", fa = "صرفه‌جویی" }
+row_after = { en = "After", fa = "بعد" }
+row_block = { en = "Block", fa = "بخش" }
+not_priced_cell = { en = "not priced", fa = "قیمت‌گذاری نشده" }
+comparison = { en = "Version comparison", fa = "مقایسه نسخه‌ها" }
+ranked_note = { en = "Ranks hold only within one step and one group (data scope, price version, evidence class). Insufficient evidence is never ranked.", fa = "رتبه فقط درون یک مرحله و یک گروه معنا دارد. شواهد ناکافی هرگز رتبه نمی‌گیرد." }
+col_rank = { en = "Rank", fa = "رتبه" }
+col_status = { en = "Status", fa = "وضعیت" }
+col_version = { en = "Version", fa = "نسخه" }
+col_group = { en = "Group", fa = "گروه" }
+col_eligible = { en = "Eligible", fa = "واجد شرایط" }
+col_correctness = { en = "Correctness", fa = "درستی" }
+col_evidence = { en = "Evidence", fa = "نوع شاهد" }
+col_tenant = { en = "Largest tenant", fa = "بزرگ‌ترین مستأجر" }
+group_text = { en = "group {n}: {requests} requests, prices {pv}", fa = "گروه {n}: {requests} درخواست، قیمت {pv}" }
+status_ranked = { en = "ranked", fa = "رتبه‌بندی شده" }
+status_insufficient = { en = "insufficient evidence", fa = "شواهد ناکافی" }
+status_missing = { en = "baseline missing", fa = "خط مبنا موجود نیست" }
+status_duplicate = { en = "duplicate version", fa = "نسخه تکراری" }
+version_switch = { en = "Version shown", fa = "نسخه نمایش‌داده‌شده" }
+cache_monitor = { en = "Cache monitor", fa = "پایش حافظه نهان" }
+lookups = { en = "Lookups", fa = "جست‌وجوها" }
+hits = { en = "Hits", fa = "یافته‌ها" }
+misses = { en = "Misses", fa = "نایافته‌ها" }
+guard_blocks = { en = "Guard blocks", fa = "مسدودشده توسط محافظ" }
+gate_skips = { en = "Greeting skips", fa = "رد شدن احوال‌پرسی" }
+shadow = { en = "Shadow check (sampled, agree, unknown)", fa = "بررسی سایه (نمونه، موافق، نامعلوم)" }
+not_reported = { en = "not in the result", fa = "در نتیجه نیامده" }
+guard_reasons_none = { en = "Guard blocks by reason: no result carries the reasons yet.", fa = "دلیل مسدودسازی محافظ هنوز در هیچ نتیجه‌ای ثبت نشده است." }
+misses_how = { en = "How misses are counted", fa = "شیوه شمارش نایافته‌ها" }
+misses_retrieval = { en = "misses = lookups − hits − guard blocks − ineligible", fa = "نایافته = جست‌وجو منهای یافته، مسدود و فاقد شرایط" }
+misses_session_memo = { en = "misses = lookups that ran (memo not reused)", fa = "نایافته = جست‌وجوهایی که اجرا شدند" }
+misses_requests = { en = "misses = eligible requests not served from the cache", fa = "نایافته = درخواست‌های واجد شرایطی که از حافظه نهان پاسخ نگرفتند" }
+greeting_gate = { en = "Greeting gate: token saving", fa = "دروازه احوال‌پرسی: صرفه‌جویی توکن" }
+gate_lower_bound = { en = "lower bound (fees not priced)", fa = "کران پایین؛ کارمزدها قیمت‌گذاری نشده‌اند" }
+gate_skipped = { en = "Turns skipped", fa = "نوبت‌های ردشده" }
+routing = { en = "Routing per bot", fa = "مسیریابی به تفکیک بات" }
+routing_none = { en = "No per-bot slices in this routing result.", fa = "این نتیجه مسیریابی برش به تفکیک بات ندارد." }
+bot = { en = "Bot (rank)", fa = "بات (رتبه)" }
+requests = { en = "Requests", fa = "درخواست‌ها" }
+moved = { en = "Moved", fa = "منتقل‌شده" }
+moved_share = { en = "Moved %", fa = "درصد منتقل‌شده" }
+share_of_saving = { en = "Share of saving", fa = "سهم از صرفه‌جویی" }
+insufficient = { en = "Too few requests", fa = "درخواست کم" }
+tenant = { en = "Tenant (rank)", fa = "مستأجر (رتبه)" }
+tenant_share = { en = "Share of requests", fa = "سهم از درخواست‌ها" }
+flag_over_cap = { en = "over the {cap} cap", fa = "بیش از سقف {cap}" }
+flag_ok = { en = "within the cap", fa = "درون سقف" }
+traffic_weighted_share = { en = "Traffic-weighted saving %", fa = "درصد صرفه‌جویی وزن‌دار با ترافیک" }
+caveats = { en = "Caveats", fa = "هشدارها" }
+evidence = { en = "Evidence", fa = "نوع شاهد" }
+quality_line = { en = "simulation on logged data; quality not proven", fa = "شبیه‌سازی روی داده ثبت‌شده؛ کیفیت اثبات نشده" }
+ev_observed = { en = "observed", fa = "مشاهده‌شده" }
+ev_metadata_derived = { en = "metadata-derived", fa = "برگرفته از فراداده" }
+ev_heuristic = { en = "heuristic", fa = "ابتکاری" }
+ev_hypothetical_reconstruction = { en = "hypothetical reconstruction", fa = "بازسازی فرضی" }
+ev_simulation = { en = "simulation", fa = "شبیه‌سازی" }
+corr_unmeasured = { en = "correctness unmeasured (not checked)", fa = "درستی سنجیده نشده" }
+corr_measured = { en = "correctness measured", fa = "درستی سنجیده شده" }
+corr_sampled = { en = "correctness sampled (n={n})", fa = "درستی نمونه‌گیری شده ({n} مورد)" }
+corr_unknown = { en = "correctness unknown", fa = "درستی نامعلوم" }
+slice_result = { en = "Result totals", fa = "کل نتیجه" }
+slice_all = { en = "All requests", fa = "همه درخواست‌ها" }
+slice_llm_only = { en = "LLM requests only", fa = "فقط درخواست‌های مدل زبانی" }
+slice_over_8k = { en = "Over 8,000 tokens", fa = "بیش از ۸۰۰۰ توکن" }
+slice_traffic_weighted = { en = "Traffic-weighted", fa = "وزن‌دار با ترافیک" }
+slice_lang = { en = "Language: {code}", fa = "زبان: {code}" }
+slice_missing = { en = "This slice is not in the result.", fa = "این برش در نتیجه نیست." }
+slice_other_units = { en = "This slice is in recorded units inside a repriced result: not shown (units are never mixed).", fa = "این برش با واحد ثبت‌شده در نتیجه‌ای با قیمت‌گذاری دوباره است؛ نشان داده نمی‌شود چون واحدها هرگز مخلوط نمی‌شوند." }
+inconsistent = { en = "The blocks do not add up to the stored total: not shown.", fa = "جمع بخش‌ها با کل ثبت‌شده برابر نیست؛ نشان داده نمی‌شود." }
+empty_title = { en = "No lever results yet.", fa = "هنوز نتیجه‌ای وجود ندارد." }
+empty_message = { en = "A replay writes them to reports/levers/<lever_id>.json. Nothing is invented meanwhile.", fa = "بازپخش، نتیجه‌ها را در پوشه گزارش‌ها می‌نویسد. تا آن زمان چیزی ساخته نمی‌شود." }
+no_chart = { en = "No chart: a value is unknown, and none is invented.", fa = "نمودار نیست؛ مقداری نامعلوم است و چیزی ساخته نمی‌شود." }
+step_cache = { en = "Cache", fa = "حافظه نهان" }
+step_context = { en = "Context", fa = "زمینه" }
+step_routing = { en = "Routing", fa = "مسیریابی" }
+step_none = { en = "No result for this step under this baseline.", fa = "برای این مرحله با این خط مبنا نتیجه‌ای نیست." }
+baseline_premium_gpt_5_5 = { en = "Premium gpt-5.5 (estimate only)", fa = "مدل گران‌قیمت gpt-5.5 (فقط تخمین)" }
+baseline_as_logged = { en = "As-logged recorded cost", fa = "هزینه ثبت‌شده در لاگ" }
+baseline_todays_models = { en = "Today's logged models", fa = "مدل‌های فعلی ثبت‌شده" }
+baseline_best_single_cheap = { en = "Best single cheap model", fa = "بهترین مدل ارزان واحد" }
+skipped_files = { en = "Files that are not lever results: {n} (not shown).", fa = "فایل‌هایی که نتیجه نیستند: {n} (نشان داده نمی‌شوند)." }
