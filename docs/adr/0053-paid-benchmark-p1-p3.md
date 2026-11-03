@@ -70,3 +70,11 @@ Status: **provisional**; review by Parham (owner of these files) pending. Reason
 - `SharedSpendLedger` raises a `TypeError` on a timezone-naive summary timestamp instead of refusing with a reason.
 - A missing catalogue tier for an arm raises a `KeyError` in the labels instead of a refusal.
 - The gate values are owner decisions (not listed by `unset_owner_values`); until set, labels are `not_configured` and Persian quality claims stay conditional.
+
+## Amendment 2 (2026-11-03): a transient provider error no longer stops a paid run
+
+Status: **provisional**. Reason: the pilot's generation and judging each stopped after a single Metis connection timeout (about 50 s): the spend guard cannot price a call with no reported usage, so it charged the pre-call estimate and stopped **every** later call in the run (ADR-0021), including a whole second judge that never got a call.
+
+**Changed (benchmark only).** `SpendGuardedClient` (`wiring/benchmark.py`) treats a `connection` or `timeout` error as transient: it charges the pre-call estimate (conservative, never zero, bounded by the cap, since the provider may still have billed the request) and lets the run go on. After `max_consecutive_transient` (5) such errors in a row it stops the run (an outage), and any success resets the streak. Every other uncomputable cost (missing price, unmapped model, an unknown error) still stops the run as before. `SpendGuard` itself, the pipeline and the router cascade are unchanged. Tests: `tests/unit/wiring/test_benchmark_transient_errors.py`.
+
+**Consequence.** A flaky connection costs one estimate per failed call instead of the run. A failed call is still recorded as an error and is retried by the next pass (resume with the same run ID; recorded answers replay free).

@@ -156,7 +156,15 @@ class SpendGuardedClient:
     """``ports.ModelClient``: a live call only if its pre-call estimate fits
     what is left (the spend guard over the shared ledger); then the actual
     cost is charged. A refused call returns a ``ModelError``
-    (``spend_guard_refused``), so the E4 run records it and goes on."""
+    (``spend_guard_refused``), so the E4 run records it and goes on.
+
+    A **transient** provider error (``connection`` or ``timeout``: no usage is
+    reported, so the actual cost is unknown) charges the pre-call estimate,
+    never zero, and does **not** stop the run; the run is stopped after
+    ``max_consecutive_transient`` of them in a row (an outage). Any other
+    uncomputable cost still stops it (ADR-0021; ADR-0053 amendment 2)."""
+
+    TRANSIENT = frozenset({ErrorClass.CONNECTION, ErrorClass.TIMEOUT})
 
     def __init__(
         self,
@@ -165,11 +173,14 @@ class SpendGuardedClient:
         *,
         estimate: Callable[[ModelInvocation], CostEstimate],
         actual: Callable[[ModelInvocation, ModelResult], Cost | None],
+        max_consecutive_transient: int = 5,
     ) -> None:
         self._inner = inner
         self._guard = guard
         self._estimate = estimate
         self._actual = actual
+        self.max_consecutive_transient = max_consecutive_transient
+        self._streak = 0
 
     @property
     def source(self) -> AnswerSource:
@@ -185,6 +196,16 @@ class SpendGuardedClient:
                 source=self._inner.source,
             )
         result = self._inner.invoke(invocation)
+        if isinstance(result, ModelError) and result.error_class in self.TRANSIENT:
+            assert estimate.cost.amount is not None  # allows() checked it
+            self._guard.charge_amount(estimate.cost.amount)
+            self._streak += 1
+            if self._streak >= self.max_consecutive_transient:
+                self._guard.stop(
+                    f"{self._streak} consecutive {result.error_class.value} errors"
+                )
+            return result
+        self._streak = 0
         self._guard.charge(self._actual(invocation, result), estimate)
         return result
 

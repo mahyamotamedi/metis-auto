@@ -56,17 +56,31 @@ cheap_arms = ["gpt-5-nano"]
 """
 
 
+NO_OWNER_VALUES = """
+[gates]
+metis_allows_samples = false
+
+[spend_share]
+summaries_dir = "reports/spend/ledgers"
+
+[run]
+
+[judges]
+
+[labels]
+"""
+
+
 def _config(owner: bool) -> str:
     text = (ROOT / "config/evaluation/benchmark.toml").read_text(encoding="utf-8")
     text = text.replace(
         'shareable_ids = "reports/evaluation/golden_v2/golden_v2_shareable.parquet"',
         'shareable_ids = "syn/shareable.parquet"',
     )
-    if not owner:
-        return text
     head, _, _ = text.partition("[gates]")
     tail = text.split("[spot_check]", 1)[1]
-    return head + OWNER_VALUES + "\n[spot_check]" + tail
+    values = OWNER_VALUES if owner else NO_OWNER_VALUES  # never the live pilot values
+    return head + values + "\n[spot_check]" + tail
 
 
 @pytest.fixture
