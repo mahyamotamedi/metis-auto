@@ -8,10 +8,11 @@ model). No routing, caching, or accounting logic here: the page holds the
 history and sends it every turn (P-8), shows each ``TurnReport``, and maps the
 widgets to the session's toggles.
 
-- Header (UI spec Stage 2, UI-H01..H05): the text wordmark, the language switch
-  (فا / EN), the Fake/Live chip, the budget, the theme toggle and a "Local demo"
-  chip; below, the Chat and Results tabs. Built here, not with Streamlit's top
-  navigation, which cannot hold these controls (ADR-0052).
+- Header (UI spec Stage 2, UI-H01..H05): the text wordmark (متیس‌اتو /
+  Metis-Auto, Stage 2b), the language switch (فا / EN), the Fake/Live chip, the
+  real budget in both modes, the theme toggle and a "Local demo" chip; below,
+  the Chat and Results tabs. Built here, not with Streamlit's top navigation,
+  which cannot hold these controls (ADR-0052).
 - Main area: the chat (Persian right-to-left, English left-to-right), the
   live-call banner, and per-message details.
 - Sidebar: bot setup (instructions, one retrieved document per block,
@@ -64,11 +65,14 @@ from metis_auto.wiring.demo_ui import (
     cost_view,
     detail_sections,
     friendly_failure,
+    header_budget,
     live_banner,
     live_check,
     load_presets,
-    money,
     routing_kind,
+    routing_kind_text,
+    served_text,
+    term_text,
     text_direction,
     waterfall_rows,
 )
@@ -81,8 +85,11 @@ from metis_auto.wiring.ui_config import (
     translator,
     ui_state,
 )
+from metis_auto.wiring.ui_format import fmt
 from metis_auto.wiring.ui_style import (
     altair_config,
+    axis_format,
+    bar_layout,
     budget_html,
     card_title_html,
     chip_html,
@@ -90,7 +97,9 @@ from metis_auto.wiring.ui_style import (
     header_brand_html,
     kind_rows,
     kind_scale,
+    legend_html,
     ltr,
+    md_safe,
     page_css,
 )
 
@@ -480,7 +489,7 @@ def _banner() -> None:
     s = _s()
     chat: ChatSession = s.chat
     if s.blocked:
-        banner = blocked_banner(s.blocked)
+        banner = blocked_banner(s.blocked, t=s.ui_text)
     else:
         allowed, reasons = (True, ()) if chat.live else live_check(_loader())
         banner = live_banner(
@@ -488,6 +497,7 @@ def _banner() -> None:
             allowed=allowed,
             reasons=reasons,
             stopped=chat.pipeline.live_stopped,
+            t=s.ui_text,
         )
     show = {
         "off": st.info,
@@ -495,14 +505,20 @@ def _banner() -> None:
         "blocked": st.error,
         "stopped": st.error,
     }[banner.state]
-    show(f"**{S(f'banner_{banner.state}')}.** {banner.detail}")
+    show(f"**{banner.title}.** {banner.detail}")
     if s.notice:
         level, text = s.notice
         {"info": st.toast, "error": st.error}[level](text)
         s.notice = None
 
 
+def _usd(value, currency: str = "USD") -> str:
+    """An amount through the one formatter, LTR-isolated (UI-V07)."""
+    return ltr(fmt(value, "money", currency=currency, unknown=S("not_computed")))
+
+
 def _message(i: int, message: dict) -> None:
+    t = _s().ui_text
     role, text = message["role"], message["text"]
     with st.chat_message(role):
         with st.container(key=f"{text_direction(text)}-m{i}"):
@@ -510,33 +526,33 @@ def _message(i: int, message: dict) -> None:
         report: TurnReport | None = message.get("report")
         if report is None:
             return
-        failure = friendly_failure(report)
+        failure = friendly_failure(report, t=t)
         if failure:
             st.warning(failure)
         view = cost_view(report.parts)
         parts = [
-            f"**{routing_kind(report)}**",
-            S("served_by", by=report.served_by),
+            f"**{routing_kind_text(routing_kind(report), t)}**",
+            S("served_by", by=served_text(report.served_by, t)),
             f"`{ltr(report.model_id or '-')}`",
         ]
         if view is not None and view.paid is not None:
             saved = (
-                S("badge_less", share=ltr(f"{view.saved_fraction:.0%}"))
+                S("badge_less", share=ltr(fmt(view.saved_fraction, "percent")))
                 if view.saved_fraction is not None
                 else ""
             )
             parts.append(
                 S(
                     "badge_paid",
-                    paid=ltr(money(view.paid)),
-                    premium=ltr(money(view.premium)),
+                    paid=_usd(view.paid, view.currency),
+                    premium=_usd(view.premium, view.currency),
                     saved=saved,
                 )
             )
         with st.container(key=f"badge-{i}"):
-            st.markdown(" · ".join(parts))
+            st.markdown(md_safe(" · ".join(parts)))
         with st.expander(S("details")):
-            for title, rows in detail_sections(report):
+            for title, rows in detail_sections(report, t=t):
                 st.markdown(f"**{title}**")
                 st.table(pd.DataFrame(rows, columns=["", S("col_value")]).set_index(""))
 
@@ -579,30 +595,51 @@ def _waterfall(view: CostView) -> None:
         st.html(empty_state_html("bar_chart", S("nothing_computed")))
         return
     s = _s()
-    domain, colours = kind_scale(load_theme(s.ui_theme), s.ui_text)
-    data = pd.DataFrame(kind_rows(rows, s.ui_text))
+    t = s.ui_text
+    domain, colours = kind_scale(load_theme(s.ui_theme), t)
+    data = pd.DataFrame(kind_rows(rows, t))
+    data["term"] = [term_text(term, t) for term in data["term"]]
+    data["text"] = [
+        fmt(v, "money", currency=view.currency, signed=k != "total")
+        for v, k in zip(data["amount"], data["kind"], strict=True)
+    ]
     order = list(data["term"])
+    layout = bar_layout(s.ui_lang)
     bars = (
         alt.Chart(data)
         .mark_bar(cornerRadius=3, height=16)
         .encode(
             y=alt.Y(
-                "term:N", sort=order, title=None, axis=alt.Axis(labelOverlap=False)
+                "term:N",
+                sort=order,
+                title=None,
+                axis=alt.Axis(labelOverlap=False, orient=layout["y_orient"]),
             ),
-            x=alt.X("start:Q", title=view.currency, axis=alt.Axis(format=".6f")),
+            x=alt.X(
+                "start:Q",
+                title=view.currency,
+                axis=alt.Axis(format=axis_format("money")),
+                scale=alt.Scale(reverse=layout["x_reverse"]),
+            ),
             x2="end:Q",
             color=alt.Color(
                 "kind_label:N",
                 scale=alt.Scale(domain=domain, range=colours),
-                legend=alt.Legend(title=None),
+                legend=None,
             ),
             tooltip=[
                 alt.Tooltip("term:N", title=S("col_term")),
-                alt.Tooltip("label:N", title=view.currency),
+                alt.Tooltip("text:N", title=view.currency),
             ],
         )
     )
     _chart(bars.properties(height=alt.Step(26)))
+    present = set(data["kind_label"])
+    st.html(
+        legend_html(
+            [(k, c) for k, c in zip(domain, colours, strict=True) if k in present]
+        )
+    )
 
 
 def _cost_tab(view: CostView | None, scope: str) -> None:
@@ -610,14 +647,9 @@ def _cost_tab(view: CostView | None, scope: str) -> None:
         st.html(empty_state_html("receipt_long", S("no_answer_yet", scope=scope)))
         return
     cards = (
-        (S("actually_paid"), ltr(money(view.paid, ""))),
-        (S("premium_estimate"), ltr(money(view.premium, ""))),
-        (
-            S("saved"),
-            ltr(
-                f"{view.saved_fraction:.1%}" if view.saved_fraction is not None else "-"
-            ),
-        ),
+        (S("actually_paid"), _usd(view.paid, view.currency)),
+        (S("premium_estimate"), _usd(view.premium, view.currency)),
+        (S("saved"), ltr(fmt(view.saved_fraction, "percent", unknown="-"))),
     )
     with st.container(key=f"mx-row-cost-{scope}", horizontal=True):
         for n, (label, value) in enumerate(cards):
@@ -651,12 +683,13 @@ def _cost_panel() -> None:
             rows = []
             m_terms = dict(message_view.terms) if message_view else {}
             s_terms = dict(session_view.terms) if session_view else {}
-            for label, _ in (message_view or session_view).terms:
+            view = message_view or session_view
+            for label, _ in view.terms:
                 rows.append(
                     {
-                        S("col_term"): label,
-                        S("col_message"): ltr(money(m_terms.get(label), "")),
-                        S("col_session"): ltr(money(s_terms.get(label), "")),
+                        S("col_term"): term_text(label, s.ui_text),
+                        S("col_message"): _usd(m_terms.get(label), view.currency),
+                        S("col_session"): _usd(s_terms.get(label), view.currency),
                     }
                 )
             st.table(pd.DataFrame(rows).set_index(S("col_term")))
@@ -671,27 +704,31 @@ def _cost_panel() -> None:
             return
         st.progress(
             min(budget.lifetime_fraction, 1.0),
-            text=S(
-                "budget_lifetime",
-                spent=ltr(f"{budget.lifetime_spent:.6f}"),
-                cap=ltr(f"{budget.lifetime_cap} {budget.currency}"),
-                share=ltr(f"{budget.lifetime_fraction:.2%}"),
+            text=md_safe(
+                S(
+                    "budget_lifetime",
+                    spent=_usd(budget.lifetime_spent, budget.currency),
+                    cap=_usd(budget.lifetime_cap, budget.currency),
+                    share=ltr(fmt(budget.lifetime_fraction, "percent")),
+                )
             ),
         )
         if budget.run_cap is not None:
             st.progress(
                 min(budget.run_fraction or 0.0, 1.0),
-                text=S(
-                    "budget_run",
-                    spent=ltr(f"{budget.run_spent:.6f}"),
-                    cap=ltr(f"{budget.run_cap} {budget.currency}"),
+                text=md_safe(
+                    S(
+                        "budget_run",
+                        spent=_usd(budget.run_spent, budget.currency),
+                        cap=_usd(budget.run_cap, budget.currency),
+                    )
                 ),
             )
-        marks = " / ".join(ltr(f"{w:.0%}") for w in budget.warn_at)
+        marks = " / ".join(ltr(fmt(w, "percent")) for w in budget.warn_at)
         if budget.crossed is not None and budget.crossed >= max(budget.warn_at):
-            st.error(S("budget_over_tell", share=ltr(f"{budget.crossed:.0%}")))
+            st.error(S("budget_over_tell", share=ltr(fmt(budget.crossed, "percent"))))
         elif budget.crossed is not None:
-            st.warning(S("budget_over", share=ltr(f"{budget.crossed:.0%}")))
+            st.warning(S("budget_over", share=ltr(fmt(budget.crossed, "percent"))))
         st.caption(
             S("budget_note", marks=marks)
             + " "
@@ -733,8 +770,9 @@ def _header(pages: list, current) -> None:
     """Two rows, full width (images 3 and 4): brand | language, mode, budget,
     theme, local demo; then the tabs with a line icon, active = filled pill."""
     s = _s()
-    chat: ChatSession | None = s.get("chat")
-    live = bool(chat and chat.live)
+    _init()  # the budget is read from the session's ledger, on every page
+    chat: ChatSession = s.chat
+    live = chat.live
     with st.container(key="mx-header", gap=None):
         with st.container(
             key="mx-header-row1",
@@ -765,10 +803,7 @@ def _header(pages: list, current) -> None:
                     width="content",
                 )
                 st.html(
-                    budget_html(
-                        s.ui_text, live=live, budget=budget_view(chat) if live else None
-                    ),
-                    width="content",
+                    budget_html(s.ui_text, budget=header_budget(chat)), width="content"
                 )
                 st.toggle(
                     S("theme_dark"),

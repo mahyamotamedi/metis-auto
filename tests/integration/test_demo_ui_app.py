@@ -19,6 +19,7 @@ from metis_auto.adapters.providers import FakeModelClient  # noqa: E402
 from metis_auto.settings import load_settings  # noqa: E402
 from metis_auto.wiring.chat import CompressionMode, RoutingMode  # noqa: E402
 from metis_auto.wiring.demo_ui import load_presets  # noqa: E402
+from metis_auto.wiring.ui_config import load_strings  # noqa: E402
 
 PAGE = str(Path(__file__).resolve().parents[2] / "scripts" / "demo_ui.py")
 MARKER = "SYNTHETIC-CONTENT-MARKER-91c2"
@@ -424,7 +425,7 @@ def test_numbers_and_model_ids_are_ltr_isolated(tmp_path):
     assert values and all(v.startswith(LRI) and v.endswith(PDI) for v in values)
     badge = _texts(at)
     assert f"{LRI}{report.model_id}{PDI}" in badge
-    assert 'class="mx-brand-sub mx-ltr"' in " ".join(_html(at))
+    assert '<b><bdi dir="ltr" class="mx-ltr">$' in " ".join(_html(at))  # budget
     at = at.switch_page(RESULTS_PAGE).run()
     values = [m.value for m in at.metric]
     assert values and all(v.startswith(LRI) and v.endswith(PDI) for v in values)
@@ -433,8 +434,12 @@ def test_numbers_and_model_ids_are_ltr_isolated(tmp_path):
 def test_header_has_brand_mode_chip_budget_and_no_login(tmp_path):
     at = _app(tmp_path, theme="dark", lang="fa")
     html = " ".join(_html(at))
-    assert "متیس" in html and "Metis-Auto prototype" in html
-    assert "حالت آزمایشی" in html  # fake mode instead of a balance
+    assert "متیس‌اتو" in html and "نمونه‌ی آزمایشی" in html  # Stage 2b point 1
+    # Stage 2b point 2: the real budget (cap 20, empty test ledger) in fake
+    # mode too; the mode only in the chip, never twice
+    assert '<div class="mx-budget"' in html and "بودجه:" in html
+    assert '<b><bdi dir="ltr" class="mx-ltr">$20.00</bdi></b>' in html
+    assert "حالت آزمایشی" not in html and html.count("آزمایشی") == 2  # chip, pill
     text = html.lower()
     for absent in ("login", "sign up", "ورود", "avatar", "+</"):
         assert absent not in text, absent
@@ -450,3 +455,136 @@ def test_streamlit_chrome_is_hidden_and_colours_come_from_tokens(tmp_path):
     assert '[data-testid="stToolbar"]' in css and "display: none" in css
     body = css.split("}", 1)[1]
     assert not re.search(r"#[0-9a-fA-F]{6}\b", body.replace("#vg-tooltip-element", ""))
+
+
+# --- Stage 2b polish (owner review 2026-11-03) ------------------------------------
+
+
+def _specs(at: AppTest) -> list[dict]:
+    return [json.loads(e.proto.spec) for e in at.get("vega_lite_chart")]
+
+
+def _encodings(spec: dict) -> list[dict]:
+    layers = [spec, *spec.get("layer", [])]
+    return [layer.get("encoding", {}) for layer in layers]
+
+
+def test_results_are_tabbed_with_names_legends_and_rtl_bars(tmp_path):
+    at = _app(tmp_path, theme="dark", lang="fa", levers=REAL_LEVERS)
+    at = at.switch_page(RESULTS_PAGE).run()
+    assert not at.exception
+    strings = load_strings()
+    tabs = [t.label for t in at.tabs]
+    for key in ("step_cache", "step_context", "step_routing", "tab_per_bot"):
+        assert strings.text(key, "fa") in tabs, key
+    specs = _specs(at)
+    assert specs
+    for spec in specs:  # Vega's own legend hidden: the page draws a centred one
+        for enc in _encodings(spec):
+            if "field" in enc.get("color", {}):
+                assert enc["color"].get("legend", "absent") is None, enc["color"]
+    assert any('class="mx-legend"' in h for h in _html(at))
+    horizontal = [
+        enc
+        for spec in specs
+        for enc in _encodings(spec)
+        if enc.get("y", {}).get("type") == "nominal"
+        and enc.get("x", {}).get("type") == "quantitative"
+    ]
+    assert horizontal
+    for enc in horizontal:  # labels on the right, bars from right to left
+        assert enc["y"]["axis"]["orient"] == "right"
+        assert enc["x"]["scale"]["reverse"] is True
+    # readable names; the raw id only in the muted id caption
+    options = " ".join(o for sb in at.selectbox for o in sb.options)
+    assert "حافظه‌ی بازیابی، ۹۰ روز (B)" in options
+    assert "بودجه‌ی تاریخچه" in options
+    assert "rb1.retrieval-cache" not in options and "ctx.history_budget" not in options
+    assert any('class="mx-id"' in h for h in _html(at))
+    # long tables are folded
+    assert all(e.proto.expanded is False for e in at.expander)
+
+
+def test_numbers_use_the_one_formatter(tmp_path):
+    import re
+
+    at = _app(tmp_path, theme="dark", lang="en", levers=REAL_LEVERS)
+    at = at.switch_page(RESULTS_PAGE).run()
+    values = [m.value.strip(LRI + PDI) for m in at.metric]
+    assert values
+    for value in values:
+        assert not re.search(r"\.[0-9]{2}%", value), value  # 1 decimal
+        assert not re.fullmatch(r"[0-9,]+\.[0-9]{3,}", value) or value.startswith(
+            "0."
+        ), value  # >= 1: 2 decimals
+
+
+def _english_ui_strings() -> list[str]:
+    """English values of the strings table that a Persian page must not show:
+    longer than 3 letters, different from every Persian string (so product
+    names such as "Metis-Auto" or "LLMLingua-2" inside Persian text pass)."""
+    import re
+
+    strings = load_strings()
+    fa_all = " ".join(strings.text(k, "fa") for k in strings.keys())
+    out = []
+    for key in strings.keys():
+        en = re.sub(r"\{[a-z_]+\}", "", strings.text(key, "en")).strip(" .:,")
+        if len(re.sub(r"[^A-Za-z]", "", en)) > 3 and en not in fa_all:
+            out.append(en)
+    return out
+
+
+def _persian_page_text(at: AppTest) -> str:
+    """Every visible UI text: labels, values, captions, tabs, expander labels,
+    select options, tables (chat details: labels only; their values are model
+    ids, states and router explanations from the backend), HTML fragments.
+    Message bodies are content and are left out."""
+    parts = [
+        str(e.value)
+        for kind in ("caption", "title", "header", "subheader", "info", "warning")
+        for e in getattr(at, kind)
+    ]
+    parts += [str(m.value) for m in at.markdown if "[SYNTHETIC]" not in str(m.value)]
+    parts += [f"{m.label} {m.value}" for m in at.metric]
+    parts += [t.label for t in at.tabs] + [e.label for e in at.expander]
+    parts += [o for sb in at.selectbox for o in sb.options]
+    # preset titles are SYNTHETIC preset data (presets-synthetic.toml), English
+    presets = {p.title for p in load_presets()}
+    parts += [
+        w.label
+        for kind in ("toggle", "button", "radio")
+        for w in getattr(at, kind)
+        if w.label not in presets
+    ]
+    for table in at.table:
+        frame = table.value
+        parts += [str(c) for c in frame.columns] + [str(i) for i in frame.index]
+        if "مقدار" not in [str(c) for c in frame.columns]:
+            parts += [str(v) for v in frame.to_numpy().ravel()]
+    # the raw id caption (allowed, owner review point 3) and result data that
+    # its writer stored in English (assumptions) are not UI strings
+    parts += [h for h in _html(at) if 'class="mx-id"' not in h and "mx-data" not in h]
+    return " ".join(parts)
+
+
+def test_no_english_ui_string_in_persian_on_either_page(tmp_path):
+    import re
+
+    english = _english_ui_strings()
+    assert len(english) > 100
+    at = _app(tmp_path, theme="dark", lang="fa", levers=REAL_LEVERS)
+    at = send(at, "سلام")
+    at = send(at, "سفارشم کی می‌رسه؟")
+    assert not at.exception
+    pages = [_persian_page_text(at)]
+    at = at.switch_page(RESULTS_PAGE).run()
+    assert not at.exception
+    pages.append(_persian_page_text(at))
+    for text in pages:
+        found = [
+            e
+            for e in english
+            if re.search(rf"(?<![A-Za-z]){re.escape(e)}(?![A-Za-z])", text)
+        ]
+        assert found == []

@@ -249,16 +249,19 @@ def test_query_parameters_restore_theme_and_language():
 def test_brand_is_a_text_wordmark_without_an_imitation_logo():
     t = translator(load_strings(), "fa")
     html = header_brand_html(t)
-    assert "متیس" in html and "Metis-Auto prototype" in html
+    # Stage 2b (owner review point 1): متیس‌اتو, never Metis's name alone
+    assert "متیس‌اتو" in html and "نمونه‌ی آزمایشی" in html
     assert "<svg" not in html and "<img" not in html  # no logo asset in the repo
     assert not (REPO / "assets" / "brand" / "logo.svg").exists()
 
 
-def test_budget_shows_fake_mode_or_the_amount_left_without_a_top_up():
+def test_budget_shows_the_amount_left_without_a_top_up():
+    """Stage 2b (owner review point 2): the real budget in both modes; the
+    mode is only in the chip."""
     strings = load_strings()
     fa, en = translator(strings, "fa"), translator(strings, "en")
-    assert "حالت آزمایشی" in budget_html(fa, live=False, budget=None)
-    assert "Fake mode" in budget_html(en, live=False, budget=None)
+    assert "نامعلوم" in budget_html(fa, budget=None)
+    assert "unknown" in budget_html(en, budget=None)
     budget = BudgetView(
         currency="USD",
         lifetime_spent=Decimal("2.5"),
@@ -270,7 +273,7 @@ def test_budget_shows_fake_mode_or_the_amount_left_without_a_top_up():
         warn_at=(0.5, 0.8),
         crossed=None,
     )
-    html = budget_html(en, live=True, budget=budget)
+    html = budget_html(en, budget=budget)
     assert "7.50" in html and '<bdi dir="ltr"' in html
     assert "+" not in html.replace("&#43;", "")  # no top-up button
 
