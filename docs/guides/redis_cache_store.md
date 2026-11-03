@@ -1,6 +1,6 @@
 # Redis cache store (sprint task T-1)
 
-The answer cache can keep its entries in Redis instead of process memory. Only the store changes: the cache policy, its key, its scope and its validity rules are the same code path ("added without touching the pipeline"; QA-REPL, FR-XCACHE-08, ADR-0011 point 5). Code: `src/metis_auto/adapters/stores/redis_store.py`, switch `wiring.from_settings.cache_store`, setting `[cache] store` (`settings.model.CacheStoreSettings`).
+The answer cache can keep its entries in Redis instead of process memory. Only the store changes: the cache policy, its key, its scope and its validity rules are the same code path ("added without touching the pipeline"; QA-REPL, FR-XCACHE-08, ADR-0011 point 5). Decision record: [ADR-0049](../adr/0049-redis-cache-store-and-store-switch.md). Code: `src/metis_auto/adapters/stores/redis_store.py`, switch `wiring.from_settings.cache_store`, setting `[cache] store` (`settings.model.CacheStoreSettings`).
 
 ## Switch
 
