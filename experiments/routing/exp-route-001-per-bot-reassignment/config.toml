@@ -1,0 +1,46 @@
+# exp-route-001 per-bot reassignment (final plan R-A3). A record of the rules
+# declared before any result (2026-11-03; v2 the same day after R-0 landed and
+# ADR-0046 points 4 to 6); scripts/run_per_bot_reassignment.py does not read this
+# file. Its parameters come from config/evaluation/sprint.toml and are hashed into
+# the result manifests: [routing] (candidates, retiring, avoid_long_context_tier;
+# candidates_jev is dropped, J-3 passes its own list), [sufficiency] min_n,
+# [sample] tenant_cap, [baselines] catalogue, price_table and premium_model.
+
+[per_bot]
+# Fit rows: split_by_session "tune" and period "tune" (as R-C3), LLM requests.
+# Evaluation rows: split_by_session "report", read once.
+fit_rows = "split tune and period tune"
+eval_split = "report"
+
+# Eligibility and candidate cost: R-0, analysis.routing_base.eligible_models and
+# candidate_costs (ADR-0045).
+eligibility = "routing_base"
+
+# Candidate sets (ADR-0046 point 4): the primary result drops candidates the
+# catalogue marks hidden_reasoning_billed_as_output; route.per_bot.with_reasoning_models
+# keeps them ("lower bound on candidate cost, hidden reasoning not counted").
+primary = "candidates without hidden_reasoning_billed_as_output"
+
+# Target per bot: the candidate R-0 allows for EVERY priced tune request of the
+# bot with the lowest summed list-price cost there (ties: alphabetical). Kept
+# strict by the owner on 2026-11-03, after R-0's unknown-attachment rule was seen
+# to rule out whole bots.
+bot_target = "cheapest candidate eligible for all priced tune requests"
+
+# Decision per baseline (ADR-0046 point 6, provisional; owner to confirm, Q-B21):
+# the bot is reassigned in a baseline only if the target's tune cost is strictly
+# lower than that baseline's own model there, in that baseline's units; a request
+# then moves only if the target is eligible for it, another model and strictly
+# cheaper on it. Never upward; every row's saving >= 0.
+decision = "per baseline, own model and units"
+
+# as_logged: target at implied recorded rates (reports/full_eda/tables/
+# implied_unit_rates.csv, ADR-0038 pattern); a missing needed rate = unknown.
+as_logged_rates = "implied_unit_rates.csv"
+
+# Reporting (constants in the script): per-bot table and bot_rank slices for the
+# 10 costliest bots (todays_models cost on the report split), 5 tenant ranks,
+# over_8k = effective input above 8,000 tokens, eda_simple_rule = the EDA's rule.
+top_bots = 10
+top_tenants = 5
+over_tokens = 8000
