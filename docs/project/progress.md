@@ -37,6 +37,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 ## Entries, newest first
 
 <!-- progress-index:start -->
+- 2026-11-03: [Pipeline C, UI Stage 5: browser Back, back-tracking, saved history, create chatbot](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-5-navigation-history-create.md)
 - 2026-11-03: [Pipeline C, UI Stage 4: real bots from the local database](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-4-real-bots.md)
 - 2026-11-03: [Pipeline C, UI Stage 3: application shell and both journeys](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-3-journeys.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: UI Stage 2b, visual polish of the design system](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-2b-polish.md)
