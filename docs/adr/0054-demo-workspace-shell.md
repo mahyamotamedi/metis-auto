@@ -1,4 +1,4 @@
-# ADR-XXXX (demo-workspace-shell): The demo's shell is session-state wiring with one ChatSession per journey and bot
+# ADR-0054: The demo's shell is session-state wiring with one ChatSession per journey and bot
 
 - Status: **provisional**, the agent's reading of the approved UI spec (`docs/design/metis-auto-ui-spec.md` §1, §4.3, §4.4, §5, §7, Stage 3) and the owner's decisions of 2026-11-03 (Pipeline C, Day 3), until the owner reviews it.
 - Date: 2026-11-03
