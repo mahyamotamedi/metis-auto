@@ -1,0 +1,135 @@
+{
+  "approval": "owner (Kimia, Pipeline B), 2026-11-03: one report-split run, like R-A1/R-A2",
+  "created_at": "2026-11-03T10:56:23.975017+00:00",
+  "data_facts": {
+    "n_chunk_rows": 237323,
+    "n_report": 73063,
+    "n_report_llm": 20750,
+    "tokens_per_char": 0.3384048487819899
+  },
+  "frozen": {
+    "default": {
+      "ledger": false,
+      "pointer_tokens": 8,
+      "visible_window": 0
+    },
+    "role": "k = 0 is the default (nothing assumed visible); k <= 1 is the stated scenario; every tune scenario is reported",
+    "stated_scenario": {
+      "ledger": false,
+      "pointer_tokens": 8,
+      "visible_window": 1
+    }
+  },
+  "lever": "R-B2 cross-turn chunk policy (exp-ctx-002), report split",
+  "lever_results": [
+    "rb2.cross-turn.k-0.ptr-8.pointer.report.as_logged",
+    "rb2.cross-turn.k-0.ptr-8.pointer.report.best_single_cheap",
+    "rb2.cross-turn.k-0.ptr-8.pointer.report.premium_gpt_5_5",
+    "rb2.cross-turn.k-0.ptr-8.pointer.report.todays_models",
+    "rb2.cross-turn.k-1.ptr-8.pointer.report.as_logged",
+    "rb2.cross-turn.k-1.ptr-8.pointer.report.best_single_cheap",
+    "rb2.cross-turn.k-1.ptr-8.pointer.report.premium_gpt_5_5",
+    "rb2.cross-turn.k-1.ptr-8.pointer.report.todays_models"
+  ],
+  "scenarios": [
+    {
+      "repriced_saving": {
+        "best_single_cheap": {
+          "token_cost": "0.000000000",
+          "total": "0.000000000"
+        },
+        "premium_gpt_5_5": {
+          "token_cost": "0.000000000",
+          "total": "0.000000000"
+        },
+        "todays_models": {
+          "token_cost": "0.000000000",
+          "total": "0.000000000"
+        }
+      },
+      "scenario": {
+        "pointer_tokens": 8,
+        "session_ledger": false,
+        "tokens_per_char": 0.3384048487819899,
+        "visible_window": 0
+      },
+      "summary": {
+        "cost": {
+          "saved": 0.0,
+          "saving_share_of_token_cost": 0.0,
+          "saving_share_of_total": 0.0,
+          "token_cost": 79.357330484
+        },
+        "n_requests_all": 73063,
+        "n_requests_changed": 0,
+        "n_requests_llm": 20750,
+        "reasons": {
+          "kept_first_seen": 86071,
+          "kept_not_visible": 64919,
+          "within_message": 86333
+        },
+        "repeat_reference": {
+          "n_chunk_rows": 237323,
+          "share_rows_repeating_in_session": 0.6598096265427287
+        },
+        "tokens": {
+          "added": 0.0,
+          "removed": 0.0,
+          "saved": 0.0,
+          "supported_input": 537588010.0
+        }
+      }
+    },
+    {
+      "repriced_saving": {
+        "best_single_cheap": {
+          "token_cost": "1.390832250",
+          "total": "1.390832250"
+        },
+        "premium_gpt_5_5": {
+          "token_cost": "139.292428775",
+          "total": "139.292428775"
+        },
+        "todays_models": {
+          "token_cost": "8.262038594",
+          "total": "8.262038594"
+        }
+      },
+      "scenario": {
+        "pointer_tokens": 8,
+        "session_ledger": false,
+        "tokens_per_char": 0.3384048487819899,
+        "visible_window": 1
+      },
+      "summary": {
+        "cost": {
+          "saved": 6.005353796699953,
+          "saving_share_of_token_cost": 0.07567484642027808,
+          "saving_share_of_total": 0.04101532091077291,
+          "token_cost": 79.357330484
+        },
+        "n_requests_all": 73063,
+        "n_requests_changed": 9125,
+        "n_requests_llm": 20750,
+        "reasons": {
+          "dropped": 45114,
+          "kept_cost_unknown": 25,
+          "kept_first_seen": 86071,
+          "kept_not_visible": 19780,
+          "within_message": 86333
+        },
+        "repeat_reference": {
+          "n_chunk_rows": 237323,
+          "share_rows_repeating_in_session": 0.6598096265427287
+        },
+        "tokens": {
+          "added": 360912.0,
+          "removed": 25660398.408684224,
+          "saved": 25287859.10300359,
+          "supported_input": 537588010.0
+        }
+      }
+    }
+  ],
+  "scope": "split_by_session report rows (whole sessions); LLM rows act"
+}

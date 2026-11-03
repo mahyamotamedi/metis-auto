@@ -1,70 +1,282 @@
 {
   "assumptions": [
     "cost simulation; quality not proven",
-    "saving not computed in recorded units: the routed cost is in price-file units and units are never subtracted across",
     "no quality label: nearest-profile policy over logged models only",
     "token counts assumed model-independent; logged output length unchanged",
     "fees and recorded cost blocks unchanged (lookup fee is not on the price list)",
-    "rows: split_by_session tune, LLM; fitted on the same rows, own session and duplicate family never a neighbour",
-    "baselines over the rows whose incumbent and tokens are priced; the others keep their model and are counted in the routing slice",
+    "recorded blocks (fees, token_cost) unchanged by apply; each baseline is accounted in its own units (ADR-0036)",
+    "Unit: recorded units (as_logged). Incumbent: the recorded token cost; the target at its implied recorded rates (reports/full_eda/tables/implied_unit_rates.csv, the ADR-0038 pattern).",
+    "A needed implied rate that is missing makes the request's saving unknown (n_saving_unknown, out of both sides), never 0; requests not moved save exactly 0; fees never change.",
+    "Requests whose cost in a baseline is unknown are left out of both sides (n_cost_known), never priced at zero; workflow rows have no cost.",
+    "Per baseline, the incumbent is that baseline's model for the request (logged model for todays_models and as_logged, the premium model, the best single cheap model) and 'cheaper' is tested in that baseline's units.",
+    "So each saving is the router's own effect and is >= 0 row by row; follows ADR-0046 point 6, confirmed for Pipeline B by the owner 2026-11-03 (Q-B21).",
+    "eligibility: shared routing base (R-0, ADR-0045): analysis.routing_base",
+    "rows: split_by_session tune inside the tune period, LLM; fitted on the same rows, own session and duplicate family never a neighbour",
+    "k=15 is the grid point; grid [5, 15, 50]; default chosen by session/family-grouped nested CV, 5 outer x 3 inner folds, inside the tune split",
     "timestamps are naive (Q-06)",
-    "interim eligibility, not the shared routing base",
-    "k=15 is the grid point, not the default; grid [5, 15, 50] reported in full",
-    "default chosen by session/family-grouped nested CV, 5 outer x 3 inner folds, inside the tune split"
+    "Candidates the catalogue marks hidden_reasoning_billed_as_output are excluded (ADR-0046 point 4): deepseek-v4-flash, gpt-5-nano, mimo-v2.5.",
+    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 379.1557 ms, p95 438.5194 ms, max 587.6791 ms",
+    "Overhead caveat: router fitted on the tune split before timing (fit not timed); apply prices the candidates, checks bot sufficiency and searches the k nearest training profiles.",
+    "Overhead sample: tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, route.per_bot) used report-period rows, so the two samples differ"
   ],
   "baseline": "as_logged",
   "baseline_cost": {
-    "fees": "6.542000000",
-    "token_cost": "30.768643562",
-    "total": "37.310643562"
+    "fees": "101.060000000",
+    "token_cost": "226.555051869",
+    "total": "327.615051869"
   },
-  "ci_high": null,
-  "ci_low": null,
+  "ci_high": 0.23028952041580927,
+  "ci_low": 0.1586746004036082,
   "correctness_state": "unmeasured",
   "evidence_class": "simulation",
   "lever_id": "rb3.knn-router.k-15.tune.as_logged",
   "manifest": {
-    "code_commit": "5a68fb66790ec19fb07502f4e5382bfdb5152624",
-    "config_hash": "f378b99660de50d470e1c1371a85d6dbfbddba35a017a5f7216ef818820b162b",
-    "created_at": "2026-11-02T15:17:07.155550Z",
+    "code_commit": "9f05b25e27c0505563aaa3ad25a6e4e79429e194",
+    "config_hash": "7ceb431dad818be43dbd95ab21540a995497185f94c654f90c994d5a0ddcfd94",
+    "created_at": "2026-11-03T10:36:12.138284Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "full-eda-implied-unit-rates",
     "python_version": "3.13.5",
     "seed": 20261102
   },
-  "n_eligible": 88971,
+  "n_eligible": 176427,
   "n_requests": 230762,
-  "overhead_ms_p50": null,
-  "overhead_ms_p95": null,
-  "saving": {},
+  "overhead_ms_p50": 379.1557,
+  "overhead_ms_p95": 438.5194,
+  "saving": {
+    "fees": "0",
+    "token_cost": "63.144486971",
+    "total": "63.144486971"
+  },
   "slices": {
     "all": {
-      "n_cost_known": "88971",
-      "n_requests": "230762"
+      "baseline:total": "327.615051869",
+      "n_cost_known": "207659",
+      "n_requests": "230762",
+      "saving:total": "63.144486971",
+      "saving_share": "0.192739884"
+    },
+    "bot_rank:1": {
+      "baseline:total": "31.586813400",
+      "n_cost_known": "80111",
+      "n_requests": "80526",
+      "saving:total": "1.014567043",
+      "saving_share": "0.032119956"
+    },
+    "bot_rank:10": {
+      "baseline:total": "4.672584200",
+      "n_cost_known": "1495",
+      "n_requests": "1495",
+      "saving:total": "3.737710528",
+      "saving_share": "0.799923633"
+    },
+    "bot_rank:2": {
+      "baseline:total": "28.234605000",
+      "n_cost_known": "113",
+      "n_requests": "118",
+      "saving:total": "15.600891699",
+      "saving_share": "0.552545067"
+    },
+    "bot_rank:3": {
+      "baseline:total": "14.315641250",
+      "n_cost_known": "1726",
+      "n_requests": "1769",
+      "saving:total": "10.556971712",
+      "saving_share": "0.737443159"
+    },
+    "bot_rank:4": {
+      "baseline:total": "13.978444900",
+      "n_cost_known": "1208",
+      "n_requests": "1214",
+      "saving:total": "8.806171612",
+      "saving_share": "0.629982210"
+    },
+    "bot_rank:5": {
+      "baseline:total": "31.009875700",
+      "n_cost_known": "2928",
+      "n_requests": "2928",
+      "saving:total": "0.173986710",
+      "saving_share": "0.005610687"
+    },
+    "bot_rank:6": {
+      "baseline:total": "23.683954750",
+      "n_cost_known": "2374",
+      "n_requests": "2375",
+      "saving:total": "0.244672942",
+      "saving_share": "0.010330747"
+    },
+    "bot_rank:7": {
+      "baseline:total": "6.244168200",
+      "n_cost_known": "32295",
+      "n_requests": "32295",
+      "saving:total": "0.046064630",
+      "saving_share": "0.007377224"
+    },
+    "bot_rank:8": {
+      "baseline:total": "17.406786450",
+      "n_cost_known": "2001",
+      "n_requests": "2001",
+      "saving:total": "0.668465052",
+      "saving_share": "0.038402554"
+    },
+    "bot_rank:9": {
+      "baseline:total": "12.786830900",
+      "n_cost_known": "1464",
+      "n_requests": "1464",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "lang:arabic_script_other": {
+      "baseline:total": "6.974396558",
+      "n_cost_known": "5498",
+      "n_requests": "5544",
+      "saving:total": "1.535110477",
+      "saving_share": "0.220106566"
+    },
+    "lang:en": {
+      "baseline:total": "7.264140590",
+      "n_cost_known": "4546",
+      "n_requests": "4555",
+      "saving:total": "3.123554670",
+      "saving_share": "0.429996451"
+    },
+    "lang:fa": {
+      "baseline:total": "275.395097372",
+      "n_cost_known": "167006",
+      "n_requests": "168163",
+      "saving:total": "49.955410382",
+      "saving_share": "0.181395424"
+    },
+    "lang:fa_en_mixed": {
+      "baseline:total": "14.845956088",
+      "n_cost_known": "10837",
+      "n_requests": "10873",
+      "saving:total": "4.845152194",
+      "saving_share": "0.326361749"
+    },
+    "lang:finglish": {
+      "baseline:total": "0.040057630",
+      "n_cost_known": "15",
+      "n_requests": "15",
+      "saving:total": "0.008684921",
+      "saving_share": "0.216810664"
+    },
+    "lang:missing": {
+      "baseline:total": "2.825811466",
+      "n_cost_known": "1262",
+      "n_requests": "1276",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "lang:other": {
+      "baseline:total": "0.093382328",
+      "n_cost_known": "88",
+      "n_requests": "89",
+      "saving:total": "0.056634178",
+      "saving_share": "0.606476395"
+    },
+    "lang:short_uncertain": {
+      "baseline:total": "13.223107610",
+      "n_cost_known": "17865",
+      "n_requests": "18272",
+      "saving:total": "3.385197416",
+      "saving_share": "0.256006191"
+    },
+    "lang:structured": {
+      "baseline:total": "6.953102227",
+      "n_cost_known": "542",
+      "n_requests": "544",
+      "saving:total": "0.234742731",
+      "saving_share": "0.033760863"
     },
     "llm_only": {
-      "n_cost_known": "88971",
-      "n_requests": "209331"
+      "baseline:total": "327.615051869",
+      "n_cost_known": "207659",
+      "n_requests": "209331",
+      "saving:total": "63.144486971",
+      "saving_share": "0.192739884"
+    },
+    "over_8k": {
+      "baseline:total": "158.454500413",
+      "n_cost_known": "15935",
+      "n_requests": "15936",
+      "saving:total": "12.173976125",
+      "saving_share": "0.076829475"
     },
     "routing": {
-      "moved_share": "0.043108761",
-      "moved_to:deepseek-v4-flash": "3102",
-      "moved_to:gpt-4.1-nano": "5693",
-      "moved_to:gpt-4o-mini": "216",
-      "moved_to:mimo-v2.5": "13",
-      "n_moved": "9024",
+      "moved_share": "0.087521676",
+      "moved_to:gpt-4.1-nano": "6381",
+      "moved_to:gpt-4o-mini": "11940",
+      "n_candidates_in_baseline": "176427",
+      "n_moved": "18321",
       "n_requests_routed": "209331",
-      "reason:incumbent_unpriced": "119854",
-      "reason:insufficient_bot": "1226",
-      "reason:moved": "9024",
-      "reason:no_cheaper_candidate": "76859",
-      "reason:no_eligible_candidate": "1862",
+      "n_saving_unknown": "1166",
+      "n_switched_in_baseline": "25043",
+      "reason:incumbent_unpriced": "186",
+      "reason:insufficient_bot": "2043",
+      "reason:moved": "18321",
+      "reason:no_cheaper_candidate": "158106",
+      "reason:no_eligible_candidate": "30169",
       "reason:unknown_tokens": "506",
-      "support_median": "0.200000000"
+      "saving_by_target:gpt-4.1-nano": "1.263883312",
+      "saving_by_target:gpt-4o-mini": "61.880603659",
+      "support_median": "0.200000000",
+      "switched_share_llm": "0.119633499"
+    },
+    "tenant_capped_0.35": {
+      "baseline:total": "273.764048279",
+      "n_cost_known": "173510",
+      "n_requests": "173510",
+      "saving:total": "40.215295291",
+      "saving_share": "0.146897650"
+    },
+    "tenant_rank:1": {
+      "baseline:total": "109.371095780",
+      "n_cost_known": "94877",
+      "n_requests": "95369",
+      "saving:total": "43.911763450",
+      "saving_share": "0.401493312",
+      "share": "0.455589473"
+    },
+    "tenant_rank:2": {
+      "baseline:total": "7.386665696",
+      "n_cost_known": "42359",
+      "n_requests": "43424",
+      "saving:total": "0.160575316",
+      "saving_share": "0.021738538",
+      "share": "0.207441803"
+    },
+    "tenant_rank:3": {
+      "baseline:total": "6.293547150",
+      "n_cost_known": "32636",
+      "n_requests": "32636",
+      "saving:total": "0.046405691",
+      "saving_share": "0.007373535",
+      "share": "0.155906196"
+    },
+    "tenant_rank:4": {
+      "baseline:total": "182.961635500",
+      "n_cost_known": "21124",
+      "n_requests": "21125",
+      "saving:total": "10.819570322",
+      "saving_share": "0.059135732",
+      "share": "0.100916730"
+    },
+    "tenant_rank:5": {
+      "baseline:total": "2.730512850",
+      "n_cost_known": "8110",
+      "n_requests": "8110",
+      "saving:total": "0.001120775",
+      "saving_share": "0.000410463",
+      "share": "0.038742470"
     },
     "traffic_weighted": {
-      "n_cost_known": "88971",
-      "n_requests": "230762"
+      "baseline:total": "327.615051869",
+      "bot_mean_saving_share": "0.038826592",
+      "n_cost_known": "207659",
+      "n_requests": "209331",
+      "saving:total": "63.144486971",
+      "saving_share": "0.192739884"
     }
   },
   "step": "routing",
