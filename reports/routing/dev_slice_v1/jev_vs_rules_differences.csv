@@ -1,0 +1,16 @@
+record_id,split,rules_tier,jev_tier,jev_probability,jev_confidence,rules_model,jev_model
+rs1-m_002721,check,1,0,0.63,0.62,gpt-4o-mini,gpt-5-nano
+rs1-m_259172,check,1,0,0.88,0.99,gpt-4o-mini,gpt-5-nano
+rs1-m_259645,check,1,0,0.5700000000000001,0.6,gpt-4o-mini,gpt-5-nano
+rs1-m_278967,check,1,0,0.86,1.0,gpt-4o-mini,gpt-5-nano
+rs1-m_361923,check,1,0,0.82,0.98,gpt-4o-mini,gpt-5-nano
+rs1-m_444770,check,1,0,0.66,0.66,gpt-4o-mini,gpt-5-nano
+rs1-m_042389,tune,1,0,0.6,0.71,gpt-4o-mini,gpt-5-nano
+rs1-m_196766,tune,1,0,0.59,0.65,gpt-4o-mini,gpt-5-nano
+rs1-m_244370,tune,1,0,0.6,0.6,gpt-4o-mini,gpt-5-nano
+rs1-m_245412,tune,1,0,0.72,0.92,gpt-4o-mini,gpt-5-nano
+rs1-m_412515,tune,1,0,0.6699999999999999,0.78,gpt-4o-mini,gpt-5-nano
+rs1-m_439735,tune,1,0,0.5800000000000001,0.78,gpt-4o-mini,gpt-5-nano
+rs1-m_467344,tune,1,0,0.61,0.61,gpt-4o-mini,gpt-5-nano
+rs1-m_569269,tune,1,0,0.51,0.78,gpt-4o-mini,gpt-5-nano
+rs1-m_593349,tune,1,0,0.55,0.63,gpt-4o-mini,gpt-5-nano
