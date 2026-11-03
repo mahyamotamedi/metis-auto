@@ -1,0 +1,7 @@
+## Pipeline B, Day 3 decision records: kNN router and Redis cache store (2026-11-03)
+
+Branch `pipeline-b-day3-adrs`, from `origin/main` at `e71bbc2` (#36). Day 3 itself is on `main` since #24; its decisions had no ADR. **Awaiting review.**
+- [ADR-0048](../../adr/0048-knn-router-nearest-profile-routing.md) (R-B3, `exp-route-011`): nearest-profile routing without quality labels, neighbours from any bot, the predeclared least-aggressive criterion for `k` in session/family-grouped nested CV, pricing as baseline minus the routed cost (`as_logged` not computed), labels blocked. Records the Day 3 result (k = 5, 0.70% [0.54, 0.89] of today's-model cost on the priced rows) and that ADR-0045's routing base supersedes the interim eligibility in part (switch-over pending). Notes the conflict with ADR-0046 on what a repriced saving means (Q-B21).
+- [ADR-0049](../../adr/0049-redis-cache-store-and-store-switch.md) (T-1): `RedisCacheStore` behind the unchanged `CacheStore` port, contract JSON, keys namespaced by the cache key schema version, no expiry, password only from `METIS_REDIS_PASSWORD`, machine-local `[cache] store` outside the config hash, used by the demo chat only.
+- **Numbers chosen by hand at the owner's request** (the repo rule is drafts numbered by the merger): `origin/main` held 0001–0047 and no branch, local branch or worktree held 0048 or above (checked 2026-11-03).
+- Cited from the R-B3 README, the Redis guide, the decision notes and the two `module_reference.md` rows. ADR table in `docs/README.md` rebuilt with `scripts/adr_finalize.py`.
