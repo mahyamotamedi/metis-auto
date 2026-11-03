@@ -79,6 +79,7 @@ def css_variables(theme: Theme) -> dict[str, str]:
         f"linear-gradient(270deg, {', '.join(theme.brand_gradient)})"
     )
     out["--cta-gradient"] = f"linear-gradient(270deg, {', '.join(theme.cta_gradient)})"
+    out |= _entry_variables(theme)
     for key, value in theme.size.items():
         if isinstance(value, int):
             out[_var(key)] = f"{value}px"
@@ -93,6 +94,28 @@ def css_variables(theme: Theme) -> dict[str, str]:
         f"{theme.size['header_row1'] + theme.size['header_row2']}px"
     )
     return out
+
+
+def _entry_variables(theme: Theme) -> dict[str, str]:
+    """The entry screen's surfaces (UI-S01). Dark: the landing tokens sampled
+    from image 1. Light: a calm version derived from the light tokens (no
+    sampled landing exists), a faint accent and danger glow on the page colour."""
+    land = theme.landing
+    if theme.mode == "dark" and land:
+        return {
+            "--entry-bg": land["bg"],
+            "--entry-hero": land["hero"],
+            "--entry-hero-border": land["hero_border"],
+            "--entry-glow-a": land["glow_navy"],
+            "--entry-glow-b": land["glow_wine"],
+        }
+    return {
+        "--entry-bg": "var(--bg)",
+        "--entry-hero": "var(--surface)",
+        "--entry-hero-border": "var(--border)",
+        "--entry-glow-a": "color-mix(in srgb, var(--accent) 9%, transparent)",
+        "--entry-glow-b": "color-mix(in srgb, var(--danger) 6%, transparent)",
+    }
 
 
 @lru_cache(maxsize=2)
@@ -192,6 +215,12 @@ _HEADER = """
 .st-key-mx-header-row2 { height: var(--header-row2); min-height: var(--header-row2);
   align-items: flex-start; gap: 6px; flex-wrap: nowrap; }
 .st-key-mx-header-tools { align-items: center; gap: 22px; flex-wrap: nowrap; }
+.st-key-mx-brand-wrap { position: relative; }
+.st-key-mx-brand-wrap [data-testid="stPageLink"] { position: absolute; inset: 0; }
+.st-key-mx-brand-wrap [data-testid="stPageLink-NavLink"] { width: 100%; height: 100%;
+  padding: 0; border-radius: var(--radius-control); background: transparent; }
+.st-key-mx-brand-wrap [data-testid="stPageLink-NavLink"] * { color: transparent
+  !important; }
 .mx-brand { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
 .mx-wordmark { font-size: var(--font-wordmark); font-weight: 800; color: var(--text);
   line-height: 1; }
@@ -348,10 +377,11 @@ _CONTROLS = """
 .stApp button:disabled { opacity: 0.45; cursor: not-allowed; }
 /* reusable styles for Stages 3 and 4: pills and the one gradient CTA per screen */
 [class*="st-key-mx-pill"] button { border-radius: var(--radius-pill); }
-[class*="st-key-mx-cta"] button { background: var(--cta-gradient); border: 0;
-  border-radius: var(--radius-pill); color: var(--on-accent); font-weight: 700;
-  padding: 0 28px; }
-[class*="st-key-mx-cta"] button :is(p, span) { color: var(--on-accent); }
+.stApp [class*="st-key-mx-cta"] button[data-testid^="stBaseButton"] {
+  background: var(--cta-gradient); border: 0; border-radius: var(--radius-pill);
+  color: var(--on-accent); font-weight: 700; padding: 0 28px; }
+.stApp [class*="st-key-mx-cta"] button :is(p, span) { color: var(--on-accent); }
+.stApp [class*="st-key-mx-cta"] button:hover { filter: brightness(1.08); }
 /* toggles (UI-K03): react-aria switch; on = accent, off = elevated track */
 [data-testid="stCheckbox"] label > div:first-of-type { background: var(--elevated); }
 [data-testid="stCheckbox"] label[data-selected="true"] > div:first-of-type {
@@ -441,6 +471,97 @@ _CONTROLS = """
   color: var(--text-muted); }
 """
 
+_WORKSPACE = """
+/* entry screen (UI-S01, image 1): near-black page with two soft radial glows (dark),
+   a calm light version; a hero with a gradient headline and the two journey cards */
+.stApp:has(.mx-entry) { background: radial-gradient(60% 55% at 6% 92%,
+  var(--entry-glow-a), transparent 72%), radial-gradient(50% 40% at 96% 4%,
+  var(--entry-glow-b), transparent 72%), var(--entry-bg); }
+.stApp:has(.mx-entry) :is([data-testid="stAppViewContainer"], [data-testid="stMain"]) {
+  background: transparent; }
+.st-key-mx-entry-hero { max-width: 1080px; margin: 12px auto 0; background:
+  var(--entry-hero); border: 1px solid var(--entry-hero-border); border-radius: 28px;
+  padding: 56px 40px 44px; gap: 30px; align-items: stretch; }
+.mx-hero-title { font-size: clamp(26px, 3.6vw, 46px); font-weight: 800;
+  line-height: 1.6; text-align: center; margin: 0 auto; width: fit-content;
+  max-width: 100%; background:
+  var(--brand-gradient-text); -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent; }
+.mx-hero-sub { text-align: center; color: var(--text-muted); font-size: 18px;
+  line-height: 1.9; max-width: 680px; margin: 0 auto; }
+[class*="st-key-mx-entry-card"] { background: var(--surface); border: 1px solid
+  var(--border); border-radius: 20px; padding: 28px; gap: 14px; min-height: 280px;
+  align-items: flex-start; transition: border-color .15s; }
+[class*="st-key-mx-entry-card"]:hover { border-color: var(--text-muted); }
+.mx-entry-icon { width: 56px; height: 56px; border-radius: 14px; display: flex;
+  align-items: center; justify-content: center; background: var(--control);
+  border: 1px solid var(--border); }
+.mx-entry-icon .mx-icon { font-size: 28px; color: var(--text); }
+.mx-entry-card-title { font-size: 22px; font-weight: 700; color: var(--text); }
+.mx-entry-card-text { color: var(--text-muted); font-size: 16px; line-height: 1.9; }
+[class*="st-key-mx-entry-card"] [class*="st-key-mx-cta"] { margin-top: auto; }
+[class*="st-key-mx-cta"] button { min-height: 48px; }
+/* toggles: the knob sits at the start of the track when off and at the end when on, in
+   both directions (Streamlit's own knob offset assumes left to right) */
+[data-testid="stCheckbox"] label > div:first-of-type { width: 40px; height: 22px;
+  border-radius: var(--radius-pill); padding: 0 2px; display: flex;
+  align-items: center; justify-content: flex-start; flex: none; }
+[data-testid="stCheckbox"] label[data-selected="true"] > div:first-of-type {
+  justify-content: flex-end; }
+[data-testid="stCheckbox"] label > div:first-of-type > div { width: 18px; height: 18px;
+  transform: none !important; border-radius: 50%; }
+/* optimisation settings (UI-S04) */
+.mx-set-name { font-size: 17px; font-weight: 700; color: var(--text); }
+.mx-set-text { color: var(--text-muted); font-size: 14px; line-height: 1.9;
+  margin-top: 2px; }
+.mx-set-caption { color: var(--text-muted); font-size: 12.5px; margin-top: 6px; }
+.mx-chip--on { border-color: color-mix(in srgb, var(--success) 45%, transparent);
+  color: var(--success); }
+.mx-chip--off { color: var(--text-muted); }
+[class*="st-key-mx-card-set"] [data-testid="stHorizontalBlock"] { align-items: center;
+  gap: 24px; }
+.st-key-mx-set-side { align-items: center; gap: 10px; }
+.mx-set-title { font-size: 26px; font-weight: 800; color: var(--text); margin: 0; }
+/* workspaces (UI-S05, UI-S06) */
+.mx-ws-title { font-size: 24px; font-weight: 800; color: var(--text);
+  line-height: 1.5; }
+.st-key-mx-ws-head { gap: 8px; margin-bottom: 4px; }
+.st-key-mx-banner { background: color-mix(in srgb, var(--info) 9%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--info) 35%, transparent);
+  border-radius: var(--radius-control); padding: 12px 16px; gap: 6px; }
+.st-key-mx-banner-row { gap: 20px; }
+.mx-banner-text { color: var(--text); font-size: var(--font-small); line-height: 1.9; }
+.st-key-mx-settings-focus { outline: var(--focus-ring) solid var(--accent);
+  outline-offset: 4px; border-radius: var(--radius-card); }
+[class*="st-key-mx-conv"] button, [class*="st-key-mx-bot"] button { width: 100%;
+  justify-content: flex-start; padding: 0 10px; min-height: 34px; text-align: start; }
+[class*="st-key-mx-conv"] button :is(p, span) { color: var(--text) !important;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
+[class*="st-key-mx-conv-current"] button { background: var(--elevated); }
+[class*="st-key-mx-bot"] button p { font-size: 14px; text-align: start; }
+.mx-bot-facts { color: var(--text-muted); font-size: 12px; margin: -2px 10px 6px; }
+.mx-side-title { font-size: 13px; font-weight: 700; color: var(--text-muted);
+  margin: 14px 0 6px; letter-spacing: 0; }
+/* savings panel (UI-L04, UI-L05): a card beside the chat; on narrow screens it
+   stacks below the chat inside a collapsible expander titled with the saving */
+.st-key-mx-panel [data-testid="stExpander"] details { border: 0; }
+.st-key-mx-panel [data-testid="stExpander"] summary { padding-inline: 0; }
+.st-key-mx-panel { gap: 16px; }
+.mx-facts { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px;
+  font-size: var(--font-small); }
+.mx-facts dt { color: var(--text-muted); margin: 0; }
+.mx-facts dd { color: var(--text); margin: 0; unicode-bidi: plaintext; }
+.mx-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.mx-est { color: var(--text-muted); font-size: 12px; }
+@media (min-width: 641px) {
+  .st-key-mx-panel [data-testid="stExpander"] summary { display: none; }
+}
+@media (max-width: 640px) {
+  .st-key-mx-entry-hero { padding: 32px 16px 24px; border-radius: 20px; }
+  [data-testid="stMainBlockContainer"] { padding-inline: 12px; }
+}
+"""
+
 _STATES = """
 /* banners (UI-K06) and error cards (UI-K05) */
 [data-testid="stAlertContainer"] { border-radius: var(--radius-control); border: 1px
@@ -514,7 +635,11 @@ def _scoped(css: str) -> str:
     css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
     return re.sub(
         r"([^{}]+)\{",
-        lambda m: ", ".join(f":root {s}" for s in _split_selectors(m.group(1))) + " {",
+        lambda m: (
+            m.group(0)
+            if m.group(1).strip().startswith("@")
+            else ", ".join(f":root {s}" for s in _split_selectors(m.group(1))) + " {"
+        ),
         css,
     )
 
@@ -525,6 +650,9 @@ def page_css(theme: Theme, lang: str) -> str:
     ``var(--…)``."""
     rtl = direction(lang) == "rtl"
     variables = css_variables(theme) | {"--dir": direction(lang)}
+    variables["--brand-gradient-text"] = variables["--brand-gradient"].replace(
+        "270deg", "270deg" if rtl else "90deg"
+    )
     root = ":root { " + " ".join(f"{k}: {v};" for k, v in variables.items())
     root += f" color-scheme: {theme.mode}; }}"
     knob = "dark_mode" if theme.mode == "dark" else "light_mode"
@@ -538,6 +666,7 @@ def page_css(theme: Theme, lang: str) -> str:
         _CARDS,
         _CONTROLS,
         _STATES,
+        _WORKSPACE,
     ]
     rules = _scoped("\n".join(b for b in blocks if b))
     rules = rules.replace("__ICON__", ICON_FONT).replace("__KNOB_ICON__", knob)
@@ -788,3 +917,75 @@ def empty_state_html(icon: str, line: str, action: str | None = None) -> str:
 def reason_html(text: str) -> str:
     """The one-line reason under a disabled control (UI-K05, UI-R04)."""
     return f'<div class="mx-reason">{_icon("block")} {html.escape(text)}</div>'
+
+
+# --- Stage 3 fragments: entry, settings, workspaces, savings panel
+
+
+def entry_hero_html(t: Text) -> str:
+    """The entry screen's hero (UI-S01, image 1): a large gradient headline in our
+    own copy and a muted subtitle. The marker class lets the CSS paint the
+    page's soft glows behind the entry screen only."""
+    return (
+        '<div class="mx-entry"></div>'
+        f'<div class="mx-hero-title" role="heading" aria-level="1">'
+        f"{html.escape(t('entry_headline'))}</div>"
+        f'<div class="mx-hero-sub">{html.escape(t("entry_subtitle"))}</div>'
+    )
+
+
+def entry_card_html(icon: str, title: str, text: str) -> str:
+    """One journey card's content above its CTA (UI-E03): a neutral Material
+    icon in a rounded tile (never a provider logo), the title and the one line."""
+    return (
+        f'<div class="mx-entry-icon">{_icon(icon)}</div>'
+        f'<div class="mx-entry-card-title">{html.escape(title)}</div>'
+        f'<div class="mx-entry-card-text">{html.escape(text)}</div>'
+    )
+
+
+def setting_text_html(
+    name: str, text: str, caption: str | None, reason: str | None
+) -> str:
+    """A setting card's left side (UI-A20): name, plain explanation, then the
+    caption (cache: semantic matching is not available) or, when the switch is
+    disabled, the one-line reason (UI-R04)."""
+    extra = (
+        f'<div class="mx-set-caption">{html.escape(caption)}</div>' if caption else ""
+    )
+    if reason:
+        extra += reason_html(reason)
+    return (
+        f'<div class="mx-set-name">{html.escape(name)}</div>'
+        f'<div class="mx-set-text">{html.escape(text)}</div>{extra}'
+    )
+
+
+def workspace_title_html(title: str) -> str:
+    return f'<div class="mx-ws-title">{html.escape(title)}</div>'
+
+
+def side_title_html(title: str) -> str:
+    return f'<div class="mx-side-title">{html.escape(title)}</div>'
+
+
+def bot_facts_html(facts: str) -> str:
+    return f'<div class="mx-bot-facts">{html.escape(facts)}</div>'
+
+
+def banner_text_html(text: str) -> str:
+    return f'<div class="mx-banner-text">{html.escape(text)}</div>'
+
+
+def facts_html(rows: list[tuple[str, str]], chips: list[tuple[str, bool]]) -> str:
+    """The last message's facts (UI-D05..D11): label and value rows (values are
+    already LTR-isolated where they are numbers or model ids) and one chip per
+    optimisation (UI-D07..D09), green when applied."""
+    body = "".join(
+        f"<dt>{html.escape(label)}</dt><dd>{html.escape(value)}</dd>"
+        for label, value in rows
+    )
+    chip = "".join(
+        chip_html(text, kind="on" if applied else "off") for text, applied in chips
+    )
+    return f'<dl class="mx-facts">{body}</dl><div class="mx-chips">{chip}</div>'

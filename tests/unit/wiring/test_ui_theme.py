@@ -45,6 +45,7 @@ HEX = re.compile(r"#[0-9a-fA-F]{3,8}\b")
 PAGE_FILES = [
     REPO / "scripts" / "demo_ui.py",
     REPO / "scripts" / "demo_pages" / "results.py",
+    REPO / "scripts" / "demo_pages" / "workspace.py",
 ]
 STYLE_FILE = REPO / "src" / "metis_auto" / "wiring" / "ui_style.py"
 

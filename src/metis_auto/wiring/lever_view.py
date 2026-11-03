@@ -66,6 +66,8 @@ from metis_auto.analysis.levers import BLOCKS
 from metis_auto.wiring.ui_config import Strings, Text, direction
 from metis_auto.wiring.ui_format import fmt
 
+LRI, PDI = "\u2066", "\u2069"
+
 LEVERS_DIR = Path("reports") / "levers"
 SPRINT_TOML = Path("config") / "evaluation" / "sprint.toml"
 LEVER_NAMES_PATH = Path("config") / "demo" / "lever_names.toml"
@@ -338,6 +340,8 @@ class Card:
     value: Decimal | None
     """The stored (or summed) figure; None is unknown or not applicable."""
     text: str
+    note: str = ""
+    """Words about the figure (not isolated): shown as the card's caption."""
 
 
 @dataclass(frozen=True)
@@ -585,7 +589,15 @@ class _Text:
         self.strings, self.lang = strings, lang
 
     def __call__(self, key: str, **fields: object) -> str:
-        return self.strings.text(key, self.lang, **fields)
+        """A string with every number field LTR-isolated (UI-V07), so a count in
+        a Persian sentence never reorders."""
+        isolated = {
+            k: f"{LRI}{v}{PDI}"
+            if isinstance(v, (int, float, Decimal)) and not isinstance(v, bool)
+            else v
+            for k, v in fields.items()
+        }
+        return self.strings.text(key, self.lang, **isolated)
 
     def amount(self, value: Decimal | None) -> str:
         return fmt(value, "money", unknown=self("unknown"))
@@ -927,8 +939,7 @@ def _step_view(
     if share is None and wf.saving_total is not None and wf.baseline_total:
         share = wf.saving_total / wf.baseline_total
     interval_text = t.interval(ci)
-    if slice_name != RESULT_SLICE:
-        interval_text = f"{interval_text} — {t('interval_result_only')}"
+    interval_note = t("interval_result_only") if slice_name != RESULT_SLICE else ""
     cards = (
         Card(
             "baseline_cost",
@@ -938,7 +949,7 @@ def _step_view(
         ),
         Card("saving", t("saving"), wf.saving_total, t.amount(wf.saving_total)),
         Card("saving_share", t("saving_share"), share, t.share(share)),
-        Card("interval", t("interval"), None, interval_text),
+        Card("interval", t("interval"), None, interval_text, interval_note),
     )
     return replace(
         base,
