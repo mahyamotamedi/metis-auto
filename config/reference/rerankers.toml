@@ -1,0 +1,32 @@
+# Local text rerankers for the reranker-cut cut-first item (a) (final plan R-A2;
+# ADR-0040; traces H-2, FR-CTX-02). NOT FETCHED, NOT PINNED: the revision and the
+# sha256 of every file are owner-pinned placeholders, because no value here was
+# checked against the model card (never invent a hash). Until each is set,
+# `python scripts/fetch_reranker_assets.py` refuses to download and
+# `scripts/run_reranker_cut.py --scorers bge_reranker_v2_m3` refuses to start.
+#
+# Local GPU only, no data uploaded anywhere (licence question O-1 is unanswered
+# in writing): weights are downloaded once by the fetch script (explicit, like
+# installing a package), stored under paths data/rerankers/ (git-ignored), and
+# loaded offline. Libraries: the existing extra `compress` (torch, transformers),
+# imported only in adapters/rerankers/bge_local.py (tested).
+version = "rerankers-2026-11-04-unpinned"
+
+[[rerankers]]
+ref = "bge-reranker-v2-m3"
+model = "BAAI/bge-reranker-v2-m3"
+# [OWNER-PLACEHOLDER] commit hash of the model repository to use; set only after
+# reading the model card, and record the check date in `evidence`.
+# revision = "<40-hex commit>"
+# [OWNER-PLACEHOLDER] licence as stated on the model card (not verified here).
+# licence = "<as on the card>"
+# evidence = { source = "<model card URL and revision>", checked_on = <date> }
+
+# [OWNER-PLACEHOLDER] file list and pins; each entry needs `sha256` (and may
+# carry `size_bytes`). The names are the files a transformers sequence-
+# classification model needs; confirm them against the repository listing at
+# pin time. The url is built from model + revision + name by the fetch script.
+# [[rerankers.files]]
+# name = "model.safetensors"
+# sha256 = "<64-hex>"
+# size_bytes = <n>

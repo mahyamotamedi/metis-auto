@@ -106,6 +106,12 @@ _LEXICAL = (
     "chunk (normalize_safe, word tokens, no stopword list).",
 )
 
+_MODEL = (
+    "Scorer: a text model's raw relevance score for the user message and each "
+    "chunk (injected scorer, run locally on a seeded sample); not comparable "
+    "with the platform's relevancy or a lexical overlap.",
+)
+
 _WORD = re.compile(r"\w+")
 
 
@@ -246,7 +252,13 @@ class RerankerCut:
         self.evidence_class = (
             "hypothetical reconstruction" if scorer is None else "heuristic"
         )
-        self.assumptions = _COMMON + (_OBSERVED if scorer is None else _LEXICAL)
+        self.assumptions = _COMMON + (
+            _OBSERVED
+            if scorer is None
+            else _LEXICAL
+            if self.scorer_name == "lexical_overlap"
+            else _MODEL
+        )
 
     def _set(self, floor: object, threshold: object, top_k: object) -> None:
         self.floor = _int("floor", floor, 0)

@@ -390,3 +390,111 @@ def test_recorded_and_repriced_units_never_mixed(rr):
         assert not any("recorded units" in a for a in r.assumptions)
     assert any("recorded units" in a for a in logged.assumptions)
     assert not any("price-file units" in a for a in logged.assumptions)
+
+
+# --- cut-first (a): the real reranker through the injected-scorer interface ----
+
+
+def test_real_reranker_refuses_to_start_when_weights_are_missing(rr, capsys, tmp_path):
+    """The committed table has no pins, and an empty assets folder has no files:
+    the run stops with code 2 before it reads any data."""
+    code = rr.main(
+        ["--scorers", "bge_reranker_v2_m3", "--reranker-assets", str(tmp_path)]
+    )
+    out = capsys.readouterr().out
+    assert code == 2 and "no data was read" in out
+    assert "revision is not pinned" in out and "no files are listed" in out
+
+
+def test_default_scorers_never_include_the_real_reranker(rr):
+    assert "bge_reranker_v2_m3" not in rr.DEFAULT_SCORERS
+    assert set(rr.DEFAULT_SCORERS) < set(rr.SCORERS)
+
+
+def test_missing_and_mismatching_files_are_named(rr, tmp_path):
+    from metis_auto.adapters.rerankers.assets import (
+        RerankerFile,
+        RerankerSpec,
+        not_ready_reasons,
+    )
+
+    good = tmp_path / "bge/rev1"
+    good.mkdir(parents=True)
+    (good / "a.bin").write_bytes(b"synthetic")
+    import hashlib
+
+    pin = hashlib.sha256(b"synthetic").hexdigest()
+    spec = RerankerSpec(
+        "bge",
+        "syn/model",
+        "rev1",
+        (RerankerFile("a.bin", pin), RerankerFile("b.bin", pin)),
+    )
+    reasons = not_ready_reasons(spec, tmp_path)
+    assert any("b.bin: missing" in r for r in reasons)
+    assert not any("a.bin" in r for r in reasons)
+    (good / "b.bin").write_bytes(b"tampered")
+    assert any("b.bin: sha256 differs" in r for r in not_ready_reasons(spec, tmp_path))
+    (good / "b.bin").write_bytes(b"synthetic")
+    assert not_ready_reasons(spec, tmp_path) == []
+
+
+def test_no_gpu_refuses_even_with_ready_weights(tmp_path):
+    import hashlib
+
+    from metis_auto.adapters.rerankers.assets import RerankerFile, RerankerSpec
+    from metis_auto.adapters.rerankers.bge_local import check_ready
+
+    d = tmp_path / "bge/rev1"
+    d.mkdir(parents=True)
+    (d / "a.bin").write_bytes(b"x")
+    spec = RerankerSpec(
+        "bge",
+        "syn/model",
+        "rev1",
+        (RerankerFile("a.bin", hashlib.sha256(b"x").hexdigest()),),
+    )
+    assert any(
+        "local GPU" in r for r in check_ready(spec, tmp_path, device_probe=lambda: None)
+    )
+    assert check_ready(spec, tmp_path, device_probe=lambda: "cuda") == []
+
+
+def test_fetch_script_refuses_while_unpinned_and_downloads_nothing(capsys, tmp_path):
+    spec = importlib.util.spec_from_file_location(
+        "fetch_reranker_under_test", ROOT / "scripts" / "fetch_reranker_assets.py"
+    )
+    fetch = importlib.util.module_from_spec(spec)
+    sys.modules["fetch_reranker_under_test"] = fetch
+    spec.loader.exec_module(fetch)
+    assert (
+        fetch.main([], table=ROOT / "config/reference/rerankers.toml", root=tmp_path)
+        == 1
+    )
+    assert "refused (nothing downloaded)" in capsys.readouterr().out
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_data_folder_for_rerankers_is_git_ignored():
+    lines = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+    assert "data/rerankers/" in lines
+
+
+def test_injected_scorer_gets_its_name_as_the_lever_label(rr):
+    cls = rr.load_version_class()
+
+    def bge_reranker_v2_m3(query, texts):
+        return [float(len(t)) for t in texts]
+
+    chunks = chunk_rows(["m-0"]).assign(content="text")
+    v = cls(
+        bge_reranker_v2_m3,
+        0,
+        None,
+        None,
+        chunks=chunks,
+        tokens_per_char=SLOPE,
+        queries={"m-0": "q"},
+    )
+    assert v.lever_id == "context.reranker_cut.bge_reranker_v2_m3"
+    assert any("text model" in a for a in v.assumptions)

@@ -6,6 +6,12 @@ Reads ``data/derived/full_eda/requests.parquet`` and the derived chunk table
 
 - ``observed_relevancy``: the platform's own ``relevancy``; every eligible
   request of the tune and report periods (no text read);
+- ``bge_reranker_v2_m3`` (cut-first item (a), opt-in, never in the default
+  scorers): the real cross-encoder through the injected-scorer interface, on the
+  same seeded sample as ``lexical_overlap``, **local GPU only**. It refuses to
+  start (before any data is read) while the weights are unpinned, missing or
+  differ from their sha256 (``scripts/fetch_reranker_assets.py``), or no GPU is
+  found. No data is uploaded; the Hugging Face libraries run offline.
 - ``lexical_overlap``: word overlap of the user message with each chunk
   (*heuristic*), on a seeded sample of eligible requests per period. Chunk text
   (``data/full_data/raw/data/derived/chat_message_rag_chunks-*``) and user text
@@ -26,7 +32,8 @@ tokens are reported apart, never in the saving.
 
 Traces: H-2, X5, FR-CTX-02, FR-CTX-03, ADR-0031, ADR-0032. Usage:
 ``.venv\\Scripts\\python.exe scripts/run_reranker_cut.py [--out DIR]
-[--scorers observed_relevancy lexical_overlap]``.
+[--scorers observed_relevancy lexical_overlap]``; the real reranker:
+``... --scorers bge_reranker_v2_m3`` (after the fetch script; never run here).
 """
 
 from __future__ import annotations
@@ -78,7 +85,13 @@ RATES_VERSION = "full-eda-implied-unit-rates"  # as S-6b's as_logged manifests
 BASELINE = "todays_models"  # the curve's cost
 COST_KEYS = ("fees", "token_cost", "total")
 SAVING_UNKNOWN = "rc_saving_unknown"  # set by RerankerCut.baseline_frames
-SCORERS = ("observed_relevancy", "lexical_overlap")
+BGE = "bge_reranker_v2_m3"
+SCORERS = ("observed_relevancy", "lexical_overlap", BGE)
+DEFAULT_SCORERS = ("observed_relevancy", "lexical_overlap")
+TEXT_SCORERS = ("lexical_overlap", BGE)
+"""Scorers that read chunk and question text in memory, on a seeded sample."""
+RERANKERS = ROOT / "config" / "reference" / "rerankers.toml"
+RERANKER_ASSETS = ROOT / "data" / "rerankers"
 CHUNK_COLUMNS = ["message_id", "chunk_id", "h_exact", "n_chars", "relevancy"]
 NONE = "none"
 
@@ -496,11 +509,58 @@ def _shown(path: Path) -> Path:
     return path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
 
 
-def main(argv: list[str] | None = None) -> int:
+def injected_scorers(
+    names, *, table: Path = RERANKERS, assets: Path = RERANKER_ASSETS
+) -> tuple[dict[str, Callable] | None, list[str]]:
+    """The text scorers to inject for the requested names, or the reasons the
+    run must not start. ``lexical_overlap`` comes from the candidate file; the
+    real reranker is built only if its weights are pinned, present, matching
+    their sha256, and a local GPU exists (nothing is loaded otherwise)."""
+    scorers: dict[str, Callable] = {}
+    if "lexical_overlap" in names:
+        scorers["lexical_overlap"] = _load("lexical_overlap")
+    if BGE in names:
+        from metis_auto.adapters.rerankers.assets import load_specs
+        from metis_auto.adapters.rerankers.bge_local import (
+            RerankerUnavailable,
+            check_ready,
+            load_scorer,
+        )
+
+        spec = load_specs(table).get("bge-reranker-v2-m3")
+        if spec is None:
+            return None, ["bge-reranker-v2-m3 is not in the rerankers table"]
+        reasons = check_ready(spec, assets)
+        if reasons:
+            return None, reasons
+        try:
+            scorers[BGE] = load_scorer(spec, assets)
+        except RerankerUnavailable as exc:
+            return None, list(exc.reasons)
+    return scorers, []
+
+
+def main(
+    argv: list[str] | None = None,
+    *,
+    scorers: Mapping[str, Callable] | None = None,
+) -> int:
+    """``scorers`` injects text scorers by name (tests); by default they are
+    built by ``injected_scorers`` after the readiness checks."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", type=Path, default=OUT_DIR, help="result folder")
-    parser.add_argument("--scorers", nargs="+", choices=SCORERS, default=list(SCORERS))
+    parser.add_argument(
+        "--scorers", nargs="+", choices=SCORERS, default=list(DEFAULT_SCORERS)
+    )
+    parser.add_argument("--reranker-assets", type=Path, default=RERANKER_ASSETS)
     args = parser.parse_args(argv)
+    if scorers is None:
+        scorers, reasons = injected_scorers(args.scorers, assets=args.reranker_assets)
+        if scorers is None:
+            print("refused: the reranker run cannot start (no data was read):")
+            for reason in reasons:
+                print(f"  - {reason}")
+            return 2
 
     sprint = load_toml(SPRINT)
     cfg = load_toml(CONFIG)["reranker_cut"]
@@ -513,7 +573,6 @@ def main(argv: list[str] | None = None) -> int:
         else ()
     )
     cls = load_version_class()
-    lexical = _load("lexical_overlap")
 
     req = with_blocks(scope(pd.read_parquet(REQUESTS), ctx))
     cached_sep = cached_reported_separately(req)
@@ -539,7 +598,7 @@ def main(argv: list[str] | None = None) -> int:
 
     for scorer_name in args.scorers:
         frames = dict(periods)
-        if scorer_name == "lexical_overlap":
+        if scorer_name in TEXT_SCORERS:
             frames = {
                 p: sample_requests(
                     f, rag_candidates(f), int(cfg["lexical_sample"]), seed=ctx.seed
@@ -549,9 +608,12 @@ def main(argv: list[str] | None = None) -> int:
             both = pd.concat(frames.values())
             chunks = read_chunks(both["ai_message_id"], with_text=True)
             mismatch = int((chunks["content"].str.len() != chunks["n_chars"]).sum())
-            print(f"\nlexical: text attached; length != n_chars on {mismatch:,} rows")
+            print(
+                f"\n{scorer_name}: text attached; "
+                f"length != n_chars on {mismatch:,} rows"
+            )
             base = cls(
-                lexical,
+                scorers[scorer_name],
                 int(cfg["floor"]),
                 None,
                 None,
@@ -624,9 +686,7 @@ def main(argv: list[str] | None = None) -> int:
             "threshold_quantiles": cfg["threshold_quantiles"],
             "top_k_grid": cfg["top_k_grid"],
             "min_score_mass_kept": cfg["min_score_mass_kept"],
-            "sample": cfg["lexical_sample"]
-            if scorer_name == "lexical_overlap"
-            else None,
+            "sample": cfg["lexical_sample"] if scorer_name in TEXT_SCORERS else None,
             "price_table": sprint["baselines"]["price_table"],
             "catalogue": sprint["baselines"]["catalogue"],
             "premium_model": premium,
@@ -655,7 +715,7 @@ def main(argv: list[str] | None = None) -> int:
             mass=float(pick["score_mass_kept"]),
             min_mass=cfg["min_score_mass_kept"],
             passed=passed,
-            sample=len(report) if scorer_name == "lexical_overlap" else None,
+            sample=len(report) if scorer_name in TEXT_SCORERS else None,
         )
         paths = write_results(
             point,
