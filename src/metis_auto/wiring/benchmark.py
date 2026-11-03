@@ -67,6 +67,7 @@ from metis_auto.contracts import (
 from metis_auto.domain.accounting.cost import cost_of, pre_call_estimate
 from metis_auto.domain.accounting.overhead import template_overhead, with_overhead
 from metis_auto.domain.accounting.tokens import sum_counts
+from metis_auto.evaluation.benchmark import agreement as ag
 from metis_auto.evaluation.benchmark import labels as lb
 from metis_auto.evaluation.benchmark import plan as pl
 from metis_auto.evaluation.benchmark import spot_check as sc
@@ -107,6 +108,8 @@ from .tokenizers import build_tokenizers
 CONFIG_PATH = "config/evaluation/benchmark.toml"
 GOLDEN_ANSWERS_CONFIG = "config/evaluation/golden_answers.toml"
 RUNS_DIR = "runs/benchmark"
+AGREEMENT_FILE = "agreement.json"
+KEY_FILE = "key_LOCAL_ONLY.csv"
 
 
 class BenchmarkRefused(RuntimeError):
@@ -747,9 +750,30 @@ class Benchmark:
         files = sorted(folder.glob("*.scores.jsonl"))
         if len(files) != 2:
             raise BenchmarkRefused([f"need the two judges' score files in {folder}"])
+        judged_rows = [read_rows(f) for f in files]
         scores = [read_scores(f) for f in files]
+        inconsistent = [
+            {
+                (r["case_id"], r["candidate"])
+                for r in rows
+                if r["state"] == "inconsistent"
+            }
+            for rows in judged_rows
+        ]
+        languages = {r["case_id"]: r["language"] for rows in judged_rows for r in rows}
         frame = self.shareable().set_index("record_id")
-        records = sorted({k[0] for s in scores for k in s})
+        records = sorted(
+            {k[0] for s in scores for k in s} | {k[0] for g in inconsistent for k in g}
+        )
+        gate_file = self.root / RUNS_DIR / run_id / AGREEMENT_FILE
+        report = (
+            json.loads(gate_file.read_text(encoding="utf-8"))
+            if gate_file.exists()
+            else None
+        )
+        gate = ag.gate_by_language(
+            report, self.config.gate, sorted(set(languages.values()))
+        )
         catalogue = self.catalogue()
         arms = list(callable_arms(self.arms()))
         rows = lb.make_labels(
@@ -760,15 +784,54 @@ class Benchmark:
             acceptable_score=self.config.labels.acceptable_score,
             cheap_arms=self.config.labels.cheap_arms,
             name=name,
+            inconsistent=inconsistent,
+            languages=languages,
+            gate=gate,
         )
+        pairs = [
+            (r["judge_id"], r["candidate"], r["state"])
+            for rows in judged_rows
+            for r in rows
+        ]
         out = self.root / RUNS_DIR / run_id / "labels"
         out.mkdir(parents=True, exist_ok=True)
         lb.to_frame(rows, arms).to_parquet(out / f"{name}.labels.parquet", index=False)
-        summary = lb.summary(rows)
+        summary = lb.summary(rows, inconsistency=lb.inconsistency_summary(pairs))
         (out / f"{name}.summary.json").write_text(
             json.dumps(summary, indent=2) + "\n", encoding="utf-8"
         )
         return summary
+
+    # -------------------------------------------------------- agreement
+    def agreement(self, *, run_id: str) -> dict[str, Any]:
+        """P-2: the filled spot-check sheet and the local key → agreement per
+        judge and language, and the gate (E5). Content-free; local files only,
+        no call."""
+        run = self.root / RUNS_DIR / run_id
+        sheet, key = run / "spot_check" / "sheet.csv", run / "spot_check" / KEY_FILE
+        for path in (sheet, key):
+            if not path.exists():
+                raise BenchmarkRefused([f"missing {path.relative_to(self.root)}"])
+        judge_rows: dict[str, list[dict[str, Any]]] = {}
+        for f in sorted((run / "judging").glob("*.scores.jsonl")):
+            for row in read_rows(f):
+                judge_rows.setdefault(row["judge_id"], []).append(row)
+        if not judge_rows:
+            raise BenchmarkRefused([f"no judging results in {run / 'judging'}"])
+        try:
+            report = ag.agreement_report(
+                run_id=run_id,
+                sheet_text=sheet.read_text(encoding="utf-8-sig"),
+                key_text=key.read_text(encoding="utf-8-sig"),
+                judge_rows=judge_rows,
+                gate=self.config.gate,
+            )
+        except ValueError as exc:
+            raise BenchmarkRefused([str(exc)]) from exc
+        (run / AGREEMENT_FILE).write_text(
+            json.dumps(report, indent=2) + "\n", encoding="utf-8"
+        )
+        return report
 
     # ------------------------------------------------------- spot check
     def spot_check(self, *, run_id: str) -> dict[str, Any]:
@@ -890,6 +953,11 @@ def write_judging(
             row = asdict(c)
             row["cost_usd"] = None if row["cost_usd"] is None else str(row["cost_usd"])
             f.write(json.dumps(row) + "\n")
+
+
+def read_rows(path: Path) -> list[dict[str, Any]]:
+    """The score lines of one judge's file (``write_judging``)."""
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
 
 
 def read_scores(path: Path) -> dict[tuple[str, str], float]:

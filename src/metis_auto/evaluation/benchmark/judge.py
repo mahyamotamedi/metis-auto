@@ -18,8 +18,13 @@ never request cost. The judge model is configuration (owner decision).
 
 ``judge_all`` runs E5's ``judge_items`` one pair at a time so a refused output
 or a failed call becomes a ``not_evaluated`` outcome with its reason instead of
-crashing the run; both answer orders, as E5 does. ``require_two_families``
-checks the plan's "two judges from different families".
+crashing the run; both answer orders, as E5 does. A pair whose two orders map
+to different verdicts (E5's ``swap_consistent`` is False: ``mapped_a !=
+mapped_b`` in ``judging/pairwise.py``) is **not** scored 0.5 and not a tie: it
+becomes state ``inconsistent`` with no score, so a position-biased judge can
+never produce a tie by averaging (ADR-0053 amendment 1). Only two orders that
+both say "tie" are a tie. ``require_two_families`` checks the plan's "two judges
+from different families".
 Calls: ports.ModelClient, evaluation.judging. Traces: FR-EVAL-05, ADR-0006,
 ADR-0053. Status: provisional.
 """
@@ -30,7 +35,7 @@ import json
 import re
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
 
 from metis_auto.contracts import (
@@ -303,7 +308,7 @@ def judge_all(
         except JudgeCallFailed as exc:
             outcomes.append(_failed(item, f"judge_call_failed:{exc.reason}"))
             continue
-        outcomes.extend(run.outcomes)
+        outcomes.extend(_mark_inconsistent(o) for o in run.outcomes)
         total += run.cost_usd_total
     excluded = Counter(o.reason for o in outcomes if o.state != "judged" and o.reason)
     return JudgeRun(
@@ -314,6 +319,21 @@ def judge_all(
         cost_kind="evaluation",
         excluded_by_reason=dict(excluded),
     )
+
+
+def _mark_inconsistent(outcome: PairOutcome) -> PairOutcome:
+    """E5's rule, unchanged: a judged pair is swap-inconsistent when its two
+    orders gave different verdicts. Here that means no score and no
+    preference; the paid calls (cost) and the order verdicts stay."""
+    if outcome.state == "judged" and outcome.swap_consistent is False:
+        return replace(
+            outcome,
+            state="inconsistent",
+            reason="swap_inconsistent",
+            score=None,
+            preference=None,
+        )
+    return outcome
 
 
 def _failed(item: PairItem, reason: str) -> PairOutcome:

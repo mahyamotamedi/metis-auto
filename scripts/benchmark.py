@@ -10,6 +10,7 @@ ADR-0053). Thin wrapper over metis_auto.wiring.benchmark.
         --approved-by <owner> --cap <usd> --dataset-text-approved    # PAID, gated
     python scripts/benchmark.py spot-check --run-id <id>  # local files, no call
     python scripts/benchmark.py labels --run-id <id> --name <name>   # no call
+    python scripts/benchmark.py agreement --run-id <id>   # filled sheet.csv, no call
 
 ``plan`` and ``tenant-check`` never build a client and print counts, bounds and
 reasons only. ``generate`` and ``judge`` refuse, listing every reason, until the
@@ -46,7 +47,15 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     ap.add_argument(
         "action",
-        choices=["tenant-check", "plan", "generate", "judge", "spot-check", "labels"],
+        choices=[
+            "tenant-check",
+            "plan",
+            "generate",
+            "judge",
+            "spot-check",
+            "labels",
+            "agreement",
+        ],
     )
     ap.add_argument(
         "--with-db", action="store_true", help="count input sizes from the database"
@@ -78,6 +87,8 @@ def main() -> int:
             out = {"done": args.action, "summary": str(type(result).__name__)}
         elif args.action == "spot-check":
             out = bench.spot_check(run_id=args.run_id)
+        elif args.action == "agreement":
+            out = bench.agreement(run_id=args.run_id)
         else:
             out = bench.labels(run_id=args.run_id, name=args.name)
     except BenchmarkRefused as exc:

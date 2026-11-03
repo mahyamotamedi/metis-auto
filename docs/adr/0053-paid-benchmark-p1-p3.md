@@ -50,3 +50,23 @@ Facts that shape the design (all checked 2026-11-03):
 - **Budget:** at most about 7.97 USD remains under the 20 USD ceiling (golden answers 12.03 USD, Parham's router checks 0.0049 USD; other machines unknown until their summaries exist). The 300-request main run does not fit; the pilot's printed bound decides whether it does. **Update 2026-11-03:** [ADR-0018 amendment 3](0018-live-calls-for-development-under-a-lifetime-budget.md) raised the ceiling and lifetime cap to 92 USD (80 USD credit left plus the 12.03 USD already spent, an upper bound), so the 7.97 USD bound above no longer applies.
 - Labels from golden-v2 are training labels for R-B3 / R-C3; any "quality" claim stays conditional on the judges' Persian validation (the E5 gate, owner) and the 60-item spot-check.
 - Not changed: E4, E5, the golden-answers code, the ledger, R-B3 and R-C3 (used, not edited); the catalogue and `sprint.toml` (their owners' changes, TODO-17).
+
+## Amendment 1 (2026-11-03): swap-inconsistent pairs, the Persian gate on labels, spot-check agreement
+
+Status: **provisional**; review by Parham (owner of these files) pending. Reason: a review of the code above found that a judge whose two orders disagreed was still scored (the E5 mean made it look like a tie), that labels said nothing about whether the judges were validated for Persian, and that nothing turned the filled spot-check sheet into numbers. Public names and shapes of `evaluation/sampling` and `evaluation/judging` (E4, E5) are unchanged; everything below is added.
+
+**Changed**
+1. **A swap-inconsistent pair is not a tie and not a score.** E5 already defines it (`PairOutcome.swap_consistent`, true when both orders map to the same verdict); `judge_all` now turns an inconsistent judged outcome into state `inconsistent` (reason `swap_inconsistent`, no score, no preference) with `dataclasses.replace`, so E5's types and diagnostics are untouched. The paid calls stay in the cost totals. A genuine tie (both orders `tie`) is still 0.5. In the labels, an arm with an inconsistent pair for either judge is NA (never guessed from the other judge's score) and a record with nothing else labelled is `not_labelled:inconsistent`; the summary reports the inconsistency rate per judge and per arm.
+2. **`judge_gate` per label row and in the summary.** `validated` / `unvalidated` / `not_configured` by language group, from E5's `evaluate_gate` on the spot-check agreement when the `[gate]` values (E5 `GateConfig`: statistic, minimum agreement, minimum items) are set, else `not_configured`; a language is validated only when both judges pass. Label values are unchanged and no row is dropped. R-C3 may report on labels that are not validated but must not move on them (`benchmark_labels.md`). The file format stays `benchmark-labels-v1` (additive columns `inconsistent_arms`, `judge_gate`).
+3. **`scripts/benchmark.py agreement --run-id <run>`** reads the filled `spot_check/sheet.csv` and `key_LOCAL_ONLY.csv`, maps them to E5's rating import (`read_ratings`, strict-majority consensus), computes agreement per judge and language with E5's `agreement`, evaluates the gate, and writes the content-free `runs/benchmark/<run>/agreement.json` (counts and statistics only). Missing ratings give `insufficient`; unset gate values give `not_configured`. It makes no call. Agreement has no confidence interval yet (no bootstrap is passed), so E5's gate compares the point value.
+
+**Known limits (review findings not changed here; each is a follow-up, finding 4 only on the owner's say-so)**
+- Arms and the reference are generated with the reasoning effort and output-token limits of their own settings; a difference in either is confounded with the model in the labels.
+- The two judges' families may overlap with the answering arms' families (self-preference); `require_two_families` only compares the judges with each other.
+- A reasoning judge can spend its output limit on reasoning and return empty text; that becomes `not_evaluated`, not a retry.
+- Strata can be empty in the pilot's quotas, and E5's bootstrap clusters by record (`session_ref` is the record ID), not by session.
+- Replayed answers are counted as spend in the plan's bound although they cost nothing.
+- `LabelRow.judges` is always 2 (the constructor demands two judges).
+- `SharedSpendLedger` raises a `TypeError` on a timezone-naive summary timestamp instead of refusing with a reason.
+- A missing catalogue tier for an arm raises a `KeyError` in the labels instead of a refusal.
+- The gate values are owner decisions (not listed by `unset_owner_values`); until set, labels are `not_configured` and Persian quality claims stay conditional.
