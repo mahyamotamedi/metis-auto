@@ -12,19 +12,18 @@
     "Report period (Aug-Oct 2026) read once; the window may look back into the tune period (owner decision 2026-11-02). Period is from a_timestamp, days from u_timestamp (naive, Q-06).",
     "Guard: no approval step, empty blocklist, no disabled bot, key version pq-v1; every served key would still need approval before serving.",
     "Tenant slices: the 10 largest tenants by LLM requests (opaque ranks); traffic_weighted slice not computed.",
-    "The working tree had uncommitted changes when this ran.",
     "K-1 review (owner, 2026-11-02): 30 of 30 first-turn hits reviewed (15 top keys, 15 seeded random): yes 20, no 4, unsure 6, blank 0.",
     "Still a candidate saving: answer error <= 1% needs about 300 reviewed hits with no error (decision rules); 30 were reviewed.",
     "4 of 30 reviewed hits were judged wrong (13%); half the sample is top keys, so this is not a random error rate.",
     "The review applies to this untimed variant (stored answer = window mode); the 24 h TTL variant serves the latest answer and stays unmeasured.",
     "Repriced baseline in price-file units, token cost only (fees are not on the price list); no interval computed.",
-    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 42.1441 ms, p95 51.7891 ms, max 94.7981 ms; 2026-11-02, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
+    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 40.8995 ms, p95 49.5409 ms, max 84.3517 ms; 2026-11-02, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
     "Overhead caveat: on a one-row frame the nightly window is empty, so this times eligibility, keying and the guard path, not the nightly build (batch work) or a lookup in a built set."
   ],
   "baseline": "todays_models",
   "baseline_cost": {
-    "token_cost": "3.622410713",
-    "total": "3.622410713"
+    "token_cost": "251.424849776",
+    "total": "251.424849776"
   },
   "ci_high": null,
   "ci_low": null,
@@ -32,40 +31,40 @@
   "evidence_class": "simulation",
   "lever_id": "cache.popular_question.first_turn",
   "manifest": {
-    "code_commit": "91b330d7b008b83f10d6b4186f5712a11006058f",
-    "config_hash": "e168660532d0a590ddc2e067475b40ee599e117d456422651a8dd3e3c6a63ab9",
-    "created_at": "2026-11-02T13:29:38.763188Z",
+    "code_commit": "37262d410ac5b928309351c567f0ddaa8fc1c429",
+    "config_hash": "3c457264a1d398aac4f9b7bac4d54765efd9085a851c615023c4e169d3a19588",
+    "created_at": "2026-11-02T20:41:08.275054Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "prices-metis-2026-10-18-logged",
     "python_version": "3.13.9",
     "seed": 20261102
   },
   "n_eligible": 2707,
   "n_requests": 77774,
-  "overhead_ms_p50": 42.1441,
-  "overhead_ms_p95": 51.7891,
+  "overhead_ms_p50": 40.8995,
+  "overhead_ms_p95": 49.5409,
   "saving": {
-    "token_cost": "0.004006235",
-    "total": "0.004006235"
+    "token_cost": "0.543152855",
+    "total": "0.543152855"
   },
   "slices": {
     "all": {
-      "baseline:total": "3.622410713",
+      "baseline:total": "251.424849776",
       "cache_hit_rate": "0.009797619",
       "n_cache_hits": "762",
-      "n_cost_known": "4919",
+      "n_cost_known": "24561",
       "n_requests": "77774",
-      "saving:total": "0.004006235",
-      "saving_share": "0.001105958"
+      "saving:total": "0.543152855",
+      "saving_share": "0.002160299"
     },
     "llm_only": {
-      "baseline:total": "3.622410713",
+      "baseline:total": "251.424849776",
       "cache_hit_rate": "0.030964281",
       "n_cache_hits": "762",
-      "n_cost_known": "4919",
+      "n_cost_known": "24561",
       "n_requests": "24609",
-      "saving:total": "0.004006235",
-      "saving_share": "0.001105958"
+      "saving:total": "0.543152855",
+      "saving_share": "0.002160299"
     }
   },
   "step": "cache",

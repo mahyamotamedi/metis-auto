@@ -1,0 +1,301 @@
+{
+  "assumptions": [
+    "quality not proven; cost simulation only",
+    "no quality label: per bot, the cheapest candidate eligible for all of its tune traffic, chosen by repriced cost only; no bot is declared moved",
+    "token counts assumed model-independent (tokenizers differ); logged output length unchanged",
+    "recorded blocks (fees, token_cost) unchanged by apply; each baseline is accounted in its own units (ADR-0036)",
+    "Unit: recorded units (as_logged). Incumbent: the recorded token cost; the target at its implied recorded rates (reports/full_eda/tables/implied_unit_rates.csv, the ADR-0038 pattern).",
+    "A needed implied rate that is missing makes the request's saving unknown (n_saving_unknown, out of both sides), never 0; requests not moved save exactly 0; fees never change.",
+    "Eligibility and candidate cost: R-0 (analysis.routing_base.eligible_models and candidate_costs, ADR-0045) with sprint.toml [routing] as rules.",
+    "Fitted on tune rows (split_by_session tune and period Mar-Jul 2026), applied once to the report split (sessions starting Aug-Oct 2026); timestamps are naive (Q-06).",
+    "Requests whose cost in a baseline is unknown are left out of both sides (n_cost_known), never priced at zero; workflow rows have no cost.",
+    "Slices: all and llm_only (every rate twice), traffic_weighted (request-weighted; bot_mean_saving_share is the unweighted mean over bots), over_8k, lang:<label>, tenant_rank:<n>, bot_rank:<n> (ranks, never IDs), the tenant-capped rows and eda_simple_rule (the EDA's rule group).",
+    "Per baseline, the incumbent is that baseline's model for the request (logged model for todays_models and as_logged, the premium model, the best single cheap model) and 'cheaper' is tested in that baseline's units.",
+    "So each saving is the router's own effect and is >= 0 row by row; follows ADR-0046 point 6, provisional; owner to confirm (Q-B21).",
+    "lower bound on candidate cost, hidden reasoning not counted (ADR-0046 point 4): includes the candidates the catalogue marks hidden_reasoning_billed_as_output.",
+    "The working tree had uncommitted changes when this ran.",
+    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 22.021 ms, p95 51.4958 ms, max 191.4905 ms; 2026-11-03, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
+    "Overhead caveat: the per-bot choice is fitted on the tune split before timing (batch work); apply times the repricing and the eligibility check of the bot's choice (R-0 candidate_costs)."
+  ],
+  "baseline": "as_logged",
+  "baseline_cost": {
+    "fees": "65.502000000",
+    "token_cost": "80.995575405",
+    "total": "146.497575405"
+  },
+  "ci_high": 0.04225380416900481,
+  "ci_low": 0.0343754409047075,
+  "correctness_state": "unmeasured",
+  "evidence_class": "simulation",
+  "lever_id": "route.per_bot.with_reasoning_models",
+  "manifest": {
+    "code_commit": "d69242396e02871e3240af97a26adb9bc2c2182d",
+    "config_hash": "891f0cd52448314f2b75fd5187710dbf4ce690591defd01b4629c576f91e5ed3",
+    "created_at": "2026-11-03T07:31:44.573074Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "full-eda-implied-unit-rates",
+    "python_version": "3.13.9",
+    "seed": 20261102
+  },
+  "n_eligible": 3016,
+  "n_requests": 73063,
+  "overhead_ms_p50": 22.021,
+  "overhead_ms_p95": 51.4958,
+  "saving": {
+    "fees": "0",
+    "token_cost": "5.642744171",
+    "total": "5.642744171"
+  },
+  "slices": {
+    "all": {
+      "baseline:total": "146.497575405",
+      "n_cost_known": "20744",
+      "n_requests": "73063",
+      "saving:total": "5.642744171",
+      "saving_share": "0.038517663"
+    },
+    "bot_rank:1": {
+      "baseline:total": "56.514359292",
+      "n_cost_known": "5809",
+      "n_requests": "5809",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:10": {
+      "baseline:total": "3.057944800",
+      "n_cost_known": "988",
+      "n_requests": "988",
+      "saving:total": "2.429977617",
+      "saving_share": "0.794644042"
+    },
+    "bot_rank:2": {
+      "baseline:total": "15.200870788",
+      "n_cost_known": "1559",
+      "n_requests": "1559",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:3": {
+      "baseline:total": "12.763875888",
+      "n_cost_known": "1406",
+      "n_requests": "1406",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:4": {
+      "baseline:total": "8.242237794",
+      "n_cost_known": "926",
+      "n_requests": "926",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:5": {
+      "baseline:total": "7.601730392",
+      "n_cost_known": "1323",
+      "n_requests": "1323",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:6": {
+      "baseline:total": "3.429372084",
+      "n_cost_known": "401",
+      "n_requests": "401",
+      "saving:total": "0.735001512",
+      "saving_share": "0.214325391"
+    },
+    "bot_rank:7": {
+      "baseline:total": "2.285831612",
+      "n_cost_known": "220",
+      "n_requests": "220",
+      "saving:total": "1.034043578",
+      "saving_share": "0.452370845"
+    },
+    "bot_rank:8": {
+      "baseline:total": "7.233972834",
+      "n_cost_known": "898",
+      "n_requests": "898",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:9": {
+      "baseline:total": "1.379299818",
+      "n_cost_known": "204",
+      "n_requests": "204",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "eda_simple_rule": {
+      "baseline:total": "5.233179243",
+      "n_cost_known": "4351",
+      "n_requests": "4356",
+      "saving:total": "1.225451749",
+      "saving_share": "0.234169649",
+      "saving_share_of_all": "0.008364997"
+    },
+    "lang:arabic_script_other": {
+      "baseline:total": "3.121306443",
+      "n_cost_known": "457",
+      "n_requests": "457",
+      "saving:total": "0.127426363",
+      "saving_share": "0.040824689"
+    },
+    "lang:en": {
+      "baseline:total": "1.301099407",
+      "n_cost_known": "422",
+      "n_requests": "422",
+      "saving:total": "0.016966522",
+      "saving_share": "0.013040142"
+    },
+    "lang:fa": {
+      "baseline:total": "130.155492095",
+      "n_cost_known": "16738",
+      "n_requests": "16740",
+      "saving:total": "5.003602028",
+      "saving_share": "0.038443265"
+    },
+    "lang:fa_en_mixed": {
+      "baseline:total": "3.967145266",
+      "n_cost_known": "833",
+      "n_requests": "834",
+      "saving:total": "0.111886029",
+      "saving_share": "0.028203159"
+    },
+    "lang:finglish": {
+      "baseline:total": "0.063258878",
+      "n_cost_known": "8",
+      "n_requests": "8",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "lang:other": {
+      "baseline:total": "0.000165600",
+      "n_cost_known": "2",
+      "n_requests": "2",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "lang:short_uncertain": {
+      "baseline:total": "7.623289157",
+      "n_cost_known": "2170",
+      "n_requests": "2171",
+      "saving:total": "0.376217031",
+      "saving_share": "0.049351012"
+    },
+    "lang:structured": {
+      "baseline:total": "0.083865679",
+      "n_cost_known": "24",
+      "n_requests": "24",
+      "saving:total": "0.006646197",
+      "saving_share": "0.079248117"
+    },
+    "lang:unknown": {
+      "baseline:total": "0.181952879",
+      "n_cost_known": "90",
+      "n_requests": "92",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "llm_only": {
+      "baseline:total": "146.497575405",
+      "n_cost_known": "20744",
+      "n_requests": "20750",
+      "saving:total": "5.642744171",
+      "saving_share": "0.038517663"
+    },
+    "over_8k": {
+      "baseline:total": "108.819822271",
+      "n_cost_known": "10720",
+      "n_requests": "10720",
+      "saving:total": "1.452344091",
+      "saving_share": "0.013346319"
+    },
+    "routing": {
+      "bots:chosen": "100",
+      "bots:fitted": "531",
+      "bots:incumbent_unpriced": "2",
+      "bots:insufficient_bot": "299",
+      "bots:no_eligible_candidate": "130",
+      "bots:reassigned_in_baseline": "45",
+      "n_candidates_in_baseline": "3016",
+      "n_llm_requests": "20750",
+      "n_saving_unknown": "0",
+      "n_simulated_switch": "3714",
+      "n_switched_in_baseline": "2732",
+      "no_eligible:attachment": "379",
+      "no_eligible:attachment_and_functions": "42",
+      "no_eligible:context_or_output_limit": "1",
+      "no_eligible:functions": "1450",
+      "no_eligible_cost_share:attachment": "0.002382440",
+      "no_eligible_cost_share:attachment_and_functions": "0.000157553",
+      "no_eligible_cost_share:context_or_output_limit": "0.001883471",
+      "no_eligible_cost_share:functions": "0.063355698",
+      "reason:incumbent_unpriced": "37",
+      "reason:insufficient_bot": "877",
+      "reason:no_eligible_candidate": "14857",
+      "reason:row_not_eligible": "5",
+      "reason:simulated_switch": "3714",
+      "reason:unknown_tokens": "6",
+      "reason:unseen_bot": "1254",
+      "saving_by_target:gpt-5-nano": "5.642744171",
+      "switched_share_all": "0.037392387",
+      "switched_share_llm": "0.131662651"
+    },
+    "tenant_capped_0.35": {
+      "baseline:total": "25.107162583",
+      "n_cost_known": "6095",
+      "n_requests": "6095",
+      "saving:total": "0.721694477",
+      "saving_share": "0.028744565"
+    },
+    "tenant_rank:1": {
+      "baseline:total": "138.962042300",
+      "n_cost_known": "16782",
+      "n_requests": "16782",
+      "saving:total": "5.592892767",
+      "saving_share": "0.040247629",
+      "share": "0.808771084"
+    },
+    "tenant_rank:2": {
+      "baseline:total": "0.249392433",
+      "n_cost_known": "1377",
+      "n_requests": "1377",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000",
+      "share": "0.066361446"
+    },
+    "tenant_rank:3": {
+      "baseline:total": "0.202069350",
+      "n_cost_known": "648",
+      "n_requests": "648",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000",
+      "share": "0.031228916"
+    },
+    "tenant_rank:4": {
+      "baseline:total": "0.448625200",
+      "n_cost_known": "640",
+      "n_requests": "640",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000",
+      "share": "0.030843373"
+    },
+    "tenant_rank:5": {
+      "baseline:total": "0.168179770",
+      "n_cost_known": "221",
+      "n_requests": "221",
+      "saving:total": "0.004130574",
+      "saving_share": "0.024560469",
+      "share": "0.010650602"
+    },
+    "traffic_weighted": {
+      "baseline:total": "146.497575405",
+      "bot_mean_saving_share": "0.023405142",
+      "n_cost_known": "20744",
+      "n_requests": "20750",
+      "saving:total": "5.642744171",
+      "saving_share": "0.038517663"
+    }
+  },
+  "step": "routing",
+  "version": "route.per_bot.v2"
+}
