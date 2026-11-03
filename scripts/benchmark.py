@@ -11,6 +11,7 @@ ADR-0053). Thin wrapper over metis_auto.wiring.benchmark.
     python scripts/benchmark.py spot-check --run-id <id>  # local files, no call
     python scripts/benchmark.py labels --run-id <id> --name <name>   # no call
     python scripts/benchmark.py agreement --run-id <id>   # filled sheet.csv, no call
+    python scripts/benchmark.py framework-report --run-id <id>   # E4/E6 table, no call
 
 ``plan`` and ``tenant-check`` never build a client and print counts, bounds and
 reasons only. ``generate`` and ``judge`` refuse, listing every reason, until the
@@ -55,6 +56,7 @@ def main() -> int:
             "spot-check",
             "labels",
             "agreement",
+            "framework-report",
         ],
     )
     ap.add_argument(
@@ -89,6 +91,13 @@ def main() -> int:
             out = bench.spot_check(run_id=args.run_id)
         elif args.action == "agreement":
             out = bench.agreement(run_id=args.run_id)
+        elif args.action == "framework-report":
+            report = bench.framework_report(run_id=args.run_id)
+            out = {
+                "written": f"runs/benchmark/{args.run_id}/framework_report.md",
+                "judges": sorted(report["tables"]),
+                "run": report["run"],
+            }
         else:
             out = bench.labels(run_id=args.run_id, name=args.name)
     except BenchmarkRefused as exc:

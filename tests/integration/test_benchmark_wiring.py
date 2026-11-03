@@ -355,6 +355,19 @@ def test_generate_judge_label_and_spot_check_over_mocked_http(root, tmp_path):
     )
     assert set(gated["judge_gate"]) == {"validated"}
 
+    # the pilot through the framework: the run is rebuilt from the recordings
+    framework = gated_bench.framework_report(run_id="run-syn")
+    assert framework["reconstructed"] is True
+    assert (
+        framework["run"]["planned_calls"] == 12
+        and framework["run"]["skipped_calls"] == 0
+    )
+    assert sorted(framework["tables"]) == sorted(JUDGES)
+    assert set(framework["judge_gate"].values()) == {"validated"}
+    saved = (root / "runs/benchmark/run-syn/framework_report.json").read_text("utf-8")
+    assert "SYNTHETIC" not in saved and "syn-m-" not in saved and "gv2-syn" not in saved
+    assert (root / "runs/benchmark/run-syn/framework_report.md").exists()
+
 
 def test_spend_guard_stops_live_calls_at_the_shared_ceiling(root, tmp_path):
     """Another machine's summary leaves almost nothing under the 92 USD

@@ -610,3 +610,16 @@ def _record(
         outcome="response",
         cost_state=state,
     )
+
+
+def call_record(
+    call: PlannedCall,
+    source: AnswerSource,
+    result: ModelResponse | ModelError | ModelNoAnswer,
+    wall_ms: float,
+    entry: CatalogueEntry,
+    prices: PriceTable,
+) -> CallRecord:
+    """E4's record builder, public: the content-free ``CallRecord`` of one
+    answer (cost from the reported usage), for rebuilding a run from recordings."""
+    return _record(call, source, result, wall_ms, entry, prices)
