@@ -1,5 +1,5 @@
 """LLM-as-System-One: the Mode 1 backup decision backend
-(ADR-XXXX (system-one-decision-router) point 2; R6).
+(ADR-0047 point 2; R6).
 
 A tier-0 chat model (default ``gpt-4.1-nano``) is asked the same typed
 questions as Jev and answers in JSON, in the shared wire shape

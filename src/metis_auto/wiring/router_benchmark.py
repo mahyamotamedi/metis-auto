@@ -1,4 +1,4 @@
-"""Latency benchmark of a local decision backend (ADR-XXXX (system-one-decision-router)
+"""Latency benchmark of a local decision backend (ADR-0047
 point 4; R5).
 
 Measures one backend in isolation (``decide`` with a generous timeout, so the
@@ -18,7 +18,7 @@ message length, the share over budget, model input tokens per call, errors
 by kind, and the share of answers below the confidence gate (A-105).
 If THX-01 misses the budget, the next steps are fewer threads or more, a
 shorter state (``--max-message-chars``), then ONNX int8; else inline routing
-is rules only and THX-01 runs in shadow (ADR-XXXX (system-one-decision-router) point 4).
+is rules only and THX-01 runs in shadow (ADR-0047 point 4).
 """
 
 from __future__ import annotations

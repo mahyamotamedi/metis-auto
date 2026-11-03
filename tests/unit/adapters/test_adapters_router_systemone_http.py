@@ -1,5 +1,5 @@
 """A local /v1/systemone server as a decision backend
-(ADR-XXXX (system-one-decision-router); R5), over httpx.MockTransport: the request
+(ADR-0047; R5), over httpx.MockTransport: the request
 shape, typed answers, health caching and every expected failure returned (never raised).
 SYNTHETIC text; no network."""
 

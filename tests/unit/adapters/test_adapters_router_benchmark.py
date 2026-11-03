@@ -1,4 +1,4 @@
-"""The router latency benchmark (ADR-XXXX (system-one-decision-router) point 4; R5) on
+"""The router latency benchmark (ADR-0047 point 4; R5) on
 the fake backend: synthetic states cover languages, lengths and history; slice states
 skip what the gate decides; the report holds counts and timings only. SYNTHETIC text."""
 

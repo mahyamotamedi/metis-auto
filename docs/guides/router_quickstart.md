@@ -1,6 +1,6 @@
 # Decision router quickstart (Windows first)
 
-Status: **complete through R8** (2026-11-03); the fresh-clone walkthrough was skipped (TODO-19). Inline routing is rules only: THX-01 and Jev are too slow on this machine and network, so they run in shadow and offline evaluation (A-118). The decision router ([ADR-XXXX (system-one-decision-router)](../adr/draft-system-one-decision-router.md)) is being built in phases; this guide grows with it. What works today: the cascade in the pipeline with a fake backend, the frozen dev slice and its replay, and THX-01 (in process) and a local `/v1/systemone` server as backends, with their model files pinned and a latency benchmark. Nothing here changes serving: `router.mode = "off"` is the default.
+Status: **complete through R8** (2026-11-03); the fresh-clone walkthrough was skipped (TODO-19). Inline routing is rules only: THX-01 and Jev are too slow on this machine and network, so they run in shadow and offline evaluation (A-118). The decision router ([ADR-0047](../adr/0047-system-one-decision-router.md)) is being built in phases; this guide grows with it. What works today: the cascade in the pipeline with a fake backend, the frozen dev slice and its replay, and THX-01 (in process) and a local `/v1/systemone` server as backends, with their model files pinned and a latency benchmark. Nothing here changes serving: `router.mode = "off"` is the default.
 
 Commands are PowerShell, run from the repository root (`C:\Users\<you>\Desktop\metis-auto-jev`).
 
@@ -127,7 +127,7 @@ Files go to `data\routers\thx01\<commit>\` (git-ignored); `pin`, `fetch` and `ch
 
 Add `--out runs\finish_router\<name>.json` to keep a copy of the output. **Decision rule (owner, 2026-11-03):** if any setting gives p95 ≤ 60 ms on `--from-slice`, the best one becomes the default and `local` is the inline mode. Otherwise inline routing is rules only, and THX-01 runs in shadow and offline evaluation (no ONNX conversion now).
 
-The report gives load and sha256 time, latency p50/p90/p95/p99/max overall and by message length, the share over 60 ms, `meets_budget_p95`, the model's input tokens per call (THX-01 runs one sequence per question, five per request), errors by kind, and the share of answers below the confidence gate. If THX-01 misses 60 ms p95: try thread counts and shorter states; then ONNX int8 (built only if needed); else inline routing stays rules only and THX-01 runs in shadow (ADR-XXXX (system-one-decision-router) point 4).
+The report gives load and sha256 time, latency p50/p90/p95/p99/max overall and by message length, the share over 60 ms, `meets_budget_p95`, the model's input tokens per call (THX-01 runs one sequence per question, five per request), errors by kind, and the share of answers below the confidence gate. If THX-01 misses 60 ms p95: try thread counts and shorter states; then ONNX int8 (built only if needed); else inline routing stays rules only and THX-01 runs in shadow (ADR-0047 point 4).
 
 **4. Optional, skipped for now (A-117): Mizan on your own llama-server** (shadow and offline evaluation only, never inline on CPU). The GGUF is about 2.7 GB (model card); `plan` prints the exact size first:
 

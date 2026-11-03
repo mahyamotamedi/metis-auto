@@ -7,7 +7,7 @@
     ... --asset mizan-1.5-4b-q4-k-m                   # the optional Mizan GGUF
 
 The only step that downloads router models (network, explicit;
-ADR-XXXX (system-one-decision-router) point 7). ``plan`` reads Hub metadata only and
+ADR-0047 point 7). ``plan`` reads Hub metadata only and
 prints the files and their sizes. ``pin`` downloads exactly those files at one commit
 (each file retried up to five times; a dropped connection resumes the partial file;
 verified files are kept, so re-running ``pin`` continues where it stopped), verifies

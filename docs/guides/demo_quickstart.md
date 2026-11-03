@@ -8,7 +8,7 @@ Deeper background, if you want it: [local development guide](local_development.m
 
 ---
 
-> **Decision router (in progress):** the System-One router ([ADR-XXXX (system-one-decision-router)](../adr/draft-system-one-decision-router.md)) has its own [router quickstart](router_quickstart.md); it is off by default and does not change this demo.
+> **Decision router (in progress):** the System-One router ([ADR-0047](../adr/0047-system-one-decision-router.md)) has its own [router quickstart](router_quickstart.md); it is off by default and does not change this demo.
 
 ## 1. What the demo is and what it shows
 

@@ -3,7 +3,7 @@
 Committed, content-free, no machine paths. Every value is a placeholder chosen
 for development, not evidence. The size is 100–200 records; anything above
 ``HARD_MAX`` is refused in code, whatever the file says (owner, 2026-11-02).
-Traces: FR-DATA-06, FR-EVAL-04/06, ADR-XXXX (system-one-decision-router) point 10.
+Traces: FR-DATA-06, FR-EVAL-04/06, ADR-0047 point 10.
 """
 
 from __future__ import annotations

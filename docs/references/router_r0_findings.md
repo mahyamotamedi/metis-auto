@@ -1,6 +1,6 @@
 # System-One decision router, phase R0: verification findings
 
-Phase R0 of the decision-router work (owner's master prompt of 2026-11-02, "Metis-Auto System-One Decision Router"; ADR-XXXX (system-one-decision-router) to follow in R1). **No product code was written.** Every fact below names its source and check date; anything not confirmed by a primary source is marked **unverified**. Traces: FR-FEAT-02, FR-ROUTE-03/04, FR-ACCT-03, FR-DATA-02/06, QA-LAT, QA-PRIV, QA-TEST, H-5.
+Phase R0 of the decision-router work (owner's master prompt of 2026-11-02, "Metis-Auto System-One Decision Router"; ADR-0047 to follow in R1). **No product code was written.** Every fact below names its source and check date; anything not confirmed by a primary source is marked **unverified**. Traces: FR-FEAT-02, FR-ROUTE-03/04, FR-ACCT-03, FR-DATA-02/06, QA-LAT, QA-PRIV, QA-TEST, H-5.
 
 Checked 2026-11-02 (Asia/Tehran), by the agent, on the owner's Windows machine (`desktop-88s7q9u`, win32 x64) through the desktop bridge, plus a Linux 3.13 workspace for the test run.
 

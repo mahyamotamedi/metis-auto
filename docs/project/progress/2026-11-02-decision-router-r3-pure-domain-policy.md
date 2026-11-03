@@ -1,6 +1,6 @@
 ## Decision router R3: the pure domain policy (2026-11-02)
 
-Status: **awaiting review**; serving unchanged (`policy = "fixed_model"`, `router.mode = "off"`); no live call. Details: [routing.md §7](../../architecture/routing.md), [ADR-XXXX (system-one-decision-router)](../../adr/draft-system-one-decision-router.md) (policy details).
+Status: **awaiting review**; serving unchanged (`policy = "fixed_model"`, `router.mode = "off"`); no live call. Details: [routing.md §7](../../architecture/routing.md), [ADR-0047](../../adr/0047-system-one-decision-router.md) (policy details).
 
 - **Question sets:** `config/reference/router-questions-v1.toml`, `routing_qs_v1` in English and Persian (complexity score 0–3, needs reasoning, cheap model ok, a 10-option intent, depends on history) with the intent → `prompt_labels` mapping; read by `settings.reference` (`reference.router_questions`), which refuses more than 10 choice options and language variants that differ; the loader refuses an unknown `router.question_set`.
 - **Gate and state** (`domain/routing/decision.py`): decisive cheap-feature rules (unknown never fires); `build_state` with truncation, optional fold, previous user turn, last-assistant-turn kind, and never instructions or retrieved text (tested).

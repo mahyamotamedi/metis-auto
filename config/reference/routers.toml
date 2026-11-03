@@ -1,4 +1,4 @@
-# Local decision-router models (ADR-XXXX (system-one-decision-router) point 7; decision router R5).
+# Local decision-router models (ADR-0047 point 7; decision router R5).
 #
 # Model files are fetched ONCE by `python scripts/fetch_router_assets.py`
 # (network, explicit) into paths.router_assets (default data/routers/,

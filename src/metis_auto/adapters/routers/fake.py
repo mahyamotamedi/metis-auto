@@ -1,5 +1,5 @@
 """Fake System-One decision backend: scripted, deterministic
-(ADR-XXXX (system-one-decision-router)).
+(ADR-0047).
 
 Responsibility: let the router cascade, the pipeline and the chat demo run
 offline with no weights and no keys. Implements ``ports.BaseRouter``.

@@ -1,4 +1,4 @@
-"""Build, check and report the routing dev slice (ADR-XXXX (system-one-decision-router);
+"""Build, check and report the routing dev slice (ADR-0047;
 100–200 records). Thin CLI.
 
     python scripts/build_router_dev_slice.py plan     # counts only, no text read

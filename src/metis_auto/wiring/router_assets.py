@@ -1,4 +1,4 @@
-"""Fetch and pin decision-router model files (ADR-XXXX (system-one-decision-router)
+"""Fetch and pin decision-router model files (ADR-0047
 point 7; R5).
 
 ``scripts/fetch_router_assets.py`` is the only caller and the only step that

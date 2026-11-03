@@ -1,4 +1,4 @@
-"""System-One decision contracts (ADR-XXXX (system-one-decision-router); FR-FEAT-02,
+"""System-One decision contracts (ADR-0047; FR-FEAT-02,
 FR-ROUTE-02/04, FR-ACCT-03).
 
 A System-One decision model returns no text: given a minimised request state
@@ -267,7 +267,7 @@ class DecisionResult(ContractModel):
 class DecisionError(ContractModel):
     """An expected backend failure. Backends return it; they never raise for
     timeouts, transport, provider or parsing failures
-    (ADR-XXXX (system-one-decision-router))."""
+    (ADR-0047)."""
 
     outcome: Literal["error"] = field(
         Privacy.OPERATIONAL, "Discriminator.", default="error"

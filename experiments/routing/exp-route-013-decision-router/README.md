@@ -1,7 +1,7 @@
 # EXP-ROUTE-012: the System-One decision router (Parham; J-3 remapped; R8)
 
 - **Hypothesis:** H-1 (part of the traffic can run on a cheaper model). Here a System-One decision model (THX-01 local, Jev hosted) answers typed questions about each request, and a pure policy maps the answers to a tier. Traces: FR-FEAT-02 (a semantic signal), FR-ROUTE-03 (comparable, swappable strategies), FR-ROUTE-04 (router overhead), FR-ROUTE-05 (unknown limits exclude), FR-EVAL-04/06 (stratified, leakage-safe evaluation), QA-LAT (the 60 ms p95 budget inside the 100 ms overhead), QA-PRIV.
-- **Decision record:** [ADR-XXXX (system-one-decision-router)](../../../docs/adr/draft-system-one-decision-router.md); the routing base is [ADR-0045](../../../docs/adr/0045-routing-base-eligibility-and-failover.md).
+- **Decision record:** [ADR-0047](../../../docs/adr/0047-system-one-decision-router.md); the routing base is [ADR-0045](../../../docs/adr/0045-routing-base-eligibility-and-failover.md).
 - **ID:** `exp-route-013`. `exp-route-011` is Pipeline B's kNN router; the routing plan reserves 001 to 008 and 010; R9 of the routing plan is this experiment.
 - **Evidence class:** *simulation*. There are **no quality labels yet**, so agreement with the rules is not accuracy. Every result says "quality not proven".
 - **Status (2026-11-03):** harness, routing step version and tests done; the THX-01 shadow run and the latency benchmark were run on the owner's machine (results below). The L1 labelling plan is prepared, not run.

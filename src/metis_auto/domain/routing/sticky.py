@@ -29,7 +29,7 @@ request sees the stronger producer and stays on it.
 
 Mode ``per_request``: the rules on every message, no anchor, no greeting rule.
 
-**Inner router** (``inner``, ADR-XXXX (system-one-decision-router)): ``rule_based``
+**Inner router** (``inner``, ADR-0047): ``rule_based``
 (default, unchanged) or ``decision_router``, which routes first and re-routed messages
 and adds **hysteresis** on anchored, similar messages (stateless, P-8):
 - the decision's tier is above the anchor's → re-route up now (``upgrade``);
@@ -96,7 +96,7 @@ class StickyConfig(ContractModel):
     """A change between determined languages (fa, en, mixed, other) counts."""
     inner: Literal["rule_based", "decision_router"] = "rule_based"
     """Router for first and re-routed messages
-    (ADR-XXXX (system-one-decision-router))."""
+    (ADR-0047)."""
 
 
 @dataclass(frozen=True)

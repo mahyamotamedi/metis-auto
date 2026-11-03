@@ -1,5 +1,5 @@
 """SYNTHETIC cases for the router-off regression test
-(ADR-XXXX (system-one-decision-router) point 12, R4).
+(ADR-0047 point 12, R4).
 
 ``run_cases`` drives the real pipeline, built from the committed defaults with
 fakes only, through a fixed set of SYNTHETIC requests under several routing

@@ -1,4 +1,4 @@
-"""Decision-router contracts (ADR-XXXX (system-one-decision-router)): shape rules that
+"""Decision-router contracts (ADR-0047): shape rules that
 keep answers typed, outcomes consistent, and the local cost honest. All text is
 SYNTHETIC."""
 

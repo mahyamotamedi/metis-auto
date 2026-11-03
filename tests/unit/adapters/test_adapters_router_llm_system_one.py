@@ -1,4 +1,4 @@
-"""LLM-as-System-One, the Mode 1 backup (ADR-XXXX (system-one-decision-router)
+"""LLM-as-System-One, the Mode 1 backup (ADR-0047
 point 2; R6), built through wiring with a scripted answering client: the prompt
 (instructions + state, no dataset text in tests), JSON answers parsed into typed
 answers, the cost from the catalogue's price row, the pre-call estimate as an

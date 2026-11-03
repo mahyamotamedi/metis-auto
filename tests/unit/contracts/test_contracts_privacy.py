@@ -80,7 +80,7 @@ CONTENT_FREE = [
     AccountedUsage,
     SavingsDecomposition,
     ChatTemplate,
-    # Decision router (ADR-XXXX (system-one-decision-router)): everything but the state
+    # Decision router (ADR-0047): everything but the state
     # leaves the boundary.
     DecisionQuestionSet,
     DecisionResult,
@@ -115,7 +115,7 @@ def test_content_bearing_contracts_are_detected():
 
 def test_the_decision_state_is_content():
     # The state sent to a decision backend never reaches an event
-    # (ADR-XXXX (system-one-decision-router)).
+    # (ADR-0047).
     paths = set(content_paths(DecisionState))
     assert {"message", "previous_user_turn"} <= paths
     assert DecisionState not in CONTENT_FREE

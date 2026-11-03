@@ -205,7 +205,7 @@ def build_pipeline_from_settings(
     that rebuilds its pipeline keeps its cache reachable); default: from
     settings (``fingerprint_key``).
 
-    Decision router (ADR-XXXX (system-one-decision-router)): built when ``router.mode``
+    Decision router (ADR-0047): built when ``router.mode``
     is not ``off``, from the configured backends or ``router_backends``. A chain with a
     hosted backend needs the live permission and gets the file ledger (the same one as a
     live answering client). ``states_dataset_derived`` is True (the safe side) unless

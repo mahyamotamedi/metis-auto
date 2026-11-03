@@ -1,4 +1,4 @@
-"""Build, verify and report the routing dev slice (ADR-XXXX (system-one-decision-router)
+"""Build, verify and report the routing dev slice (ADR-0047
 point 10).
 
 Composition only: reads with ``data_access.full``, labels with golden-v1's

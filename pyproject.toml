@@ -48,7 +48,7 @@ compress = [
     "accelerate>=1.15,<2",
     "llmlingua==0.2.2",
 ]
-# Local decision router (ADR-XXXX (system-one-decision-router), decision router R5): THX-01 in process,
+# Local decision router (ADR-0047, decision router R5): THX-01 in process,
 # imported only in adapters/routers/thx01_local.py (tested). Heavy (torch);
 # never in the runtime lock or the dev lock: its own lock,
 # requirements-router-local.lock (= the dev lock + this extra, shared pins equal

@@ -9,7 +9,7 @@ one (R8). The weights average 1 over the slice when every traffic cohort is
 present in it; a cohort with traffic but no record cannot be weighted, and
 its traffic share is reported as uncovered.
 
-Traces: FR-EVAL-04/06, ADR-XXXX (system-one-decision-router) point 10.
+Traces: FR-EVAL-04/06, ADR-0047 point 10.
 """
 
 from __future__ import annotations

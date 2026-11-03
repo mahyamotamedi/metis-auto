@@ -1,4 +1,4 @@
-"""The slice replay (ADR-XXXX (system-one-decision-router), R4) on a SYNTHETIC miniature
+"""The slice replay (ADR-0047, R4) on a SYNTHETIC miniature
 slice: the frozen records only, every scenario, counts and timings only, the router
 cache on the second pass, and no dataset state ever reaching a hosted backend."""
 

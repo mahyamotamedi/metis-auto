@@ -81,7 +81,7 @@ user = "metis"
 # Without METIS_FINGERPRINT_KEY, use a random key per process (A-44).
 ephemeral_fingerprint_key = true
 
-# --- Decision router, System One (ADR-XXXX (system-one-decision-router)). Infrastructure only: the routing
+# --- Decision router, System One (ADR-0047). Infrastructure only: the routing
 # POLICY knobs (gate rules, mapping thresholds, criteria, hysteresis, state
 # truncation, safe tier) arrive in R3 under [pipeline.routing.decision_router].
 # Every value is a PLACEHOLDER until exp-route-013 gives evidence. Serving
@@ -121,7 +121,7 @@ cooldown_s = 30
 # (Metis pricing page, checked by the owner 2026-11-02; never TypeSafe's direct
 # price). Only jev-latest is offered: every result records the version the
 # response reports (model_revision); a change of version invalidates the
-# router cache (ADR-XXXX (system-one-decision-router)).
+# router cache (ADR-0047).
 type = "jev_metis"
 enabled = false
 base_url = "https://api.metisai.ir/typesafe"   # posts to /v1/systemone; not OpenAI-compatible
@@ -194,7 +194,7 @@ model_id = "gpt-4o-mini"
 # sticky_v1 (owner brief §7) or per_request (the rules on every message).
 mode = "sticky_v1"
 # Router for first and re-routed messages: rule_based (unchanged) or
-# decision_router (ADR-XXXX (system-one-decision-router): adds hysteresis from [pipeline.routing.decision_router.hysteresis]).
+# decision_router (ADR-0047: adds hysteresis from [pipeline.routing.decision_router.hysteresis]).
 inner = "rule_based"
 # "Very different" message → re-route and re-anchor: code appears or
 # disappears, a coding intent appears (A-71), an attachment appears, the language switches, or the length
@@ -203,7 +203,7 @@ length_bucket_jump = 2
 language_switch = true
 
 [pipeline.routing.decision_router]
-# System-One decision router POLICY (ADR-XXXX (system-one-decision-router); infrastructure is [router]).
+# System-One decision router POLICY (ADR-0047; infrastructure is [router]).
 # Selected with policy = "decision_router" (or as sticky's inner router). Every
 # number is a PLACEHOLDER (A-43 style), tuned on the dev slice's tune split only.
 # Path: gate (fast) → answers (slow or router cache) → rules → safe tier.

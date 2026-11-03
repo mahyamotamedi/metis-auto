@@ -1,5 +1,5 @@
 """Decision-router gate, state builder and answer view (pure;
-ADR-XXXX (system-one-decision-router)).
+ADR-0047).
 
 - ``needs_decision``: the fast path. Configured gate rules decide from cheap
   features alone (0 ms): greeting or small talk, code or coding intent, an

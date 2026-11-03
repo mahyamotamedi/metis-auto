@@ -1,5 +1,5 @@
 """A local ``/v1/systemone`` server as a decision backend
-(ADR-XXXX (system-one-decision-router); R5).
+(ADR-0047; R5).
 
 For Mizan-1.5-4B on the owner's own ``llama-server`` (or THX-01's own server).
 Loopback only (validated in settings): dataset text may go to it because it

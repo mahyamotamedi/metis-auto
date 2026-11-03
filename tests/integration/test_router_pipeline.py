@@ -1,4 +1,4 @@
-"""The decision router inside the pipeline (ADR-XXXX (system-one-decision-router), R4).
+"""The decision router inside the pipeline (ADR-0047, R4).
 
 - Router off: every event and response is byte-identical to the pre-R4
   pipeline (digests captured before the cascade existed).

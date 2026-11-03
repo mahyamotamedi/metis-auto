@@ -1,4 +1,4 @@
-"""Jev via the Metis TypeSafe wrapper (ADR-XXXX (system-one-decision-router) points
+"""Jev via the Metis TypeSafe wrapper (ADR-0047 points
 1-2 and 6; R6), over httpx.MockTransport: the endpoint, the Bearer header, the wire
 body, typed answers, the reported version, the cost from the router price table
 (never TypeSafe's own price), the pre-call estimate as an upper bound, and every

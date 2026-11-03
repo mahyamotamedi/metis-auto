@@ -1,4 +1,4 @@
-"""The fake decision backend (ADR-XXXX (system-one-decision-router)): deterministic,
+"""The fake decision backend (ADR-0047): deterministic,
 scripted, honest about time and cost, and never reads the state. SYNTHETIC only."""
 
 from datetime import UTC, datetime

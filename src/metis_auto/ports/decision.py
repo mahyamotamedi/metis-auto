@@ -1,5 +1,5 @@
 """``BaseRouter``: the swap point for System-One decision backends
-(ADR-XXXX (system-one-decision-router)).
+(ADR-0047).
 
 A decision backend answers typed questions about a minimised request state
 (``DecisionState``) and returns typed, probabilistic answers. It never picks a

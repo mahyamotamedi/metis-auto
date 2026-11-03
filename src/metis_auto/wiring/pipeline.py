@@ -100,7 +100,7 @@ ROUTING_POLICIES: dict[str, Callable[[PipelineConfig], RoutingPolicy]] = {
     # experiments/ only.
     "rule_based": _rule_based,
     "sticky": _sticky,
-    # Decision router (ADR-XXXX (system-one-decision-router)): placeholder until
+    # Decision router (ADR-0047): placeholder until
     # exp-route-013 gives evidence; without decision answers (router.mode = "off") it
     # falls back to the rules, then the safe tier.
     "decision_router": _decision_router,

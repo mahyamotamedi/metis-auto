@@ -1,6 +1,6 @@
 """Slice records: build them from a selected target, and map them onto the
 ``Request`` contract (pure; FR-DATA-06, ADR-0028 rules,
-ADR-XXXX (system-one-decision-router)).
+ADR-0047).
 
 A record is one target USER message with what a router may see (message,
 earlier turns, instructions, retrieved chunks, attachment modalities) and, on

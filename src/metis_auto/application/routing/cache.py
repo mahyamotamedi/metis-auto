@@ -1,4 +1,4 @@
-"""Router-result cache (ADR-XXXX (system-one-decision-router) points 3 and 8).
+"""Router-result cache (ADR-0047 points 3 and 8).
 
 In process, per run. Key: a keyed fingerprint (ADR-0015) of the state with its
 text folded (``[router.cache] normalisation``), the question-set version and

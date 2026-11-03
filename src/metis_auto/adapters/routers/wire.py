@@ -1,5 +1,5 @@
 """The System-One wire shape, shared by the local backends
-(ADR-XXXX (system-one-decision-router); R5).
+(ADR-0047; R5).
 
 One format serves THX-01 in process and a ``/v1/systemone`` server (Mizan on
 llama-server, THX-01's own server): ``state`` (a string or JSON), and

@@ -110,7 +110,7 @@ flowchart TD
 
 ## 7. The System-One decision router (placeholder until exp-route-013)
 
-Decision record: [ADR-XXXX (system-one-decision-router)](../adr/draft-system-one-decision-router.md).
+Decision record: [ADR-0047](../adr/0047-system-one-decision-router.md).
 
 A decision model answers typed questions about a minimised state (no text is generated); the pure `decision_router` policy maps the answers to a tier, then to the tier's cheapest eligible model by effective cost. Infrastructure (mode, backends, deadline, cache, circuit breaker) is `[router]`; the policy is `[pipeline.routing.decision_router]`. With `router.mode = "off"` there are no answers and the policy routes by the rules, then the safe tier.
 
@@ -142,7 +142,7 @@ Gate, cache and backend chain run in the application cascade (R4); everything af
 
 1. **Gate** (`domain.routing.decision.needs_decision`): `skipped(rules_decisive)` with the rule ID; no backend is called.
 2. **State** (`build_state`): the truncated message, optionally the previous user turn, derived labels. No state → `skipped(ineligible_state)`. A run is treated as dataset-derived unless its caller says it sends only SYNTHETIC or owner-written text (A-102).
-3. **Router cache:** a keyed fingerprint of the state with its text folded (`[router.cache] normalisation`), plus the question set and language, looked up per chain backend under the model revision last seen from it. A hit is `answered` with `cache_hit`, zero cost, and no attempts. A backend reporting a new revision has its entries dropped, and the change is recorded and logged (ADR-XXXX (system-one-decision-router) point 8).
+3. **Router cache:** a keyed fingerprint of the state with its text folded (`[router.cache] normalisation`), plus the question set and language, looked up per chain backend under the model revision last seen from it. A hit is `answered` with `cache_hit`, zero cost, and no attempts. A backend reporting a new revision has its entries dropped, and the change is recorded and logged (ADR-0047 point 8).
 4. **Backend chain** under the step budget: `router.deadline_ms`, tightened to the request's `deadline_ms` minus `reserved_pipeline_ms`. For each backend, the cascade checks, in order:
    - **time left:** with none, the step stops with `timeout`;
    - **availability:** `unavailable` if the backend can't be called now;

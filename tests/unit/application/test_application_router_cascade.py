@@ -1,4 +1,4 @@
-"""The decision-router cascade (ADR-XXXX (system-one-decision-router), R4): gate, state,
+"""The decision-router cascade (ADR-0047, R4): gate, state,
 router cache keyed on the model revision, the backend chain under the deadline, the
 circuit breaker, the approval check and the spend guard for hosted backends, the
 confidence gate, and the overhead measurement. SYNTHETIC text, fakes only."""

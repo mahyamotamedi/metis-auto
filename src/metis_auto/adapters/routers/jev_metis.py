@@ -1,5 +1,5 @@
 """Jev (TypeSafe) through the Metis wrapper: the hosted System-One decision
-backend, Mode 1 (ADR-XXXX (system-one-decision-router) points 1-2, 6; R6).
+backend, Mode 1 (ADR-0047 points 1-2, 6; R6).
 
 Endpoint ``POST <base_url>/v1/systemone`` with ``Authorization: Bearer <Metis
 key>`` (Metis TypeSafe page, saved 2026-11-02:

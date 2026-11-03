@@ -1,5 +1,5 @@
 """exp-route-013: the decision router as a routing step version on R-0's
-routing base (ADR-XXXX (system-one-decision-router); final plan R-0, J-3
+routing base (ADR-0047; final plan R-0, J-3
 remapped; FR-ROUTE-01, FR-ROUTE-03, FR-ROUTE-05, H-1; ADR-0045).
 
 The decision router answers typed questions about a request and its pure

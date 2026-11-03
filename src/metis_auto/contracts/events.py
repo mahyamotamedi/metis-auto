@@ -95,7 +95,7 @@ class BackendCircuit(ContractModel):
 
 
 class DecisionMeasured(ContractModel):
-    """The decision-router step (ADR-XXXX (system-one-decision-router)). Never carries
+    """The decision-router step (ADR-0047). Never carries
     the state."""
 
     event_type: Literal["decision_measured"] = _type("decision_measured")

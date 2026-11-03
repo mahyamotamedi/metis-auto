@@ -1,5 +1,5 @@
 #
-# Generated 2026-11-02 for the extra `router-local` (ADR-XXXX (system-one-decision-router), decision router R5):
+# Generated 2026-11-02 for the extra `router-local` (ADR-0047, decision router R5):
 # requirements-dev.lock plus the router-local extra, with the shared pins equal to
 # requirements-compress.lock (same torch, transformers, safetensors, huggingface-hub
 # and numpy), so both can be installed together. Resolved by pip-compile with

@@ -1,4 +1,4 @@
-# System-One question sets for the decision router (ADR-XXXX (system-one-decision-router) point 9).
+# System-One question sets for the decision router (ADR-0047 point 9).
 # Our own configured wording: operational configuration, never request content.
 # Every set exists in English (en) and Persian (fa) with the SAME question IDs,
 # types, option names and level counts (checked by the loader); the language

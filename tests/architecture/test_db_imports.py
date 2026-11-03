@@ -2,7 +2,7 @@
 (ADR-0027), so offline code never needs them. ``scripts/full_eda_*`` predate the rule
 and are outside ``src``. Static check (``ast``).
 
-Widened on purpose (ADR-XXXX (system-one-decision-router) point 10, owner-approved
+Widened on purpose (ADR-0047 point 10, owner-approved
 2026-11-02): **pyarrow** may also be imported in ``data_access/full``, the Parquet
 reader of the routing dev slice, which projects columns and filters rows one file at a
 time without a database. The SQL libraries stay in ``data_access/postgres`` only."""

@@ -69,7 +69,7 @@ machine allows (configuration.md §3 rules 1 and 2)."""
 RUNTIME_ONLY = {("router", "real_data_approved"), ("router", "allow_unpriced")}
 """Keys only the runtime layers (``config/local.toml``, environment overrides,
 explicit overrides) may set: per-machine, per-run approvals that a committed
-file must never grant (ADR-XXXX (system-one-decision-router); mirrors
+file must never grant (ADR-0047; mirrors
 ``golden_answers.real_data_approved``)."""
 SECRET_NAMES = {"api_key", "password", "secret", "fingerprint_key", "token"}
 SECRET_SUFFIXES = ("_api_key", "_password", "_secret")
@@ -287,7 +287,7 @@ def _leaf_paths(data: Mapping[str, Any], prefix: tuple[str, ...] = ()):
 
 def _check_router_prices(settings: Settings, reference: ReferenceData) -> None:
     """Every ``price_ref`` named by a router backend exists in the router price
-    table (ADR-XXXX (system-one-decision-router)): a typo must not silently become "not
+    table (ADR-0047): a typo must not silently become "not
     computed"."""
     table = reference.router_prices
     known = {e.price_ref for e in table.entries} if table is not None else set()
@@ -302,7 +302,7 @@ def _check_router_prices(settings: Settings, reference: ReferenceData) -> None:
 
 def _check_router_assets(settings: Settings, reference: ReferenceData) -> None:
     """Every THX-01 backend names a THX-01 row of the router asset table
-    (ADR-XXXX (system-one-decision-router) point 7). Pinning is checked when the backend
+    (ADR-0047 point 7). Pinning is checked when the backend
     loads, so an unpinned asset is a clear "not available" rather than a settings
     error."""
     table = reference.routers
@@ -319,7 +319,7 @@ def _check_router_assets(settings: Settings, reference: ReferenceData) -> None:
 
 def _check_router_questions(settings: Settings, reference: ReferenceData) -> None:
     """The configured question set exists in both languages
-    (ADR-XXXX (system-one-decision-router)), so an A/B switch of
+    (ADR-0047), so an A/B switch of
     ``router.question_language`` never fails at request time."""
     table = reference.router_questions
     if table is None:

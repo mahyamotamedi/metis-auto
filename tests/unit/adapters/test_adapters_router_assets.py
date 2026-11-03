@@ -1,5 +1,5 @@
 """Fetching and pinning decision-router model files
-(ADR-XXXX (system-one-decision-router) point 7; R5), against a fake Hub laid out like
+(ADR-0047 point 7; R5), against a fake Hub laid out like
 doofz/THX-01 (the model at the root, demo and training folders beside it): the plan
 lists exactly the package's files and never walks the other folders; pin verifies every
 file against the Hub's own tree (LFS sha256 or git blob ID), retries and resumes a

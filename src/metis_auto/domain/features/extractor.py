@@ -44,7 +44,7 @@ from .detectors import (
 FEATURE_SET_VERSION = "fs-0.3.0-demo"
 ROUTER_FEATURE_SET_VERSION = "fs-0.4.0-router"
 """The feature set when the decision router fills ``RequestFeatures.decision``
-(ADR-XXXX (system-one-decision-router), R4). Used only when ``router.mode`` is not
+(ADR-0047, R4). Used only when ``router.mode`` is not
 ``off``, so a run with the router off keeps ``FEATURE_SET_VERSION`` and identical
 output."""
 

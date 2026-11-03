@@ -1,5 +1,5 @@
 """System-One decision backends (``ports.BaseRouter``;
-ADR-XXXX (system-one-decision-router)).
+ADR-0047).
 
 R1: the scripted fake. Later phases add Jev via Metis and the LLM backup
 (R6), THX-01 in-process and a local ``/v1/systemone`` client (R5), and the

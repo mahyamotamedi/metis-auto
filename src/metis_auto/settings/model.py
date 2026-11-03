@@ -56,7 +56,7 @@ class PathSettings(ContractModel):
     router_assets: str = "data/routers"
     """Decision-router model files (THX-01, optional Mizan GGUF) fetched once
     by scripts/fetch_router_assets.py (git-ignored;
-    ADR-XXXX (system-one-decision-router), R5)."""
+    ADR-0047, R5)."""
 
 
 class LoggingSettings(ContractModel):
@@ -122,13 +122,13 @@ class ReferenceSettings(ContractModel):
     """Pinned context-compressor models (Demo milestone, experimental)."""
     router_questions: str | None = "reference/router-questions-v1.toml"
     """System-One question sets of the decision router
-    (ADR-XXXX (system-one-decision-router))."""
+    (ADR-0047)."""
     router_prices: str | None = "reference/prices-metis-router-2026-11-02.toml"
     """Prices of hosted decision-router backends
-    (ADR-XXXX (system-one-decision-router)), apart from the answering-model table so its
+    (ADR-0047), apart from the answering-model table so its
     version does not change."""
     routers: str | None = "reference/routers.toml"
-    """Pinned local decision-router model files (ADR-XXXX (system-one-decision-router)
+    """Pinned local decision-router model files (ADR-0047
     point 7, R5)."""
 
 
@@ -378,7 +378,7 @@ class Settings(ContractModel):
     dev: DevSettings = DevSettings()
     golden_answers: GoldenAnswersSettings = GoldenAnswersSettings()
     router: RouterSettings = RouterSettings()
-    """Decision-router infrastructure (ADR-XXXX (system-one-decision-router)); ``mode =
+    """Decision-router infrastructure (ADR-0047); ``mode =
     "off"`` by default."""
     data: DevSliceSettings = DevSliceSettings()
     """Machine-local dataset location (left out of the config hash)."""
@@ -692,7 +692,7 @@ class RouterAssetFile(ContractModel):
 
 
 class RouterAssetSpec(ContractModel):
-    """A pinned decision-router model (ADR-XXXX (system-one-decision-router) point 7).
+    """A pinned decision-router model (ADR-0047 point 7).
     Unpinned (no ``revision``, no files) until ``scripts/fetch_router_assets.py pin``
     writes the pins; an unpinned asset is never loaded."""
 
@@ -772,7 +772,7 @@ calibration bucket for 11+ options is broken (R0 findings §5)."""
 class RouterQuestionTable(ContractModel):
     """Question sets of the decision router, each in English and Persian with
     the same IDs, types, option names and level counts
-    (ADR-XXXX (system-one-decision-router) point 9)."""
+    (ADR-0047 point 9)."""
 
     version: Version
     sets: tuple[DecisionQuestionSet, ...]

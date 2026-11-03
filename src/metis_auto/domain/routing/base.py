@@ -42,7 +42,7 @@ class PolicyChoice:
     anchor_model_id: str | None = None
     """Sticky routing: the session's anchor before this request."""
     router_summary: RouterSummary | None = None
-    """Decision router (ADR-XXXX (system-one-decision-router)): path, backend, tier,
+    """Decision router (ADR-0047): path, backend, tier,
     thresholds, effort."""
 
 

@@ -1,4 +1,4 @@
-"""Decision-router settings (ADR-XXXX (system-one-decision-router)): defaults off, chain
+"""Decision-router settings (ADR-0047): defaults off, chain
 validation, runtime-only approvals, loopback-only local servers, and the machine-local
 dataset path. Hermetic: works on a copy of ``config/``."""
 
@@ -171,7 +171,7 @@ def test_a_router_price_without_an_output_row_is_refused(cfg):
         load(cfg)
 
 
-# --- question sets (ADR-XXXX (system-one-decision-router) point 9) --------------------
+# --- question sets (ADR-0047 point 9) --------------------
 
 
 def test_routing_question_sets_load_in_both_languages_with_ten_intent_options(cfg):
@@ -235,7 +235,7 @@ def test_an_unknown_question_set_is_refused(cfg):
         load(cfg, overrides={"router.question_set": "routing_qs_v9"})
 
 
-# --- router model assets (ADR-XXXX (system-one-decision-router) point 7, R5) ----------
+# --- router model assets (ADR-0047 point 7, R5) ----------
 
 
 def test_a_thx01_backend_must_name_a_thx01_asset(cfg):

@@ -11,7 +11,7 @@ COMPRESS_LIBRARIES = {"torch", "transformers", "llmlingua", "accelerate", "nltk"
 ALLOWED = {SRC / "adapters" / "compressors" / "llmlingua2.py"}
 SHARED = {"torch", "transformers"}
 """Shared with the decision router's THX-01 adapter
-(ADR-XXXX (system-one-decision-router), R5), which
+(ADR-0047, R5), which
 ``tests/architecture/test_router_imports.py`` holds to its own rule."""
 SHARED_ALLOWED = {SRC / "adapters" / "routers" / "thx01_local.py"}
 

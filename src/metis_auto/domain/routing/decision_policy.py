@@ -1,4 +1,4 @@
-"""``decision_router`` routing policy (pure; ADR-XXXX (system-one-decision-router);
+"""``decision_router`` routing policy (pure; ADR-0047;
 routing plan R9).
 
 The decision model answers questions; this policy maps the answers, the rule

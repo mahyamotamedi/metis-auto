@@ -1,4 +1,4 @@
-# Routing dev slice v1 (ADR-XXXX (system-one-decision-router) point 10; guide docs/evaluation/router_dev_slice_v1.md).
+# Routing dev slice v1 (ADR-0047 point 10; guide docs/evaluation/router_dev_slice_v1.md).
 # Content-free and machine-independent: no paths outside the repository. The
 # dataset location comes from [data] full_data_root (config/local.toml or
 # METIS__DATA__FULL_DATA_ROOT), never from this file.

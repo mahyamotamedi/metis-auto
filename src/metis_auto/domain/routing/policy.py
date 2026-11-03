@@ -45,7 +45,7 @@ class RoutingConfig(ContractModel):
     sticky: StickyConfig | None = None
     """Config of the ``sticky`` policy (mode sticky_v1 or per_request)."""
     decision_router: DecisionRouterConfig | None = None
-    """Config of the ``decision_router`` policy (ADR-XXXX (system-one-decision-router)),
+    """Config of the ``decision_router`` policy (ADR-0047),
     also the sticky inner router when ``sticky.inner = "decision_router"``."""
 
 

@@ -1,4 +1,4 @@
-"""Decision-router cascade (ADR-XXXX (system-one-decision-router)): gate, router cache,
+"""Decision-router cascade (ADR-0047): gate, router cache,
 backend chain under the deadline, circuit breaker, spend guard and approval checks."""
 
 from .cache import RevisionChange, RouterResultCache

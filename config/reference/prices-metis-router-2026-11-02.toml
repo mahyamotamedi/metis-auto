@@ -1,4 +1,4 @@
-# Price table for decision-router backends (ADR-XXXX (system-one-decision-router)): System-One models
+# Price table for decision-router backends (ADR-0047): System-One models
 # called as router overhead, never as answering models. Same schema as the
 # answering-model price files (docs/architecture/token_accounting.md §4), kept
 # apart so the answering-model table and its version do not change.

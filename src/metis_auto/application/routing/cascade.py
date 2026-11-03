@@ -1,4 +1,4 @@
-"""The decision-router cascade (ADR-XXXX (system-one-decision-router) point 3;
+"""The decision-router cascade (ADR-0047 point 3;
 routing.md §7).
 
 For one request, after the cheap features and before routing:

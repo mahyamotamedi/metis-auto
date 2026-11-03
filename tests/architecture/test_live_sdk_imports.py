@@ -43,7 +43,7 @@ HTTP_ALLOWED = {
     GEMINI,
     # Pre-existing (golden dataset, ADR-0028): the Hugging Face token check.
     SRC / "wiring" / "db_ingest.py",
-    # Decision router R5 (ADR-XXXX (system-one-decision-router) point 7): the
+    # Decision router R5 (ADR-0047 point 7): the
     # read-only Hugging Face client that pins router model files; never on the
     # request path (scripts/fetch_router_assets.py only).
     SRC / "adapters" / "routers" / "hub.py",

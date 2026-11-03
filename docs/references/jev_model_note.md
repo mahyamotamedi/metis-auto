@@ -11,7 +11,7 @@ In this project Jev is **the router itself**:
 - **Mode 1:** hosted Jev through the Metis wrapper, for shadow runs and labelling only.
 - **Mode 2:** THX-01, the local open-weight model, is the inline router.
 
-Both sit behind one port, `ports.BaseRouter`. Decision record: [ADR-XXXX (system-one-decision-router)](../adr/draft-system-one-decision-router.md).
+Both sit behind one port, `ports.BaseRouter`. Decision record: [ADR-0047](../adr/0047-system-one-decision-router.md).
 
 **Not OpenAI-compatible.** Jev has its own endpoint and wire format (`/v1/systemone`, `{model, state, questions}` → `{model, answers, usage}`), so the existing OpenAI-compatible adapter (`adapters/providers/openai_compat.py`) cannot call it. It has its own adapter, `adapters/routers/jev_metis.py`. By the plan's own rule, J-4 and P-2 therefore do not use Jev as a chat model.
 
@@ -51,7 +51,7 @@ The plan's rule for an incompatible model applies, so none of these is built as 
 
 | Plan task | As written | Remapped to | Where |
 |---|---|---|---|
-| J-3 | Run per-bot reassignment with Jev among the candidate models | **Jev as the routing model (Mode 1).** The router's decided tier is turned into a model by R-0's routing base, in exp-route-013's routing step version | `experiments/routing/exp-route-013-decision-router/`, ADR-XXXX (system-one-decision-router) |
+| J-3 | Run per-bot reassignment with Jev among the candidate models | **Jev as the routing model (Mode 1).** The router's decided tier is turned into a model by R-0's routing base, in exp-route-013's routing step version | `experiments/routing/exp-route-013-decision-router/`, ADR-0047 |
 | J-4 | A live smoke test through `live_wrapper_check.py` | **The router live check:** one SYNTHETIC state to Jev via Metis, the LLM backup on three test models, and a `json_schema` probe; under 0.05 USD, through the spend guard | `scripts/router_live_check.py` |
 | P-1/P-2 Jev arm | Jev answers benchmark requests | **The router's shadow evaluation:** rules only vs the decision router on the frozen dev slice (local backends only until Q-55 is answered) | `scripts/evaluate_router_slice.py`, exp-route-013 |
 

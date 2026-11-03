@@ -43,7 +43,7 @@
 # thinking = "disabled"             # unset = DeepSeek's default (thinking on)
 
 
-# --- Decision router (ADR-XXXX (system-one-decision-router); guide: docs/guides/router_quickstart.md) ----
+# --- Decision router (ADR-0047; guide: docs/guides/router_quickstart.md) ----
 # [router]
 # mode = "local"                    # off | local | hosted | hybrid_local_first | hybrid_hosted_first
 # real_data_approved = false        # RUNTIME ONLY. Owner decision 2026-11-02: keep false

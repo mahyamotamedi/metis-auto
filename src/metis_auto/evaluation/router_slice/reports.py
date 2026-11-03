@@ -1,5 +1,5 @@
 """Content-free outputs of the routing dev slice, the review sheet, and label
-import (pure; QA-PRIV, FR-EVAL-04/09, ADR-XXXX (system-one-decision-router)).
+import (pure; QA-PRIV, FR-EVAL-04/09, ADR-0047).
 
 Committable outputs (``reports/routing/dev_slice_v1/``) hold record IDs,
 strata codes, cohort pseudonyms and counts only: no text and no hashes of

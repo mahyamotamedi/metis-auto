@@ -1,5 +1,5 @@
 """Column-projected, one-file-at-a-time reads of the full dataset
-(ADR-XXXX (system-one-decision-router)).
+(ADR-0047).
 
 Every Parquet file of the dataset is a single row group (R0 findings §3), so
 a row filter cannot skip I/O: each function reads **one file at a time**,

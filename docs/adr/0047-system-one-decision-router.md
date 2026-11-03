@@ -1,4 +1,4 @@
-# ADR-XXXX (system-one-decision-router): System-One decision router (hosted Jev and a local open-weight model behind one port)
+# ADR-0047: System-One decision router (hosted Jev and a local open-weight model behind one port)
 
 - Status: **draft** (R1, 2026-11-02). Points 1–11 are **decided** by the project owner on 2026-11-02 (R0 review); the thresholds, question wording and backend defaults are **provisional placeholders** until exp-route-013 gives evidence. Serving defaults do not change.
 - Date: 2026-11-02

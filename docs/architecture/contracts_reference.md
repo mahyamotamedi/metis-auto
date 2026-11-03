@@ -346,7 +346,7 @@ Counts with the target's tokenizer, for the context stage (stage 5).
 
 ## `contracts.decision`
 
-System-One decision contracts (ADR-XXXX (system-one-decision-router); FR-FEAT-02, FR-ROUTE-02/04, FR-ACCT-03).
+System-One decision contracts (ADR-0047; FR-FEAT-02, FR-ROUTE-02/04, FR-ACCT-03).
 
 ### `DecisionOption`
 
@@ -415,7 +415,7 @@ What one backend answered for one state (derived, content-free).
 
 ### `DecisionError`
 
-An expected backend failure. Backends return it; they never raise for timeouts, transport, provider or parsing failures (ADR-XXXX (system-one-decision-router)).
+An expected backend failure. Backends return it; they never raise for timeouts, transport, provider or parsing failures (ADR-0047).
 
 | Field | Type | Req. | Privacy | Description |
 |---|---|---|---|---|
@@ -538,8 +538,8 @@ Features of one request. None means unknown (the component's state was unknown),
 | `traffic_source_provenance` | `Provenance \| None` |  | operational | Declared or inferred. |
 | `history_turns` | `tuple[TurnFeatures, ...]` |  | derived | Earlier user turns, oldest first, with their producers (sticky routing). |
 | `extra` | `dict[Name, FeatureValue]` |  | derived | Experimental or measured features (e.g. semantic intent). |
-| `deadline_ms` | `PosInt \| None` |  | operational | The request's time budget, copied from the request (the decision router's latency criterion, ADR-XXXX (system-one-decision-router)); None if not set. |
-| `decision` | `DecisionOutcome \| None` |  | derived | System-One decision answers (FR-FEAT-02 semantic slot; ADR-XXXX (system-one-decision-router)); None when the decision router is off. |
+| `deadline_ms` | `PosInt \| None` |  | operational | The request's time budget, copied from the request (the decision router's latency criterion, ADR-0047); None if not set. |
+| `decision` | `DecisionOutcome \| None` |  | derived | System-One decision answers (FR-FEAT-02 semantic slot; ADR-0047); None when the decision router is off. |
 
 **Enumerations**
 
@@ -547,7 +547,7 @@ Features of one request. None means unknown (the component's state was unknown),
 
 ## `contracts.decision_state`
 
-The state sent to a System-One decision backend (ADR-XXXX (system-one-decision-router); QA-PRIV).
+The state sent to a System-One decision backend (ADR-0047; QA-PRIV).
 
 ### `DecisionState`
 
@@ -702,7 +702,7 @@ The chosen target and why (FR-ROUTE-02). Content-free.
 | `min_context_window` | `PosInt \| None` |  | operational | Constraint applied on a re-route. |
 | `flags` | `tuple[RoutingFlag, ...]` |  | operational | Flags. |
 | `anchor_model_id` | `Name \| None` |  | operational | Sticky routing: the session's anchor model before this request, if any. |
-| `router_summary` | `RouterSummary \| None` |  | operational | Decision-router path, backend, mapped tier and thresholds (ADR-XXXX (system-one-decision-router)); None for policies that use no decision router. |
+| `router_summary` | `RouterSummary \| None` |  | operational | Decision-router path, backend, mapped tier and thresholds (ADR-0047); None for policies that use no decision router. |
 
 **Enumerations**
 
@@ -1119,7 +1119,7 @@ One decision backend's circuit-breaker state when the step began.
 
 ### `DecisionMeasured`
 
-The decision-router step (ADR-XXXX (system-one-decision-router)). Never carries the state.
+The decision-router step (ADR-0047). Never carries the state.
 
 | Field | Type | Req. | Privacy | Description |
 |---|---|---|---|---|

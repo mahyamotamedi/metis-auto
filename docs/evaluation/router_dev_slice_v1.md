@@ -1,6 +1,6 @@
 # Routing dev slice v1 (`router-dev-slice-v1`)
 
-Status: **built by the owner on Windows from the commands below; awaiting review** (R2 of the decision router, [ADR-XXXX (system-one-decision-router)](../adr/draft-system-one-decision-router.md) point 10). Config: [`config/evaluation/router_dev_slice_v1.toml`](../../config/evaluation/router_dev_slice_v1.toml). Code: `data_access/full`, `evaluation/router_slice`, `wiring/router_slice.py`, `scripts/build_router_dev_slice.py`. Traces: FR-DATA-02/04/06, FR-EVAL-04/06/09, QA-PRIV, QA-REPRO; A-91.
+Status: **built by the owner on Windows from the commands below; awaiting review** (R2 of the decision router, [ADR-0047](../adr/0047-system-one-decision-router.md) point 10). Config: [`config/evaluation/router_dev_slice_v1.toml`](../../config/evaluation/router_dev_slice_v1.toml). Code: `data_access/full`, `evaluation/router_slice`, `wiring/router_slice.py`, `scripts/build_router_dev_slice.py`. Traces: FR-DATA-02/04/06, FR-EVAL-04/06/09, QA-PRIV, QA-REPRO; A-91.
 
 ## 1. What it is, and what it is not
 

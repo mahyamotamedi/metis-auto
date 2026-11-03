@@ -1,5 +1,5 @@
 """Per-backend circuit breaker of the decision router (FR-FAIL-05,
-ADR-XXXX (system-one-decision-router)).
+ADR-0047).
 
 Closed: calls go through; a failure is remembered for ``window_s``. When
 ``failure_threshold`` failures fall inside the window the circuit **opens**:

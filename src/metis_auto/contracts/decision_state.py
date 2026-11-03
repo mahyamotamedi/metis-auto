@@ -1,5 +1,5 @@
 """The state sent to a System-One decision backend
-(ADR-XXXX (system-one-decision-router); QA-PRIV).
+(ADR-0047; QA-PRIV).
 
 ``DecisionState`` is **content**: it holds a truncated copy of the user's
 message and, optionally, of the previous user turn. It exists only in memory on

@@ -1,5 +1,5 @@
 """Hugging Face Hub, read-only, for fetching pinned decision-router models
-(ADR-XXXX (system-one-decision-router) point 7; decision router R5). Standard library
+(ADR-0047 point 7; decision router R5). Standard library
 only (``urllib``), so no extra is needed to fetch.
 
 - ``revision_sha``: a branch or tag → its commit (40 hex).

@@ -80,7 +80,7 @@ Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid t
 | **Effective cost** | Routing's expected cost of one answer on a model, with its expected hidden reasoning tokens billed as output (routing plan §3). | "price" (for this) |
 | **Bot-level scope (demo)** | The DEMO cache setting that shares entries across users of one bot (global scope only when instructions are present). Not a serving option (ADR-0023). | "global cache" |
 | **Demo seed** | DEMO ONLY: a few logged first-turn sample answers served on an exact message match, shown locally, never sent to a provider. | — |
-| **System-One decision model** | A fast model that returns no text: given a state and named, typed questions (`choice`, `score`, `noul`), it returns one typed answer per question with probabilities (ADR-XXXX (system-one-decision-router)). It never picks a model itself. | "classifier" (narrower), "router model" |
+| **System-One decision model** | A fast model that returns no text: given a state and named, typed questions (`choice`, `score`, `noul`), it returns one typed answer per question with probabilities (ADR-0047). It never picks a model itself. | "classifier" (narrower), "router model" |
 | **Decision backend** | One implementation of `ports.BaseRouter`: Jev via Metis, an LLM answering in JSON, THX-01 in-process, a local `/v1/systemone` server, or the fake. | "router" (the whole cascade) |
 | **Jev** | TypeSafe's hosted System-One decision model, reached through the Metis wrapper (`/typesafe/v1/systemone`, `jev-latest`). A router, never a model to route to: it cannot answer users (A-111). Mode 1. | "JEV model" as a chat candidate |
 | **THX-01** | The open-weight System-One decision model (mmBERT-base, multilingual) run in process from pinned files. Mode 2, the local router. | — |
@@ -89,7 +89,7 @@ Domain terms used in Metis-Auto docs, code, and issues. Use these terms; avoid t
 | **Question set** | A versioned, configured set of decision questions asked together (e.g. `routing_qs_v1`), in English or Persian wording. | — |
 | **Decision state** | The minimised, truncated request state sent to a decision backend: content, kept in memory only; never instructions or retrieved text. | "prompt" |
 | **Fast path / slow path** | Fast: a gate rule or a router-cache hit decides (about 0 ms). Slow: a decision backend is called under the deadline. | — |
-| **Router cascade** | Gate → router cache → backend chain (deadline, circuit breaker, spend guard) → rule fallback → safe tier (ADR-XXXX (system-one-decision-router)). | — |
+| **Router cascade** | Gate → router cache → backend chain (deadline, circuit breaker, spend guard) → rule fallback → safe tier (ADR-0047). | — |
 | **Router overhead** | The latency and cost of the decision step, measured and attributed apart from the answering model (FR-ROUTE-04). | — |
 | **Circuit breaker** | Per-backend health state: opens after repeated failures in a window, stays open for a cooldown, then lets one probe through (half open). | — |
 | **Routing dev slice** | A seeded, stratified 100–200-record slice of the full dataset (150 chosen) for developing and tuning the router, split by session into `tune` and `check`; golden records excluded. | "dev set" (ambiguous) |

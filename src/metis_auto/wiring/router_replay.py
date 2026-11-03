@@ -1,5 +1,5 @@
 """Replay the frozen routing dev slice through the pipeline
-(ADR-XXXX (system-one-decision-router), R4).
+(ADR-0047, R4).
 
 Each of the 150 records becomes a ``Request`` (``pre_retrieval`` profile:
 routing happens before retrieval) and goes through the real pipeline with the

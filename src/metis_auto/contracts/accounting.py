@@ -55,7 +55,7 @@ class CostBasis(StrEnum):
     LOCAL_COMPUTE = "local_compute"
     """Work done on this machine with no billed price (a local router): the
     amount is zero by definition and no price table applies. CPU time is
-    reported as latency, not cost (ADR-XXXX (system-one-decision-router))."""
+    reported as latency, not cost (ADR-0047)."""
 
 
 class CostCaveat(StrEnum):

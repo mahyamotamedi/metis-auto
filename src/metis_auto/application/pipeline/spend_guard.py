@@ -56,7 +56,7 @@ class SpendGuard:
     def stop(self, reason: str) -> None:
         """Stop live calls for the rest of the run (an unpriced router call
         that ``router.allow_unpriced`` let through,
-        ADR-XXXX (system-one-decision-router) point 6)."""
+        ADR-0047 point 6)."""
         if self._stopped is None:
             self._stopped = reason
             log.warning("spend guard: %s", reason)

@@ -113,7 +113,7 @@ def load_reference(config_dir: Path, paths: ReferenceSettings) -> ReferenceData:
 
 def read_router_assets(path: Path) -> RouterAssetTable:
     """``version`` plus ``[[assets]]`` with their ``[[assets.files]]`` pins
-    (ADR-XXXX (system-one-decision-router) point 7; written by
+    (ADR-0047 point 7; written by
     scripts/fetch_router_assets.py pin)."""
     raw = _read(path)
     return _validated(
@@ -123,7 +123,7 @@ def read_router_assets(path: Path) -> RouterAssetTable:
 
 def read_router_questions(path: Path) -> RouterQuestionTable:
     """``version``, ``[intent_mapping]`` and ``[[sets]]`` with their questions
-    (ADR-XXXX (system-one-decision-router)). Choice options are ``{name, description}``
+    (ADR-0047). Choice options are ``{name, description}``
     tables."""
     raw = _read(path)
     return _validated(

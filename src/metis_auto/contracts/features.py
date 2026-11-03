@@ -144,14 +144,14 @@ class RequestFeatures(ContractModel):
     deadline_ms: PosInt | None = field(
         Privacy.OPERATIONAL,
         "The request's time budget, copied from the request (the decision "
-        "router's latency criterion, ADR-XXXX (system-one-decision-router)); None if "
+        "router's latency criterion, ADR-0047); None if "
         "not set.",
         default=None,
     )
     decision: DecisionOutcome | None = field(
         Privacy.DERIVED,
         "System-One decision answers (FR-FEAT-02 semantic slot; "
-        "ADR-XXXX (system-one-decision-router)); None "
+        "ADR-0047); None "
         "when the decision router is off.",
         default=None,
     )

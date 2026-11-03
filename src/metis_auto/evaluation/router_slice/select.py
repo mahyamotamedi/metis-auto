@@ -12,7 +12,7 @@ group whose stratum value reached its ceiling is closed whole. Deterministic
 for a given seed and input, independent of input order.
 
 Traces: FR-EVAL-04/06 (stratified, leakage-safe evaluation sets),
-ADR-XXXX (system-one-decision-router).
+ADR-0047.
 """
 
 from __future__ import annotations

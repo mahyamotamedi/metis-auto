@@ -1,5 +1,5 @@
 """R8 shadow evaluation of the decision router on the frozen dev slice
-(exp-route-013; ADR-XXXX (system-one-decision-router) point 12).
+(exp-route-013; ADR-0047 point 12).
 
 Each slice record goes through two pipelines with the fake answering client:
 **rules only** (``decision_router`` policy with ``router.mode = "off"``: the

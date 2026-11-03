@@ -1,5 +1,5 @@
 """Replay the frozen routing dev slice through the pipeline
-(ADR-XXXX (system-one-decision-router), R4). Thin CLI.
+(ADR-0047, R4). Thin CLI.
 
     python scripts/replay_router_slice.py                     # all scenarios
     python scripts/replay_router_slice.py --scenario local    # one scenario

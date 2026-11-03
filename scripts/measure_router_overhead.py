@@ -11,7 +11,7 @@ scripts/fetch_router_assets.py first); a local server must already be running
 on loopback. No network beyond loopback, no key, no spend. ``--from-slice``
 reads the frozen dev slice only after checking it is the committed one; its
 text stays in memory. Prints counts, timings (ms), token counts and memory
-only: never message text. ADR-XXXX (system-one-decision-router) point 4: if THX-01
+only: never message text. ADR-0047 point 4: if THX-01
 misses 60 ms p95, try threads and shorter states, then ONNX int8; else inline routing is
 rules only.
 """

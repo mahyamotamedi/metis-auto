@@ -1,4 +1,4 @@
-"""Decision-router factory (ADR-XXXX (system-one-decision-router), R4): ``[router]``
+"""Decision-router factory (ADR-0047, R4): ``[router]``
 settings → a ``RouterSpec`` that ``build_pipeline`` turns into a ``RouterCascade``.
 
 Responsibility: map the configured mode, chain, deadline, cache, breaker and

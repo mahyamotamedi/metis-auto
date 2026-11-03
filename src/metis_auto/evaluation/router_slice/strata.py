@@ -5,7 +5,7 @@ the answer, cohort, the bot's instruction evidence); pass 2 adds the golden
 feature row from ``analysis.request_features.session_requests`` (language
 group, rule intent, greeting, bot class, families). Values are codes, never
 text. Traces: FR-DATA-06, ADR-0028 (shared definitions),
-ADR-XXXX (system-one-decision-router).
+ADR-0047.
 """
 
 from __future__ import annotations

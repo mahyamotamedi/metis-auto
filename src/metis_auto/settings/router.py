@@ -1,5 +1,5 @@
 """Decision-router infrastructure settings (``[router]``, ``[data]``;
-ADR-XXXX (system-one-decision-router)).
+ADR-0047).
 
 Responsibility: the typed form of the router's *infrastructure* settings:
 mode, deadline, backends and their chains, the router-result cache, the
@@ -103,7 +103,7 @@ class Thx01BackendSettings(_Backend):
     """Row in ``config/reference/routers.toml`` (revision and sha256 pins)."""
     runtime: Literal["torch", "onnx"] = "torch"
     """``onnx`` (int8) is the fallback if torch misses the latency budget
-    (ADR-XXXX (system-one-decision-router) point 4); not built until the R5 benchmark
+    (ADR-0047 point 4); not built until the R5 benchmark
     asks for it."""
     threads: int = Field(default=4, ge=1, le=64)
     state_format: Literal["text", "json"] = "text"

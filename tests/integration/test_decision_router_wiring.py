@@ -1,5 +1,5 @@
 """The decision_router policy builds from the committed defaults through wiring,
-alone and as the sticky inner router (ADR-XXXX (system-one-decision-router)). With the
+alone and as the sticky inner router (ADR-0047). With the
 router off it routes by the rules and then the safe tier: no decision answers exist."""
 
 from metis_auto.contracts import RouterPath

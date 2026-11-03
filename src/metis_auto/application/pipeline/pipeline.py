@@ -14,7 +14,7 @@ attempts, accounting}; application.{measurement, events}; ports
 via the spend guard). Built by: wiring. Config: ``PipelineConfig``.
 Traces: FR-API-01, FR-OBS-01, FR-ACCT-03…05, FR-CASC-*, FR-FAIL-*, ADR-0010.
 
-Decision router (ADR-XXXX (system-one-decision-router), R4): with an optional
+Decision router (ADR-0047, R4): with an optional
 ``RouterCascade`` the features stage also runs the decision step (span ``route.decide``,
 event ``decision_measured``); its answers fill ``RequestFeatures.decision`` before
 ``features_extracted`` and routing, and its duration and cost are router overhead
@@ -330,7 +330,7 @@ class RequestPipeline:
         return feats
 
     def _decide(self, run: _Run, feats: RequestFeatures) -> RequestFeatures:
-        """The decision-router step (ADR-XXXX (system-one-decision-router)): answers
+        """The decision-router step (ADR-0047): answers
         into the features, its overhead into the run. Never raises for expected
         failures."""
         assert self._router is not None

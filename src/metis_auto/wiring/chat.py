@@ -102,7 +102,7 @@ class RoutingMode(StrEnum):
     PER_REQUEST = "per_request"
     FIXED = "fixed"
     DECISION_ROUTER = "decision_router"
-    """The System-One decision router (ADR-XXXX (system-one-decision-router), R7):
+    """The System-One decision router (ADR-0047, R7):
     ``router_mode`` picks its chain (``local`` = THX-01, ``hosted`` = Jev via
     Metis, or a hybrid); ``off`` keeps the policy but asks no backend (the
     rules decide). A placeholder demo component, never evidence."""

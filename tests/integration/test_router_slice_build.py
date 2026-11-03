@@ -1,5 +1,5 @@
 """The routing dev slice end to end on a SYNTHETIC Parquet miniature with the
-real schema (ADR-XXXX (system-one-decision-router)): plan reads no text, build is
+real schema (ADR-0047): plan reads no text, build is
 deterministic and obeys exclusions and caps, committable outputs carry no content,
 verify catches a changed config or a different build, labels import as ID + label
 only."""

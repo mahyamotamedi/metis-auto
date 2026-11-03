@@ -75,7 +75,7 @@ class RoutingDecision(ContractModel):
     router_summary: RouterSummary | None = field(
         Privacy.OPERATIONAL,
         "Decision-router path, backend, mapped tier and thresholds "
-        "(ADR-XXXX (system-one-decision-router)); "
+        "(ADR-0047); "
         "None for policies that use no decision router.",
         default=None,
     )

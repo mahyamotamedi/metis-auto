@@ -1,5 +1,5 @@
 """THX-01 in process: the default local decision backend
-(ADR-XXXX (system-one-decision-router); R5).
+(ADR-0047; R5).
 
 Implements ``ports.BaseRouter`` over ``thx01.Agent.system_one`` (extra
 ``router-local``: thx01 1.0.0, torch, transformers). The only module that

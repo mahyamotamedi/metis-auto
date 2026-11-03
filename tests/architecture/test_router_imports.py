@@ -1,5 +1,5 @@
 """Decision-router libraries are imported only by their own adapter
-(ADR-XXXX (system-one-decision-router)), so offline code, the runtime lock and the
+(ADR-0047), so offline code, the runtime lock and the
 Docker images never need them. ``typesafe-sdk`` is not used at all (owner decision
 2026-11-02: httpx with a strict wire model). Static check (``ast``); the adapters named
 here arrive in R5 and R6, and the rule holds from now on."""

@@ -1,6 +1,6 @@
 """Routing (CMP-05): a shared eligibility filter, then a selectable policy;
 the System-One decision router's gate, state and policy
-(ADR-XXXX (system-one-decision-router)).
+(ADR-0047).
 Traces: FR-ROUTE-01…07, routing.md."""
 
 from .base import PolicyChoice, RequestedModelMode, RoutingPolicy

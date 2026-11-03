@@ -1,5 +1,5 @@
 """exp-route-013: the decision router's tiers on R-0's routing base
-(ADR-XXXX (system-one-decision-router); ADR-0045; J-3 remapped). Every frame,
+(ADR-0047; ADR-0045; J-3 remapped). Every frame,
 model, limit, tier and price here is [SYNTHETIC]. The routing base is used
 unchanged: its eligibility excludes, the decided tier chooses among the rest,
 and a request never moves to a dearer model."""

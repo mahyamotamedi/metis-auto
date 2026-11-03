@@ -1,4 +1,4 @@
-"""THX-01 in process (ADR-XXXX (system-one-decision-router); R5), with a fake agent in
+"""THX-01 in process (ADR-0047; R5), with a fake agent in
 place of thx01 and torch: availability reasons, sha256 pins checked before load, a work
 copy so nothing pinned is ever written, contained stdout, answer parsing, timeouts and
 calibration. The real model runs only on the owner's machine (the benchmark). SYNTHETIC

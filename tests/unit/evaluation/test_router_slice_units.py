@@ -1,4 +1,4 @@
-"""Pure parts of the routing dev slice (ADR-XXXX (system-one-decision-router)): config
+"""Pure parts of the routing dev slice (ADR-0047): config
 bounds, the seeded selection, splits, the Request mapping, review assignment, label
 agreement, and dataset-root resolution (Windows-style paths). SYNTHETIC only."""
 

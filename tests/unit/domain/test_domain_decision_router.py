@@ -1,4 +1,4 @@
-"""The decision router's pure parts (ADR-XXXX (system-one-decision-router)): gate, state
+"""The decision router's pure parts (ADR-0047): gate, state
 builder, answer mapping, paths, criteria, reasoning effort, the tier helper, and the
 sticky interplay with hysteresis. Real Metis test catalogue and prices (offline config);
 every text is SYNTHETIC."""
