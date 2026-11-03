@@ -312,6 +312,8 @@ def test_target_check_against_100_ms(mo):
         ("cache.popular_question.all_turns.ttl24h", "ttl", "24"),
         ("context.reranker_cut.observed_relevancy", "scorer", "observed_relevancy"),
         ("context.reranker_cut.lexical_overlap", "scorer", "lexical_overlap"),
+        ("route.per_bot", "set", None),
+        ("route.per_bot.with_reasoning_models", "set", ".with_reasoning_models"),
     ],
 )
 def test_known_lever_ids_find_their_version(mo, lever_id, group, value):
