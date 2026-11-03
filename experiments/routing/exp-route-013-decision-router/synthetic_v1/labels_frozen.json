@@ -1,0 +1,15 @@
+{
+  "set": "jev-synth-v1",
+  "frozen_on": "2026-11-03",
+  "approved_by": "owner (Parham), 'approved as is'",
+  "rows": 100,
+  "review_sha256": "bcf830897979f6962d59e26bbd92c94479bf554f59d1f171a8f6984e9f69d1fd",
+  "frozen_sha256": "dbb2119eaf429ed217c96d5ffee8f24ff80de5bdfe847ad12b46b57d7ceba7b0",
+  "changed_by_owner": 0,
+  "borderline": 5,
+  "tier_counts": {
+    "0": 60,
+    "1": 40
+  },
+  "note": "SYNTHETIC requests written for this check; none copied or paraphrased from the dataset."
+}

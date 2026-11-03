@@ -214,3 +214,111 @@ def test_live_budget_refusal_is_explained(tmp_path):
     assert not ledger.exists() or all(
         MARKER not in json.dumps(line) for line in ledger.read_text().splitlines()
     )
+
+
+# --- Results page (D-2, spec UI-S07) -------------------------------------------
+
+RESULTS_PAGE = "demo_pages/results.py"  # relative to scripts/demo_ui.py
+REAL_LEVERS = Path(__file__).resolve().parents[2] / "reports" / "levers"
+
+
+def _synthetic_levers(folder: Path) -> Path:
+    from datetime import UTC, datetime
+    from decimal import Decimal
+
+    from metis_auto.analysis.lever_result import LeverResult, Manifest
+
+    manifest = Manifest(
+        data_revision="0" * 40,
+        code_commit="unknown",
+        config_hash="a" * 64,
+        seed=7,
+        price_version="prices-synthetic-1",
+        python_version="3.13.5",
+        created_at=datetime(2026, 11, 3, 9, 0, tzinfo=UTC),
+    )
+    cut = {"n_requests": Decimal(10), "n_cache_hits": Decimal(2)}
+    result = LeverResult(
+        lever_id="cache.synthetic.as_logged",
+        step="cache",
+        version="synthetic",
+        n_requests=10,
+        n_eligible=6,
+        baseline="as_logged",
+        baseline_cost={"fees": Decimal(2), "token_cost": Decimal(6)},
+        saving={"fees": Decimal("0.5"), "token_cost": Decimal("1.5")},
+        ci_low=0.1,
+        ci_high=0.3,
+        slices={"all": cut, "llm_only": cut},
+        evidence_class="simulation",
+        correctness_state="unmeasured",
+        assumptions=("[SYNTHETIC] fixture",),
+        manifest=manifest,
+    )
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{result.lever_id}.json").write_text(result.to_json(), encoding="utf-8")
+    return folder
+
+
+def results_page(tmp_path, levers: Path) -> AppTest:
+    at = AppTest.from_file(PAGE, default_timeout=60)
+    at.session_state["_test_settings_loader"] = make_loader(tmp_path)
+    at.session_state["_test_client_factory"] = lambda _l, _r: FakeModelClient()
+    at.session_state["_test_levers_dir"] = str(levers)
+    at.run()
+    return at.switch_page(RESULTS_PAGE).run()
+
+
+def _page_text(at: AppTest) -> str:
+    parts = [
+        str(e.value)
+        for kind in (
+            "markdown",
+            "caption",
+            "title",
+            "header",
+            "subheader",
+            "info",
+            "warning",
+        )
+        for e in getattr(at, kind)
+    ]
+    parts += [f"{m.label} {m.value}" for m in at.metric]
+    return " ".join(parts)
+
+
+def test_results_page_renders_in_fake_mode(tmp_path):
+    at = results_page(tmp_path, _synthetic_levers(tmp_path / "levers"))
+    assert not at.exception
+    at.segmented_control(key="res_lang").set_value("en").run()
+    assert not at.exception
+    assert at.title[0].value == "Results"
+    assert any(m.label == "Saving" for m in at.metric)
+    at.selectbox(key="res_baseline").set_value("todays_models").run()
+    assert not at.exception
+    at.segmented_control(key="res_lang").set_value("fa").run()
+    assert not at.exception and at.title[0].value != "Results"
+
+
+def test_results_page_empty_state(tmp_path):
+    at = results_page(tmp_path, tmp_path / "no-results")
+    assert not at.exception
+    at.segmented_control(key="res_lang").set_value("en").run()
+    assert "No lever results yet" in _page_text(at)
+    assert not at.metric
+
+
+@pytest.mark.skipif(not REAL_LEVERS.is_dir(), reason="no committed lever results")
+def test_results_page_on_the_committed_results_shows_no_ids(tmp_path):
+    import re
+
+    at = results_page(tmp_path, REAL_LEVERS)
+    assert not at.exception
+    for lang in ("en", "fa"):
+        at.segmented_control(key="res_lang").set_value(lang).run()
+        for baseline in ("as_logged", "todays_models", "premium_gpt_5_5"):
+            at.selectbox(key="res_baseline").set_value(baseline).run()
+            assert not at.exception, (lang, baseline)
+            text = _page_text(at)
+            assert not re.search(r"\b[0-9a-f]{16,}\b", text)
+            assert not re.search(r"\b(bot|tenant|user)_(rank|id)\b", text)

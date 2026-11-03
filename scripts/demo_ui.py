@@ -15,6 +15,8 @@ widgets to the session's toggles.
   settings, EXPERIMENTAL compression, DeepSeek thinking, new user, reset).
 - Right: the cost panel (paid vs the premium estimate, the savings
   decomposition, the budget).
+- Top navigation: Chat (this page) and Results (D-2, the offline lever results,
+  ``scripts/demo_pages/results.py`` over ``wiring.lever_view``).
 
 Live calls need both keys (ADR-0018): the Live switch here and
 ``[live] enabled = true`` in config/local.toml, plus METIS_API_KEY in .env.
@@ -69,6 +71,7 @@ STREAMLIT_OPTIONS = (
     "--client.toolbarMode=minimal",
     "--server.fileWatcherType=none",
 )
+RESULTS_PAGE = "demo_pages/results.py"  # D-2 Results page, relative to this file
 FAKE, LIVE = "Fake (free, no key)", "Live (real models, budgeted)"
 ROUTING_LABELS = {
     RoutingMode.STICKY_V1.value: "Sticky v1",
@@ -100,6 +103,9 @@ CSS = """
 [class*="st-key-rtl-"] p, [class*="st-key-rtl-"] li {
   font-family: "Vazirmatn", "Tahoma", "Geeza Pro", system-ui, sans-serif;
   line-height: 1.9; }
+[class*="st-key-rtl-"] [data-testid="stMetricValue"],
+[class*="st-key-rtl-"] [data-testid="stDataFrame"] {
+  direction: ltr; unicode-bidi: isolate; }
 [class*="st-key-badge-"] p { font-size: 0.82rem; opacity: 0.85; margin: 0; }
 .block-container { padding-top: 2.2rem; padding-bottom: 1rem; }
 [data-testid="stMetricValue"] { font-size: 1.35rem; }
@@ -671,9 +677,7 @@ def _cost_panel() -> None:
     )
 
 
-def main() -> None:
-    st.set_page_config(page_title="Metis-Auto demo", page_icon="💸", layout="wide")
-    st.markdown(CSS, unsafe_allow_html=True)  # static CSS only, no content
+def _chat_page() -> None:
     _init()
     _sidebar()
     st.title("Metis-Auto demo")
@@ -687,6 +691,27 @@ def main() -> None:
         _chat_column()
     with right:
         _cost_panel()
+
+
+def main() -> None:
+    st.set_page_config(page_title="Metis-Auto demo", page_icon="💸", layout="wide")
+    st.markdown(CSS, unsafe_allow_html=True)  # static CSS only, no content
+    pages = [
+        st.Page(
+            _chat_page,
+            title="Chat",
+            icon=":material/chat:",
+            url_path="chat",
+            default=True,
+        ),
+        st.Page(
+            RESULTS_PAGE,
+            title="Results",
+            icon=":material/insights:",
+            url_path="results",
+        ),
+    ]
+    st.navigation(pages, position="top").run()
 
 
 def _launch() -> int:

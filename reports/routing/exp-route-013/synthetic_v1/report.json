@@ -1,0 +1,1793 @@
+{
+  "set": {
+    "set": "jev-synth-v1",
+    "frozen_on": "2026-11-03",
+    "approved_by": "owner (Parham), 'approved as is'",
+    "rows": 100,
+    "review_sha256": "bcf830897979f6962d59e26bbd92c94479bf554f59d1f171a8f6984e9f69d1fd",
+    "frozen_sha256": "dbb2119eaf429ed217c96d5ffee8f24ff80de5bdfe847ad12b46b57d7ceba7b0",
+    "changed_by_owner": 0,
+    "borderline": 5,
+    "tier_counts": {
+      "0": 60,
+      "1": 40
+    },
+    "note": "SYNTHETIC requests written for this check; none copied or paraphrased from the dataset."
+  },
+  "marker_sent": false,
+  "jev_ran": true,
+  "jev_skipped": null,
+  "accuracy": {
+    "all": {
+      "rules": {
+        "n": 100,
+        "decided": 100,
+        "correct": 43,
+        "accuracy": 0.43,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 57,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.05
+      },
+      "rule_based": {
+        "n": 100,
+        "decided": 100,
+        "correct": 59,
+        "accuracy": 0.59,
+        "under_routed_1_to_0": 35,
+        "over_routed_0_to_1": 6,
+        "tier1_recall": 0.125,
+        "tier0_recall": 0.9
+      },
+      "thx01": {
+        "n": 100,
+        "decided": 100,
+        "correct": 41,
+        "accuracy": 0.41,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 59,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.017
+      },
+      "jev": {
+        "n": 100,
+        "decided": 100,
+        "correct": 72,
+        "accuracy": 0.72,
+        "under_routed_1_to_0": 1,
+        "over_routed_0_to_1": 27,
+        "tier1_recall": 0.975,
+        "tier0_recall": 0.55
+      },
+      "thx01_with_gate": {
+        "n": 100,
+        "decided": 100,
+        "correct": 44,
+        "accuracy": 0.44,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 56,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.067
+      },
+      "jev_with_gate": {
+        "n": 100,
+        "decided": 100,
+        "correct": 70,
+        "accuracy": 0.7,
+        "under_routed_1_to_0": 1,
+        "over_routed_0_to_1": 29,
+        "tier1_recall": 0.975,
+        "tier0_recall": 0.517
+      }
+    },
+    "persian": {
+      "rules": {
+        "n": 70,
+        "decided": 70,
+        "correct": 29,
+        "accuracy": 0.414,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 41,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.068
+      },
+      "rule_based": {
+        "n": 70,
+        "decided": 70,
+        "correct": 43,
+        "accuracy": 0.614,
+        "under_routed_1_to_0": 24,
+        "over_routed_0_to_1": 3,
+        "tier1_recall": 0.077,
+        "tier0_recall": 0.932
+      },
+      "thx01": {
+        "n": 70,
+        "decided": 70,
+        "correct": 27,
+        "accuracy": 0.386,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 43,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.023
+      },
+      "jev": {
+        "n": 70,
+        "decided": 70,
+        "correct": 48,
+        "accuracy": 0.686,
+        "under_routed_1_to_0": 1,
+        "over_routed_0_to_1": 21,
+        "tier1_recall": 0.962,
+        "tier0_recall": 0.523
+      },
+      "thx01_with_gate": {
+        "n": 70,
+        "decided": 70,
+        "correct": 30,
+        "accuracy": 0.429,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 40,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.091
+      },
+      "jev_with_gate": {
+        "n": 70,
+        "decided": 70,
+        "correct": 47,
+        "accuracy": 0.671,
+        "under_routed_1_to_0": 1,
+        "over_routed_0_to_1": 22,
+        "tier1_recall": 0.962,
+        "tier0_recall": 0.5
+      }
+    },
+    "english": {
+      "rules": {
+        "n": 15,
+        "decided": 15,
+        "correct": 7,
+        "accuracy": 0.467,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 8,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.0
+      },
+      "rule_based": {
+        "n": 15,
+        "decided": 15,
+        "correct": 8,
+        "accuracy": 0.533,
+        "under_routed_1_to_0": 6,
+        "over_routed_0_to_1": 1,
+        "tier1_recall": 0.143,
+        "tier0_recall": 0.875
+      },
+      "thx01": {
+        "n": 15,
+        "decided": 15,
+        "correct": 7,
+        "accuracy": 0.467,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 8,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.0
+      },
+      "jev": {
+        "n": 15,
+        "decided": 15,
+        "correct": 13,
+        "accuracy": 0.867,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 2,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.75
+      },
+      "thx01_with_gate": {
+        "n": 15,
+        "decided": 15,
+        "correct": 7,
+        "accuracy": 0.467,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 8,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.0
+      },
+      "jev_with_gate": {
+        "n": 15,
+        "decided": 15,
+        "correct": 13,
+        "accuracy": 0.867,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 2,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.75
+      }
+    },
+    "mixed": {
+      "rules": {
+        "n": 15,
+        "decided": 15,
+        "correct": 7,
+        "accuracy": 0.467,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 8,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.0
+      },
+      "rule_based": {
+        "n": 15,
+        "decided": 15,
+        "correct": 8,
+        "accuracy": 0.533,
+        "under_routed_1_to_0": 5,
+        "over_routed_0_to_1": 2,
+        "tier1_recall": 0.286,
+        "tier0_recall": 0.75
+      },
+      "thx01": {
+        "n": 15,
+        "decided": 15,
+        "correct": 7,
+        "accuracy": 0.467,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 8,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.0
+      },
+      "jev": {
+        "n": 15,
+        "decided": 15,
+        "correct": 11,
+        "accuracy": 0.733,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 4,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.5
+      },
+      "thx01_with_gate": {
+        "n": 15,
+        "decided": 15,
+        "correct": 7,
+        "accuracy": 0.467,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 8,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.0
+      },
+      "jev_with_gate": {
+        "n": 15,
+        "decided": 15,
+        "correct": 10,
+        "accuracy": 0.667,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 5,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.375
+      }
+    },
+    "borderline": {
+      "rules": {
+        "n": 5,
+        "decided": 5,
+        "correct": 2,
+        "accuracy": 0.4,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 3,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.0
+      },
+      "rule_based": {
+        "n": 5,
+        "decided": 5,
+        "correct": 2,
+        "accuracy": 0.4,
+        "under_routed_1_to_0": 2,
+        "over_routed_0_to_1": 1,
+        "tier1_recall": 0.0,
+        "tier0_recall": 0.667
+      },
+      "thx01": {
+        "n": 5,
+        "decided": 5,
+        "correct": 2,
+        "accuracy": 0.4,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 3,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.0
+      },
+      "jev": {
+        "n": 5,
+        "decided": 5,
+        "correct": 2,
+        "accuracy": 0.4,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 3,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.0
+      },
+      "thx01_with_gate": {
+        "n": 5,
+        "decided": 5,
+        "correct": 2,
+        "accuracy": 0.4,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 3,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.0
+      },
+      "jev_with_gate": {
+        "n": 5,
+        "decided": 5,
+        "correct": 2,
+        "accuracy": 0.4,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 3,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.0
+      }
+    },
+    "changed_by_owner": {
+      "n": 0
+    }
+  },
+  "accuracy_by_category": {
+    "code": {
+      "rules": 0.462,
+      "rule_based": 0.462,
+      "thx01": 0.462,
+      "jev": 0.692,
+      "thx01_with_gate": 0.462,
+      "jev_with_gate": 0.615
+    },
+    "factual": {
+      "rules": 0.286,
+      "rule_based": 0.643,
+      "thx01": 0.286,
+      "jev": 0.786,
+      "thx01_with_gate": 0.286,
+      "jev_with_gate": 0.714
+    },
+    "follow_up": {
+      "rules": 0.4,
+      "rule_based": 0.6,
+      "thx01": 0.4,
+      "jev": 0.7,
+      "thx01_with_gate": 0.4,
+      "jev_with_gate": 0.7
+    },
+    "greeting": {
+      "rules": 0.375,
+      "rule_based": 1.0,
+      "thx01": 0.0,
+      "jev": 1.0,
+      "thx01_with_gate": 0.375,
+      "jev_with_gate": 1.0
+    },
+    "math": {
+      "rules": 0.4,
+      "rule_based": 0.6,
+      "thx01": 0.4,
+      "jev": 0.5,
+      "thx01_with_gate": 0.4,
+      "jev_with_gate": 0.5
+    },
+    "reasoning": {
+      "rules": 0.9,
+      "rule_based": 0.1,
+      "thx01": 0.9,
+      "jev": 0.9,
+      "thx01_with_gate": 0.9,
+      "jev_with_gate": 0.9
+    },
+    "support": {
+      "rules": 0.357,
+      "rule_based": 0.714,
+      "thx01": 0.357,
+      "jev": 0.429,
+      "thx01_with_gate": 0.357,
+      "jev_with_gate": 0.429
+    },
+    "translation": {
+      "rules": 0.333,
+      "rule_based": 0.667,
+      "thx01": 0.444,
+      "jev": 0.889,
+      "thx01_with_gate": 0.444,
+      "jev_with_gate": 0.889
+    },
+    "writing": {
+      "rules": 0.417,
+      "rule_based": 0.583,
+      "thx01": 0.417,
+      "jev": 0.75,
+      "thx01_with_gate": 0.417,
+      "jev_with_gate": 0.75
+    }
+  },
+  "agreement": {
+    "rules~rule_based": {
+      "n": 100,
+      "agree": 14,
+      "share": 0.14
+    },
+    "rules~thx01": {
+      "n": 100,
+      "agree": 96,
+      "share": 0.96
+    },
+    "rules~jev": {
+      "n": 100,
+      "agree": 69,
+      "share": 0.69
+    },
+    "rule_based~thx01": {
+      "n": 100,
+      "agree": 12,
+      "share": 0.12
+    },
+    "rule_based~jev": {
+      "n": 100,
+      "agree": 41,
+      "share": 0.41
+    },
+    "thx01~jev": {
+      "n": 100,
+      "agree": 65,
+      "share": 0.65
+    },
+    "all_three(rules, thx01, jev)": {
+      "n": 100,
+      "agree": 65,
+      "share": 0.65
+    },
+    "all_three(rule_based, thx01, jev)": {
+      "n": 100,
+      "agree": 9,
+      "share": 0.09
+    }
+  },
+  "gate": {
+    "gated_rows": 14,
+    "gate_rules": {
+      "gate.greeting": 3,
+      "gate.coding_intent": 11
+    }
+  },
+  "routers": {
+    "thx01": {
+      "status": {
+        "answered": 100
+      },
+      "path": {
+        "fallback_safe_tier": 40,
+        "slow_local": 60
+      },
+      "failure_reasons": {},
+      "model_revision": {
+        "b323afcef149f9288a9d0daef4badd67b9b87c61": 100
+      },
+      "decide_ms": {
+        "n": 100,
+        "min": 3086.3233,
+        "p10": 3521.9506,
+        "p50": 4076.9136,
+        "p90": 5012.6351,
+        "max": 7312.5014
+      },
+      "backend_latency_ms": {
+        "n": 100,
+        "min": 3082.8928,
+        "p10": 3504.2563,
+        "p50": 4073.7369,
+        "p90": 5008.9744,
+        "max": 7308.2096
+      },
+      "input_tokens": {
+        "n": 100,
+        "min": 466,
+        "p10": 491,
+        "p50": 551,
+        "p90": 646,
+        "max": 756
+      },
+      "cost_total_usd": "0",
+      "cost_per_call_usd": "0",
+      "answered_by_model_accuracy": {
+        "n": 60,
+        "decided": 60,
+        "correct": 38,
+        "accuracy": 0.633,
+        "under_routed_1_to_0": 0,
+        "over_routed_0_to_1": 22,
+        "tier1_recall": 1.0,
+        "tier0_recall": 0.043
+      },
+      "confidence_by_question": {
+        "complexity": {
+          "reported_confidence": {
+            "n": 100,
+            "min": 0.0736,
+            "p10": 0.1213,
+            "p50": 0.381,
+            "p90": 0.7691,
+            "max": 0.8979
+          },
+          "confidence_missing": 0,
+          "probability_strength": {
+            "n": 100,
+            "min": 0.3426,
+            "p10": 0.427,
+            "p50": 0.6969,
+            "p90": 0.9297,
+            "max": 0.9748
+          }
+        },
+        "needs_reasoning": {
+          "reported_confidence": {
+            "n": 100,
+            "min": 0.5039,
+            "p10": 0.5509,
+            "p50": 0.7149,
+            "p90": 0.9471,
+            "max": 0.9924
+          },
+          "confidence_missing": 0,
+          "probability_strength": {
+            "n": 100,
+            "min": 0.5039,
+            "p10": 0.5509,
+            "p50": 0.7149,
+            "p90": 0.9471,
+            "max": 0.9924
+          }
+        },
+        "cheap_model_ok": {
+          "reported_confidence": {
+            "n": 100,
+            "min": 0.5015,
+            "p10": 0.5215,
+            "p50": 0.5874,
+            "p90": 0.736,
+            "max": 0.9257
+          },
+          "confidence_missing": 0,
+          "probability_strength": {
+            "n": 100,
+            "min": 0.5015,
+            "p10": 0.5215,
+            "p50": 0.5874,
+            "p90": 0.736,
+            "max": 0.9257
+          }
+        },
+        "intent": {
+          "reported_confidence": {
+            "n": 100,
+            "min": 0.1892,
+            "p10": 0.3829,
+            "p50": 0.7362,
+            "p90": 0.95,
+            "max": 0.9787
+          },
+          "confidence_missing": 0,
+          "probability_strength": {
+            "n": 100,
+            "min": 0.3206,
+            "p10": 0.445,
+            "p50": 0.8584,
+            "p90": 0.9841,
+            "max": 0.9934
+          }
+        },
+        "depends_on_history": {
+          "reported_confidence": {
+            "n": 100,
+            "min": 0.5023,
+            "p10": 0.5189,
+            "p50": 0.7088,
+            "p90": 0.8643,
+            "max": 0.9493
+          },
+          "confidence_missing": 0,
+          "probability_strength": {
+            "n": 100,
+            "min": 0.5023,
+            "p10": 0.5189,
+            "p50": 0.7088,
+            "p90": 0.8643,
+            "max": 0.9493
+          }
+        }
+      }
+    },
+    "jev": {
+      "status": {
+        "answered": 100
+      },
+      "path": {
+        "slow_hosted": 85,
+        "fallback_safe_tier": 15
+      },
+      "failure_reasons": {},
+      "model_revision": {
+        "jev-1.14.0": 100
+      },
+      "decide_ms": {
+        "n": 100,
+        "min": 716.8643,
+        "p10": 787.7069,
+        "p50": 970.7185,
+        "p90": 1125.8064,
+        "max": 3783.0447
+      },
+      "backend_latency_ms": {
+        "n": 100,
+        "min": 699.3885,
+        "p10": 762.0356,
+        "p50": 951.6795,
+        "p90": 1104.512,
+        "max": 3772.879
+      },
+      "input_tokens": {
+        "n": 100,
+        "min": 668,
+        "p10": 676,
+        "p50": 697,
+        "p90": 741,
+        "max": 765
+      },
+      "cost_total_usd": "0.0032478600",
+      "cost_per_call_usd": "0.0000324786",
+      "answered_by_model_accuracy": {
+        "n": 85,
+        "decided": 85,
+        "correct": 72,
+        "accuracy": 0.847,
+        "under_routed_1_to_0": 1,
+        "over_routed_0_to_1": 12,
+        "tier1_recall": 0.975,
+        "tier0_recall": 0.733
+      },
+      "confidence_by_question": {
+        "complexity": {
+          "reported_confidence": {
+            "n": 100,
+            "min": 0.06,
+            "p10": 0.5,
+            "p50": 0.83,
+            "p90": 1.0,
+            "max": 1.0
+          },
+          "confidence_missing": 0,
+          "probability_strength": {
+            "n": 100,
+            "min": 0.5,
+            "p10": 0.54,
+            "p50": 0.84,
+            "p90": 1.0,
+            "max": 1.0
+          }
+        },
+        "needs_reasoning": {
+          "reported_confidence": {
+            "n": 0
+          },
+          "confidence_missing": 100,
+          "probability_strength": {
+            "n": 100,
+            "min": 0.5,
+            "p10": 0.58,
+            "p50": 0.83,
+            "p90": 0.93,
+            "max": 0.96
+          }
+        },
+        "cheap_model_ok": {
+          "reported_confidence": {
+            "n": 0
+          },
+          "confidence_missing": 100,
+          "probability_strength": {
+            "n": 100,
+            "min": 0.5,
+            "p10": 0.59,
+            "p50": 0.84,
+            "p90": 0.95,
+            "max": 0.97
+          }
+        },
+        "intent": {
+          "reported_confidence": {
+            "n": 100,
+            "min": 0.32,
+            "p10": 0.74,
+            "p50": 1.0,
+            "p90": 1.0,
+            "max": 1.0
+          },
+          "confidence_missing": 0,
+          "probability_strength": {
+            "n": 100,
+            "min": 0.39,
+            "p10": 0.77,
+            "p50": 1.0,
+            "p90": 1.0,
+            "max": 1.0
+          }
+        },
+        "depends_on_history": {
+          "reported_confidence": {
+            "n": 0
+          },
+          "confidence_missing": 100,
+          "probability_strength": {
+            "n": 100,
+            "min": 0.66,
+            "p10": 0.88,
+            "p50": 0.95,
+            "p90": 0.96,
+            "max": 0.97
+          }
+        }
+      }
+    }
+  },
+  "jev_ledger_remaining_usd": "0.0167521400",
+  "rows_with_any_error": [
+    {
+      "id": "SYN-FA-001",
+      "language": "fa",
+      "category": "greeting",
+      "label": 0,
+      "borderline": false,
+      "rules": 0,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-002",
+      "language": "fa",
+      "category": "greeting",
+      "label": 0,
+      "borderline": false,
+      "rules": 0,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-003",
+      "language": "fa",
+      "category": "greeting",
+      "label": 0,
+      "borderline": false,
+      "rules": 0,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-004",
+      "language": "fa",
+      "category": "greeting",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-005",
+      "language": "fa",
+      "category": "greeting",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-006",
+      "language": "fa",
+      "category": "greeting",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-007",
+      "language": "fa",
+      "category": "greeting",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-008",
+      "language": "fa",
+      "category": "follow_up",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-009",
+      "language": "fa",
+      "category": "follow_up",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-010",
+      "language": "fa",
+      "category": "follow_up",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-011",
+      "language": "fa",
+      "category": "follow_up",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-012",
+      "language": "fa",
+      "category": "follow_up",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-013",
+      "language": "fa",
+      "category": "follow_up",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-014",
+      "language": "fa",
+      "category": "follow_up",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-015",
+      "language": "fa",
+      "category": "follow_up",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-016",
+      "language": "fa",
+      "category": "factual",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-017",
+      "language": "fa",
+      "category": "factual",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-018",
+      "language": "fa",
+      "category": "factual",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-019",
+      "language": "fa",
+      "category": "factual",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-020",
+      "language": "fa",
+      "category": "factual",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-021",
+      "language": "fa",
+      "category": "factual",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-022",
+      "language": "fa",
+      "category": "factual",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-023",
+      "language": "fa",
+      "category": "factual",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-024",
+      "language": "fa",
+      "category": "factual",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-025",
+      "language": "fa",
+      "category": "factual",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-026",
+      "language": "fa",
+      "category": "support",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-027",
+      "language": "fa",
+      "category": "support",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-028",
+      "language": "fa",
+      "category": "support",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-029",
+      "language": "fa",
+      "category": "support",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-030",
+      "language": "fa",
+      "category": "support",
+      "label": 0,
+      "borderline": true,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-031",
+      "language": "fa",
+      "category": "support",
+      "label": 1,
+      "borderline": true,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-032",
+      "language": "fa",
+      "category": "support",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-033",
+      "language": "fa",
+      "category": "support",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-034",
+      "language": "fa",
+      "category": "support",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-035",
+      "language": "fa",
+      "category": "support",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-036",
+      "language": "fa",
+      "category": "translation",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-037",
+      "language": "fa",
+      "category": "translation",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-038",
+      "language": "fa",
+      "category": "translation",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-039",
+      "language": "fa",
+      "category": "translation",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 0,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-040",
+      "language": "fa",
+      "category": "translation",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-041",
+      "language": "fa",
+      "category": "translation",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-042",
+      "language": "fa",
+      "category": "writing",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-043",
+      "language": "fa",
+      "category": "writing",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-044",
+      "language": "fa",
+      "category": "writing",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-045",
+      "language": "fa",
+      "category": "writing",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-046",
+      "language": "fa",
+      "category": "writing",
+      "label": 0,
+      "borderline": true,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-047",
+      "language": "fa",
+      "category": "writing",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-048",
+      "language": "fa",
+      "category": "writing",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-049",
+      "language": "fa",
+      "category": "writing",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-050",
+      "language": "fa",
+      "category": "writing",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-051",
+      "language": "fa",
+      "category": "code",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 1,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-052",
+      "language": "fa",
+      "category": "code",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 1,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-054",
+      "language": "fa",
+      "category": "code",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-FA-056",
+      "language": "fa",
+      "category": "code",
+      "label": 0,
+      "borderline": true,
+      "rules": 1,
+      "rule_based": 1,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-057",
+      "language": "fa",
+      "category": "code",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-058",
+      "language": "fa",
+      "category": "math",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-059",
+      "language": "fa",
+      "category": "math",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-060",
+      "language": "fa",
+      "category": "math",
+      "label": 1,
+      "borderline": true,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-061",
+      "language": "fa",
+      "category": "math",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-062",
+      "language": "fa",
+      "category": "math",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-063",
+      "language": "fa",
+      "category": "math",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-064",
+      "language": "fa",
+      "category": "math",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-065",
+      "language": "fa",
+      "category": "reasoning",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-066",
+      "language": "fa",
+      "category": "reasoning",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-067",
+      "language": "fa",
+      "category": "reasoning",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-068",
+      "language": "fa",
+      "category": "reasoning",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-069",
+      "language": "fa",
+      "category": "reasoning",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-FA-070",
+      "language": "fa",
+      "category": "reasoning",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-EN-001",
+      "language": "en",
+      "category": "greeting",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-EN-002",
+      "language": "en",
+      "category": "follow_up",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-EN-003",
+      "language": "en",
+      "category": "factual",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-EN-004",
+      "language": "en",
+      "category": "factual",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-EN-005",
+      "language": "en",
+      "category": "support",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-EN-006",
+      "language": "en",
+      "category": "support",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-EN-007",
+      "language": "en",
+      "category": "translation",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-EN-008",
+      "language": "en",
+      "category": "writing",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-EN-009",
+      "language": "en",
+      "category": "writing",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-EN-010",
+      "language": "en",
+      "category": "code",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 1,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-EN-012",
+      "language": "en",
+      "category": "math",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-EN-013",
+      "language": "en",
+      "category": "math",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-EN-014",
+      "language": "en",
+      "category": "reasoning",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-EN-015",
+      "language": "en",
+      "category": "reasoning",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-MI-001",
+      "language": "mixed",
+      "category": "follow_up",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-MI-002",
+      "language": "mixed",
+      "category": "factual",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 1,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-MI-003",
+      "language": "mixed",
+      "category": "factual",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-MI-004",
+      "language": "mixed",
+      "category": "support",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-MI-006",
+      "language": "mixed",
+      "category": "translation",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-MI-007",
+      "language": "mixed",
+      "category": "translation",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-MI-008",
+      "language": "mixed",
+      "category": "writing",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-MI-009",
+      "language": "mixed",
+      "category": "code",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 1,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-MI-011",
+      "language": "mixed",
+      "category": "code",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-MI-012",
+      "language": "mixed",
+      "category": "code",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 0
+    },
+    {
+      "id": "SYN-MI-013",
+      "language": "mixed",
+      "category": "math",
+      "label": 0,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-MI-014",
+      "language": "mixed",
+      "category": "reasoning",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    },
+    {
+      "id": "SYN-MI-015",
+      "language": "mixed",
+      "category": "reasoning",
+      "label": 1,
+      "borderline": false,
+      "rules": 1,
+      "rule_based": 0,
+      "thx01": 1,
+      "jev": 1
+    }
+  ],
+  "limits": [
+    "SYNTHETIC requests written for this check, not real traffic: lengths, topics and phrasing differ from the dataset.",
+    "Labels are one person's judgement (the owner); no second rater, no agreement measure.",
+    "n = 100 (70 / 15 / 15 by language; 5 borderline): per-language and per-category numbers rest on 15 or fewer rows each.",
+    "Tier 0/1 only: router tiers >= 1 count as 1. Accuracy is against labels, not answer quality.",
+    "Models asked with the gate off and offline settings (no inline deadline, no router cache, confidence gate off).",
+    "A first signal, not proof."
+  ]
+}

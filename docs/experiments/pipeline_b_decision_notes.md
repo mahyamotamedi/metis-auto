@@ -30,6 +30,8 @@ Common to every block: tune period March–July 2026 (`a_timestamp`, naive, Q-06
 
 ## Routing: R-B3 kNN router, nearest-profile policy (`exp-route-011`)
 
+Decision record: [ADR-0048](../adr/0048-knn-router-nearest-profile-routing.md). The interim eligibility below is superseded in part by [ADR-0045](../adr/0045-routing-base-eligibility-and-failover.md) (shared routing base, now on `main`); B's switch-over and re-run are pending.
+
 | | |
 |---|---|
 | Tried | For each request, the `k` nearest tune profiles (never its own session or duplicate family); the cheapest eligible candidate those neighbours ran; never upward; `k` in {5, 15, 50}, default by the predeclared least-aggressive criterion in session/family-grouped nested CV inside the tune split. |

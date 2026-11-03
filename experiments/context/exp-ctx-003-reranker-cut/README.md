@@ -28,7 +28,7 @@
 
 ## Results on the full data (2026-11-02)
 
-Report period August to October 2026. Tokens cover every eligible request. **Cost coverage:** `todays_models` can price only models in the sprint catalogue (`catalogue-metis-test.toml`), and `gemini-2.5-flash`, which carries 90% of eligible RAG requests and about 95% of their recorded cost, is not in it. So its cost share is over 4,919 of 24,609 report LLM requests (1,495 of 16,099 eligible), mostly `grok-4-1-fast` and `gpt-4o-mini`: **not representative**. `gemini-2.5-flash` is present in `as_logged` (it has an implied rate) and, by construction, in `premium_gpt_5_5` and `best_single_cheap`, which price every request at one model. Intervals are session-clustered 95% bootstrap.
+Report period August to October 2026. Tokens cover every eligible request. **Cost coverage:** `todays_models` uses the replay prices (ADR-0041; `catalogue-metis-replay.toml`, `prices-metis-2026-10-18-logged`; re-run 2026-11-03), which price `gemini-2.5-flash`, the model of 90% of eligible RAG requests and about 95% of their recorded cost. It now covers 24,561 of 24,609 report LLM requests and every one of the 16,099 eligible (before: 4,919 and 1,495 with the test catalogue, mostly `grok-4-1-fast` and `gpt-4o-mini`, not representative). `premium_gpt_5_5` and `best_single_cheap` price every request at one model, and their results are unchanged by the replay prices. Intervals are session-clustered 95% bootstrap.
 
 **Three numbers per request group** (headline points, report period):
 
@@ -43,31 +43,31 @@ Report period August to October 2026. Tokens cover every eligible request. **Cos
 |---|---|---|---|---|---|---|
 | `observed_relevancy` | `as_logged` | recorded | 16,099 / 16,099 | 159.39 | 3.040 | 1.91% (1.83% to 1.98%) |
 | `observed_relevancy` | `premium_gpt_5_5` (`gpt-5.5`, estimate) | price-file | 16,099 / 16,099 | 3,936.30 | 102.62 | 2.61% (2.41% to 2.81%) |
-| `observed_relevancy` | `todays_models` | price-file | **1,495 / 16,099** | 3.62 | 0.175 | 4.83% (3.11% to 6.69%), not representative |
+| `observed_relevancy` | `todays_models` (replay prices) | price-file | 16,099 / 16,099 | 251.42 | 6.084 | 2.42% (2.24% to 2.63%) |
 | `observed_relevancy` | `best_single_cheap` (`gpt-5-nano`) | price-file | 16,099 / 16,099 | 41.85 | 1.025 | 2.45% (2.27% to 2.65%) |
 | `lexical_overlap` (2,000 sample) | `as_logged` | recorded | 2,000 / 2,000 | 18.53 | 0.377 | 2.04% (1.88% to 2.18%) |
 | `lexical_overlap` | `premium_gpt_5_5` | price-file | 2,000 / 2,000 | 453.47 | 12.61 | 2.78% (2.42% to 3.16%) |
-| `lexical_overlap` | `todays_models` | price-file | **183 / 2,000** | 0.488 | 0.040 | 8.15% (4.84% to 13.08%), not representative |
+| `lexical_overlap` | `todays_models` (replay prices) | price-file | 2,000 / 2,000 | 28.96 | 0.736 | 2.54% (2.22% to 2.89%) |
 | `lexical_overlap` | `best_single_cheap` | price-file | 2,000 / 2,000 | 4.79 | 0.126 | 2.63% (2.29% to 2.99%) |
 
-No eligible request has an unknown `as_logged` saving (every logged model of an eligible request has an implied rate); 11 of 24,609 report LLM rows have no known cost in `as_logged`, `premium_gpt_5_5` and `best_single_cheap` (unknown tokens or recorded cost), versus 19,690 in `todays_models`. The observed scorer's shares are of all priced LLM requests; the lexical ones of a RAG-only sample, so the two scorers' shares are not comparable.
+No eligible request has an unknown `as_logged` saving (every logged model of an eligible request has an implied rate); 11 of 24,609 report LLM rows have no known cost in `as_logged`, `premium_gpt_5_5` and `best_single_cheap` (unknown tokens or recorded cost), versus 48 in `todays_models` (19,690 with the old price file). The observed scorer's shares are of all priced LLM requests; the lexical ones of a RAG-only sample, so the two scorers' shares are not comparable.
 
-The two cost shares have different denominators (all priced LLM requests vs. the priced requests of a RAG-only sample) and are not comparable. On the tune period the observed headline saved 2.2% (1.5% to 3.0%).
+The two cost shares have different denominators (all priced LLM requests vs. the priced requests of a RAG-only sample) and are not comparable. On the tune period the observed headline saved 3.6% (3.2% to 4.2%) at `todays_models` with the replay prices.
 
-**Curve, report period, observed scorer** (unique chunk share removed / cost share saved at `todays_models`, priced subset only; full table with both periods and scorers in `reports/levers/context.reranker_cut.curve.csv`):
+**Curve, report period, observed scorer** (unique chunk share removed / cost share saved at `todays_models`, replay prices, all 16,099 eligible requests priced; the headline points did not move with the prices; full table with both periods and scorers in `reports/levers/context.reranker_cut.curve.csv`):
 
 | top_k \ threshold | none | q10 (0.111) | q25 (0.231) | q50 (0.509) |
 |---|---|---|---|---|
-| 3 | 68.3% / 14.8% | 68.3% / 14.8% | 68.3% / 14.8% | 68.3% / 14.8% |
-| 5 | 48.1% / 10.8% | 49.1% / 11.0% | 51.8% / 11.5% | 59.6% / 12.3% |
-| 8 | 21.2% / 5.3% | 24.6% / 6.2% | 33.0% / 7.5% | 52.4% / 9.2% |
-| 10 | 9.6% / 2.8% | 14.5% / 4.1% | 26.2% / 5.7% | 50.6% / 8.1% |
-| 12 | 3.4% / 1.2% | 9.4% / 2.9% | **23.1% / 4.8%** | 49.9% / 7.6% |
-| none | 0 / 0 | 6.8% / 1.9% | 21.6% / 4.1% | 49.6% / 7.1% |
+| 3 | 68.3% / 7.2% | 68.3% / 7.2% | 68.3% / 7.2% | 68.3% / 7.2% |
+| 5 | 48.1% / 5.1% | 49.1% / 5.2% | 51.8% / 5.4% | 59.6% / 6.3% |
+| 8 | 21.2% / 2.2% | 24.6% / 2.6% | 33.0% / 3.5% | 52.4% / 5.5% |
+| 10 | 9.6% / 1.0% | 14.5% / 1.5% | 26.2% / 2.8% | 50.6% / 5.3% |
+| 12 | 3.4% / 0.4% | 9.4% / 1.0% | **23.1% / 2.4%** | 49.9% / 5.2% |
+| none | 0 / 0 | 6.8% / 0.7% | 21.6% / 2.3% | 49.6% / 5.2% |
 
 At `top_k` 3 the floor (3) equals `top_k`, so thresholds change nothing. For the lexical scorer the 10% and 25% tune quantiles are both 0.0 (at least a quarter of unique chunks share no word with the question), so those rows drop nothing beyond `top_k`.
 
-**Overhead** (`scripts/measure_lever_overhead.py`, offline per-request estimate on one machine; not a load test, Q-14): `apply` on 1,000 seeded report-period LLM rows as one-row frames, chunks loaded before timing. Observed p50 25.6 ms, p95 28.2 ms; lexical p50 28.2 ms, p95 35.3 ms (AMD Ryzen 7 5800H, CPython 3.13.9, 2026-11-02). Both pass the 100 ms p95 target. The earlier 86.4 / 96.5 ms p95 included three repricings inside `apply`; pricing is now accounting outside `apply` (`baseline_frames`), so it is no longer timed.
+**Overhead** (`scripts/measure_lever_overhead.py`, offline per-request estimate on one machine; not a load test, Q-14): `apply` on 1,000 seeded report-period LLM rows as one-row frames, chunks loaded before timing. Observed p50 58.1 ms, p95 70.9 ms; lexical p50 66.3 ms, p95 84.9 ms (AMD Ryzen 7 5800H, CPython 3.13.9, 2026-11-03, measured on the `todays_models` files; two earlier runs that day gave 68.8 / 69.0 and 83.0 / 85.1 ms). Both pass the 100 ms p95 target. The 2026-11-02 figures (p95 28.2 and 35.3 ms; still in the other three baselines' files) predate the last change in #26, which moved the effective-input cap into `apply` (`baselines_full.token_counts` and two `lower_uncached_input` calls); the current figures time the merged code. Pricing stays outside `apply` (`baseline_frames`) and is not timed.
 
 ## Assumptions
 
@@ -75,6 +75,6 @@ At `top_k` 3 the floor (3) equals `top_k`, so thresholds change nothing. For the
 - *Current:* the 0.3384 tokens-per-character slope is a turn-0 regression (*hypothetical reconstruction*), applied to every request and model.
 - *Current:* repeated chunks inside a request are billed (the slope counts every row); S-6 owns that saving.
 - *Current:* the platform's relevancy scores are comparable across the queries of one request (one reranker); unverified.
-- *Current:* `todays_models` covers only catalogue models (see Results); `as_logged` uses model-average implied input rates (ADR-0038), so tiered or cached-heavy requests are priced roughly.
+- *Current:* `todays_models` uses the replay prices of ADR-0041 (48 report LLM rows unpriced); `as_logged` uses model-average implied input rates (ADR-0038), so tiered or cached-heavy requests are priced roughly.
 - *Future:* a real reranker (`bge-reranker-v2-m3`, cut-first a) and a quality ablation would replace the score-mass rule.
 - *Speculative:* the score-mass rule (≥ 90%) is a reasonable proxy for "nothing important removed".

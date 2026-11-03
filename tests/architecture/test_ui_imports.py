@@ -1,5 +1,6 @@
 """The UI libraries (extra ``ui``: Streamlit and the Altair and pandas it
 brings) are imported only by the demo page, ``scripts/demo_ui.py`` (Demo B),
+its Results page file ``scripts/demo_pages/results.py`` (D-2, spec UI-R01),
 its live smoke test (``scripts/demo_ui_live_check.py``, which drives the page
 with Streamlit's test runner), and the page's tests; the package never needs
 them. Static check (``ast``)."""
@@ -11,6 +12,7 @@ REPO = Path(__file__).resolve().parents[2]
 UI_LIBRARIES = {"streamlit", "altair"}
 ALLOWED = {
     REPO / "scripts" / "demo_ui.py",
+    REPO / "scripts" / "demo_pages" / "results.py",
     REPO / "scripts" / "demo_ui_live_check.py",
     REPO / "tests" / "integration" / "test_demo_ui_app.py",
 }
@@ -43,3 +45,14 @@ def test_the_page_never_touches_the_key_or_logs():
     source = ast.unparse(tree)
     for forbidden in ("METIS_API_KEY", "get_secret_value", ".env", "logging", "print("):
         assert forbidden not in source, forbidden
+
+
+def test_new_page_files_hold_no_colours():
+    """Colours live in ``config/demo/theme.toml`` (spec UI-T05; Stage 2 replaces
+    it with the full token table); the Results page names none."""
+    import re
+
+    page = REPO / "scripts" / "demo_pages" / "results.py"
+    source = page.read_text(encoding="utf-8")
+    assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", source)
+    assert "rgb(" not in source and "hsl(" not in source
