@@ -13,13 +13,11 @@ widgets to the session's toggles.
   real budget in both modes, the theme toggle and a "Local demo" chip; below,
   the Chat and Results tabs. Built here, not with Streamlit's top navigation,
   which cannot hold these controls (ADR-0052).
-- Main area: the chat (Persian right-to-left, English left-to-right), the
-  live-call banner, and per-message details.
-- Sidebar: bot setup (instructions, one retrieved document per block,
-  SYNTHETIC presets) and settings (fake or live, routing mode, the DEMO cache
-  settings, EXPERIMENTAL compression, DeepSeek thinking, new user, reset).
-- Right: the cost panel (paid vs the premium estimate, the savings
-  decomposition, the budget).
+- Chat page: the screen the session's ``DemoWorkspace`` is on (UI spec Stage 3):
+  the entry screen, the optimisation settings, or a chat workspace with the
+  savings panel beside it. Drawn by ``scripts/demo_pages/workspace.py`` over
+  ``wiring.demo_workspace`` and ``wiring.savings_panel``. The brand returns to
+  the entry screen (an invisible page link with ``?screen=entry``).
 - Results (D-2, the offline lever results): ``scripts/demo_pages/results.py``
   over ``wiring.lever_view``.
 
@@ -46,37 +44,22 @@ import subprocess
 import sys
 from pathlib import Path
 
-import altair as alt
-import pandas as pd
 import streamlit as st
 from streamlit.runtime.scriptrunner import get_script_run_ctx
 
-from metis_auto.settings import SettingsError
-from metis_auto.wiring.chat import (
-    ChatSession,
-    CompressionMode,
-    RoutingMode,
-    TurnReport,
+_PAGES = Path(__file__).resolve().parent
+if str(_PAGES) not in sys.path:  # `demo_pages` next to this file (AppTest, plain run)
+    sys.path.insert(0, str(_PAGES))
+
+from demo_pages import workspace as workspace_page  # noqa: E402
+
+from metis_auto.wiring.demo_ui import header_budget, load_presets  # noqa: E402
+from metis_auto.wiring.demo_workspace import (  # noqa: E402
+    DemoWorkspace,
+    make_session_factory,
+    synthetic_bots,
 )
-from metis_auto.wiring.demo_ui import (
-    CostView,
-    blocked_banner,
-    budget_view,
-    cost_view,
-    detail_sections,
-    friendly_failure,
-    header_budget,
-    live_banner,
-    live_check,
-    load_presets,
-    routing_kind,
-    routing_kind_text,
-    served_text,
-    term_text,
-    text_direction,
-    waterfall_rows,
-)
-from metis_auto.wiring.ui_config import (
+from metis_auto.wiring.ui_config import (  # noqa: E402
     DEFAULT_LANGUAGE,
     LANGUAGE_SHORT,
     LANGUAGES,
@@ -85,21 +68,10 @@ from metis_auto.wiring.ui_config import (
     translator,
     ui_state,
 )
-from metis_auto.wiring.ui_format import fmt
-from metis_auto.wiring.ui_style import (
-    altair_config,
-    axis_format,
-    bar_layout,
+from metis_auto.wiring.ui_style import (  # noqa: E402
     budget_html,
-    card_title_html,
     chip_html,
-    empty_state_html,
     header_brand_html,
-    kind_rows,
-    kind_scale,
-    legend_html,
-    ltr,
-    md_safe,
     page_css,
 )
 
@@ -110,15 +82,6 @@ STREAMLIT_OPTIONS = (
     "--server.fileWatcherType=none",
 )
 RESULTS_PAGE = "demo_pages/results.py"  # D-2 Results page, relative to this file
-FAKE, LIVE = "Fake (free, no key)", "Live (real models, budgeted)"
-MODE_KEYS = {FAKE: "mode_fake_option", LIVE: "mode_live_option"}
-ROUTER_MODES = (
-    "off",
-    "local",
-    "hosted",
-    "hybrid_local_first",
-    "hybrid_hosted_first",
-)
 
 # --- session state -------------------------------------------------------
 
@@ -139,614 +102,27 @@ def S(key: str, **fields: object) -> str:
 
 
 def _init() -> None:
+    """One ``DemoWorkspace`` per browser session: the router, one ChatSession per
+    journey and bot, the settings (wiring, spec Stage 3)."""
     s = _s()
-    if "chat" in s:
+    if "workspace" in s:
         return
-    s.presets = load_presets(_injected("presets_path"))
-    s.preset_key = None
-    s.instructions = ""
-    s.doc_ids = []
-    s.next_doc = 0
-    s.mode = FAKE
-    s.routing = RoutingMode.STICKY_V1.value
-    s.router_mode = "local"
-    s.compression = CompressionMode.OFF.value
-    s.bot_cache = False
-    s.seed = False
-    s.thinking = True
-    s.messages = []
     s.notice = None
     s.blocked = None
-    s.chat = _build_chat(live=False)
-    s.fixed_model = s.chat.model_id
-
-
-def _documents() -> list[str]:
-    s = _s()
-    return [s.get(f"doc_{i}", "") for i in s.doc_ids]
-
-
-def _build_chat(*, live: bool) -> ChatSession:
-    s = _s()
-    routing = RoutingMode(s.routing)
-    return ChatSession(
-        s.get("fixed_model") if routing == RoutingMode.FIXED else None,
-        live=live,
-        instructions=s.instructions or None,
-        retrieved=_documents(),
-        routing=routing,
-        compression=CompressionMode(s.compression),
-        bot_cache=s.bot_cache,
-        seed=s.seed,
-        deepseek_thinking=s.thinking,
-        settings_loader=_injected("settings_loader"),
-        client_factory=_injected("client_factory"),
-        compressor_factory=_injected("compressor_factory"),
-        seed_path=_injected("seed_path"),
-        router_mode=s.get("router_mode", "local"),
-    )
-
-
-def _notice(level: str, text: str) -> None:
-    _s().notice = (level, text)
-
-
-def _loader():
-    from metis_auto.settings import load_settings
-
-    return _injected("settings_loader") or (lambda o: load_settings(overrides=o))
-
-
-# --- callbacks (run before the page is drawn) ---------------------------
-
-
-def _on_mode() -> None:
-    s = _s()
-    live = s.mode == LIVE
-    if live:
-        allowed, reasons = live_check(_loader())
-        if not allowed:
-            s.mode, s.blocked = FAKE, "; ".join(reasons)
-            return
-    try:
-        chat = _build_chat(live=live)
-    except (SettingsError, ValueError) as exc:
-        s.mode = FAKE
-        s.blocked = str(exc).removeprefix("live calls refused: ")
-        return
-    s.chat, s.messages, s.blocked = chat, [], None
-    _notice(
-        "info",
-        S(
-            "notice_new_run",
-            mode=S("mode_live" if live else "mode_fake"),
-            run=ltr(chat.run_id),
+    s.workspace = DemoWorkspace(
+        synthetic_bots(load_presets(_injected("presets_path"))),
+        session_factory=make_session_factory(
+            settings_loader=_injected("settings_loader"),
+            client_factory=_injected("client_factory"),
+            compressor_factory=_injected("compressor_factory"),
+            seed_path=_injected("seed_path"),
         ),
     )
 
 
-def _apply(key: str, change, current) -> None:
-    """Apply one toggle to the session; on failure restore the widget."""
-    s = _s()
-    try:
-        change(s[key])
-    except Exception as exc:  # noqa: BLE001 - shown to the presenter
-        s[key] = current
-        _notice("error", S("notice_setting_failed", error=exc))
-
-
-def _on_routing() -> None:
-    s = _s()
-    chat: ChatSession = s.chat
-
-    def change(value: str) -> None:
-        if value == RoutingMode.FIXED.value:
-            chat.switch_model(s.fixed_model)
-        else:
-            chat.set_routing(RoutingMode(value))
-
-    _apply("routing", change, chat.routing.value)
-
-
-def _on_router_mode() -> None:
-    s = _s()
-    chat: ChatSession = s.chat
-    _apply("router_mode", chat.set_router_mode, chat.router_mode)
-
-
-def _on_fixed_model() -> None:
-    s = _s()
-    _apply("fixed_model", s.chat.switch_model, s.chat.model_id)
-
-
-def _on_compression() -> None:
-    chat: ChatSession = _s().chat
-    _apply(
-        "compression",
-        lambda v: chat.set_compression(CompressionMode(v)),
-        chat.compression.value,
-    )
-
-
-def _on_bot_cache() -> None:
-    chat: ChatSession = _s().chat
-    _apply("bot_cache", chat.set_bot_cache, chat.bot_cache)
-
-
-def _on_seed() -> None:
-    chat: ChatSession = _s().chat
-    _apply("seed", chat.set_seed, chat.seed)
-
-
-def _on_thinking() -> None:
-    chat: ChatSession = _s().chat
-    _apply("thinking", chat.set_deepseek_thinking, chat.deepseek_thinking)
-
-
-def _on_new_user() -> None:
-    s = _s()
-    s.chat.new_user()
-    s.messages = []
-    _notice("info", S("notice_new_user", n=ltr(s.chat.users)))
-
-
-def _on_reset() -> None:
-    s = _s()
-    s.chat.reset()
-    s.messages = []
-    _notice("info", S("notice_reset"))
-
-
-def _on_degrade() -> None:
-    _s().chat.degrade_next()
-    _notice("info", S("notice_degrade"))
-
-
-def _load_preset(key: str) -> None:
-    s = _s()
-    preset = next(p for p in s.presets if p.key == key)
-    for i in s.doc_ids:
-        s.pop(f"doc_{i}", None)
-    s.doc_ids = []
-    for text in preset.documents:
-        _add_doc(text)
-    s.instructions = preset.instructions
-    s.preset_key = key
-    s.chat.reset()
-    s.messages = []
-    _notice("info", S("notice_preset", title=preset.title))
-
-
-def _clear_bot() -> None:
-    s = _s()
-    for i in s.doc_ids:
-        s.pop(f"doc_{i}", None)
-    s.doc_ids, s.instructions, s.preset_key = [], "", None
-
-
-def _add_doc(text: str = "") -> None:
-    s = _s()
-    s[f"doc_{s.next_doc}"] = text
-    s.doc_ids = [*s.doc_ids, s.next_doc]
-    s.next_doc += 1
-
-
-def _remove_doc(doc_id: int) -> None:
-    s = _s()
-    s.doc_ids = [i for i in s.doc_ids if i != doc_id]
-    s.pop(f"doc_{doc_id}", None)
-
-
-# --- one turn ------------------------------------------------------------
-
-
-def _send(message: str) -> None:
-    s = _s()
-    chat: ChatSession = s.chat
-    chat.set_instructions(s.instructions or None)
-    chat.set_retrieved(_documents())
-    with st.spinner(S("spinner_answering")):
-        response, report = chat.ask(message)
-    s.messages.append({"role": "user", "text": message})
-    s.messages.append(
-        {"role": "assistant", "text": response.answer or "", "report": report}
-    )
-
-
-# --- drawing ---------------------------------------------------------------
-
-
-def _sidebar() -> None:
-    s = _s()
-    chat: ChatSession = s.chat
-    t = s.ui_text  # bound now: format functions also run outside the script run
-    with st.sidebar:
-        st.header(S("bot_setup"))
-        st.caption(S("presets_note"))
-        for preset in s.presets:
-            st.button(
-                preset.title,
-                key=f"preset_{preset.key}",
-                on_click=_load_preset,
-                args=(preset.key,),
-                help=preset.description,
-                width="stretch",
-                type="primary" if s.preset_key == preset.key else "secondary",
-            )
-        st.text_area(S("instructions"), key="instructions", height=160)
-        st.markdown(S("retrieved_context"))
-        for n, doc_id in enumerate(s.doc_ids, 1):
-            st.text_area(S("document_n", n=n), key=f"doc_{doc_id}", height=110)
-            st.button(
-                S("remove_document_n", n=n),
-                key=f"rm_{doc_id}",
-                on_click=_remove_doc,
-                args=(doc_id,),
-                type="tertiary",
-            )
-        c1, c2 = st.columns(2)
-        c1.button(S("add_document"), on_click=_add_doc, width="stretch")
-        c2.button(S("clear_bot"), on_click=_clear_bot, width="stretch")
-
-        st.divider()
-        st.header(S("settings"))
-        st.radio(
-            S("mode"),
-            [FAKE, LIVE],
-            key="mode",
-            format_func=lambda v: t(MODE_KEYS[v]),
-            on_change=_on_mode,
-        )
-        st.radio(
-            S("routing_label"),
-            [m.value for m in RoutingMode],
-            key="routing",
-            format_func=lambda v: t(f"routing_{v}"),
-            on_change=_on_routing,
-            horizontal=True,
-            help=S("routing_help"),
-        )
-        if s.routing == RoutingMode.DECISION_ROUTER.value:
-            st.selectbox(
-                S("decision_backends"),
-                list(ROUTER_MODES),
-                key="router_mode",
-                format_func=lambda v: t(f"router_{v}"),
-                on_change=_on_router_mode,
-                help=S("decision_backends_help"),
-            )
-        if s.routing == RoutingMode.FIXED.value:
-            models = [
-                e.model_id for e in chat.loaded.reference.catalogue.entries if e.enabled
-            ]
-            st.selectbox(
-                S("model"), models, key="fixed_model", on_change=_on_fixed_model
-            )
-        st.toggle(
-            S("bot_cache"),
-            key="bot_cache",
-            on_change=_on_bot_cache,
-            help=S("bot_cache_help"),
-        )
-        st.toggle(
-            S("demo_seed"),
-            key="seed",
-            on_change=_on_seed,
-            help=S("demo_seed_help"),
-        )
-        st.radio(
-            S("compression"),
-            [
-                CompressionMode.OFF.value,
-                CompressionMode.FAKE.value,
-                CompressionMode.LLMLINGUA2.value,
-            ],
-            key="compression",
-            format_func=lambda v: t(f"compression_{v}"),
-            on_change=_on_compression,
-            horizontal=True,
-        )
-        if s.compression == CompressionMode.LLMLINGUA2.value:
-            st.warning(S("llmlingua_warning"), icon=":material/warning:")
-        elif s.compression == CompressionMode.FAKE.value:
-            st.caption(S("compression_fake_note"))
-        st.toggle(
-            S("thinking"),
-            key="thinking",
-            on_change=_on_thinking,
-            help=S("thinking_help"),
-        )
-        c1, c2 = st.columns(2)
-        c1.button(
-            S("new_user"),
-            key="new_user",
-            on_click=_on_new_user,
-            width="stretch",
-        )
-        c2.button(
-            S("reset_conversation"),
-            key="reset",
-            on_click=_on_reset,
-            width="stretch",
-        )
-        if not chat.live:
-            with st.expander(S("more_fake")):
-                st.button(
-                    S("cut_off_next"),
-                    on_click=_on_degrade,
-                    width="stretch",
-                )
-        if s.seed and chat.seeded:
-            with st.expander(S("seeded_questions")):
-                st.caption(S("seeded_note"))
-                for n, question in enumerate(chat.seeded):
-                    if st.button(question, key=f"seedq_{n}"):
-                        _send(question)
-        st.caption(S("run_footer", run=ltr(chat.run_id), user=ltr(chat.users)))
-
-
-def _banner() -> None:
-    s = _s()
-    chat: ChatSession = s.chat
-    if s.blocked:
-        banner = blocked_banner(s.blocked, t=s.ui_text)
-    else:
-        allowed, reasons = (True, ()) if chat.live else live_check(_loader())
-        banner = live_banner(
-            live=chat.live,
-            allowed=allowed,
-            reasons=reasons,
-            stopped=chat.pipeline.live_stopped,
-            t=s.ui_text,
-        )
-    show = {
-        "off": st.info,
-        "on": st.warning,
-        "blocked": st.error,
-        "stopped": st.error,
-    }[banner.state]
-    show(f"**{banner.title}.** {banner.detail}")
-    if s.notice:
-        level, text = s.notice
-        {"info": st.toast, "error": st.error}[level](text)
-        s.notice = None
-
-
-def _usd(value, currency: str = "USD") -> str:
-    """An amount through the one formatter, LTR-isolated (UI-V07)."""
-    return ltr(fmt(value, "money", currency=currency, unknown=S("not_computed")))
-
-
-def _message(i: int, message: dict) -> None:
-    t = _s().ui_text
-    role, text = message["role"], message["text"]
-    with st.chat_message(role):
-        with st.container(key=f"{text_direction(text)}-m{i}"):
-            st.markdown(text or S("no_answer"))
-        report: TurnReport | None = message.get("report")
-        if report is None:
-            return
-        failure = friendly_failure(report, t=t)
-        if failure:
-            st.warning(failure)
-        view = cost_view(report.parts)
-        parts = [
-            f"**{routing_kind_text(routing_kind(report), t)}**",
-            S("served_by", by=served_text(report.served_by, t)),
-            f"`{ltr(report.model_id or '-')}`",
-        ]
-        if view is not None and view.paid is not None:
-            saved = (
-                S("badge_less", share=ltr(fmt(view.saved_fraction, "percent")))
-                if view.saved_fraction is not None
-                else ""
-            )
-            parts.append(
-                S(
-                    "badge_paid",
-                    paid=_usd(view.paid, view.currency),
-                    premium=_usd(view.premium, view.currency),
-                    saved=saved,
-                )
-            )
-        with st.container(key=f"badge-{i}"):
-            st.markdown(md_safe(" · ".join(parts)))
-        with st.expander(S("details")):
-            for title, rows in detail_sections(report, t=t):
-                st.markdown(f"**{title}**")
-                st.table(pd.DataFrame(rows, columns=["", S("col_value")]).set_index(""))
-
-
-def _chat_column() -> None:
-    s = _s()
-    box = st.container(height=430, border=False, key="mx-chat-box")
-    with box:
-        if not s.messages:
-            st.html(empty_state_html("forum", S("chat_empty"), S("chat_empty_action")))
-        for i, message in enumerate(s.messages):
-            _message(i, message)
-    preset = next((p for p in s.presets if p.key == s.preset_key), None)
-    if preset and preset.suggested:
-        picked = st.pills(
-            S("try_synthetic"),
-            preset.suggested,
-            key=f"try_{len(s.messages)}",
-            label_visibility="collapsed",
-        )
-        if picked:
-            _send(picked)
-            st.rerun()
-    prompt = st.chat_input(S("chat_placeholder"))
-    if prompt:
-        _send(prompt)
-        st.rerun()
-
-
-def _chart(chart: alt.TopLevelMixin) -> None:
-    """Every chart gets the theme's Altair config (UI-G05, UI-G06)."""
-    s = _s()
-    config = altair_config(load_theme(s.ui_theme), s.ui_lang)
-    st.altair_chart(chart.configure(**config), width="stretch", theme=None)
-
-
-def _waterfall(view: CostView) -> None:
-    rows = waterfall_rows(view)
-    if not rows:
-        st.html(empty_state_html("bar_chart", S("nothing_computed")))
-        return
-    s = _s()
-    t = s.ui_text
-    domain, colours = kind_scale(load_theme(s.ui_theme), t)
-    data = pd.DataFrame(kind_rows(rows, t))
-    data["term"] = [term_text(term, t) for term in data["term"]]
-    data["text"] = [
-        fmt(v, "money", currency=view.currency, signed=k != "total")
-        for v, k in zip(data["amount"], data["kind"], strict=True)
-    ]
-    order = list(data["term"])
-    layout = bar_layout(s.ui_lang)
-    bars = (
-        alt.Chart(data)
-        .mark_bar(cornerRadius=3, height=16)
-        .encode(
-            y=alt.Y(
-                "term:N",
-                sort=order,
-                title=None,
-                axis=alt.Axis(labelOverlap=False, orient=layout["y_orient"]),
-            ),
-            x=alt.X(
-                "start:Q",
-                title=view.currency,
-                axis=alt.Axis(format=axis_format("money")),
-                scale=alt.Scale(reverse=layout["x_reverse"]),
-            ),
-            x2="end:Q",
-            color=alt.Color(
-                "kind_label:N",
-                scale=alt.Scale(domain=domain, range=colours),
-                legend=None,
-            ),
-            tooltip=[
-                alt.Tooltip("term:N", title=S("col_term")),
-                alt.Tooltip("text:N", title=view.currency),
-            ],
-        )
-    )
-    _chart(bars.properties(height=alt.Step(26)))
-    present = set(data["kind_label"])
-    st.html(
-        legend_html(
-            [(k, c) for k, c in zip(domain, colours, strict=True) if k in present]
-        )
-    )
-
-
-def _cost_tab(view: CostView | None, scope: str) -> None:
-    if view is None:
-        st.html(empty_state_html("receipt_long", S("no_answer_yet", scope=scope)))
-        return
-    cards = (
-        (S("actually_paid"), _usd(view.paid, view.currency)),
-        (S("premium_estimate"), _usd(view.premium, view.currency)),
-        (S("saved"), ltr(fmt(view.saved_fraction, "percent", unknown="-"))),
-    )
-    with st.container(key=f"mx-row-cost-{scope}", horizontal=True):
-        for n, (label, value) in enumerate(cards):
-            with st.container(key=f"mx-kpi-cost-{scope}-{n}"):
-                st.metric(label, value)
-    _waterfall(view)
-
-
-def _cost_panel() -> None:
-    s = _s()
-    chat: ChatSession = s.chat
-    last = next((m["report"] for m in reversed(s.messages) if m.get("report")), None)
-    message_view = cost_view(last.parts) if last else None
-    session_view = cost_view(last.session_parts) if last else None
-    with st.container(key="mx-card-cost"):
-        st.html(card_title_html(S("cost")))
-        tab1, tab2 = st.tabs([S("tab_message"), S("tab_session")])
-        with tab1:
-            _cost_tab(message_view, S("scope_message"))
-        with tab2:
-            _cost_tab(session_view, S("scope_session"))
-            if session_view is not None:
-                st.caption(
-                    S(
-                        "session_counts",
-                        messages=ltr(session_view.messages),
-                        hits=ltr(session_view.cache_hits),
-                    )
-                )
-        if message_view or session_view:
-            rows = []
-            m_terms = dict(message_view.terms) if message_view else {}
-            s_terms = dict(session_view.terms) if session_view else {}
-            view = message_view or session_view
-            for label, _ in view.terms:
-                rows.append(
-                    {
-                        S("col_term"): term_text(label, s.ui_text),
-                        S("col_message"): _usd(m_terms.get(label), view.currency),
-                        S("col_session"): _usd(s_terms.get(label), view.currency),
-                    }
-                )
-            st.table(pd.DataFrame(rows).set_index(S("col_term")))
-            st.caption(S("decomposition_note"))
-        st.caption(f"{S('premium_caveat')} {S('demo_caveat')}")
-
-    with st.container(key="mx-card-budget"):
-        st.html(card_title_html(S("budget")))
-        budget = budget_view(chat)
-        if budget is None:
-            st.html(empty_state_html("account_balance_wallet", S("budget_none")))
-            return
-        st.progress(
-            min(budget.lifetime_fraction, 1.0),
-            text=md_safe(
-                S(
-                    "budget_lifetime",
-                    spent=_usd(budget.lifetime_spent, budget.currency),
-                    cap=_usd(budget.lifetime_cap, budget.currency),
-                    share=ltr(fmt(budget.lifetime_fraction, "percent")),
-                )
-            ),
-        )
-        if budget.run_cap is not None:
-            st.progress(
-                min(budget.run_fraction or 0.0, 1.0),
-                text=md_safe(
-                    S(
-                        "budget_run",
-                        spent=_usd(budget.run_spent, budget.currency),
-                        cap=_usd(budget.run_cap, budget.currency),
-                    )
-                ),
-            )
-        marks = " / ".join(ltr(fmt(w, "percent")) for w in budget.warn_at)
-        if budget.crossed is not None and budget.crossed >= max(budget.warn_at):
-            st.error(S("budget_over_tell", share=ltr(fmt(budget.crossed, "percent"))))
-        elif budget.crossed is not None:
-            st.warning(S("budget_over", share=ltr(fmt(budget.crossed, "percent"))))
-        st.caption(
-            S("budget_note", marks=marks)
-            + " "
-            + S("budget_fake_free" if not chat.live else "budget_live_charged")
-        )
-
-
 def _chat_page() -> None:
     _init()
-    _sidebar()
-    st.title(S("chat_title"))
-    st.caption(S("chat_subtitle"))
-    _banner()
-    left, right = st.columns([3, 2], gap="large")
-    with left:
-        _chat_column()
-    with right:
-        _cost_panel()
+    workspace_page.render()
 
 
 # --- shell: theme, language, header (UI spec Stage 2) ----------------------------
@@ -771,7 +147,7 @@ def _header(pages: list, current) -> None:
     theme, local demo; then the tabs with a line icon, active = filled pill."""
     s = _s()
     _init()  # the budget is read from the session's ledger, on every page
-    chat: ChatSession = s.chat
+    chat = s.workspace.header_session()
     live = chat.live
     with st.container(key="mx-header", gap=None):
         with st.container(
@@ -780,7 +156,19 @@ def _header(pages: list, current) -> None:
             horizontal_alignment="distribute",
             vertical_alignment="center",
         ):
-            st.html(header_brand_html(s.ui_text), width="content")
+            with st.container(key="mx-brand-wrap", width="content"):
+                st.html(header_brand_html(s.ui_text), width="content")
+                # an invisible link over the wordmark: back to the entry screen
+                # (UI-H02) without losing the session (a plain href would reload)
+                st.page_link(
+                    pages[0][1],
+                    label=S("brand_home"),
+                    query_params={
+                        "theme": s.ui_theme,
+                        "lang": s.ui_lang,
+                        "screen": "entry",
+                    },
+                )
             with st.container(
                 key="mx-header-tools",
                 horizontal=True,

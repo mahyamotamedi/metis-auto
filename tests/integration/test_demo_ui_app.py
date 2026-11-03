@@ -47,8 +47,9 @@ def make_loader(tmp_path, *, live_enabled=False, key=None, run_cap=None):
 
 
 def page(tmp_path, *, loader=None, client_factory=None, lang="en") -> AppTest:
-    """The chat page in English (``?lang=en``): the default is Persian since
-    Stage 2 (UI-V06); the assertions below read the English strings."""
+    """The app on its entry screen, in English (``?lang=en``): the default is
+    Persian since Stage 2 (UI-V06); the assertions below read the English
+    strings."""
     at = AppTest.from_file(PAGE, default_timeout=60)
     at.query_params["lang"] = lang
     at.session_state["_test_settings_loader"] = loader or make_loader(tmp_path)
@@ -56,6 +57,21 @@ def page(tmp_path, *, loader=None, client_factory=None, lang="en") -> AppTest:
         lambda _l, _r: FakeModelClient()
     )
     return at.run()
+
+
+def direct(tmp_path, **kwargs) -> AppTest:
+    """Journey B: the entry screen's "Direct chat" card (UI-S06)."""
+    at = page(tmp_path, **kwargs)
+    return at.button(key="mx-cta-entry-direct").click().run()
+
+
+def chatbot(tmp_path, bot: str | None = None, **kwargs) -> AppTest:
+    """Journey A: entry -> (a bot) -> settings -> "Start chatting" (UI-S05)."""
+    at = page(tmp_path, **kwargs)
+    at = at.button(key="mx-cta-entry-chatbot").click().run()
+    if bot:
+        at = at.button(key=f"mx-bot-{bot}").click().run()
+    return at.button(key="mx-cta-start").click().run()
 
 
 def send(at: AppTest, text: str) -> AppTest:
@@ -66,77 +82,83 @@ def _texts(at: AppTest) -> str:
     return " ".join(str(m.value) for m in at.markdown)
 
 
+def _chat(at: AppTest):
+    """The open workspace's real ChatSession."""
+    return at.session_state["workspace"].current().session
+
+
+def _messages(at: AppTest) -> list[dict]:
+    return at.session_state["workspace"].current().messages
+
+
 def test_loads_in_fake_mode_and_a_message_round_trips(tmp_path):
     at = page(tmp_path)
     assert not at.exception
-    assert at.title[0].value == "Metis-Auto demo"
-    assert "Fake mode: live calls OFF" in at.info[0].value
-    assert "live.enabled is false" in at.info[0].value  # why live is blocked
-    chat = at.session_state["chat"]
+    assert at.session_state["workspace"].journey.value == "none"  # the entry screen
+    assert len(at.get("page_link")) == 3  # brand overlay, Chat, Results
+    at = at.button(key="mx-cta-entry-direct").click().run()
+    assert not at.exception
+    chat = _chat(at)
     assert not chat.live and chat.routing == RoutingMode.STICKY_V1
+    assert any("Fake mode: live calls OFF" in c.value for c in at.caption)
+    assert any("live.enabled is false" in c.value for c in at.caption)
 
     at = send(at, "سلام")
     assert not at.exception
-    messages = at.session_state["messages"]
+    messages = _messages(at)
     assert [m["role"] for m in messages] == ["user", "assistant"]
     assert messages[1]["text"].startswith("[SYNTHETIC] fake answer")
     assert messages[1]["report"].routing["reason_code"] == "sticky.greeting"
     assert len(at.chat_message) == 2
     assert "greeting" in _texts(at)  # the badge under the answer
     assert len(chat.history) == 2  # the session holds the history (P-8)
-    assert at.metric[0].label == "Actually paid"
+    assert at.metric[0].label == "Actually paid (est.)"  # fake: an estimate
 
 
-def test_presets_load_into_the_bot_setup(tmp_path):
-    at = page(tmp_path)
+def test_bots_are_listed_and_their_instructions_reach_the_request(tmp_path):
     fa, en = load_presets()
-    at.button(key="preset_fa_shop").click().run()
-    assert at.session_state["instructions"] == fa.instructions
-    assert len(at.session_state["doc_ids"]) == len(fa.documents)
-    assert at.text_area(key="instructions").value == fa.instructions
-    at.button(key="preset_en_faq").click().run()
-    docs = [at.text_area(key=f"doc_{i}").value for i in at.session_state["doc_ids"]]
-    assert docs == list(en.documents)
-
+    at = chatbot(tmp_path, bot="en_faq")
+    assert not at.exception
+    chat = _chat(at)
     at = send(at, "How do I export my notes to PDF?")
-    chat = at.session_state["chat"]
     assert chat.instructions == en.instructions
     assert chat.retrieved == en.documents
-    report = at.session_state["messages"][-1]["report"]
+    report = _messages(at)[-1]["report"]
     assert report.routing["reason_code"].startswith("sticky.first_substantive")
-
-    at.button(key=f"rm_{at.session_state['doc_ids'][0]}").click().run()
-    assert len(at.session_state["doc_ids"]) == len(en.documents) - 1
+    ws = at.session_state["workspace"]
+    assert ws.bot_key == en.key and ws.bots[0].key == fa.key
 
 
 def test_toggles_reach_the_backend(tmp_path):
-    at = page(tmp_path)
-    chat = at.session_state["chat"]
-    at.radio(key="routing").set_value(RoutingMode.PER_REQUEST.value).run()
+    at = direct(tmp_path)
+    chat = _chat(at)
+    assert not chat.bot_cache and chat.compression == CompressionMode.OFF
+    at.radio(key="routing_method").set_value(RoutingMode.PER_REQUEST.value).run()
     assert chat.routing == RoutingMode.PER_REQUEST
-    at.radio(key="routing").set_value(RoutingMode.FIXED.value).run()
-    at.selectbox(key="fixed_model").set_value("gpt-4.1-nano").run()
+    at.toggle(key="sw_routing").set_value(False).run()  # routing off: fixed model
+    assert chat.routing == RoutingMode.FIXED
+    at.selectbox(key="preferred_model").set_value("gpt-4.1-nano").run()
     assert chat.routing == RoutingMode.FIXED and chat.model_id == "gpt-4.1-nano"
-    at.radio(key="routing").set_value(RoutingMode.STICKY_V1.value).run()
-    at.toggle(key="bot_cache").set_value(True).run()
+    at.toggle(key="sw_routing").set_value(True).run()
+    assert chat.routing == RoutingMode.PER_REQUEST  # the chosen method is back
+    at.toggle(key="sw_cache").set_value(True).run()
     at.radio(key="compression").set_value(CompressionMode.FAKE.value).run()
     at.toggle(key="thinking").set_value(False).run()
-    assert chat.routing == RoutingMode.STICKY_V1
     assert chat.bot_cache and chat.compression == CompressionMode.FAKE
+    assert at.toggle(key="sw_context").value is True  # the switch shows the real state
     assert not chat.deepseek_thinking
-    assert at.session_state["chat"] is chat  # toggles keep the run and cache
+    assert _chat(at) is chat  # toggles keep the run and the cache
 
-    at.button(key="preset_fa_shop").click().run()
+    at = chatbot(tmp_path, bot="fa_shop")
+    chat = _chat(at)
+    at.toggle(key="sw_cache").set_value(True).run()
     at = send(at, "هزینه ارسال برای شهرستان چقدر است؟")
-    first = at.session_state["messages"][-1]["report"]
-    assert first.compression  # the fake compressor ran on the documents
     at.button(key="new_user").click().run()
-    assert chat.users == 2 and at.session_state["messages"] == []
+    assert chat.users == 2 and _messages(at) == []
     at = send(at, "هزینه ارسال برای شهرستان چقدر است؟")
-    hit = at.session_state["messages"][-1]["report"]
-    assert hit.served_by == "cache"  # cross-user hit on the same bot
+    assert _messages(at)[-1]["report"].served_by == "cache"  # cross-user hit
     at.button(key="reset").click().run()
-    assert chat.history == [] and at.session_state["messages"] == []
+    assert chat.history == [] and _messages(at) == []
 
 
 def test_a_failed_toggle_is_reported_and_reverted(tmp_path):
@@ -149,17 +171,18 @@ def test_a_failed_toggle_is_reported_and_reverted(tmp_path):
     at.session_state["_test_client_factory"] = lambda _l, _r: FakeModelClient()
     at.session_state["_test_compressor_factory"] = broken
     at.run()
+    at.button(key="mx-cta-entry-direct").click().run()
     at.radio(key="compression").set_value(CompressionMode.LLMLINGUA2.value).run()
     assert at.session_state["compression"] == CompressionMode.OFF.value
-    assert at.session_state["chat"].compression == CompressionMode.OFF
+    assert _chat(at).compression == CompressionMode.OFF
     assert "compression unavailable" in at.error[0].value
 
 
 def test_live_switch_blocked_by_configuration_says_why(tmp_path):
-    at = page(tmp_path)
+    at = direct(tmp_path)
     at.radio(key="mode").set_value(LIVE).run()
     assert at.session_state["mode"] == FAKE
-    assert not at.session_state["chat"].live
+    assert not _chat(at).live
     banner = at.error[0].value
     assert "Live calls BLOCKED" in banner
     assert "live.enabled is false" in banner
@@ -169,8 +192,7 @@ def test_live_switch_blocked_by_configuration_says_why(tmp_path):
 
 def test_no_message_content_in_logs(tmp_path, caplog):
     caplog.set_level(logging.DEBUG)
-    at = page(tmp_path)
-    at.button(key="preset_en_faq").click().run()
+    at = chatbot(tmp_path, bot="en_faq")
     at = send(at, f"{MARKER} how do I sync?")
     at = send(at, f"{MARKER} write a python function to list notes")
     assert not at.exception
@@ -204,14 +226,14 @@ def test_live_budget_refusal_is_explained(tmp_path):
     loader = make_loader(
         tmp_path, live_enabled=True, key=SYNTHETIC_KEY, run_cap="0.0000001"
     )
-    at = page(tmp_path, loader=loader, client_factory=factory)
-    assert "Live mode is available" in at.info[0].value
+    at = direct(tmp_path, loader=loader, client_factory=factory)
+    assert any("Live mode is available" in c.value for c in at.caption)
     at.radio(key="mode").set_value(LIVE).run()
-    chat = at.session_state["chat"]
+    chat = _chat(at)
     assert chat.live
     assert "Live calls ON" in at.warning[0].value
     at = send(at, f"{MARKER} hello")
-    report = at.session_state["messages"][-1]["report"]
+    report = _messages(at)[-1]["report"]
     assert report.failure == "budget_exhausted"
     assert requests == []  # refused before any HTTP request
     assert any("Nothing was charged" in w.value for w in at.warning)
@@ -383,6 +405,7 @@ def test_both_pages_render_in_every_theme_and_language(tmp_path, theme, lang):
     css = _css(at)  # the theme CSS (UI-T04)
     assert "--bg:" in css
     assert (RTL_LAYOUT in css) == (lang == "fa")
+    at = at.button(key="mx-cta-entry-direct").click().run()
     at = send(at, "سلام")
     assert not at.exception
     at = at.switch_page(RESULTS_PAGE).run()
@@ -418,9 +441,10 @@ def test_default_is_dark_and_persian(tmp_path):
 def test_numbers_and_model_ids_are_ltr_isolated(tmp_path):
     """UI-V07: money, percentages, counts and model ids never reorder in RTL."""
     at = _app(tmp_path, theme="dark", lang="fa")
+    at = at.button(key="mx-cta-entry-direct").click().run()
     at = send(at, "How do I export my notes to PDF?")
     assert not at.exception
-    report = at.session_state["messages"][-1]["report"]
+    report = _messages(at)[-1]["report"]
     values = [m.value for m in at.metric]
     assert values and all(v.startswith(LRI) and v.endswith(PDI) for v in values)
     badge = _texts(at)
@@ -444,7 +468,7 @@ def test_header_has_brand_mode_chip_budget_and_no_login(tmp_path):
     for absent in ("login", "sign up", "ورود", "avatar", "+</"):
         assert absent not in text, absent
     links = at.get("page_link")
-    assert len(links) == 2
+    assert len(links) == 3  # the brand (back to the entry screen), Chat, Results
 
 
 def test_streamlit_chrome_is_hidden_and_colours_come_from_tokens(tmp_path):
@@ -544,13 +568,14 @@ def _persian_page_text(at: AppTest) -> str:
         str(e.value)
         for kind in ("caption", "title", "header", "subheader", "info", "warning")
         for e in getattr(at, kind)
+        if "[SYNTHETIC]" not in str(e.value)  # a SYNTHETIC bot's English label
     ]
     parts += [str(m.value) for m in at.markdown if "[SYNTHETIC]" not in str(m.value)]
     parts += [f"{m.label} {m.value}" for m in at.metric]
     parts += [t.label for t in at.tabs] + [e.label for e in at.expander]
     parts += [o for sb in at.selectbox for o in sb.options]
     # preset titles are SYNTHETIC preset data (presets-synthetic.toml), English
-    presets = {p.title for p in load_presets()}
+    presets = {f"[SYNTHETIC] {p.title}" for p in load_presets()}
     parts += [
         w.label
         for kind in ("toggle", "button", "radio")
@@ -564,7 +589,11 @@ def _persian_page_text(at: AppTest) -> str:
             parts += [str(v) for v in frame.to_numpy().ravel()]
     # the raw id caption (allowed, owner review point 3) and result data that
     # its writer stored in English (assumptions) are not UI strings
-    parts += [h for h in _html(at) if 'class="mx-id"' not in h and "mx-data" not in h]
+    parts += [
+        h
+        for h in _html(at)
+        if 'class="mx-id"' not in h and "mx-data" not in h and "[SYNTHETIC]" not in h
+    ]
     return " ".join(parts)
 
 
@@ -574,10 +603,14 @@ def test_no_english_ui_string_in_persian_on_either_page(tmp_path):
     english = _english_ui_strings()
     assert len(english) > 100
     at = _app(tmp_path, theme="dark", lang="fa", levers=REAL_LEVERS)
+    pages = [_persian_page_text(at)]  # the entry screen
+    at = at.button(key="mx-cta-entry-chatbot").click().run()
+    pages.append(_persian_page_text(at))  # settings
+    at = at.button(key="mx-cta-start").click().run()
     at = send(at, "سلام")
     at = send(at, "سفارشم کی می‌رسه؟")
     assert not at.exception
-    pages = [_persian_page_text(at)]
+    pages.append(_persian_page_text(at))
     at = at.switch_page(RESULTS_PAGE).run()
     assert not at.exception
     pages.append(_persian_page_text(at))

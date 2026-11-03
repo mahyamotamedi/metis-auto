@@ -52,7 +52,6 @@ from metis_auto.wiring.ui_style import (
     card_title_html,
     data_list_html,
     empty_state_html,
-    faded,
     id_caption_html,
     labelled,
     legend_html,
@@ -224,6 +223,7 @@ def _comparison_chart(d: Dashboard, step: str, height: int) -> None:
         _no_chart(d)
         return
     colour = _theme().kinds["total"]
+    muted = _theme().colours["text_muted"]  # unranked: the muted gray, both themes
     data = pd.DataFrame(list(rows))
     y_axis, x_axis, x_scale, title = _hbar_axes(d, "percent", d.labels["saving_share"])
     bars = (
@@ -232,7 +232,7 @@ def _comparison_chart(d: Dashboard, step: str, height: int) -> None:
         .encode(
             y=alt.Y("version:N", sort="-x", title=None, axis=y_axis),
             x=alt.X("saving_share:Q", title=title, axis=x_axis, scale=x_scale),
-            opacity=alt.condition("datum.ranked", alt.value(1.0), alt.value(0.35)),
+            color=alt.condition("datum.ranked", alt.value(colour), alt.value(muted)),
             tooltip=[
                 alt.Tooltip("version:N", title=d.labels["col_version"]),
                 alt.Tooltip("id:N", title=d.labels["id_caption"]),
@@ -245,7 +245,7 @@ def _comparison_chart(d: Dashboard, step: str, height: int) -> None:
     _chart(bars, d)
     items = [(d.labels["legend_ranked"], colour)]
     if not all(r["ranked"] for r in rows):
-        items.append((d.labels["legend_unranked"], faded(colour)))
+        items.append((d.labels["legend_unranked"], muted))
     _legend(items)
 
 
@@ -294,7 +294,7 @@ def _kpis(key: str, cards: list[tuple[str, str, str | None]]) -> None:
 
 def _card_kpis(key: str, cards: tuple[Card, ...]) -> None:
     if cards:
-        _kpis(key, [(c.label, c.text, None) for c in cards])
+        _kpis(key, [(c.label, c.text, c.note or None) for c in cards])
 
 
 def _version_row(d: Dashboard, step: StepView) -> None:
