@@ -15,4 +15,4 @@
 | `OFL.txt` | licence | `17e355067c8284f47743a1ee3b1ef7ff684ff0601eda357f9353b10b3016ab31` |
 | `AUTHORS.txt` | authors | `b57746a5f7002c0974c76c32af74079ff7ef1aaf8f35495e9409cfa1eb11e1ca` |
 
-Served offline: `metis_auto.wiring.ui_style.font_face_css` embeds them as base64 `@font-face` rules (Streamlit 1.65.0 static serving reads only `scripts/static/`), see ADR-XXXX (demo-ui-design-system). The weights in use are listed in `config/demo/theme.toml` `[font]`.
+Served offline: `metis_auto.wiring.ui_style.font_face_css` embeds them as base64 `@font-face` rules (Streamlit 1.65.0 static serving reads only `scripts/static/`), see ADR-0052. The weights in use are listed in `config/demo/theme.toml` `[font]`.

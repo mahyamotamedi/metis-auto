@@ -11,7 +11,7 @@ widgets to the session's toggles.
 - Header (UI spec Stage 2, UI-H01..H05): the text wordmark, the language switch
   (فا / EN), the Fake/Live chip, the budget, the theme toggle and a "Local demo"
   chip; below, the Chat and Results tabs. Built here, not with Streamlit's top
-  navigation, which cannot hold these controls (ADR-XXXX (demo-ui-design-system)).
+  navigation, which cannot hold these controls (ADR-0052).
 - Main area: the chat (Persian right-to-left, English left-to-right), the
   live-call banner, and per-message details.
 - Sidebar: bot setup (instructions, one retrieved document per block,

@@ -1,4 +1,4 @@
-# ADR-XXXX (demo-ui-design-system): The demo UI's design system: one token file, a generated style sheet, a page-built header, and inlined fonts
+# ADR-0052: The demo UI's design system: one token file, a generated style sheet, a page-built header, and inlined fonts
 
 - Status: **provisional**, the agent's reading of the approved UI spec (`docs/design/metis-auto-ui-spec.md` §2, Stage 2) and the owner's decisions of 2026-11-03 (Pipeline C, Day 3), until the owner reviews it.
 - Date: 2026-11-03

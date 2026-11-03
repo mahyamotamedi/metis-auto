@@ -95,7 +95,7 @@ def font_face_css(folder: Path | None = None) -> str:
     """``@font-face`` rules for the bundled Vazirmatn files, embedded as base64:
     Streamlit 1.65.0 serves static files only from ``scripts/static/`` next to
     the main script and refuses paths that resolve outside it, so the fonts in
-    ``assets/fonts/vazirmatn/`` are inlined (ADR-XXXX (demo-ui-design-system)).
+    ``assets/fonts/vazirmatn/`` are inlined (ADR-0052).
     Offline, no CDN (UI-V08)."""
     from metis_auto.wiring.ui_config import load_theme
 
