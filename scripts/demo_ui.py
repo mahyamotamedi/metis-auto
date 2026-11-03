@@ -53,6 +53,12 @@ if str(_PAGES) not in sys.path:  # `demo_pages` next to this file (AppTest, plai
 
 from demo_pages import workspace as workspace_page  # noqa: E402
 
+from metis_auto.settings import load_settings  # noqa: E402
+from metis_auto.wiring.demo_bots import (  # noqa: E402
+    PostgresBotSource,
+    load_directory,
+    real_data_reasons,
+)
 from metis_auto.wiring.demo_ui import header_budget, load_presets  # noqa: E402
 from metis_auto.wiring.demo_workspace import (  # noqa: E402
     DemoWorkspace,
@@ -109,8 +115,11 @@ def _init() -> None:
         return
     s.notice = None
     s.blocked = None
+    load = _injected("settings_loader") or (lambda o: load_settings(overrides=o))
     s.workspace = DemoWorkspace(
         synthetic_bots(load_presets(_injected("presets_path"))),
+        directory=load_directory(_injected("bot_source") or PostgresBotSource),
+        real_data_check=lambda t: real_data_reasons(load, t),
         session_factory=make_session_factory(
             settings_loader=_injected("settings_loader"),
             client_factory=_injected("client_factory"),

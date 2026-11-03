@@ -29,7 +29,12 @@ from metis_auto.domain.accounting import (
     sum_counts,
     total_cost,
 )
-from metis_auto.domain.context import ContextConfig, OverflowRule, PassThroughStrategy
+from metis_auto.domain.context import (
+    ContextConfig,
+    DatasetPositionsStrategy,
+    OverflowRule,
+    PassThroughStrategy,
+)
 from metis_auto.domain.features import FeatureConfig, extract_features
 
 TARGET = ex.model_catalogue().entries[0]  # window 8,000; output limit unknown
@@ -71,6 +76,30 @@ def test_pass_through_orders_parts_and_records_without_content():
     assert PartRole.RETRIEVED in roles
     assert plan.record.overflow == OverflowOutcome.FITS
     assert ex.MARKER not in plan.record.model_dump_json()
+
+
+def test_dataset_positions_puts_the_chunks_after_the_message_a84():
+    """UI Stage 4 (A-84, ADR-0030): same parts as pass_through, retrieved last."""
+    args = (
+        ex.request(),
+        ex.request_measurements(),
+        _counts(12),
+        TARGET,
+        ContextConfig(),
+        False,
+    )
+    default = PassThroughStrategy().build(*args)
+    dataset = DatasetPositionsStrategy().build(*args)
+    assert sorted(p.text for p in dataset.parts) == sorted(
+        p.text for p in default.parts
+    )
+    roles = [p.role for p in dataset.parts]
+    assert roles[0] == PartRole.INSTRUCTIONS
+    last_user = max(i for i, r in enumerate(roles) if r == PartRole.USER)
+    assert all(r == PartRole.RETRIEVED for r in roles[last_user + 1 :])
+    assert PartRole.RETRIEVED in roles[last_user + 1 :]
+    assert dataset.record.components == default.record.components
+    assert dataset.record.strategy.name == "dataset_positions"  # the record says so
 
 
 def test_overflow_rule():

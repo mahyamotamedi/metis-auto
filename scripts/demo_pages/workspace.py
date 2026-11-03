@@ -49,6 +49,8 @@ from metis_auto.wiring.demo_ui import (
     text_direction,
 )
 from metis_auto.wiring.demo_workspace import (
+    LANGUAGE_OPTIONS,
+    TRI_OPTIONS,
     ChatWorkspace,
     DemoWorkspace,
     Journey,
@@ -134,6 +136,29 @@ def _usd(value, currency: str = "USD") -> str:
 
 def _choose(journey: Journey) -> None:
     _ws().choose_journey(journey)
+
+
+def _on_select(key: str) -> None:
+    error = _ws().select_bot(key, _s().ui_text)
+    if error:
+        _notice("error", error)
+
+
+def _on_bot_filter() -> None:
+    s = _s()
+    _ws().set_bot_filter_values(
+        query=s["mx-bots-search"],
+        language=s["mx-bots-language"],
+        rag=s["mx-bots-rag"],
+        memory=s["mx-bots-memory"],
+        instructions=s["mx-bots-instr"],
+    )
+
+
+def _on_continue() -> None:
+    error = _ws().continue_to_settings()
+    if error:
+        _notice("error", error)
 
 
 def _on_switch(name: str) -> None:
@@ -253,19 +278,78 @@ def entry() -> None:
 # --- bot list and settings cards
 
 
+def _bot_button(card) -> None:
+    st.button(
+        card.label,
+        key=f"mx-bot-{card.key}",
+        on_click=_on_select,
+        args=(card.key,),
+        type="primary" if card.selected else "secondary",
+        width="stretch",
+    )
+    st.html(bot_facts_html(card.facts))
+
+
+def _bot_filters() -> None:
+    """Search over the label and the four filters (UI-A02): the widgets show the
+    workspace's filter state; wiring turns them back into the filter."""
+    ws, s, t = _ws(), _s(), _s().ui_text
+    values = ws.filter_values()
+    s["mx-bots-search"] = values["query"]
+    st.text_input(
+        S("bots_search"),
+        key="mx-bots-search",
+        on_change=_on_bot_filter,
+        placeholder=S("bots_search"),
+        label_visibility="collapsed",
+    )
+    with st.expander(S("bots_filters")):
+        for group, key, options, label in (
+            ("language", "mx-bots-language", LANGUAGE_OPTIONS, "bots_filter_language"),
+            ("rag", "mx-bots-rag", TRI_OPTIONS, "bots_filter_rag"),
+            ("memory", "mx-bots-memory", TRI_OPTIONS, "bots_filter_memory"),
+            ("instructions", "mx-bots-instr", TRI_OPTIONS, "bots_filter_instructions"),
+        ):
+            s[key] = values[group]
+            st.selectbox(
+                S(label),
+                list(options),
+                key=key,
+                on_change=_on_bot_filter,
+                format_func=lambda v, g=group: ws.filter_option_text(g, v, t),
+            )
+
+
 def _bot_list() -> None:
+    """The synthetic samples first, then the dataset's bots: search, filters and
+    one page at a time (UI-A01, UI-A02, UI-A03)."""
     ws = _ws()
+    view = ws.bot_list(_s().ui_text)
+    st.html(side_title_html(view.synthetic_title))
     st.caption(S("ws_bots_note"))
-    for card in ws.bot_cards(_s().ui_text):
+    for card in view.synthetic:
+        _bot_button(card)
+    st.html(side_title_html(S("ws_bots")))
+    if view.unavailable:
+        st.html(empty_state_html("database", view.unavailable))
+        return
+    if view.empty and not view.real and ws.directory is not None:
+        st.html(empty_state_html("smart_toy", view.empty))
+    _bot_filters()
+    if view.count_text:
+        st.caption(view.count_text)
+    for card in view.real:
+        _bot_button(card)
+    if view.has_more:
         st.button(
-            card.label,
-            key=f"mx-bot-{card.key}",
-            on_click=ws.select_bot,
-            args=(card.key,),
-            type="primary" if card.selected else "secondary",
+            S("bots_more"),
+            key="mx-bots-more",
+            on_click=ws.show_more_bots,
             width="stretch",
+            type="tertiary",
         )
-        st.html(bot_facts_html(card.facts))
+    if view.workflow_note:
+        st.caption(view.workflow_note)
 
 
 def _switch(card, *, show_label: bool = False) -> None:
@@ -282,14 +366,47 @@ def _switch(card, *, show_label: bool = False) -> None:
     )
 
 
+def bots() -> None:
+    """Chatbot selection (UI-S02): the list is in the sidebar; here the heading,
+    the selected bot's derived facts, the Create button (next stage) and
+    Continue (UI-A04, UI-A06)."""
+    ws = _ws()
+    t = _s().ui_text
+    with st.sidebar:
+        _bot_list()
+    st.button(S("bots_back"), key="bots_back", on_click=ws.go_entry, type="tertiary")
+    st.title(S("bots_title"))
+    _notice_once()
+    details = ws.bot_details(t)
+    with st.container(key="mx-card-botdetails"):
+        st.html(card_title_html(details.title))
+        st.html(facts_html(list(details.rows), []))
+        st.caption(details.note)
+    with st.container(key="mx-bots-actions", horizontal=True):
+        st.button(
+            S("bots_create"),
+            key="mx-create-bot",
+            disabled=not details.create_enabled,
+            help=details.create_reason,
+            icon=":material/add:",
+        )
+        st.button(
+            S("bots_continue"),
+            key="mx-cta-continue",
+            on_click=_on_continue,
+            disabled=not details.can_continue,
+        )
+    if not details.create_enabled:
+        st.caption(f"{S('bots_create')}: {details.create_reason}")
+
+
 def settings() -> None:
     ws = _ws()
     t = _s().ui_text
     chat = ws.current()
     with st.sidebar:
-        st.html(side_title_html(S("ws_bots")))
         _bot_list()
-    st.button(S("set_back"), key="set_back", on_click=ws.go_entry, type="tertiary")
+    st.button(S("set_back"), key="set_back", on_click=ws.go_back, type="tertiary")
     st.title(S("set_title"))
     st.caption(S("set_for_bot", bot=ltr(chat.title(t))))
     available = ws.context_available(t)
@@ -318,7 +435,6 @@ def _sidebar(chat: ChatWorkspace, banner) -> None:
     direct = chat.journey == Journey.DIRECT
     with st.sidebar:
         if not direct:
-            st.html(side_title_html(S("ws_bots")))
             _bot_list()
         st.button(
             S("ws_new_chat" if direct else "ws_new_conversation"),
@@ -373,13 +489,17 @@ def _advanced(chat: ChatWorkspace, banner) -> None:
     session = chat.session
     with st.expander(S("set_advanced")):
         s.mode = LIVE if ws.live else FAKE
+        choice = ws.live_choice(t)
         st.radio(
             S("mode"),
             [FAKE, LIVE],
             key="mode",
             format_func=lambda v: t(MODE_KEYS[v]),
             on_change=_on_mode,
+            disabled=choice.disabled,
         )
+        if choice.reason:
+            st.caption(choice.reason)
         if banner.state == "off":
             st.caption(f"**{banner.title}.** {banner.detail}")
         s.routing_method = chat.routing_method.value
@@ -594,6 +714,8 @@ def workspace() -> None:
     with st.container(key="mx-ws-head", horizontal=True, vertical_alignment="center"):
         st.html(workspace_title_html(chat.title(t)), width="content")
         st.html(chip_html(chat.status_line(t), icon="route"), width="content")
+        if note := chat.knowledge_note(t):
+            st.html(chip_html(note, icon="menu_book"), width="content")
     _live_banner(banner)
     _notice_once()
     _direct_banner()
@@ -970,4 +1092,9 @@ def render() -> None:
     if ws.consume_query(st.query_params.to_dict()):
         del st.query_params["screen"]
     screen = ws.screen if ws.journey != Journey.NONE else Screen.ENTRY
-    {Screen.ENTRY: entry, Screen.SETTINGS: settings, Screen.CHAT: workspace}[screen]()
+    {
+        Screen.ENTRY: entry,
+        Screen.BOTS: bots,
+        Screen.SETTINGS: settings,
+        Screen.CHAT: workspace,
+    }[screen]()

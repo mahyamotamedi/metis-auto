@@ -29,7 +29,11 @@ from metis_auto.contracts import (
     Versions,
 )
 from metis_auto.domain.attempts import Detector, EmptyOutputDetector, TruncationDetector
-from metis_auto.domain.context import ContextStrategy, PassThroughStrategy
+from metis_auto.domain.context import (
+    ContextStrategy,
+    DatasetPositionsStrategy,
+    PassThroughStrategy,
+)
 from metis_auto.domain.features import router_feature_set
 from metis_auto.domain.routing import (
     DecisionRouterConfig,
@@ -107,6 +111,8 @@ ROUTING_POLICIES: dict[str, Callable[[PipelineConfig], RoutingPolicy]] = {
 }
 CONTEXT_STRATEGIES: dict[str, Callable[[], ContextStrategy]] = {
     "pass_through": PassThroughStrategy,
+    # A-84 layout for a real bot's chat (ADR-0030): chunks after the message.
+    "dataset_positions": DatasetPositionsStrategy,
 }
 DETECTORS: dict[str, Callable[[], Detector]] = {
     "truncation": TruncationDetector,
