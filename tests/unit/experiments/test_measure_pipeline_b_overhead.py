@@ -134,6 +134,8 @@ def test_overhead_fields_filled_and_labelled_offline_estimate(mo, tmp_path):
         )
         assert "synthetic fixture" in r.assumptions
         assert r.manifest.code_commit == "abcdef1"  # the saving is unchanged
+        sample = [a for a in r.assumptions if a.startswith("Overhead sample:")]
+        assert len(sample) == 1 and "report-period" in sample[0]
 
     # Unmeasured: None, never 0, and said so.
     mo.write_overhead(paths, None, machine="SYNTHETIC-OS", reason="no data")
@@ -194,6 +196,8 @@ def test_fit_time_not_included_for_knn(mo):
     }
     router = mo.rb3_builder(st, train, frozenset(), k=3)()
     assert router.name == "route.knn.k3" and len(router._x) == len(train)
+    wide = mo.rb3_builder(st, train, frozenset(), k=3, candidates=["cheap", "mid"])()
+    assert wide.candidates == ("cheap", "mid")
 
 
 def test_unknown_lever_id_fails_clearly(mo):
@@ -211,6 +215,19 @@ def test_unknown_lever_id_fails_clearly(mo):
     assert mo.spec_for("rb1.retrieval-cache.ttl-7d.user.tune.as_logged").version == (
         "retrieval_result_cache.ttl_7d"
     )
+    # Report-split and secondary results map to the same version as their tune
+    # counterparts (overhead is per version).
+    assert mo.spec_for("rb1.retrieval-cache.ttl-1d.user.report.as_logged").version == (
+        "retrieval_result_cache.ttl_1d"
+    )
+    rb2r = mo.spec_for("rb2.cross-turn.k-1.ptr-8.pointer.report.todays_models")
+    assert rb2r.version == "cross_turn_chunks.ptr8.k1"
+    wr = mo.spec_for("rb3.knn-router.with_reasoning_models.k-5.report.as_logged")
+    assert (wr.version, wr.params) == (
+        "route.knn.with_reasoning_models.k5",
+        {"k": 5, "with_reasoning": True},
+    )
+    assert mo.spec_for("rb3.knn-router.k-5.report.as_logged").version == "route.knn.k5"
     with pytest.raises(SystemExit, match="no Pipeline B version"):
         mo.main(["route.small_classifier.rules.as_logged", "--dry-run"])
 
@@ -252,6 +269,7 @@ def test_summary_has_no_ids_or_text(mo, tmp_path):
     assert by["retrieval_result_cache.ttl_1d"]["p95_ms"] is None
     assert by["retrieval_result_cache.ttl_1d"]["verdict"] == "not measured"
     assert payload["target"]["source"] == "Q-14"
+    assert "report-period" in payload["sample_note"]
 
 
 def test_plan_groups_baselines_and_dry_run_writes_nothing(mo, tmp_path, capsys):
@@ -274,3 +292,15 @@ def test_plan_groups_baselines_and_dry_run_writes_nothing(mo, tmp_path, capsys):
     after = {p.name: p.read_text(encoding="utf-8") for p in tmp_path.iterdir()}
     assert after == before
     assert "dry run" in capsys.readouterr().out
+
+
+def test_built_version_matches_its_label(mo):
+    class R:  # [SYNTHETIC] router stand-in
+        def __init__(self, k, candidates):
+            self.k, self.candidates, self.name = k, tuple(candidates), f"route.knn.k{k}"
+
+    st = {"candidates": ["a"], "candidates_with_reasoning": ["a", "b"]}
+    wide = mo.spec_for("rb3.knn-router.with_reasoning_models.k-5.tune.as_logged")
+    assert mo.built_as_planned(wide, R(5, ["a", "b"]), st)
+    assert not mo.built_as_planned(wide, R(5, ["a"]), st)
+    assert not mo.built_as_planned(wide, R(15, ["a", "b"]), st)

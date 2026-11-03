@@ -68,6 +68,11 @@ TARGET_P95_MS = 100.0
 DEFAULT_N = 1000
 OVERHEAD_LABEL = "Overhead:"
 CAVEAT_LABEL = "Overhead caveat:"
+SAMPLE_LABEL = "Overhead sample:"
+SAMPLE_NOTE = (
+    "tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, "
+    "route.per_bot) used report-period rows, so the two samples differ"
+)
 BASELINE = r"(?P<baseline>as_logged|todays_models|premium_gpt_5_5|best_single_cheap)"
 
 
@@ -98,18 +103,27 @@ def _rb2(m: re.Match) -> Spec:
 
 
 def _rb3(m: re.Match) -> Spec:
-    k = int(m["k"])
-    return Spec("rb3", "routing", f"route.knn.k{k}", {"k": k})
+    k, wide = int(m["k"]), bool(m["wr"])
+    name = "route.knn.with_reasoning_models" if wide else "route.knn"
+    return Spec("rb3", "routing", f"{name}.k{k}", {"k": k, "with_reasoning": wide})
 
 
 PATTERNS = (
-    (rf"^rb1\.retrieval-cache\.ttl-(?P<days>[0-9]+)d\.user\.tune\.{BASELINE}$", _rb1),
+    (
+        rf"^rb1\.retrieval-cache\.ttl-(?P<days>[0-9]+)d\.user\.(?:tune|report)"
+        rf"\.{BASELINE}$",
+        _rb1,
+    ),
     (
         rf"^rb2\.cross-turn\.k-(?P<window>[0-9]+|all)\.ptr-(?P<pointer>[0-9]+)"
-        rf"\.(?P<mode>pointer|ledger)\.{BASELINE}$",
+        rf"\.(?P<mode>pointer|ledger)(?:\.report)?\.{BASELINE}$",
         _rb2,
     ),
-    (rf"^rb3\.knn-router\.k-(?P<k>[0-9]+)\.tune\.{BASELINE}$", _rb3),
+    (
+        rf"^rb3\.knn-router(?P<wr>\.with_reasoning_models)?\.k-(?P<k>[0-9]+)"
+        rf"\.(?:tune|report)\.{BASELINE}$",
+        _rb3,
+    ),
 )
 
 CAVEATS = {
@@ -239,6 +253,21 @@ def measure_version(
     return summarise(time_apply(version, rows, ctx, clock=clock)), version
 
 
+def built_as_planned(spec: Spec, version: Any, st: dict[str, Any]) -> bool:
+    """The built version is the one the label names (R-B2's label adds the
+    window; R-B3's the candidate set, checked on the router itself)."""
+    if spec.family == "rb3":
+        key = (
+            "candidates_with_reasoning"
+            if spec.params["with_reasoning"]
+            else "candidates"
+        )
+        return version.k == spec.params["k"] and list(version.candidates) == list(
+            st[key]
+        )
+    return spec.version.startswith(version.name)
+
+
 def verdict(p95_ms: float | None) -> str:
     if p95_ms is None:
         return "not measured"
@@ -271,12 +300,14 @@ def write_overhead(
     added = (_label(stats, machine, reason),)
     if stats is not None and caveat:
         added += (f"{CAVEAT_LABEL} {caveat}",)
+    if stats is not None:
+        added += (f"{SAMPLE_LABEL} {SAMPLE_NOTE}",)
     for path in paths:
         old = LeverResult.from_json(path.read_text(encoding="utf-8"))
         kept = tuple(
             a
             for a in old.assumptions
-            if not a.startswith((OVERHEAD_LABEL, CAVEAT_LABEL))
+            if not a.startswith((OVERHEAD_LABEL, CAVEAT_LABEL, SAMPLE_LABEL))
         )
         data = old.model_dump() | {
             "overhead_ms_p50": None if stats is None else stats["p50_ms"],
@@ -336,6 +367,7 @@ def summary_payload(
         "evidence": "offline per-request estimate; not a load test (Q-14)",
         "target": {"p95_ms": TARGET_P95_MS, "source": "Q-14", "requirement": "QA-LAT"},
         "sample": sample,
+        "sample_note": SAMPLE_NOTE,
         "machine": machine,
         "versions": sorted(versions, key=lambda v: (v["family"], v["version"])),
         "created_at": created_at.isoformat(),
@@ -380,10 +412,16 @@ D2 = D3.D2
 
 
 def rb3_builder(
-    st: dict[str, Any], train: pd.DataFrame, separate: frozenset[str], *, k: int
+    st: dict[str, Any],
+    train: pd.DataFrame,
+    separate: frozenset[str],
+    *,
+    k: int,
+    candidates: Sequence[str] | None = None,
 ) -> Callable[[], Any]:
-    """R-B3 router fitted on ``train`` (the Day 3 factory: shared routing base)."""
-    return lambda: D3._factory(st, separate)(train, k)
+    """R-B3 router fitted on ``train`` (the Day 3 factory: shared routing base;
+    ``candidates`` default to the primary set)."""
+    return lambda: D3._factory(st, separate, candidates)(train, k)
 
 
 class Data:
@@ -462,7 +500,9 @@ class Data:
                 ),
                 rows,
             )
-        return rb3_builder(st, self.train(), self.separate, k=p["k"]), self.rows
+        wide = st["candidates_with_reasoning"] if p["with_reasoning"] else None
+        build = rb3_builder(st, self.train(), self.separate, k=p["k"], candidates=wide)
+        return build, self.rows
 
 
 # --- main ----------------------------------------------------------------------------
@@ -509,7 +549,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             build, rows = data.target(spec)
             stats, version = measure_version(build, rows, st["ctx"])
-            if not spec.version.startswith(version.name):  # R-B2 adds the window
+            if not built_as_planned(spec, version, st):
                 raise ValueError(f"built {version.name}, expected {spec.version}")
             record["stats"] = stats
         except (OSError, KeyError, ValueError) as exc:

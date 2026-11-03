@@ -303,6 +303,45 @@ def _dec(value: float) -> Decimal:
     return Decimal(f"{value + 0.0:.9f}")
 
 
+TOTAL_SLICES = ("all", "llm_only", "traffic_weighted")
+"""Slices that hold the result's own totals."""
+
+
+def price_file_slices(
+    slices: Mapping[str, Mapping[str, Decimal]],
+    *,
+    baseline_cost: Mapping[str, Decimal],
+    saving: Mapping[str, Decimal],
+    n_cost_known: Decimal,
+) -> dict[str, dict[str, Decimal]]:
+    """The slices of a repriced result, every money figure in price-file units
+    (ADR-0036, ADR-0050). The total slices take the result's own token cost and
+    saving (none when not computed) and the repriced baseline's known rows;
+    recorded-unit keys (``baseline:*``, ``saving:*``, ``saving_share`` and the
+    share of a recorded saving) are dropped everywhere else. Counts stay."""
+    recorded = ("baseline:", "saving:")
+    out: dict[str, dict[str, Decimal]] = {}
+    for name, values in slices.items():
+        kept = {
+            k: v
+            for k, v in values.items()
+            if not k.startswith(recorded) and k not in ("saving_share", "share")
+        }
+        if name in TOTAL_SLICES:
+            kept["n_cost_known"] = n_cost_known
+            kept["baseline:token_cost"] = baseline_cost["token_cost"]
+            kept["baseline:total"] = baseline_cost["total"]
+            if saving:
+                kept["saving:token_cost"] = saving["token_cost"]
+                kept["saving:total"] = saving["total"]
+                if baseline_cost["token_cost"] > 0:
+                    kept["saving_share"] = _dec(
+                        float(saving["token_cost"] / baseline_cost["token_cost"])
+                    )
+        out[name] = kept
+    return out
+
+
 def lever_results_json(
     res: dict[str, Any],
     req: pd.DataFrame,
@@ -394,10 +433,17 @@ def lever_results_json(
         "retrieval settings are a configuration snapshot, not a history",
         "timestamps are naive (Q-06)",
     )
+    if period == "report":
+        common += (
+            "report split (split_by_session report) scored once; tune-period rows "
+            "may warm the cache (the history looks back into the tune period, as "
+            "R-A1's window; owner decision 2026-11-02); TTL frozen on the tune split",
+        )
     out: dict[str, str] = {}
     for key in BASELINE_KEYS:
         if key == "as_logged":
             fields: dict[str, Any] = {
+                "slices": slices,
                 "baseline_cost": recorded | {"total": recorded_total},
                 "saving": {b: known[f"saving:{b}"] for b in BLOCKS},
                 "ci_low": ci[0] if ci_ok else None,
@@ -412,12 +458,13 @@ def lever_results_json(
             }
         else:
             base = baselines[key]
+            cost = {"token_cost": base["token_cost"], "total": base["total"]}
             fields = {
-                "baseline_cost": {
-                    "token_cost": base["token_cost"],
-                    "total": base["total"],
-                },
+                "baseline_cost": cost,
                 "saving": {},
+                "slices": price_file_slices(
+                    slices, baseline_cost=cost, saving={}, n_cost_known=base["n_known"]
+                ),
                 "ci_low": None,
                 "ci_high": None,
                 "assumptions": (
@@ -432,7 +479,6 @@ def lever_results_json(
             n_requests=len(req),
             n_eligible=int(r["n_requests_llm"]),
             baseline=key,
-            slices=slices,
             evidence_class="simulation",
             correctness_state="unmeasured",
             manifest=manifest,

@@ -50,22 +50,36 @@ def _st(d3):
 def test_rb3_factory_uses_the_shared_routing_base(d3):
     router = d3._factory(_st(d3), frozenset())(frame(4), 3)
     assert router.eligible_models is routing_base.eligible_models
-    assert router.rules is ROUTING
+    # R-A3's handling: candidates_jev dropped, the constructor's list used.
+    assert router.rules == {
+        k: v for k, v in ROUTING.items() if k != "candidates_jev"
+    } | {"candidates": ["cheap", "mid"]}
     assert router.candidates == routing_base.candidate_list(ROUTING)
 
 
 def test_rb3_settings_carry_the_routing_table(d3):
     st = d3.settings(ROOT / "config" / "evaluation" / "sprint.toml")
     assert "avoid_long_context_tier" in st["routing"]
-    assert tuple(st["candidates"]) == routing_base.candidate_list(st["routing"])
+    every = st["routing"]["candidates"]
+    assert st["candidates_with_reasoning"] == every
+    assert set(st["candidates"]) == set(every) - set(st["reasoning_billed"])
+    assert st["reasoning_billed"]  # read from the catalogue
 
 
 def test_no_assumption_carries_the_interim_label(d3, load_experiment):
     version = load_experiment("routing/exp-route-011-knn-router/version.py")
-    texts = [*d3.rb3_assumptions(5, "declared default"), *version.ASSUMPTIONS]
-    assert texts
+    run = load_experiment("routing/exp-route-011-knn-router/run.py")
+    texts = [
+        *d3.rb3_assumptions(5, "declared default"),
+        *d3.rb3_assumptions(5, "frozen default", split="report"),
+        *version.ASSUMPTIONS,
+        *run.POINT_6,
+    ]
     assert not [t for t in texts if "interim" in t.lower()]
-    assert any("Q-B21" in t for t in texts)
+    assert not [t for t in texts if "differs from ADR-0046" in t]
+    point6 = " ".join(run.POINT_6)
+    assert "ADR-0046 point 6" in point6
+    assert "confirmed for Pipeline B by the owner 2026-11-03" in point6
 
 
 def test_rb3_routes_on_shared_eligibility(d3):

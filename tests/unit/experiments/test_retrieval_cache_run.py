@@ -273,3 +273,49 @@ def test_rb1_saving_not_computed_against_repriced_baselines(run, frames):
         row = compare([result], baseline=key, max_tenant_share=D("0.35")).iloc[0]
         assert row["saving"] is None
         assert row["status"] == "insufficient evidence"
+
+
+def test_repriced_result_has_no_recorded_unit_slice(run, frames):
+    """ADR-0050 / D-2: a repriced result holds price-file figures only; recorded
+    fee figures (and shares of the recorded fee saving) only under as_logged."""
+    from metis_auto.analysis.lever_result import LeverResult
+
+    texts = _results(run, frames)
+    logged = LeverResult.from_json(texts["as_logged"])
+    assert "baseline:fees" in logged.slices["all"]
+    for key in ("premium_gpt_5_5", "todays_models", "best_single_cheap"):
+        r = LeverResult.from_json(texts[key])
+        for name, values in r.slices.items():
+            assert not any("fees" in k for k in values), (key, name)
+            assert "saving_share" not in values and "share" not in values
+        for name in ("all", "llm_only", "traffic_weighted"):
+            s = r.slices[name]
+            assert s["baseline:token_cost"] == r.baseline_cost["token_cost"]
+            assert s["baseline:total"] == r.baseline_cost["total"]
+            assert s["n_cost_known"] == D(3)  # the repriced baseline's known rows
+            assert not any(k.startswith("saving:") for k in s)  # not computed
+
+
+def test_report_run_lever_id_and_history_assumption(run, frames):
+    from metis_auto.analysis.lever_result import LeverResult
+
+    req, rag, per_call = frames
+    req = run.fee_blocks(req, per_call)
+    lookups = run.build_lookups(req, rag, per_call)
+    ctx = _replay_ctx()
+    res = run.evaluate(req, lookups, pd.Timedelta(days=1), ctx, 0.0)
+    texts = run.lever_results_json(
+        res,
+        req,
+        baselines=_baselines(),
+        split_counts={"report": 4},
+        ttl=pd.Timedelta(days=1),
+        ctx=ctx,
+        code_commit="unknown",
+        python_version="3.13.5",
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        period="report",
+    )
+    r = LeverResult.from_json(texts["todays_models"])
+    assert r.lever_id == "rb1.retrieval-cache.ttl-1d.user.report.todays_models"
+    assert any("tune-period rows may warm the cache" in a for a in r.assumptions)
