@@ -21,13 +21,24 @@ def _result(step, version, baseline="as_logged"):
         "saving": {"total": "2"},
         "ci_low": 0.01,
         "ci_high": 0.03,
-        "slices": {"all": {"saving_share": 0.02}, "llm_only": {"saving_share": 0.02}},
+        "slices": {
+            "all": {"saving_share": "0.02"},
+            "llm_only": {"saving_share": "0.02"},
+        },
         "evidence_class": "simulation",
         "correctness_state": "unmeasured",
         "assumptions": [],
         "overhead_ms_p50": 1.0,
         "overhead_ms_p95": 2.0,
-        "manifest": {"price_version": "prices-syn", "data_revision": "rev-syn"},
+        "manifest": {
+            "data_revision": "0" * 40,
+            "code_commit": "abc1234",
+            "config_hash": "0" * 64,
+            "seed": 1,
+            "price_version": "prices-syn",
+            "python_version": "3.13.0",
+            "created_at": "2026-11-03T00:00:00+00:00",
+        },
     }
 
 

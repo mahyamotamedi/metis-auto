@@ -4,6 +4,15 @@
 - **Evidence class:** *hypothetical reconstruction*. **Tokens only, quality not measured.** Token savings alone cannot pass the context quality rule (loss − win within noise + 3 points, groups, JSON, language, refusals). That needs the paid ablation (cut-first d).
 - **Status:** tune period run on full data on the shared S-3 code (2026-11-02): `replay_scope.scope` and `baselines_full.baseline_costs` (ADR-0036). The Day 2 interim stand-ins are retired. The report period is not read.
 
+## Frozen settings (2026-11-03, written before the report-split run)
+
+Owner decision 2026-11-03: one report-split run, like R-A1/R-A2. Frozen on the tune period before any report-period read; nothing is changed after seeing report numbers. The tune summary (`reports/context/exp-ctx-002/summary.json`, key `frozen`) holds the same values.
+
+- **Default: `k` = 0** (nothing assumed visible from earlier turns), pointer 8 tokens, no ledger.
+- **Stated scenario: `k` <= 1** (chunks from the previous turn assumed visible), pointer 8 tokens, no ledger.
+- Every tune scenario (eight) stays reported; only these two are run on the report split.
+- **Report run** (`python scripts/run_pipeline_b_day2.py rb2-report`): the report split (`split_by_session == "report"`, whole sessions, so each session's earlier turns are inside it). Results: `reports/levers/rb2.cross-turn.k-<k>.ptr-8.pointer.report.<baseline>.json`, summary `reports/context/exp-ctx-002/report.json`.
+
 ## Data scope (ADR-0036; owner decision 1, 2026-11-02)
 
 R-B2 has **no fitted parameter**: visibility and pointer size are scenarios. Its scenarios therefore run on `period == "tune"` LLM rows (per row, from `a_timestamp`), with no fitting split; `split_by_session` is not applied. Settings (periods, seed, `min_n`, `[baselines]`) come from `config/evaluation/sprint.toml` in the script. The cached-token convention is `baselines_full.cached_reported_separately` (the EDA's rule; `summary.json` says whether it equals the EDA table).

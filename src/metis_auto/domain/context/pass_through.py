@@ -79,7 +79,7 @@ class PassThroughStrategy:
         return ContextPlan(model_id=target.model_id, parts=parts, record=record)
 
 
-def _parts(request: Request) -> tuple[InputPart, ...]:
+def _parts(request: Request, *, dataset_order: bool = False) -> tuple[InputPart, ...]:
     parts: list[InputPart] = []
     if request.instructions.value is not None:
         parts.append(
@@ -98,9 +98,10 @@ def _parts(request: Request) -> tuple[InputPart, ...]:
                 item_index=i,
             )
         )
+    retrieved: list[InputPart] = []
     if request.retrieved.value is not None:
         for i, item in enumerate(request.retrieved.value.items):
-            parts.append(
+            retrieved.append(
                 InputPart(
                     role=PartRole.RETRIEVED,
                     text=item.text,
@@ -110,9 +111,24 @@ def _parts(request: Request) -> tuple[InputPart, ...]:
             )
     # TODO(Stage 8): structured-input config is not sent; how it reaches a model
     # is unknown (A-16).
-    parts.append(
-        InputPart(
-            role=PartRole.USER, text=request.message, component=ComponentName.MESSAGE
-        )
+    message = InputPart(
+        role=PartRole.USER, text=request.message, component=ComponentName.MESSAGE
     )
-    return tuple(parts)
+    if dataset_order:
+        return (*parts, message, *retrieved)
+    return (*parts, *retrieved, message)
+
+
+class DatasetPositionsStrategy(PassThroughStrategy):
+    """The same components in the dataset's recorded order (A-84, ADR-0030):
+    instructions, history, the current message, then the retrieved chunks. Used
+    for a real bot's chat so the request is laid out as the golden answers send
+    it (``evaluation.golden_answers.request``, layout ``dataset_positions``)."""
+
+    @property
+    def ref(self) -> PolicyRef:
+        return PolicyRef(name="dataset_positions", version="1.0.0")
+
+    def build(self, request, measurements, counts, target, config, rerouted):
+        plan = super().build(request, measurements, counts, target, config, rerouted)
+        return plan.model_copy(update={"parts": _parts(request, dataset_order=True)})

@@ -284,6 +284,24 @@ def test_two_results_with_the_same_version_under_one_baseline_are_flagged():
     )
 
 
+def test_same_version_on_another_data_scope_is_not_a_duplicate():
+    # One version run on the tune split and once on the report split: two data
+    # scopes, two groups, never compared, so neither is a duplicate.
+    tune = FakeResult(lever_id="route.synthetic.tune", version="v1", n_requests=9000)
+    report = FakeResult(lever_id="route.synthetic.report", version="v1")
+    twin = FakeResult(lever_id="route.synthetic.twin", version="v1")
+
+    frame = compare([tune, report], baseline="as_logged", max_tenant_share=CAP)
+    assert set(frame["status"]) == {"ranked"}
+    assert (frame["rank"] == 1).all()  # rank 1 in each of the two groups
+
+    # A reuse inside one group is still flagged.
+    frame = compare([tune, report, twin], baseline="as_logged", max_tenant_share=CAP)
+    assert _row(frame, "route.synthetic.tune")["status"] == "ranked"
+    for lever_id in ("route.synthetic.report", "route.synthetic.twin"):
+        assert _row(frame, lever_id)["status"] == "duplicate version"
+
+
 def test_tenant_cap_is_an_argument():
     result = FakeResult(slices=_slices("0.30"))
 

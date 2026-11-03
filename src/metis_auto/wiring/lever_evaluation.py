@@ -15,14 +15,18 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from pydantic import ValidationError
+
+from metis_auto.analysis.lever_result import LeverResult
 from metis_auto.evaluation.reporting import lever_verdicts as lv
-from metis_auto.wiring._interim_lever_json import is_result
 
 OUTPUT_NAMES = ("lever_evaluation.json", "lever_evaluation.md")
 
 
 def collect(paths: Sequence[Path]) -> tuple[list[dict[str, Any]], list[Path]]:
-    """(result mappings in the order given, skipped paths)."""
+    """(result mappings in the order given, skipped paths). A result is read
+    with the shared ``LeverResult`` (``model_validate``); JSON it refuses counts
+    as another shape. The mapping handed on is its JSON form."""
     results: list[dict[str, Any]] = []
     skipped: list[Path] = []
     for path in paths:
@@ -34,10 +38,10 @@ def collect(paths: Sequence[Path]) -> tuple[list[dict[str, Any]], list[Path]]:
         except (UnicodeDecodeError, json.JSONDecodeError):
             skipped.append(path)
             continue
-        if not is_result(data):
+        try:
+            results.append(LeverResult.model_validate(data).model_dump(mode="json"))
+        except ValidationError:
             skipped.append(path)
-            continue
-        results.append(data)
     return results, skipped
 
 

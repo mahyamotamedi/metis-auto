@@ -15,9 +15,11 @@ widgets to the session's toggles.
   which cannot hold these controls (ADR-0052).
 - Chat page: the screen the session's ``DemoWorkspace`` is on (UI spec Stage 3):
   the entry screen, the optimisation settings, or a chat workspace with the
-  savings panel beside it. Drawn by ``scripts/demo_pages/workspace.py`` over
-  ``wiring.demo_workspace`` and ``wiring.savings_panel``. The brand returns to
-  the entry screen (an invisible page link with ``?screen=entry``).
+  savings panel beside it. The address bar carries the step (screen, journey,
+  bot key), so the browser's Back and Forward move between steps (Stage 5).
+  Drawn by ``scripts/demo_pages/workspace.py`` over ``wiring.demo_workspace``
+  and ``wiring.savings_panel``. The brand returns to the entry screen (an
+  invisible page link with ``?screen=entry``).
 - Results (D-2, the offline lever results): ``scripts/demo_pages/results.py``
   over ``wiring.lever_view``.
 
@@ -53,6 +55,13 @@ if str(_PAGES) not in sys.path:  # `demo_pages` next to this file (AppTest, plai
 
 from demo_pages import workspace as workspace_page  # noqa: E402
 
+from metis_auto.settings import load_settings  # noqa: E402
+from metis_auto.wiring.demo_bots import (  # noqa: E402
+    PostgresBotSource,
+    load_directory,
+    real_data_reasons,
+)
+from metis_auto.wiring.demo_store import DemoStore, default_root  # noqa: E402
 from metis_auto.wiring.demo_ui import header_budget, load_presets  # noqa: E402
 from metis_auto.wiring.demo_workspace import (  # noqa: E402
     DemoWorkspace,
@@ -109,8 +118,12 @@ def _init() -> None:
         return
     s.notice = None
     s.blocked = None
+    load = _injected("settings_loader") or (lambda o: load_settings(overrides=o))
     s.workspace = DemoWorkspace(
         synthetic_bots(load_presets(_injected("presets_path"))),
+        directory=load_directory(_injected("bot_source") or PostgresBotSource),
+        real_data_check=lambda t: real_data_reasons(load, t),
+        store=DemoStore(Path(_injected("demo_dir") or default_root())),
         session_factory=make_session_factory(
             settings_loader=_injected("settings_loader"),
             client_factory=_injected("client_factory"),
@@ -130,7 +143,7 @@ def _chat_page() -> None:
 
 def _ui_state() -> tuple[str, str]:
     """Theme and language from the session, else the URL, else dark and fa
-    (UI-T03); written back to the URL so a reload keeps them."""
+    (UI-T03); ``_sync_url`` writes them back so a reload keeps them."""
     s = _s()
     current = None if "ui_dark" not in s else ("dark" if s.ui_dark else "light")
     theme, lang = ui_state(
@@ -138,8 +151,23 @@ def _ui_state() -> tuple[str, str]:
     )
     s.ui_theme, s.ui_dark, s.ui_lang = theme, theme == "dark", lang
     s.ui_text = translator(load_strings(), lang)
-    st.query_params["theme"], st.query_params["lang"] = theme, lang
     return theme, lang
+
+
+def _sync_url(current, chat_page) -> None:
+    """The address bar after this run's state (ADR-0058).
+
+    One write per run, and only when it differs, because a script run that
+    changes the query string makes Streamlit 1.65.0 push one browser history
+    entry (replace, if the run answers Back or Forward). On the Chat page the
+    router reads the bar first and may follow it (wiring.demo_workspace)."""
+    s = _s()
+    wanted = {"theme": s.ui_theme, "lang": s.ui_lang}
+    if current.url_path == chat_page.url_path:
+        _init()
+        wanted.update(s.workspace.sync_url(st.query_params.to_dict()))
+    if st.query_params.to_dict() != wanted:
+        st.query_params.from_dict(wanted)
 
 
 def _header(pages: list, current) -> None:
@@ -207,9 +235,14 @@ def _header(pages: list, current) -> None:
             for name, page, icon in pages:
                 active = page.url_path == current.url_path
                 key = f"mxtab-active-{name}" if active else f"mxtab-{name}"
+                # the Chat tab returns to the workspace's own step (UI-H03)
+                extra = s.workspace.url_params() if name == "chat" else {}
                 with st.container(key=key, width="content"):
                     st.page_link(
-                        page, label=S(f"nav_{name}"), icon=icon, query_params=query
+                        page,
+                        label=S(f"nav_{name}"),
+                        icon=icon,
+                        query_params={**query, **extra},
                     )
 
 
@@ -234,6 +267,7 @@ def main() -> None:
         ),
     ]
     current = st.navigation([p for _, p, _ in pages], position="hidden")
+    _sync_url(current, pages[0][1])
     _header(pages, current)
     current.run()
 

@@ -9,7 +9,6 @@ import numpy as np
 import pytest
 from test_knn_router import CATALOGUE, allow_all, ctx, frame
 
-from metis_auto.analysis.baselines_full import baseline_costs
 from metis_auto.analysis.lever_result import LeverResult
 
 RUN = "routing/exp-route-011-knn-router/run.py"
@@ -103,68 +102,26 @@ def test_criterion_is_least_aggressive_not_highest_saving(run):
     assert run.CRITERION.startswith("least aggressive")
 
 
-def test_routed_cost_reprices_through_baselines_full(run, load_experiment):
-    req = frame(
-        3,
-        bot_provider_model=["sep", "dear", "dear"],
-        a_bill_inputTokens=[500.0, 1000.0, 1000.0],
-        a_bill_cachedInputTokens=[800.0, 0.0, 0.0],
-    )
-    sep = frozenset({"sep"})
-    after = req.assign(
-        routed_model=["sep", "dear", "dear"],
-        route_reason=["no_cheaper_candidate"] * 3,
-        route_cost_incumbent=[1.0] * 3,
-        route_cost_routed=[1.0] * 3,
-    )
-    out = run.routed_baselines(
-        after, ctx(), premium_model="premium", cached_separately=sep
-    )
-    ref = baseline_costs(req, ctx(), premium_model="premium", cached_separately=sep)
-    # Nothing moved: the routed cost is today's models, cached-token rule included.
-    assert out["routed"]["token_cost"] == ref["todays_models"]["token_cost"]
-    assert out["saving"]["todays_models"]["token_cost"] == Decimal("0E-9")
-    moved = after.assign(routed_model=["sep", "cheap", "cheap"])
-    out = run.routed_baselines(
-        moved, ctx(), premium_model="premium", cached_separately=sep
-    )
-    assert out["saving"]["todays_models"]["token_cost"] > 0
-    assert out["saving"]["premium_gpt_5_5"]["total"] == (
-        out["before"]["premium_gpt_5_5"]["total"] - out["routed"]["total"]
-    )
-
-
-def test_rows_the_router_cannot_price_are_left_out_of_every_baseline(run):
-    req = frame(2, bot_provider_model=["unlisted", "dear"])
-    after = req.assign(
-        routed_model=["unlisted", "cheap"],
-        route_reason=["incumbent_unpriced", "moved"],
-        route_cost_incumbent=[np.nan, 1.0],
-        route_cost_routed=[np.nan, 0.5],
-    )
-    out = run.routed_baselines(
-        after, ctx(), premium_model="premium", cached_separately=frozenset()
-    )
-    for key in ("premium_gpt_5_5", "todays_models", "best_single_cheap"):
-        assert out["before"][key]["n_known"] == Decimal(1)
-    assert out["n_scope"] == 1 and out["n_left_out"] == 1
-
-
 def results(run, load_experiment):
     req = population()
     router = make(load_experiment)(req, 3)
     after = router.apply(req, ctx())
+    after["block_fees"], after["block_token_cost"] = 0.002, 0.004
     texts = run.lever_results_json(
         after,
         req,
         k=3,
+        split="tune",
+        with_reasoning=False,
         ctx=ctx(),
         premium_model="premium",
+        cheap_model="cheap",
         cached_separately=frozenset(),
+        rates={"cheap": {"input": 1.0, "cached": 0.5, "output": 2.0}},
         code_commit="abcdef1",
         python_version="3.13.5",
         created_at=CREATED,
-        extra_assumptions=("interim eligibility, not the shared routing base",),
+        extra_assumptions=("synthetic run assumption",),
     )
     return {k: LeverResult.from_json(t) for k, t in texts.items()}, after
 
@@ -184,12 +141,11 @@ def test_one_result_per_baseline_with_units_never_mixed(run, load_experiment):
     for key, r in res.items():
         assert r.step == "routing" and r.evidence_class == "simulation"
         assert "cost simulation; quality not proven" in r.assumptions
-        assert "interim eligibility, not the shared routing base" in r.assumptions
+        assert "synthetic run assumption" in r.assumptions
         assert {"all", "llm_only", "traffic_weighted", "routing"} <= set(r.slices)
-        if key == "as_logged":
-            assert r.saving == {}  # not computed in recorded units
-            assert any("not computed" in a for a in r.assumptions)
-            assert r.ci_low is None
+        if key == "as_logged":  # recorded units, the target at implied rates
+            assert set(r.saving) == {"fees", "token_cost", "total"}
+            assert r.manifest.price_version == "full-eda-implied-unit-rates"
         else:
             assert "fees" not in r.baseline_cost and "fees" not in r.saving
             assert set(r.saving) == {"token_cost", "total"}

@@ -17,6 +17,21 @@ only. Distance: Euclidean on the scaled profile. Ties: lower training position
 first (training rows sorted by index). Neighbours may come from any bot
 (``CROSS_BOT``): within one bot every request ran the bot's one model.
 
+**Per-baseline accounting** (``baseline_frames``, outside ``apply``; ADR-0046
+points 5 and 6, as R-A3 ``exp-route-001`` and R-C3; owner decision for Pipeline
+B, 2026-11-03): ``apply`` is the ``todays_models`` decision and records each
+request's target (the cheapest eligible candidate its neighbours ran, cheaper
+or not). In each baseline the incumbent is that baseline's model (the logged
+model for ``todays_models`` and ``as_logged``, the premium model, the best single
+cheap model); a request moves only if the target is another model and strictly
+cheaper in that baseline's units, so every saving is the router's own effect and
+is >= 0 row by row. ``as_logged`` prices the target at implied recorded rates
+(``implied_cost``, the ADR-0038 pattern); a needed rate that is missing makes the
+saving unknown (the row leaves both sides), never 0; rows not moved save exactly
+0; fees never change. Candidates the catalogue marks
+``hidden_reasoning_billed_as_output`` are left out of the primary result
+(ADR-0046 point 4, ``primary_candidates``).
+
 Layer: candidate code in ``experiments/``, loaded by file path; pure over
 injected frames. ``eligible_models`` is a constructor argument, never imported.
 """
@@ -30,6 +45,12 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from metis_auto.analysis.baselines_full import (
+    model_row_costs,
+    repriced_row_costs,
+    token_counts,
+)
+from metis_auto.analysis.levers import BLOCKS, block_column
 from metis_auto.analysis.replay_scope import bot_sufficiency
 
 NUMERIC = (
@@ -58,7 +79,19 @@ ASSUMPTIONS = (
     "no quality label: nearest-profile policy over logged models only",
     "token counts assumed model-independent; logged output length unchanged",
     "fees and recorded cost blocks unchanged (lookup fee is not on the price list)",
+    "recorded blocks (fees, token_cost) unchanged by apply; each baseline is "
+    "accounted in its own units (ADR-0036)",
 )
+LEVER = "rb3.knn-router"
+LEVER_WITH_REASONING = "rb3.knn-router.with_reasoning_models"
+VERSION = "route.knn"
+VERSION_WITH_REASONING = "route.knn.with_reasoning_models"
+REASONING_CAPABILITY = "hidden_reasoning_billed_as_output"
+WITH_REASONING_LABEL = "lower bound on candidate cost, hidden reasoning not counted"
+BASELINES = ("premium_gpt_5_5", "as_logged", "todays_models", "best_single_cheap")
+CANDIDATE = "route_candidate"
+MOVED_B = "route_moved_in_baseline"
+SAVING_UNKNOWN = "route_saving_unknown"
 
 REASONS = (
     "moved",
@@ -75,6 +108,121 @@ EligibleModels = Callable[
     tuple[str, ...],
 ]
 """``eligible_models(row, catalogue, prices, rules)``, the plan's R-0 shape."""
+
+
+def _records(table: Any, key: str) -> list[Mapping[str, Any]]:
+    if isinstance(table, pd.DataFrame):
+        return table.to_dict("records")
+    return list(table.get(key, []))
+
+
+def reasoning_billed(catalogue: Any) -> frozenset[str]:
+    """Models whose catalogue entry has ``REASONING_CAPABILITY`` (ADR-0046 point 4)."""
+    out = set()
+    for m in _records(catalogue, "models"):
+        names = {str(c.get("name")) for c in m.get("capabilities") or []}
+        if REASONING_CAPABILITY in names:
+            out.add(str(m["model_id"]))
+    return frozenset(out)
+
+
+def primary_candidates(candidates: Sequence[str], catalogue: Any) -> tuple[str, ...]:
+    """``candidates`` without the reasoning-billed ones, in order."""
+    hidden = reasoning_billed(catalogue)
+    return tuple(c for c in candidates if c not in hidden)
+
+
+def implied_cost(
+    tokens: pd.DataFrame, model: pd.Series, rates: Mapping[str, Mapping[str, float]]
+) -> pd.Series:
+    """Recorded-unit cost of each row on ``model`` at its implied rates per 1M
+    tokens (``input``, ``cached``, ``output``). A rate is needed only for a token
+    part above 0; a needed rate that is missing gives NaN (unknown). The rule of
+    R-A3's ``implied_cost`` (ADR-0038 pattern, ADR-0046 point 5)."""
+    out = pd.Series(np.nan, index=tokens.index)
+    uncached = tokens["input"] - tokens["cached"]
+    for m in pd.unique(model.dropna()):
+        rows = model.eq(m)
+        r = rates.get(str(m), {})
+        total = pd.Series(0.0, index=tokens.index)[rows]
+        parts = (
+            (uncached, "input"),
+            (tokens["cached"], "cached"),
+            (tokens["output"], "output"),
+        )
+        for part, key in parts:
+            rate = r.get(key)
+            rate = np.nan if rate is None else float(rate)
+            value = part[rows]
+            total = total + (value * rate).where(value.ne(0), 0.0).where(value.notna())
+        out[rows] = total / 1e6
+    return out
+
+
+def baseline_frames(
+    req: pd.DataFrame,
+    out: pd.DataFrame,
+    ctx: Any,
+    *,
+    baseline: str,
+    premium_model: str,
+    cheap_model: str,
+    cached_separately: frozenset[str],
+    rates: Mapping[str, Mapping[str, float]],
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Before and after cost blocks of one baseline (ADR-0046 points 5 and 6).
+
+    ``out`` is ``apply``'s frame. A request is a candidate (``CANDIDATE``) if it
+    has a priced target; it moves (``MOVED_B``) only if the target is another
+    model than the baseline's and strictly cheaper in this baseline's units.
+    ``as_logged``: recorded blocks, the target at ``implied_cost``; an unknown
+    target cost removes the row from both sides (``SAVING_UNKNOWN``). Repriced:
+    list prices; ``block_fees`` is 0 on both sides only so the blocks sum (the
+    result drops the fee key)."""
+    llm = req["llm_request"].astype(bool)
+    before = req[["llm_request"]].copy()
+    after = before.copy()
+    fee_col, tok_col = (block_column(b) for b in BLOCKS)
+    target = out["route_target"].reindex(req.index)
+    tcost = out["route_target_cost"].reindex(req.index)
+    candidate = (llm & target.notna() & tcost.notna()).astype(bool)
+    if baseline == "as_logged":
+        tokens = token_counts(req, cached_separately)
+        cost = implied_cost(tokens, target.where(candidate), rates)
+        recorded = req[tok_col]
+        unknown = candidate & cost.isna() & recorded.notna()
+        moved = (
+            candidate & cost.lt(recorded) & target.ne(req["bot_provider_model"])
+        ).astype(bool)
+        before[fee_col] = req[fee_col].where(~unknown)
+        after[fee_col] = req[fee_col].where(~unknown)
+        before[tok_col] = recorded.where(~unknown)
+        after[tok_col] = recorded.where(~moved, cost).where(~unknown)
+    elif baseline in ("premium_gpt_5_5", "todays_models", "best_single_cheap"):
+        inc = repriced_row_costs(
+            req,
+            ctx,
+            premium_model=premium_model,
+            cached_separately=cached_separately,
+            cheap_model=cheap_model,
+        )[baseline]
+        inc_model = {
+            "todays_models": req["bot_provider_model"],
+            "premium_gpt_5_5": pd.Series(premium_model, index=req.index),
+            "best_single_cheap": pd.Series(cheap_model, index=req.index),
+        }[baseline]
+        moved = (candidate & tcost.lt(inc) & target.ne(inc_model)).astype(bool)
+        unknown = pd.Series(False, index=req.index)
+        zero = (inc * 0.0).where(inc.notna())
+        before[fee_col], after[fee_col] = zero, zero
+        before[tok_col] = inc
+        after[tok_col] = inc.where(~moved, tcost)
+    else:
+        raise ValueError(f"unknown baseline {baseline}")
+    after[CANDIDATE] = candidate & llm
+    after[MOVED_B] = moved & llm
+    after[SAVING_UNKNOWN] = unknown & llm
+    return before, after
 
 
 def family_key(req: pd.DataFrame) -> pd.Series:
@@ -198,36 +346,13 @@ def _rows_by_code(*codes: np.ndarray) -> tuple[dict[int, np.ndarray], ...]:
     return tuple(out)
 
 
-def _price_rows(price_table: Mapping[str, Any]) -> tuple[dict[str, list], float]:
-    rows: dict[str, list] = {}
-    for p in price_table.get("prices", []):
-        rows.setdefault(str(p["price_ref"]), []).append(p)
-    return rows, float(price_table.get("per_tokens", 1_000_000))
-
-
-def _bound(value: object, default: float) -> float:
-    return default if value is None or pd.isna(value) else float(value)
-
-
 def effective_tokens(
     req: pd.DataFrame, cached_separately: frozenset[str]
 ) -> pd.DataFrame:
-    """Effective input, cached (capped at input) and output tokens: the rule of
-    ``baselines_full`` (cached tokens added back for the logged models that
-    report them outside the input count)."""
-    raw_in = req["a_bill_inputTokens"].astype(float)
-    cached = (
-        req["a_bill_cachedInputTokens"].astype(float).fillna(0).where(raw_in.notna())
-    )
-    eff_in = raw_in + cached.where(req["bot_provider_model"].isin(cached_separately), 0)
-    return pd.DataFrame(
-        {
-            "input": eff_in,
-            "cached": np.minimum(cached, eff_in),
-            "output": req["a_bill_outputTokens"].astype(float),
-        },
-        index=req.index,
-    )
+    """Effective input, cached (capped at input) and output tokens:
+    ``baselines_full.token_counts`` (cached tokens added back for the logged
+    models that report them outside the input count), as floats."""
+    return token_counts(req, cached_separately).astype(float)
 
 
 def candidate_costs(
@@ -236,26 +361,22 @@ def candidate_costs(
     ctx: Any,
     cached_separately: frozenset[str],
 ) -> pd.DataFrame:
-    """Per-row cost of each model in price-file units (NaN: unpriced model,
-    unknown tokens or a workflow row). Used to *order* models; reported
-    totals go through ``baselines_full.baseline_costs`` (tested equal)."""
-    prices, per_tokens = _price_rows(ctx.price_table)
-    refs = {str(m["model_id"]): str(m["price_ref"]) for m in ctx.catalogue["models"]}
-    tok = effective_tokens(req, cached_separately)
-    llm = req["llm_request"].astype(bool) if "llm_request" in req else True
+    """Per-row cost of each model in price-file units (NaN: unpriced model or one
+    the catalogue does not describe, unknown tokens or a workflow row):
+    ``baselines_full.model_row_costs``, before eligibility (the router applies
+    the injected ``eligible_models``). Used to *order* models; reported totals
+    go through ``baselines_full.baseline_costs`` (tested equal)."""
+    known = {str(m["model_id"]) for m in ctx.catalogue["models"]}
+    tokens = token_counts(req, cached_separately)
     out = pd.DataFrame(index=req.index)
     for model in models:
-        cost = pd.Series(np.nan, index=req.index)
-        for p in prices.get(refs.get(model, ""), []):
-            lo = _bound(p.get("min_input_tokens"), 0.0)
-            hi = _bound(p.get("max_input_tokens"), np.inf)
-            m = (tok["input"] >= lo) & (tok["input"] <= hi)
-            cost[m] = (
-                (tok["input"] - tok["cached"])[m] * float(p["input"])
-                + tok["cached"][m] * float(p["cached_input"])
-                + tok["output"][m] * float(p["output"])
-            ) / per_tokens
-        out[model] = cost.where(llm)
+        out[model] = (
+            model_row_costs(
+                req, ctx, model, cached_separately=cached_separately, tokens=tokens
+            )
+            if model in known
+            else np.nan
+        )
     return out
 
 
@@ -265,8 +386,10 @@ class KnnRouter:
     ``train`` is the fitting frame (``split_by_session == "tune"`` rows). The
     columns it adds: ``routed_model``, ``route_reason`` (one of ``REASONS``),
     ``route_support`` (share of the ``k`` neighbours that ran the routed
-    model), ``route_cost_incumbent`` and ``route_cost_routed`` (price-file
-    units). Recorded cost blocks are left as they are.
+    model), ``route_target`` and ``route_target_cost`` (the cheapest eligible
+    candidate the neighbours ran, cheaper than the incumbent or not, for
+    ``baseline_frames``), ``route_cost_incumbent`` and ``route_cost_routed``
+    (price-file units). Recorded cost blocks are left as they are.
     """
 
     step = "routing"
@@ -295,7 +418,11 @@ class KnnRouter:
         self.label_source = label_source
         self.candidates = tuple(candidates)
         self.eligible_models = eligible_models
-        self.rules = rules
+        # As R-A3: the constructor's candidates replace rules["candidates"] and
+        # rules["candidates_jev"] is dropped, so R-0 sees exactly this list.
+        self.rules = {k: v for k, v in rules.items() if k != "candidates_jev"} | {
+            "candidates": list(self.candidates)
+        }
         self.cached_separately = cached_separately
         self.chunk = chunk
         train = train.sort_index(kind="stable")
@@ -364,6 +491,8 @@ class KnnRouter:
             routed = incumbent.to_numpy(dtype=object).copy()
             routed_cost = np.where(reason == "unknown_tokens", np.nan, inc_cost)
             support = np.full(len(req), np.nan)
+            target = np.full(len(req), None, dtype=object)
+            target_cost = np.full(len(req), np.nan)
             for j, i in enumerate(active):
                 neigh = idx[j, :k]
                 if (neigh < 0).any():
@@ -381,6 +510,7 @@ class KnnRouter:
                     reason[i] = "no_eligible_candidate"
                     continue
                 best_cost, best = min(priced)
+                target[i], target_cost[i] = best, best_cost
                 if best_cost < inc_cost[i]:
                     reason[i] = "moved"
                     routed[i] = best
@@ -392,6 +522,8 @@ class KnnRouter:
             frame["routed_model"] = routed
             frame["route_reason"] = reason
             frame["route_support"] = support
+            frame["route_target"] = target
+            frame["route_target_cost"] = target_cost
             frame["route_cost_incumbent"] = inc_cost
             frame["route_cost_routed"] = routed_cost
             out[k] = frame

@@ -78,6 +78,55 @@ def bots_for_features(conn: Connection) -> list[dict[str, Any]]:
     return [dict(r._mapping) for r in rows]
 
 
+_DIRECTORY_SQL = """
+SELECT b.bot_id, b.instructions, b.provider_name, b.provider_model,
+       b.memory_enabled, b.summarizer_mode, b.corpus_ids_state, b.rag_top_k,
+       count(DISTINCT s.session_id) AS sessions,
+       count(m.message_id) FILTER (WHERE m.type = 'USER') AS requests
+FROM src.chat_bot b
+JOIN src.chat_session s ON s.bot_id = b.bot_id
+LEFT JOIN src.chat_message m ON m.session_id = s.session_id
+GROUP BY b.bot_id
+ORDER BY b.bot_id COLLATE "C"
+"""
+
+
+def bot_directory_rows(conn: Connection) -> list[dict[str, Any]]:
+    """One row per bot used in a session, with its traffic (sessions, USER turns).
+    ``instructions`` is content: the caller derives its facts and drops it."""
+    return [dict(r._mapping) for r in conn.execute(text(_DIRECTORY_SQL))]
+
+
+def bot_instructions(conn: Connection, bot_id: str) -> str | None:
+    """LOCAL USE ONLY: returns instruction text, for a request sent to a model."""
+    return conn.scalar(
+        text("SELECT instructions FROM src.chat_bot WHERE bot_id = :b"), {"b": bot_id}
+    )
+
+
+def latest_rag_texts(conn: Connection, bot_id: str) -> list[str]:
+    """LOCAL USE ONLY: the chunk texts of the bot's most recent logged AI turn that
+    has retrieved chunks, in logged order (UI-A33 Option A). ``chunks_for`` returns
+    hashes only, so the text is read here."""
+    return list(
+        conn.scalars(
+            text(
+                """SELECT c.content FROM src.rag_chunk c
+                   WHERE c.message_id = (
+                     SELECT m.message_id FROM src.chat_message m
+                     JOIN src.chat_session s USING (session_id)
+                     WHERE s.bot_id = :b AND m.type = 'AI' AND EXISTS (
+                       SELECT 1 FROM src.rag_chunk x WHERE x.message_id = m.message_id)
+                     ORDER BY m."timestamp" DESC NULLS LAST, m.source_ordinal DESC,
+                              m.message_id COLLATE "C" DESC
+                     LIMIT 1)
+                   ORDER BY c._source_file_id, c._source_row"""
+            ),
+            {"b": bot_id},
+        )
+    )
+
+
 def session_owner_map(conn: Connection) -> dict[str, tuple[str, str]]:
     return {
         r.session_id: (r.bot_id, r.user_id)

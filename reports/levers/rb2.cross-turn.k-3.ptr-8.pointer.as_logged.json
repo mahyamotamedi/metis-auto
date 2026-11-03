@@ -6,7 +6,10 @@
     "chunk tokens = chars x 0.3384 (EDA turn-0 slope)",
     "fees and output unchanged; within-message copies left to S-6",
     "rows: period tune (a_timestamp); no fitted parameter, so no split",
-    "timestamps are naive (Q-06)"
+    "timestamps are naive (Q-06)",
+    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 7.5717 ms, p95 8.9372 ms, max 12.888 ms",
+    "Overhead caveat: one-row frame: only this request's chunks are scanned, so no earlier turn is in the session state and nothing is dropped; this times the decision pass, not a session-state lookup; building the chunks frame is not timed.",
+    "Overhead sample: tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, route.per_bot) used report-period rows, so the two samples differ"
   ],
   "baseline": "as_logged",
   "baseline_cost": {
@@ -19,18 +22,18 @@
   "evidence_class": "hypothetical reconstruction",
   "lever_id": "rb2.cross-turn.k-3.ptr-8.pointer.as_logged",
   "manifest": {
-    "code_commit": "91c5b3518e885985f4b8a07f37fd751d9e4144ed",
+    "code_commit": "9f05b25e27c0505563aaa3ad25a6e4e79429e194",
     "config_hash": "070dd50846caeac661006314616bef91ae06b6f8a7432799472667d0654596db",
-    "created_at": "2026-11-02T12:45:50.886014Z",
+    "created_at": "2026-11-03T10:35:58.883683Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "prices-metis-2026-10-18-logged",
     "python_version": "3.13.5",
     "seed": 20261102
   },
   "n_eligible": 220908,
   "n_requests": 220908,
-  "overhead_ms_p50": null,
-  "overhead_ms_p95": null,
+  "overhead_ms_p50": 7.5717,
+  "overhead_ms_p95": 8.9372,
   "saving": {
     "fees": "0.000000000",
     "token_cost": "11.795021955"

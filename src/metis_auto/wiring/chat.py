@@ -178,9 +178,12 @@ class ChatSession:
         seed_path: Path | None = None,
         seed_size: int = 5,
         router_mode: str = "local",
+        context_layout: str | None = None,
     ) -> None:
         """``model_id`` without ``routing`` means fixed routing (Stage 7.5);
-        no model means sticky routing v1."""
+        no model means sticky routing v1. ``context_layout`` names a promoted
+        context strategy (``dataset_positions``: the A-84 order a real bot's
+        request is sent in); None keeps the configured one."""
         self._live = live
         self.instructions = instructions
         self.retrieved = tuple(r for r in retrieved if r.strip())
@@ -213,6 +216,7 @@ class ChatSession:
         self.model_id = model_id or "gpt-4o-mini"
         self.compression = compression
         self.bot_cache = bot_cache
+        self.context_layout = context_layout
         self.seed = seed
         self.deepseek_thinking = deepseek_thinking
         if router_mode not in ROUTER_MODES:
@@ -241,6 +245,8 @@ class ChatSession:
         elif not fixed:
             overrides["pipeline.routing.policy"] = "sticky"
             overrides["pipeline.routing.sticky.mode"] = self.routing.value
+        if self.context_layout:
+            overrides["pipeline.context.strategy"] = self.context_layout
         if self.compression != CompressionMode.OFF:
             overrides["pipeline.context.compression.enabled"] = True
         if self.bot_cache:

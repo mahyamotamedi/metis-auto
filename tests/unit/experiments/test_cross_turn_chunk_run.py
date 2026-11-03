@@ -192,3 +192,57 @@ def test_rb2_after_frame_is_float_when_nothing_was_dropped(run):
 
     assert after["a_bill_inputTokens"].dtype == "float64"
     assert after["a_bill_inputTokens"].equals(before["a_bill_inputTokens"])
+
+
+def _scenario_results(run, frames, **kw):
+    from metis_auto.analysis.lever_result import LeverResult
+
+    req, chunks, items = frames
+    req = req.assign(a_bill_outputTokens=50.0, a_n_per_call_only_items=1)  # SYNTHETIC
+    sep = frozenset({"model-sep"})
+    req = run.request_inputs(req, items, sep)
+    ch = run.build_chunks(req, chunks)
+    res = run.evaluate(req, ch, pointer_tokens=8, window=1, ledger=False, tpc=0.5)
+    repriced = run.repriced_savings(
+        res["after"], _ctx(), premium_model="syn-premium", cached_separately=sep
+    )
+    texts = run.lever_results_json(
+        res,
+        req,
+        repriced=repriced,
+        ctx=_ctx(),
+        code_commit="unknown",
+        python_version="3.13.5",
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        **kw,
+    )
+    return {k: LeverResult.from_json(t) for k, t in texts.items()}, repriced
+
+
+def test_repriced_result_has_no_recorded_unit_slice(run, frames):
+    """ADR-0050 / D-2: a repriced result holds price-file figures only."""
+    res, repriced = _scenario_results(run, frames)
+    assert "baseline:fees" in res["as_logged"].slices["all"]
+    for key in ("premium_gpt_5_5", "todays_models", "best_single_cheap"):
+        r = res[key]
+        for name, values in r.slices.items():
+            assert not any("fees" in k for k in values), (key, name)
+        for name in ("all", "llm_only", "traffic_weighted"):
+            s = r.slices[name]
+            assert s["baseline:token_cost"] == r.baseline_cost["token_cost"]
+            assert s["saving:token_cost"] == r.saving["token_cost"]
+            assert s["n_cost_known"] == repriced["before"][key]["n_known"]
+            if r.baseline_cost["token_cost"] > 0:
+                share = r.saving["token_cost"] / r.baseline_cost["token_cost"]
+                assert s["saving_share"] == D(f"{float(share):.9f}")
+
+
+def test_report_split_lever_id(run, frames):
+    res, _ = _scenario_results(run, frames, split="report")
+    assert {r.lever_id for r in res.values()} == {
+        f"rb2.cross-turn.k-1.ptr-8.pointer.report.{b}"
+        for b in ("premium_gpt_5_5", "as_logged", "todays_models", "best_single_cheap")
+    }
+    assert any("report split" in a for a in res["as_logged"].assumptions)
+    tune, _ = _scenario_results(run, frames)  # tune IDs keep their old pattern
+    assert tune["as_logged"].lever_id == "rb2.cross-turn.k-1.ptr-8.pointer.as_logged"

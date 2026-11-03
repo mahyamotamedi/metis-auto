@@ -40,7 +40,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from metis_auto.settings import LoadedSettings, SettingsError
+from metis_auto.contracts import Component, Role, Turn
+from metis_auto.settings import LoadedSettings, SettingsError, load_settings
 from metis_auto.wiring.chat import (
     ChatSession,
     ClientFactory,
@@ -50,14 +51,37 @@ from metis_auto.wiring.chat import (
     SettingsLoader,
     TurnReport,
 )
+from metis_auto.wiring.demo_bots import (
+    LANGUAGES as BOT_LANGUAGES,
+)
+from metis_auto.wiring.demo_bots import (
+    LOGGED_TURN,
+    PAGE_SIZE,
+    BotCard,
+    BotContentError,
+    BotDirectory,
+    BotProfile,
+    filter_cards,
+)
+from metis_auto.wiring.demo_store import (
+    PASSAGES_MAX,
+    BotFormError,
+    DemoStore,
+    StoredConversation,
+    UserBot,
+)
 from metis_auto.wiring.demo_ui import Preset, text_direction
-from metis_auto.wiring.ui_config import Text
+from metis_auto.wiring.ui_config import Text, load_strings, translator
+from metis_auto.wiring.ui_format import fmt
 
 TITLE_MAX = 40
 """Characters of a conversation's first message shown in the list."""
 LRI, PDI = "⁦", "⁩"
-SCREEN_PARAM = "screen"
+SCREEN_PARAM, JOURNEY_PARAM, BOT_PARAM = "screen", "journey", "bot"
+NAV_PARAMS = (SCREEN_PARAM, JOURNEY_PARAM, BOT_PARAM)
+"""The address bar's part of the router: identifiers only, never text (UI-R05)."""
 ENTRY_VALUE = "entry"
+PARAM_MAX = 64
 COMPRESSOR_LIBRARY = "llmlingua"
 
 
@@ -69,6 +93,8 @@ class Journey(StrEnum):
 
 class Screen(StrEnum):
     ENTRY = "entry"  # UI-S01
+    BOTS = "bots"  # UI-S02
+    CREATE = "create"  # UI-S03
     SETTINGS = "settings"  # UI-S04
     CHAT = "chat"  # UI-S05 (chatbot) and UI-S06 (direct)
 
@@ -77,21 +103,7 @@ def _ltr(value: object) -> str:
     return f"{LRI}{value}{PDI}"
 
 
-# --- bots (SYNTHETIC now; Stage 4 swaps the source) ---------------------------------
-
-
-@dataclass(frozen=True)
-class BotProfile:
-    """What a chat needs from a bot. Content (instructions, documents) goes to
-    the model only; the listing shows ``label`` and ``facts`` (UI-R05)."""
-
-    key: str
-    label: str
-    language: str  # "fa" | "en"
-    rag: bool
-    instructions: str
-    documents: tuple[str, ...]
-    suggested: tuple[str, ...] = ()
+# --- bots: the SYNTHETIC samples here, the real ones in wiring.demo_bots -------------
 
 
 def synthetic_bots(presets: Sequence[Preset]) -> tuple[BotProfile, ...]:
@@ -133,15 +145,28 @@ def make_session_factory(
     seed_path: Path | None = None,
 ) -> SessionFactory:
     def factory(profile: BotProfile | None, *, live: bool = False) -> ChatSession:
+        instructions, documents = profile.content() if profile else (None, ())
+        if live and profile is not None and profile.real:
+            # UI-R05: a real bot's content leaves the machine only with the
+            # owner's approval, whatever the page did before this call
+            load = settings_loader or (lambda o: load_settings(overrides=o))
+            if not load({}).settings.golden_answers.real_data_approved:
+                raise SettingsError(
+                    "live calls refused: "
+                    + translator(load_strings(), "en")("live_real_needs_approval")
+                )
         return ChatSession(
             None,
             live=live,
-            instructions=profile.instructions if profile else None,
-            retrieved=profile.documents if profile else (),
+            instructions=instructions or None,
+            retrieved=documents,
             settings_loader=settings_loader,
             client_factory=client_factory,
             compressor_factory=compressor_factory,
             seed_path=seed_path,
+            context_layout=LOGGED_TURN
+            if profile is not None and profile.real
+            else None,
         )
 
     return factory
@@ -184,6 +209,34 @@ class Conversation:
     """The session's turns while this conversation is not the open one."""
 
 
+def _turns(messages: Sequence[Mapping[str, Any]]) -> list[Turn]:
+    """The model-side history of saved messages: each user message with its
+    answer (a message without an answer was not part of the history)."""
+    turns: list[Turn] = []
+    for user, answer in zip(messages[::2], messages[1::2], strict=False):
+        if user["role"] != "user" or answer["role"] != "assistant":
+            continue
+        if not answer["text"]:
+            continue
+        model = answer.get("model")
+        turns.append(
+            Turn(role=Role.USER, text=user["text"], producer=Component.absent())
+        )
+        turns.append(
+            Turn(
+                role=Role.ASSISTANT,
+                text=answer["text"],
+                producer=Component.present(model) if model else Component.unknown(),
+            )
+        )
+    return turns
+
+
+def _conversation(saved: StoredConversation) -> Conversation:
+    messages = [dict(m) for m in saved.messages]
+    return Conversation(saved.number, messages, _turns(messages))
+
+
 @dataclass(frozen=True)
 class Switches:
     cache: bool
@@ -210,13 +263,17 @@ class ChatWorkspace:
         session: ChatSession,
         *,
         touch: Callable[[], None] = lambda: None,
+        store: DemoStore | None = None,
     ) -> None:
         self.journey = journey
         self.profile = profile
         self.session = session
         self._touch = touch
+        self._store = store
         self.conversations: list[Conversation] = [Conversation(1)]
         self.current_number = 1
+        self.skipped_files = 0
+        """Saved conversation files that could not be read (UI-A31)."""
         self.reports: list[TurnReport] = []
         """Every answered message of the session, in time order (the panel's data)."""
         self.preferred_model = session.model_id
@@ -225,8 +282,33 @@ class ChatWorkspace:
             if session.routing != RoutingMode.FIXED
             else RoutingMode.STICKY_V1
         )
+        self._restore()
 
     # --- conversations (UI-A30, UI-B02) ---
+
+    def _restore(self) -> None:
+        """Load this (journey, bot)'s saved conversations and open the newest,
+        so the history survives a restart (UI-A31). Unreadable files are only
+        counted."""
+        if self._store is None:
+            return
+        saved, self.skipped_files = self._store.load_conversations(
+            self.journey.value, self.profile.key if self.profile else None
+        )
+        if not saved:
+            return
+        self.conversations = [_conversation(c) for c in saved]
+        self.current_number = self.conversations[-1].number
+        self.session.history[:] = self.current.history
+
+    def _persist(self) -> None:
+        if self._store is None:
+            return
+        key = (self.journey.value, self.profile.key if self.profile else None)
+        if self.messages:
+            self._store.save_conversation(*key, self.current_number, self.messages)
+        else:
+            self._store.delete_conversation(*key, self.current_number)
 
     @property
     def current(self) -> Conversation:
@@ -238,14 +320,16 @@ class ChatWorkspace:
 
     def ask(self, message: str) -> TurnReport:
         if self.profile is not None:
-            self.session.set_instructions(self.profile.instructions or None)
-            self.session.set_retrieved(self.profile.documents)
+            instructions, documents = self.profile.content()
+            self.session.set_instructions(instructions or None)
+            self.session.set_retrieved(documents)
         response, report = self.session.ask(message)
         self.messages.append({"role": "user", "text": message})
         self.messages.append(
             {"role": "assistant", "text": response.answer or "", "report": report}
         )
         self.reports.append(report)
+        self._persist()
         return report
 
     def _save(self) -> None:
@@ -301,11 +385,19 @@ class ChatWorkspace:
         self.messages.clear()
         self.current.history = []
         self.session.reset()
+        self._persist()
 
     # --- titles and the status line (UI-A32, UI-B03, UI-SB06) ---
 
     def title(self, t: Text) -> str:
         return self.profile.label if self.profile else t("ws_direct_title")
+
+    def knowledge_note(self, t: Text) -> str | None:
+        """What the real bot's answers draw on (UI-A33): passages from one logged
+        turn, or its instructions only. None for samples and direct chat."""
+        if self.profile is None or not self.profile.real:
+            return None
+        return t("ws_knowledge_logged" if self.profile.rag else "ws_knowledge_none")
 
     def status_line(self, t: Text) -> str:
         if self.switches().routing:
@@ -405,6 +497,93 @@ class ChatWorkspace:
 # --- the application state ------------------------------------------------------------
 
 
+FILTER_ANY = "any"
+TRI_OPTIONS = (FILTER_ANY, "yes", "no")
+LANGUAGE_OPTIONS = (FILTER_ANY, *BOT_LANGUAGES)
+"""The values of the list's filter widgets (the page maps them through wiring)."""
+UNSET: Any = object()
+"""A filter argument that was not given (None means "any")."""
+
+
+@dataclass(frozen=True)
+class BotListView:
+    """The bot list of S02 and the sidebar (UI-A01, UI-A02): the SYNTHETIC samples
+    first, then one page of real bots, the filter result count and the states."""
+
+    synthetic_title: str
+    synthetic: tuple[BotCardView, ...]
+    real: tuple[BotCardView, ...]
+    total: int
+    has_more: bool
+    count_text: str | None
+    unavailable: str | None
+    empty: str | None
+    workflow_note: str | None
+    mine_title: str = ""
+    mine: tuple[BotCardView, ...] = ()
+    """The bots the user made, marked "yours" (UI-A10)."""
+
+
+@dataclass(frozen=True)
+class BotDetails:
+    """The selected bot's details card (UI-A04): derived facts only."""
+
+    title: str
+    rows: tuple[tuple[str, str], ...]
+    note: str
+    create_enabled: bool
+    create_reason: str
+    can_continue: bool
+
+
+@dataclass(frozen=True)
+class LiveChoice:
+    """Can the Live option be chosen with this bot? (UI-R06, UI-K05)"""
+
+    disabled: bool
+    reason: str | None
+
+
+@dataclass
+class CreateDraft:
+    """What is typed on the create screen; kept by the workspace, so leaving the
+    screen (Back, a step control) loses nothing."""
+
+    name: str = ""
+    instructions: str = ""
+    passages: list[str] = field(default_factory=lambda: [""])
+
+    def __repr__(self) -> str:
+        return "CreateDraft()"
+
+
+def _profile_of(bot: UserBot) -> BotProfile:
+    """A user-made bot as a chat profile; the label is the name the user gave."""
+    return BotProfile(
+        key=bot.id,
+        label=bot.name,
+        language="fa"
+        if text_direction(bot.instructions or " ".join(bot.passages)) == "rtl"
+        else "en",
+        rag=bool(bot.passages),
+        instructions=bot.instructions,
+        documents=bot.passages,
+    )
+
+
+def _nav_params(params: Mapping[str, object]) -> dict[str, str] | None:
+    """The router's parameters out of the query string (first value of each,
+    bounded); None when there are none."""
+    found: dict[str, str] = {}
+    for name in NAV_PARAMS:
+        value = params.get(name)
+        if isinstance(value, (list, tuple)):
+            value = value[0] if value else None
+        if isinstance(value, str) and value:
+            found[name] = value[:PARAM_MAX]
+    return found or None
+
+
 class DemoWorkspace:
     def __init__(
         self,
@@ -413,8 +592,23 @@ class DemoWorkspace:
         session_factory: SessionFactory,
         context_check: Callable[[ChatSession, Text], tuple[bool, str | None]]
         | None = None,
+        directory: BotDirectory | None = None,
+        real_data_check: Callable[[Text], tuple[str, ...]] | None = None,
+        store: DemoStore | None = None,
     ) -> None:
         self.bots = tuple(bots)
+        self.store = store
+        self.mine: tuple[BotProfile, ...] = ()
+        """The bots the user made (UI-A10), loaded from ``runs/demo/bots/``."""
+        self.skipped_files = 0
+        self.directory = directory
+        self._real_check = real_data_check or (lambda _t: ())
+        self.bot_query = ""
+        self.bot_language: str | None = None
+        self.bot_rag: bool | None = None
+        self.bot_memory: bool | None = None
+        self.bot_instructions: bool | None = None
+        self.bot_shown = PAGE_SIZE
         self._factory = session_factory
         self._context_check = context_check or (
             lambda session, t: context_availability(lambda _o: session.loaded, t)
@@ -427,6 +621,12 @@ class DemoWorkspace:
         self.settings_focus = False
         self._chats: dict[tuple[Journey, str | None], ChatWorkspace] = {}
         self._shell: ChatSession | None = None
+        self.draft = CreateDraft()
+        self.url_written: dict[str, str] | None = None
+        """The router parameters last put in the address bar (see ``sync_url``)."""
+        if store is not None:
+            saved, self.skipped_files = store.load_bots()
+            self.mine = tuple(_profile_of(b) for b in saved)
 
     # --- router ---
 
@@ -437,7 +637,7 @@ class DemoWorkspace:
         self.journey = journey
         if journey == Journey.CHATBOT:
             self.bot_key = self.bot_key or self.bots[0].key
-            self.screen = Screen.SETTINGS
+            self.screen = Screen.BOTS
         else:
             self.bot_key = None
             self.screen = Screen.CHAT
@@ -445,34 +645,198 @@ class DemoWorkspace:
     def go_entry(self) -> None:
         self.journey, self.screen, self.bot_key = Journey.NONE, Screen.ENTRY, None
 
-    def select_bot(self, key: str) -> None:
-        if key not in {b.key for b in self.bots}:
+    def _all_bots(self) -> tuple[BotProfile, ...]:
+        return (*self.bots, *self.mine)
+
+    def _is_real(self, key: str) -> bool:
+        return self.directory is not None and self.directory.card(key) is not None
+
+    def is_known_bot(self, key: str | None) -> bool:
+        return bool(key) and (
+            any(b.key == key for b in self._all_bots()) or self._is_real(key or "")
+        )
+
+    def select_bot(self, key: str, t: Text | None = None) -> str | None:
+        """Select a bot; the reason when it cannot be (nothing changes then): a
+        real bot's content may not go to a live provider without the owner's
+        approval (UI-R05, UI-R06)."""
+        if not self.is_known_bot(key):
             raise ValueError(f"unknown bot {key!r}")
+        if self.live and self._is_real(key):
+            reasons = self._real_check(t or translator(load_strings(), "en"))
+            if reasons:
+                return "; ".join(reasons)
+        previous = self.bot_key
         self.bot_key = key
+        if self.screen != Screen.BOTS and self._is_real(key):
+            try:
+                self.directory.profile(key).content()  # type: ignore[union-attr]
+            except BotContentError:
+                self.bot_key = previous
+                return (t or translator(load_strings(), "en"))(
+                    "bots_content_unreadable"
+                )
+        return None
+
+    def continue_to_settings(self) -> str | None:
+        """S02 -> S04 (UI-A06). A real bot's instructions and passages are read
+        here, once; the failure text when they cannot be (nothing changes)."""
+        try:
+            profile = self._profile()
+            if profile is not None:
+                profile.content()
+        except BotContentError:
+            return translator(load_strings(), "en")("bots_content_unreadable")
+        self.screen = Screen.SETTINGS
+        return None
+
+    def go_back(self) -> None:
+        """The back links of S02..S04: settings or create -> selection -> entry."""
+        if self.journey == Journey.CHATBOT and self.screen in (
+            Screen.SETTINGS,
+            Screen.CREATE,
+        ):
+            self.screen = Screen.BOTS
+        else:
+            self.go_entry()
 
     def start_chatting(self) -> None:
         self.screen = Screen.CHAT
+
+    def go_step(self, step: Screen) -> None:
+        """A step of the indicator or a change control: only earlier steps of the
+        open journey (entry, selection, settings); the chats stay (UI-SB03)."""
+        if step == Screen.ENTRY or self.journey == Journey.NONE:
+            self.go_entry()
+        elif self.journey == Journey.CHATBOT and step in (
+            Screen.BOTS,
+            Screen.CREATE,
+        ):
+            self.screen = step
+        elif self.journey == Journey.CHATBOT and step == Screen.SETTINGS:
+            if self.continue_to_settings():
+                self.screen = Screen.BOTS
+
+    def open_create(self) -> None:
+        """S02 -> S03 (UI-A10)."""
+        if self.journey == Journey.CHATBOT:
+            self.screen = Screen.CREATE
+
+    def set_draft(self, name: str, value: str) -> None:
+        if name not in ("name", "instructions"):
+            raise ValueError(f"unknown draft field {name!r}")
+        setattr(self.draft, name, value)
+
+    def set_draft_passage(self, index: int, value: str) -> None:
+        if 0 <= index < len(self.draft.passages):
+            self.draft.passages[index] = value
+
+    def add_draft_passage(self) -> None:
+        if len(self.draft.passages) < PASSAGES_MAX:
+            self.draft.passages.append("")
+
+    def save_draft(self) -> str | None:
+        """Save the typed bot (S03 -> S04, UI-A12); the draft is cleared on
+        success. The failure code (``create_err_<code>``) otherwise."""
+        error = self.create_bot(
+            self.draft.name, self.draft.instructions, self.draft.passages
+        )
+        if error is None:
+            self.draft = CreateDraft()
+        return error
+
+    def create_bot(
+        self, name: str, instructions: str, passages: Sequence[str]
+    ) -> str | None:
+        """Save a bot made on S03 and go on to its settings (UI-A10, UI-A12).
+        The failure text key suffix (``create_err_<code>``) when the form cannot
+        be saved or the file cannot be written; nothing changes then."""
+        if self.store is None:
+            return "unavailable"
+        try:
+            bot = self.store.save_bot(name, instructions, passages)
+        except BotFormError as exc:
+            return exc.code
+        except OSError:
+            return "write"
+        profile = _profile_of(bot)
+        self.mine = (*self.mine, profile)
+        self.journey, self.bot_key = Journey.CHATBOT, profile.key
+        return None if not self.continue_to_settings() else "write"
 
     def chat_target(self) -> Screen:
         """Where the header's Chat tab goes: the current workspace, else S01."""
         return Screen.ENTRY if self.journey == Journey.NONE else self.screen
 
-    def consume_query(self, params: Mapping[str, object]) -> bool:
-        """The brand link (``?screen=entry``): True once when it sent us home."""
-        value = params.get(SCREEN_PARAM)
-        if isinstance(value, (list, tuple)):
-            value = value[0] if value else None
-        if value == ENTRY_VALUE:
+    # --- the address bar (ADR-0058) ---
+
+    def url_params(self) -> dict[str, str]:
+        """The router state as address-bar parameters: the screen, the journey
+        and (from settings on) the bot's key; identifiers only (UI-R05)."""
+        if self.journey == Journey.NONE:
+            return {SCREEN_PARAM: ENTRY_VALUE}
+        params = {SCREEN_PARAM: self.screen.value, JOURNEY_PARAM: self.journey.value}
+        if self.journey == Journey.CHATBOT and self.bot_key:
+            if self.screen in (Screen.SETTINGS, Screen.CHAT):
+                params[BOT_PARAM] = self.bot_key
+        return params
+
+    def sync_url(self, params: Mapping[str, object]) -> dict[str, str]:
+        """Reconcile the router with the address bar; returns the parameters the
+        page must write (the page writes them once, which makes Streamlit push
+        one history entry).
+
+        The router wrote ``url_written`` last time. If the bar still shows that
+        (or no router parameters), the state is the truth: a click moved it. If
+        the bar shows something else, the user navigated (Back, Forward, a typed
+        address, a refresh, the brand link) and the state follows the bar,
+        falling back to the nearest valid earlier step when this session cannot
+        serve it (``_follow``)."""
+        requested = _nav_params(params)
+        if requested is not None and requested != self.url_written:
+            self._follow(requested)
+        self.url_written = self.url_params()
+        return self.url_written
+
+    def _follow(self, requested: Mapping[str, str]) -> None:
+        screen = requested.get(SCREEN_PARAM)
+        journey = requested.get(JOURNEY_PARAM)
+        if screen not in {s.value for s in Screen} or screen == Screen.ENTRY:
             self.go_entry()
-            return True
-        return False
+        elif journey == Journey.DIRECT:
+            if screen == Screen.CHAT:
+                self.choose_journey(Journey.DIRECT)
+            else:
+                self.go_entry()
+        elif journey == Journey.CHATBOT:
+            self._follow_chatbot(Screen(screen), requested.get(BOT_PARAM))
+        else:
+            self.go_entry()
+
+    def _follow_chatbot(self, screen: Screen, key: str | None) -> None:
+        """Journey A: selection and create need nothing; settings need a bot this
+        session knows (and can read); chat also needs the chat to exist, i.e. the
+        settings step to have been passed in this session."""
+        self.journey, self.screen = Journey.CHATBOT, Screen.BOTS
+        self.bot_key = self.bot_key or self.bots[0].key
+        if screen == Screen.CREATE:
+            self.screen = Screen.CREATE
+        elif screen in (Screen.SETTINGS, Screen.CHAT) and self.is_known_bot(key):
+            if self.select_bot(key or "") is None and not self.continue_to_settings():
+                if screen == Screen.CHAT and (Journey.CHATBOT, key) not in self._chats:
+                    return
+                self.screen = screen
 
     # --- the chats ---
 
     def _profile(self) -> BotProfile | None:
         if self.journey != Journey.CHATBOT:
             return None
-        return next(b for b in self.bots if b.key == self.bot_key)
+        found = next((b for b in self._all_bots() if b.key == self.bot_key), None)
+        if found is not None:
+            return found
+        assert self.directory is not None and self.bot_key is not None
+        return self.directory.profile(self.bot_key)
 
     def current(self) -> ChatWorkspace:
         if self.journey == Journey.NONE:
@@ -485,7 +849,9 @@ class DemoWorkspace:
                 profile,
                 self._factory(profile, live=self.live),
                 touch=self._used_a_switch,
+                store=self.store,
             )
+            self.skipped_files += self._chats[key].skipped_files
         return self._chats[key]
 
     def header_session(self) -> ChatSession:
@@ -518,7 +884,11 @@ class DemoWorkspace:
         self._shell = None
         if self.journey != Journey.NONE:
             self._chats[(self.journey, self.bot_key)] = ChatWorkspace(
-                self.journey, self._profile(), probe, touch=self._used_a_switch
+                self.journey,
+                self._profile(),
+                probe,
+                touch=self._used_a_switch,
+                store=self.store,
             )
         else:
             self._shell = probe
@@ -535,20 +905,223 @@ class DemoWorkspace:
     def _used_a_switch(self) -> None:
         self.settings_focus = False
 
+    def conversations_note(self, t: Text) -> str:
+        """Where the conversation list lives: files on this computer, or memory."""
+        return t("ws_conversations_saved" if self.store else "ws_conversations_note")
+
+    def take_store_note(self, t: Text) -> str | None:
+        """Once: how many saved files had to be skipped (UI-A31, UI-K05)."""
+        if not self.skipped_files:
+            return None
+        count, self.skipped_files = self.skipped_files, 0
+        return t("store_skipped", n=_ltr(count))
+
     # --- views ---
 
-    def bot_cards(self, t: Text) -> tuple[BotCardView, ...]:
+    def bot_cards(
+        self, t: Text, bots: Sequence[BotProfile] | None = None, extra: str = ""
+    ) -> tuple[BotCardView, ...]:
+        """The SYNTHETIC samples (or the user's bots) as cards: label and facts,
+        never content."""
         selected = self.bot_key if self.journey == Journey.CHATBOT else None
         return tuple(
             BotCardView(
                 b.key,
                 b.label,
                 f"{t('ws_lang_' + b.language)} · "
-                + t("ws_rag_yes" if b.rag else "ws_rag_no"),
+                + t("ws_rag_yes" if b.rag else "ws_rag_no")
+                + extra,
                 b.key == selected,
             )
-            for b in self.bots
+            for b in (self.bots if bots is None else bots)
         )
+
+    # --- the bot list: search, filters, paging (UI-A02) ---
+
+    def set_bot_filter(
+        self,
+        *,
+        query: str | None = None,
+        language: str | None = UNSET,
+        rag: bool | None = UNSET,
+        memory: bool | None = UNSET,
+        has_instructions: bool | None = UNSET,
+    ) -> None:
+        """Set any of the search text and the four filters; a new filter starts
+        again at the first page."""
+        if query is not None:
+            self.bot_query = query
+        if language is not UNSET:
+            self.bot_language = language
+        if rag is not UNSET:
+            self.bot_rag = rag
+        if memory is not UNSET:
+            self.bot_memory = memory
+        if has_instructions is not UNSET:
+            self.bot_instructions = has_instructions
+        self.bot_shown = PAGE_SIZE
+
+    @staticmethod
+    def _tri(value: str) -> bool | None:
+        return None if value == FILTER_ANY else value == "yes"
+
+    def filter_values(self) -> dict[str, str]:
+        """The filter widgets' current values (what the page shows)."""
+        tri = lambda v: FILTER_ANY if v is None else ("yes" if v else "no")  # noqa: E731
+        return {
+            "query": self.bot_query,
+            "language": self.bot_language or FILTER_ANY,
+            "rag": tri(self.bot_rag),
+            "memory": tri(self.bot_memory),
+            "instructions": tri(self.bot_instructions),
+        }
+
+    def set_bot_filter_values(
+        self, *, query: str, language: str, rag: str, memory: str, instructions: str
+    ) -> None:
+        """The filter widgets' values -> the filter."""
+        self.set_bot_filter(
+            query=query,
+            language=None if language == FILTER_ANY else language,
+            rag=self._tri(rag),
+            memory=self._tri(memory),
+            has_instructions=self._tri(instructions),
+        )
+
+    @staticmethod
+    def filter_option_text(group: str, value: str, t: Text) -> str:
+        if value == FILTER_ANY:
+            return t("bots_any")
+        return t(f"bots_lang_{value}" if group == "language" else f"bots_{value}")
+
+    def show_more_bots(self) -> None:
+        self.bot_shown += PAGE_SIZE
+
+    def _matches(self) -> tuple[BotCard, ...]:
+        if self.directory is None:
+            return ()
+        return filter_cards(
+            self.directory.cards,
+            query=self.bot_query,
+            language=self.bot_language,
+            rag=self.bot_rag,
+            memory=self.bot_memory,
+            has_instructions=self.bot_instructions,
+        )
+
+    def card_facts(self, card: BotCard, t: Text) -> str:
+        """``فارسی · RAG · 4,210 chats``: language, RAG and sessions (UI-A01)."""
+        return " · ".join(
+            (
+                t(f"bots_lang_{card.language}"),
+                t("ws_rag_yes" if card.rag else "ws_rag_no"),
+                t("bots_chats", n=_ltr(fmt(card.sessions, "count"))),
+            )
+        )
+
+    def bot_list(self, t: Text) -> BotListView:
+        selected = self.bot_key if self.journey == Journey.CHATBOT else None
+        matches = self._matches()
+        shown = matches[: self.bot_shown]
+        directory = self.directory
+        unavailable = empty = count = None
+        if directory is not None and not directory.available:
+            unavailable = t("bots_db_down")
+        elif directory is not None and not directory.cards:
+            empty = t("bots_none")
+        elif directory is not None:
+            if not matches:
+                empty = t("bots_no_match")
+            count = t(
+                "bots_shown",
+                shown=_ltr(fmt(len(shown), "count")),
+                total=_ltr(fmt(len(matches), "count")),
+            )
+        return BotListView(
+            t("ws_synthetic_samples"),
+            self.bot_cards(t),
+            tuple(
+                BotCardView(
+                    c.label, c.label, self.card_facts(c, t), c.label == selected
+                )
+                for c in shown
+            ),
+            len(matches),
+            len(matches) > len(shown),
+            count,
+            unavailable,
+            empty,
+            t("bots_workflow_note", n=_ltr(directory.excluded_workflow))
+            if directory is not None and directory.excluded_workflow
+            else None,
+            t("bots_mine_title"),
+            self.bot_cards(t, self.mine, " · " + t("bots_yours")),
+        )
+
+    def bot_details(self, t: Text) -> BotDetails:
+        """The selected bot's derived facts (UI-A04): never its instructions or
+        passages, never its id."""
+        create = (self.store is not None, t("bots_create_unavailable"))
+        card = (
+            self.directory.card(self.bot_key)
+            if self.directory and self.bot_key
+            else None
+        )
+        if card is not None:
+            on = lambda flag: t("set_on" if flag else "set_off")  # noqa: E731
+            rag = on(card.rag)
+            if card.rag and card.rag_top_k is not None:
+                rag = t("bots_rag_top_k", k=_ltr(card.rag_top_k))
+            total = len(self.directory.cards)  # type: ignore[union-attr]
+            rows = (
+                (t("bots_d_language"), t(f"bots_lang_{card.language}")),
+                (t("bots_d_model"), _ltr(card.model) if card.model else "-"),
+                (t("bots_d_rag"), rag),
+                (t("bots_d_memory"), on(card.memory)),
+                (t("bots_d_summariser"), on(card.summariser)),
+                (
+                    t("bots_d_instructions"),
+                    t("bots_chars", n=_ltr(fmt(card.instruction_chars, "count"))),
+                ),
+                (
+                    t("bots_d_rank"),
+                    t(
+                        "bots_rank_of",
+                        rank=_ltr(f"#{card.rank}"),
+                        total=_ltr(fmt(total, "count")),
+                    ),
+                ),
+                (
+                    t("bots_d_traffic"),
+                    t(
+                        "bots_traffic",
+                        chats=_ltr(fmt(card.sessions, "count")),
+                        messages=_ltr(fmt(card.requests, "count")),
+                    ),
+                ),
+            )
+            return BotDetails(card.label, rows, t("bots_details_note"), *create, True)
+        profile = next((b for b in self._all_bots() if b.key == self.bot_key), None)
+        if profile is None:
+            return BotDetails("", (), t("bots_details_note"), *create, False)
+        rows = (
+            (t("bots_d_language"), t(f"bots_lang_{profile.language}")),
+            (t("bots_d_rag"), t("set_on" if profile.rag else "set_off")),
+        )
+        note = "bots_mine_details" if profile in self.mine else "bots_synthetic_details"
+        return BotDetails(profile.label, rows, t(note), *create, True)
+
+    def live_choice(self, t: Text) -> LiveChoice:
+        """The Live option for the open chat: with a real bot it needs all three
+        of live.enabled, the key and the owner's approval (UI-R06)."""
+        if self.journey != Journey.CHATBOT or self.live:
+            return LiveChoice(False, None)
+        if not self._is_real(self.bot_key or ""):
+            return LiveChoice(False, None)
+        reasons = self._real_check(t)
+        if not reasons:
+            return LiveChoice(False, None)
+        return LiveChoice(True, t("bots_live_blocked", why="; ".join(reasons)))
 
     def context_available(self, t: Text) -> tuple[bool, str | None]:
         return self._context_check(self.current().session, t)
