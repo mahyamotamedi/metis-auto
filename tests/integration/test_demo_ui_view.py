@@ -177,12 +177,12 @@ def test_details_are_content_free_and_complete(loader):
 def test_budget_view_reads_the_caps_and_warnings(loader, tmp_path):
     session = chat(loader)
     view = budget_view(session)
-    assert view.lifetime_cap == Decimal("20") and view.run_cap == Decimal("1")
+    assert view.lifetime_cap == Decimal("92") and view.run_cap == Decimal("1")
     assert view.warn_at == (0.5, 0.8) and view.crossed is None
     ledger = tmp_path / "spend" / "ledger.jsonl"
     ledger.parent.mkdir(parents=True, exist_ok=True)
     ledger.write_text(
-        '{"amount": "17", "currency": "USD", "run_id": "earlier", '
+        '{"amount": "78.2", "currency": "USD", "run_id": "earlier", '
         '"time": "2026-10-19T00:00:00+00:00", "v": 1}\n',
         encoding="utf-8",
     )

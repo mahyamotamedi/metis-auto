@@ -47,7 +47,7 @@ def test_defaults_load_and_record_their_layer(cfg):
     loaded = load(cfg)
     assert loaded.layers == ("defaults:config/defaults.toml",)
     assert loaded.settings.live.enabled is False
-    assert loaded.settings.budget.lifetime_cap == Decimal("20")  # ADR-0018 amendment 2
+    assert loaded.settings.budget.lifetime_cap == Decimal("92")  # ADR-0018 amendment 3
     assert loaded.settings.budget.run_cap == Decimal("1")
     assert loaded.config_hash.startswith("cfg1:")
     assert loaded.root == cfg.parent
@@ -114,7 +114,7 @@ def test_unknown_keys_are_errors(cfg):
         load(cfg, overrides={"budget.run_capp": "1"})
 
 
-@pytest.mark.parametrize("cap", ["20.01", "100"])
+@pytest.mark.parametrize("cap", ["92.01", "200"])
 def test_lifetime_cap_can_never_exceed_the_ceiling(cfg, cap):
     with pytest.raises(SettingsError, match="ceiling"):
         load(cfg, overrides={"budget.lifetime_cap": cap})
