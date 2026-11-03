@@ -68,7 +68,7 @@ Checked against `docs/full_eda/data_dictionary.md` and `analysis/requests_table.
 | `run.py` (per baseline) | `baseline_saving`, `lever_results_json` (one result per baseline from `version.baseline_frames`; primary and `with_reasoning_models` IDs; tune or report split) |
 | `run.py` | `component_folds`, `nested_cv`, `least_aggressive`, `routed_baselines`, `lever_results_json` (one `LeverResult` per `k` per baseline) |
 
-Runner: `scripts/run_pipeline_b_day3.py rb3` (tune) and `rb3-report --k 5` (report, once). Results: `reports/levers/rb3.knn-router[.with_reasoning_models].k-<k>.<split>.<baseline>.json`, summaries `reports/routing/exp-route-011/summary.json` and `report.json`. Tests: `tests/unit/experiments/test_knn_router.py`, `test_knn_router_run.py`, `test_knn_router_baselines.py` (synthetic). Overhead: `scripts/measure_pipeline_b_overhead.py` (ADR-XXXX (pipeline-b-lever-overhead)).
+Runner: `scripts/run_pipeline_b_day3.py rb3` (tune) and `rb3-report --k 5` (report, once). Results: `reports/levers/rb3.knn-router[.with_reasoning_models].k-<k>.<split>.<baseline>.json`, summaries `reports/routing/exp-route-011/summary.json` and `report.json`. Tests: `tests/unit/experiments/test_knn_router.py`, `test_knn_router_run.py`, `test_knn_router_baselines.py` (synthetic). Overhead: `scripts/measure_pipeline_b_overhead.py` (ADR-XXXX (pipeline-b-lever-overhead)): k = 5 p50 375 ms, p95 422 ms on one-row frames (tune sample, n 987), **above the 100 ms p95 target** (Q-14); most of it is training-side indexes rebuilt per call in `apply` (follow-up: build them at fit time).
 
 ## Results (full data, `code_commit` 9f05b25, logged-model prices, 2026-11-03)
 
