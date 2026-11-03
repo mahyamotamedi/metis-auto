@@ -242,8 +242,12 @@ def test_switches_change_the_session_and_the_next_request(workspace):
     assert ws.set_routing(True) is None
     assert ws.session.routing != RoutingMode.FIXED
     assert ws.set_cache(True) is None and ws.session.bot_cache is True
-    assert ws.set_context(True) is None
-    assert ws.session.compression != CompressionMode.OFF
+    refused = ws.set_context(True)
+    if refused is None:  # compressor weights present (fetched locally)
+        assert ws.session.compression != CompressionMode.OFF
+    else:  # no weights (e.g. CI): refused with its reason, setting unchanged
+        assert "compression unavailable" in refused
+        assert ws.session.compression == CompressionMode.OFF
     assert ws.set_context(False) is None
     assert ws.session.compression == CompressionMode.OFF
     assert ws.set_cache(False) is None and ws.session.bot_cache is False
