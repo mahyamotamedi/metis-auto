@@ -1,0 +1,281 @@
+{
+  "assumptions": [
+    "cost simulation; quality not proven",
+    "no quality label: nearest-profile policy over logged models only",
+    "token counts assumed model-independent; logged output length unchanged",
+    "fees and recorded cost blocks unchanged (lookup fee is not on the price list)",
+    "recorded blocks (fees, token_cost) unchanged by apply; each baseline is accounted in its own units (ADR-0036)",
+    "Unit: price-file units (premium_gpt_5_5). Fees are not priced, so baseline_cost has no fees key (ADR-0036). Incumbent: gpt-5.5 (estimate only, never called, ADR-0026).",
+    "Requests whose cost in a baseline is unknown are left out of both sides (n_cost_known), never priced at zero; workflow rows have no cost.",
+    "Per baseline, the incumbent is that baseline's model for the request (logged model for todays_models and as_logged, the premium model, the best single cheap model) and 'cheaper' is tested in that baseline's units.",
+    "So each saving is the router's own effect and is >= 0 row by row; follows ADR-0046 point 6, confirmed for Pipeline B by the owner 2026-11-03 (Q-B21).",
+    "eligibility: shared routing base (R-0, ADR-0045): analysis.routing_base",
+    "fitted on tune rows (split_by_session tune and period Mar-Jul 2026), applied once to the report split (sessions starting Aug-Oct 2026)",
+    "k=5 is the frozen default; grid [5, 15, 50]; default chosen by session/family-grouped nested CV, 5 outer x 3 inner folds, inside the tune split",
+    "timestamps are naive (Q-06)",
+    "Candidates the catalogue marks hidden_reasoning_billed_as_output are excluded (ADR-0046 point 4): deepseek-v4-flash, gpt-5-nano, mimo-v2.5.",
+    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 374.6107 ms, p95 421.5663 ms, max 551.1496 ms",
+    "Overhead caveat: router fitted on the tune split before timing (fit not timed); apply prices the candidates, checks bot sufficiency and searches the k nearest training profiles.",
+    "Overhead sample: tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, route.per_bot) used report-period rows, so the two samples differ"
+  ],
+  "baseline": "premium_gpt_5_5",
+  "baseline_cost": {
+    "token_cost": "3737.892572150",
+    "total": "3737.892572150"
+  },
+  "ci_high": 0.03881837980434573,
+  "ci_low": 0.02861569551863819,
+  "correctness_state": "unmeasured",
+  "evidence_class": "simulation",
+  "lever_id": "rb3.knn-router.k-5.report.premium_gpt_5_5",
+  "manifest": {
+    "code_commit": "9f05b25e27c0505563aaa3ad25a6e4e79429e194",
+    "config_hash": "8eb6ac1b59e9ebca8c75aed602c8e1689c0a91c83a2af3295c97e46239ad60c5",
+    "created_at": "2026-11-03T10:56:28.475003Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "prices-metis-2026-10-18-logged",
+    "python_version": "3.13.5",
+    "seed": 20261102
+  },
+  "n_eligible": 4565,
+  "n_requests": 73063,
+  "overhead_ms_p50": 374.6107,
+  "overhead_ms_p95": 421.5663,
+  "saving": {
+    "token_cost": "124.758677643",
+    "total": "124.758677643"
+  },
+  "slices": {
+    "all": {
+      "baseline:total": "3737.892572150",
+      "n_cost_known": "20744",
+      "n_requests": "73063",
+      "saving:total": "124.758677643",
+      "saving_share": "0.033376742"
+    },
+    "bot_rank:1": {
+      "baseline:total": "2202.226955500",
+      "n_cost_known": "5809",
+      "n_requests": "5809",
+      "saving:total": "2.722358870",
+      "saving_share": "0.001236185"
+    },
+    "bot_rank:10": {
+      "baseline:total": "42.619302000",
+      "n_cost_known": "988",
+      "n_requests": "988",
+      "saving:total": "32.054323125",
+      "saving_share": "0.752108121"
+    },
+    "bot_rank:2": {
+      "baseline:total": "394.042324500",
+      "n_cost_known": "1559",
+      "n_requests": "1559",
+      "saving:total": "1.443933755",
+      "saving_share": "0.003664413"
+    },
+    "bot_rank:3": {
+      "baseline:total": "233.822957500",
+      "n_cost_known": "1406",
+      "n_requests": "1406",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "bot_rank:4": {
+      "baseline:total": "164.935298000",
+      "n_cost_known": "926",
+      "n_requests": "926",
+      "saving:total": "4.111706610",
+      "saving_share": "0.024929210"
+    },
+    "bot_rank:5": {
+      "baseline:total": "90.707496000",
+      "n_cost_known": "1323",
+      "n_requests": "1323",
+      "saving:total": "18.973654810",
+      "saving_share": "0.209174056"
+    },
+    "bot_rank:6": {
+      "baseline:total": "73.227308000",
+      "n_cost_known": "401",
+      "n_requests": "401",
+      "saving:total": "7.480196185",
+      "saving_share": "0.102150364"
+    },
+    "bot_rank:7": {
+      "baseline:total": "61.050572000",
+      "n_cost_known": "220",
+      "n_requests": "220",
+      "saving:total": "0.647462750",
+      "saving_share": "0.010605351"
+    },
+    "bot_rank:8": {
+      "baseline:total": "61.152844500",
+      "n_cost_known": "898",
+      "n_requests": "898",
+      "saving:total": "4.815849280",
+      "saving_share": "0.078751027"
+    },
+    "bot_rank:9": {
+      "baseline:total": "55.132935000",
+      "n_cost_known": "204",
+      "n_requests": "204",
+      "saving:total": "10.613459890",
+      "saving_share": "0.192506709"
+    },
+    "lang:arabic_script_other": {
+      "baseline:total": "65.962682500",
+      "n_cost_known": "457",
+      "n_requests": "457",
+      "saving:total": "5.055446880",
+      "saving_share": "0.076641014"
+    },
+    "lang:en": {
+      "baseline:total": "26.756423650",
+      "n_cost_known": "422",
+      "n_requests": "422",
+      "saving:total": "1.115957425",
+      "saving_share": "0.041708019"
+    },
+    "lang:fa": {
+      "baseline:total": "3335.650514350",
+      "n_cost_known": "16738",
+      "n_requests": "16740",
+      "saving:total": "89.548459853",
+      "saving_share": "0.026845876"
+    },
+    "lang:fa_en_mixed": {
+      "baseline:total": "93.253564250",
+      "n_cost_known": "833",
+      "n_requests": "834",
+      "saving:total": "7.092736888",
+      "saving_share": "0.076058614"
+    },
+    "lang:finglish": {
+      "baseline:total": "4.618836200",
+      "n_cost_known": "8",
+      "n_requests": "8",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "lang:missing": {
+      "baseline:total": "4.500435500",
+      "n_cost_known": "90",
+      "n_requests": "92",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "lang:other": {
+      "baseline:total": "0.009328000",
+      "n_cost_known": "2",
+      "n_requests": "2",
+      "saving:total": "0.009054760",
+      "saving_share": "0.970707547"
+    },
+    "lang:short_uncertain": {
+      "baseline:total": "204.188147900",
+      "n_cost_known": "2170",
+      "n_requests": "2171",
+      "saving:total": "21.937021838",
+      "saving_share": "0.107435334"
+    },
+    "lang:structured": {
+      "baseline:total": "2.952639800",
+      "n_cost_known": "24",
+      "n_requests": "24",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "llm_only": {
+      "baseline:total": "3737.892572150",
+      "n_cost_known": "20744",
+      "n_requests": "20750",
+      "saving:total": "124.758677643",
+      "saving_share": "0.033376742"
+    },
+    "over_8k": {
+      "baseline:total": "3518.826859350",
+      "n_cost_known": "10720",
+      "n_requests": "10720",
+      "saving:total": "51.997935825",
+      "saving_share": "0.014777066"
+    },
+    "routing": {
+      "moved_share": "0.140722892",
+      "moved_to:gpt-4.1-nano": "84",
+      "moved_to:gpt-4o-mini": "2836",
+      "n_candidates_in_baseline": "4565",
+      "n_moved": "2920",
+      "n_requests_routed": "20750",
+      "n_saving_unknown": "0",
+      "n_switched_in_baseline": "4565",
+      "reason:incumbent_unpriced": "37",
+      "reason:insufficient_bot": "2131",
+      "reason:moved": "2920",
+      "reason:no_cheaper_candidate": "1645",
+      "reason:no_eligible_candidate": "14011",
+      "reason:unknown_tokens": "6",
+      "saving_by_target:gpt-4.1-nano": "1.470204450",
+      "saving_by_target:gpt-4o-mini": "123.288473192",
+      "support_median": "0.400000000",
+      "switched_share_llm": "0.220000000"
+    },
+    "tenant_capped_0.35": {
+      "baseline:total": "578.991443800",
+      "n_cost_known": "6095",
+      "n_requests": "6095",
+      "saving:total": "33.628735360",
+      "saving_share": "0.058081576"
+    },
+    "tenant_rank:1": {
+      "baseline:total": "3669.093165100",
+      "n_cost_known": "16782",
+      "n_requests": "16782",
+      "saving:total": "105.062165368",
+      "saving_share": "0.028634368",
+      "share": "0.808771084"
+    },
+    "tenant_rank:2": {
+      "baseline:total": "13.792312600",
+      "n_cost_known": "1377",
+      "n_requests": "1377",
+      "saving:total": "5.568579610",
+      "saving_share": "0.403745171",
+      "share": "0.066361446"
+    },
+    "tenant_rank:3": {
+      "baseline:total": "7.452547850",
+      "n_cost_known": "648",
+      "n_requests": "648",
+      "saving:total": "5.263562288",
+      "saving_share": "0.706276886",
+      "share": "0.031228916"
+    },
+    "tenant_rank:4": {
+      "baseline:total": "7.573632000",
+      "n_cost_known": "640",
+      "n_requests": "640",
+      "saving:total": "1.574448480",
+      "saving_share": "0.207885527",
+      "share": "0.030843373"
+    },
+    "tenant_rank:5": {
+      "baseline:total": "3.801250200",
+      "n_cost_known": "221",
+      "n_requests": "221",
+      "saving:total": "0.164930260",
+      "saving_share": "0.043388425",
+      "share": "0.010650602"
+    },
+    "traffic_weighted": {
+      "baseline:total": "3737.892572150",
+      "bot_mean_saving_share": "0.191083685",
+      "n_cost_known": "20744",
+      "n_requests": "20750",
+      "saving:total": "124.758677643",
+      "saving_share": "0.033376742"
+    }
+  },
+  "step": "routing",
+  "version": "route.knn.k5"
+}

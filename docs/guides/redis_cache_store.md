@@ -28,6 +28,6 @@ A demo hit read from Redis (for example a second synthetic user's greeting under
 
 - `tests/unit/adapters/test_redis_store.py`: fake client (`fake_redis.py`), round trip, missing key, replace, no TTL or expiry, namespacing by key version, no `redis` import in the module, clear error without the package, password handling, the switch and the chat session.
 - `tests/unit/adapters/test_cache_store_contract.py`: one contract run against the in-memory and the Redis store.
-- `tests/integration/test_redis_store_live.py`: skips unless `redis` is importable **and** the configured server answers a ping. No new pytest marker (the `services` marker is T-0's; patch in `docs/experiments/pipeline_b_interim_contracts_day3.md`, Day 3).
+- `tests/integration/test_redis_store_live.py`: skips unless `redis` is importable **and** the configured server answers a ping. No new pytest marker (the `services` marker is T-0's; patch in `docs/experiments/pipeline_b_interim_contracts.md`, Day 3).
 
 Docker: the Redis service in `compose.yaml` is T-4 (Parham) and does not exist yet. Until then, any local Redis on `127.0.0.1:6379` works for the live test.

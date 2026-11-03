@@ -8,12 +8,15 @@
     "frequency bias: the tune split drops a family's tune rows if it recurs in the report period, so repeat rates are understated (ADR-0036)",
     "no corpus-version evidence: every hit is ttl_only",
     "retrieval settings are a configuration snapshot, not a history",
-    "timestamps are naive (Q-06)"
+    "timestamps are naive (Q-06)",
+    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 6.23 ms, p95 7.5178 ms, max 9.837 ms",
+    "Overhead caveat: one-row frame: the replay holds only this request's lookups, so this times keying, eligibility and the guard path, not a hit in a warm store; building the lookups frame is not timed.",
+    "Overhead sample: tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, route.per_bot) used report-period rows, so the two samples differ"
   ],
   "baseline": "todays_models",
   "baseline_cost": {
-    "token_cost": "27.204601969",
-    "total": "27.204601969"
+    "token_cost": "225.436152675",
+    "total": "225.436152675"
   },
   "ci_high": null,
   "ci_low": null,
@@ -21,45 +24,35 @@
   "evidence_class": "simulation",
   "lever_id": "rb1.retrieval-cache.ttl-90d.user.tune.todays_models",
   "manifest": {
-    "code_commit": "91c5b3518e885985f4b8a07f37fd751d9e4144ed",
+    "code_commit": "9f05b25e27c0505563aaa3ad25a6e4e79429e194",
     "config_hash": "a4bb9fc8a2ed5f6943e58c5befe03d7bb1d908837d1560c7d7683c763ca37fc0",
-    "created_at": "2026-11-02T12:47:38.117792Z",
+    "created_at": "2026-11-03T10:34:35.201519Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "prices-metis-2026-10-18-logged",
     "python_version": "3.13.5",
     "seed": 20261102
   },
   "n_eligible": 209331,
   "n_requests": 230762,
-  "overhead_ms_p50": null,
-  "overhead_ms_p95": null,
+  "overhead_ms_p50": 6.23,
+  "overhead_ms_p95": 7.5178,
   "saving": {},
   "slices": {
     "all": {
-      "baseline:fees": "108.097500000",
-      "baseline:token_cost": "219.681488324",
-      "baseline:total": "327.778988324",
+      "baseline:token_cost": "225.436152675",
+      "baseline:total": "225.436152675",
       "cache_hit_rate": "0.000000000",
       "n_cache_hits": "0",
-      "n_cost_known": "208825",
-      "n_requests": "230762",
-      "saving:fees": "8.212000000",
-      "saving:token_cost": "0.000000000",
-      "saving:total": "8.212000000",
-      "saving_share": "0.025053467"
+      "n_cost_known": "208639",
+      "n_requests": "230762"
     },
     "llm_only": {
-      "baseline:fees": "108.097500000",
-      "baseline:token_cost": "219.681488324",
-      "baseline:total": "327.778988324",
+      "baseline:token_cost": "225.436152675",
+      "baseline:total": "225.436152675",
       "cache_hit_rate": "0.000000000",
       "n_cache_hits": "0",
-      "n_cost_known": "208825",
-      "n_requests": "209331",
-      "saving:fees": "8.212000000",
-      "saving:token_cost": "0.000000000",
-      "saving:total": "8.212000000",
-      "saving_share": "0.025053467"
+      "n_cost_known": "208639",
+      "n_requests": "209331"
     },
     "retrieval": {
       "agreement_mean": "0.610994488",
@@ -82,41 +75,30 @@
       "tune": "234759"
     },
     "tenant_rank:1": {
-      "requests_share": "0.454337364",
-      "share": "0.000000000"
+      "requests_share": "0.454337364"
     },
     "tenant_rank:2": {
-      "requests_share": "0.207944451",
-      "share": "0.000000000"
+      "requests_share": "0.207944451"
     },
     "tenant_rank:3": {
-      "requests_share": "0.156283970",
-      "share": "0.000000000"
+      "requests_share": "0.156283970"
     },
     "tenant_rank:4": {
-      "requests_share": "0.101161259",
-      "share": "1.000000000"
+      "requests_share": "0.101161259"
     },
     "tenant_rank:5": {
-      "requests_share": "0.038836346",
-      "share": "0.000000000"
+      "requests_share": "0.038836346"
     },
     "tenant_rank:rest": {
-      "requests_share": "0.041436610",
-      "share": "0.000000000"
+      "requests_share": "0.041436610"
     },
     "traffic_weighted": {
-      "baseline:fees": "108.097500000",
-      "baseline:token_cost": "219.681488324",
-      "baseline:total": "327.778988324",
+      "baseline:token_cost": "225.436152675",
+      "baseline:total": "225.436152675",
       "cache_hit_rate": "0.000000000",
       "n_cache_hits": "0",
-      "n_cost_known": "208825",
-      "n_requests": "230762",
-      "saving:fees": "8.212000000",
-      "saving:token_cost": "0.000000000",
-      "saving:total": "8.212000000",
-      "saving_share": "0.025053467"
+      "n_cost_known": "208639",
+      "n_requests": "230762"
     }
   },
   "step": "cache",

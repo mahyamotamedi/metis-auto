@@ -6,12 +6,15 @@
     "chunk tokens = chars x 0.3384 (EDA turn-0 slope)",
     "fees and output unchanged; within-message copies left to S-6",
     "rows: period tune (a_timestamp); no fitted parameter, so no split",
-    "timestamps are naive (Q-06)"
+    "timestamps are naive (Q-06)",
+    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 7.556 ms, p95 9.055 ms, max 11.7394 ms",
+    "Overhead caveat: one-row frame: only this request's chunks are scanned, so no earlier turn is in the session state and nothing is dropped; this times the decision pass, not a session-state lookup; building the chunks frame is not timed.",
+    "Overhead sample: tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, route.per_bot) used report-period rows, so the two samples differ"
   ],
   "baseline": "todays_models",
   "baseline_cost": {
-    "token_cost": "27.635415161",
-    "total": "27.635415161"
+    "token_cost": "238.710293859",
+    "total": "238.710293859"
   },
   "ci_high": null,
   "ci_low": null,
@@ -19,35 +22,33 @@
   "evidence_class": "hypothetical reconstruction",
   "lever_id": "rb2.cross-turn.k-1.ptr-8.ledger.todays_models",
   "manifest": {
-    "code_commit": "91c5b3518e885985f4b8a07f37fd751d9e4144ed",
+    "code_commit": "9f05b25e27c0505563aaa3ad25a6e4e79429e194",
     "config_hash": "c344f49db563cfd4b57a3376fc07644f78b38e69d931aa8c4506a72d6f084979",
-    "created_at": "2026-11-02T12:45:50.886014Z",
+    "created_at": "2026-11-03T10:35:58.883683Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "prices-metis-2026-10-18-logged",
     "python_version": "3.13.5",
     "seed": 20261102
   },
   "n_eligible": 220908,
   "n_requests": 220908,
-  "overhead_ms_p50": null,
-  "overhead_ms_p95": null,
+  "overhead_ms_p50": 7.556,
+  "overhead_ms_p95": 9.055,
   "saving": {
-    "token_cost": "0.595395794",
-    "total": "0.595395794"
+    "token_cost": "8.574003866",
+    "total": "8.574003866"
   },
   "slices": {
     "all": {
-      "baseline:fees": "116.783500000",
-      "baseline:token_cost": "230.564142719",
-      "baseline:total": "347.347642719",
+      "baseline:token_cost": "238.710293859",
+      "baseline:total": "238.710293859",
       "cache_hit_rate": "0.000000000",
       "n_cache_hits": "0",
-      "n_cost_known": "220394",
+      "n_cost_known": "220208",
       "n_requests": "220908",
-      "saving:fees": "0.000000000",
-      "saving:token_cost": "8.032152502",
-      "saving:total": "8.032152502",
-      "saving_share": "0.023124246"
+      "saving:token_cost": "8.574003866",
+      "saving:total": "8.574003866",
+      "saving_share": "0.035918032"
     },
     "context_tokens": {
       "added": "2933536.000000000",
@@ -58,30 +59,26 @@
       "supported_input": "558478939.000000000"
     },
     "llm_only": {
-      "baseline:fees": "116.783500000",
-      "baseline:token_cost": "230.564142719",
-      "baseline:total": "347.347642719",
+      "baseline:token_cost": "238.710293859",
+      "baseline:total": "238.710293859",
       "cache_hit_rate": "0.000000000",
       "n_cache_hits": "0",
-      "n_cost_known": "220394",
+      "n_cost_known": "220208",
       "n_requests": "220908",
-      "saving:fees": "0.000000000",
-      "saving:token_cost": "8.032152502",
-      "saving:total": "8.032152502",
-      "saving_share": "0.023124246"
+      "saving:token_cost": "8.574003866",
+      "saving:total": "8.574003866",
+      "saving_share": "0.035918032"
     },
     "traffic_weighted": {
-      "baseline:fees": "116.783500000",
-      "baseline:token_cost": "230.564142719",
-      "baseline:total": "347.347642719",
+      "baseline:token_cost": "238.710293859",
+      "baseline:total": "238.710293859",
       "cache_hit_rate": "0.000000000",
       "n_cache_hits": "0",
-      "n_cost_known": "220394",
+      "n_cost_known": "220208",
       "n_requests": "220908",
-      "saving:fees": "0.000000000",
-      "saving:token_cost": "8.032152502",
-      "saving:total": "8.032152502",
-      "saving_share": "0.023124246"
+      "saving:token_cost": "8.574003866",
+      "saving:total": "8.574003866",
+      "saving_share": "0.035918032"
     }
   },
   "step": "context",

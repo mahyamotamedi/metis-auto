@@ -55,8 +55,9 @@ def test_routing_after_context_reprices_the_reduced_tokens(i1):
 
 def test_units_decide_which_steps_a_baseline_combines(i1):
     cells = i1.unit_cells()
-    assert cells["as_logged"]["combined_steps"] == ("cache", "context")
-    assert "routing" in cells["as_logged"]["not_computed"]
+    # R-B3 prices as_logged at implied recorded rates (ADR-0046 point 5).
+    assert cells["as_logged"]["combined_steps"] == ("cache", "context", "routing")
+    assert cells["as_logged"]["not_computed"] == {}
     for key in ("premium_gpt_5_5", "todays_models", "best_single_cheap"):
         assert cells[key]["combined_steps"] == ("context", "routing")
         assert "cache" in cells[key]["not_computed"]

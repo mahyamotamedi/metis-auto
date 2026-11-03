@@ -47,6 +47,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-03: [Sprint Day 3, Pipeline C: CI on pinned Ubuntu, macOS on main only, ADR-numbering check](progress/2026-11-03-sprint-day-3-pipeline-c-ci-pin-ubuntu-macos-main-adr-check.md)
 - 2026-11-03: [Sprint Day 3, Pipeline A: R-A1 and R-A2 today's-models results repriced with the replay prices](progress/2026-11-03-sprint-day-3-pipeline-a-reprice-todays-models.md)
 - 2026-11-03: [Sprint Day 3, Pipeline A: R-A3 per-bot reassignment on R-0, accounted per ADR-0046](progress/2026-11-03-sprint-day-3-pipeline-a-per-bot-reassignment-r-a3.md)
+- 2026-11-03: [Pipeline B: R-B3 on the routing base and per-baseline incumbent, logged-price re-run, one report-split run, overhead](progress/2026-11-03-pipeline-b-routing-base-logged-prices-rerun-overhead.md)
 - 2026-11-03: [Pipeline B, Day 3 decision records: kNN router and Redis cache store](progress/2026-11-03-pipeline-b-day-3-decision-records.md)
 - 2026-11-03: [Paid benchmark P-1 to P-3: engineering for a golden-v2 pilot, real judge, labels hand-off, shared spend total](progress/2026-11-03-paid-benchmark-p1-p3-engineering.md)
 - 2026-11-03: [Jev tasks J-1 to J-4: the note, the configuration, and the remapping](progress/2026-11-03-jev-tasks-j1-to-j4.md)
