@@ -1,4 +1,4 @@
-# ADR-XXXX (per-bot-reassignment): Per-bot reassignment moves a whole bot to the cheapest candidate eligible for all of its tune traffic, and prices the move per baseline
+# ADR-0051: Per-bot reassignment moves a whole bot to the cheapest candidate eligible for all of its tune traffic, and prices the move per baseline
 
 - Status: points 1 to 5 and 7 **decided** by the project owner (Saba, Pipeline A), 2026-11-03 (sprint task R-A3). Point 6 (incumbent per baseline) follows [ADR-0046](0046-small-classifier-routing.md) point 6 and is **provisional** with it until the owner confirms it (Q-B21).
 - Date: 2026-11-03

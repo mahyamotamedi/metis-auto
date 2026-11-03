@@ -2,7 +2,7 @@
 
 **Status: cost simulation; quality not proven. Eligibility is R-0 (`analysis.routing_base`, ADR-0045). The per-baseline accounting follows ADR-0046 point 6, provisional; owner to confirm (Q-B21).**
 
-Pipeline A's routing version for the sprint (final plan, task R-A3; "Routing without quality labels"). Traces: FR-ROUTE-01, FR-ROUTE-02 (target and reason per request), FR-ROUTE-03 (rule-based policy behind one interface), FR-ROUTE-04 (overhead), FR-ROUTE-05 (eligibility), H-5 (cheap features route; *not measurable* without quality labels, EDA §4.4), X7 (the routing benchmark this would need), Review Focus 1 and 3, ADR-0036, ADR-0045, ADR-0046. H-6 (cascade) is not addressed here. Decision record: [ADR-XXXX (per-bot-reassignment)](../../../docs/adr/draft-per-bot-reassignment.md).
+Pipeline A's routing version for the sprint (final plan, task R-A3; "Routing without quality labels"). Traces: FR-ROUTE-01, FR-ROUTE-02 (target and reason per request), FR-ROUTE-03 (rule-based policy behind one interface), FR-ROUTE-04 (overhead), FR-ROUTE-05 (eligibility), H-5 (cheap features route; *not measurable* without quality labels, EDA §4.4), X7 (the routing benchmark this would need), Review Focus 1 and 3, ADR-0036, ADR-0045, ADR-0046. H-6 (cascade) is not addressed here. Decision record: [ADR-0051](../../../docs/adr/0051-per-bot-reassignment.md).
 
 ## Hypothesis
 
