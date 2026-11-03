@@ -1,5 +1,5 @@
 # Local text rerankers for the reranker-cut cut-first item (a) (final plan R-A2;
-# ADR-0040; traces H-2, FR-CTX-02). NOT FETCHED, NOT PINNED: the revision and the
+# ADR-0040, ADR-0060; traces H-2, FR-CTX-02). NOT FETCHED, NOT PINNED: the revision and the
 # sha256 of every file are owner-pinned placeholders, because no value here was
 # checked against the model card (never invent a hash). Until each is set,
 # `python scripts/fetch_reranker_assets.py` refuses to download and

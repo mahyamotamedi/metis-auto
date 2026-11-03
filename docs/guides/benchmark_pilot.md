@@ -1,6 +1,6 @@
 # Paid benchmark pilot (P-1 to P-3): how to run it, and what the pilot machine needs
 
-Decisions: [ADR-0053](../adr/0053-paid-benchmark-p1-p3.md). Config: `config/evaluation/benchmark.toml`. Label format: [benchmark_labels.md](../evaluation/benchmark_labels.md).
+Decisions: [ADR-0053](../adr/0053-paid-benchmark-p1-p3.md), ADR-0060. Config: `config/evaluation/benchmark.toml`. Label format: [benchmark_labels.md](../evaluation/benchmark_labels.md).
 
 **Nothing here has run. Every paid step refuses until its gates are open and the owner has set the values below.**
 
