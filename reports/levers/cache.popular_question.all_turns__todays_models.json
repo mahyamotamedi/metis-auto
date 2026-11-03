@@ -12,15 +12,14 @@
     "Report period (Aug-Oct 2026) read once; the window may look back into the tune period (owner decision 2026-11-02). Period is from a_timestamp, days from u_timestamp (naive, Q-06).",
     "Guard: no approval step, empty blocklist, no disabled bot, key version pq-v1; every served key would still need approval before serving.",
     "Tenant slices: the 10 largest tenants by LLM requests (opaque ranks); traffic_weighted slice not computed.",
-    "The working tree had uncommitted changes when this ran.",
     "Repriced baseline in price-file units, token cost only (fees are not on the price list); no interval computed.",
-    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 44.316 ms, p95 63.1321 ms, max 180.5348 ms; 2026-11-02, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
+    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 40.4023 ms, p95 48.9141 ms, max 64.7052 ms; 2026-11-02, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
     "Overhead caveat: on a one-row frame the nightly window is empty, so this times eligibility, keying and the guard path, not the nightly build (batch work) or a lookup in a built set."
   ],
   "baseline": "todays_models",
   "baseline_cost": {
-    "token_cost": "3.622410713",
-    "total": "3.622410713"
+    "token_cost": "251.424849776",
+    "total": "251.424849776"
   },
   "ci_high": null,
   "ci_low": null,
@@ -28,40 +27,40 @@
   "evidence_class": "simulation",
   "lever_id": "cache.popular_question.all_turns",
   "manifest": {
-    "code_commit": "91b330d7b008b83f10d6b4186f5712a11006058f",
-    "config_hash": "5770ea560e8414f22c34c8c4cfaa4f67159d4867464c8c553967118f0e8ef8c7",
-    "created_at": "2026-11-02T13:30:08.357503Z",
+    "code_commit": "37262d410ac5b928309351c567f0ddaa8fc1c429",
+    "config_hash": "2e244191af57149bd38cf4817a146f4f6941993bfe6815c5f80a8f84762b1406",
+    "created_at": "2026-11-02T20:41:36.462711Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "prices-metis-2026-10-18-logged",
     "python_version": "3.13.9",
     "seed": 20261102
   },
   "n_eligible": 7634,
   "n_requests": 77774,
-  "overhead_ms_p50": 44.316,
-  "overhead_ms_p95": 63.1321,
+  "overhead_ms_p50": 40.4023,
+  "overhead_ms_p95": 48.9141,
   "saving": {
-    "token_cost": "0.009492204",
-    "total": "0.009492204"
+    "token_cost": "0.647474691",
+    "total": "0.647474691"
   },
   "slices": {
     "all": {
-      "baseline:total": "3.622410713",
+      "baseline:total": "251.424849776",
       "cache_hit_rate": "0.013153496",
       "n_cache_hits": "1023",
-      "n_cost_known": "4919",
+      "n_cost_known": "24561",
       "n_requests": "77774",
-      "saving:total": "0.009492204",
-      "saving_share": "0.002620411"
+      "saving:total": "0.647474691",
+      "saving_share": "0.002575222"
     },
     "llm_only": {
-      "baseline:total": "3.622410713",
+      "baseline:total": "251.424849776",
       "cache_hit_rate": "0.041570157",
       "n_cache_hits": "1023",
-      "n_cost_known": "4919",
+      "n_cost_known": "24561",
       "n_requests": "24609",
-      "saving:total": "0.009492204",
-      "saving_share": "0.002620411"
+      "saving:total": "0.647474691",
+      "saving_share": "0.002575222"
     }
   },
   "step": "cache",
