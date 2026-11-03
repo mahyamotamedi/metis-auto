@@ -15,10 +15,11 @@ FR-EVAL-06, FR-EVAL-09, FR-REQ-04, QA-COST).
   version. A version with a result under some baseline but not under the chosen
   one gets one row with status ``baseline missing``, a blank ``lever_id`` and the
   baselines it does have in ``notes``; nothing is invented for it. Two results
-  with the same ``(step, version)`` under one baseline are never merged: both get
-  status ``duplicate version``, no rank, and each other's ``lever_id`` in
-  ``notes``. So a ``version`` label must be unique within a step for each
-  baseline.
+  with the same ``(step, version)`` in one group under one baseline are never
+  merged: both get status ``duplicate version``, no rank, and each other's
+  ``lever_id`` in ``notes``. So a ``version`` label must be unique within a step
+  for each baseline and group; the same version on another data scope (a tune
+  run and a report run) is in another group and is not a duplicate.
 - **Four baselines** (``BASELINES``): premium ``gpt-5.5`` (estimate only),
   as-logged recorded cost, today's logged models, best single cheap model. Only
   as-logged is in recorded cost units; the others are repriced. They are never
@@ -288,10 +289,12 @@ def _row(r: LeverResultLike, b: Baseline, cap: Decimal) -> dict[str, object]:
 
 
 def _flag_duplicates(rows: list[dict[str, object]]) -> None:
-    """Mark rows that share ``(step, version)`` under one baseline; never merge."""
-    by_version: dict[tuple[object, object], list[dict[str, object]]] = {}
+    """Mark rows that share ``(step, version)`` in one group under one baseline;
+    never merge. Rows of different groups are never compared, so never twins."""
+    by_version: dict[tuple[object, object, object], list[dict[str, object]]] = {}
     for row in rows:
-        by_version.setdefault((row["step"], row["version"]), []).append(row)
+        key = (row["group"], row["step"], row["version"])
+        by_version.setdefault(key, []).append(row)
     for twins in by_version.values():
         if len(twins) < 2:
             continue

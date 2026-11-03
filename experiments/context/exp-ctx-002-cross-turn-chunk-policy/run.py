@@ -135,6 +135,45 @@ def _dec(value: float) -> Decimal:
     return Decimal(f"{value + 0.0:.9f}")
 
 
+TOTAL_SLICES = ("all", "llm_only", "traffic_weighted")
+"""Slices that hold the result's own totals."""
+
+
+def price_file_slices(
+    slices: Mapping[str, Mapping[str, Decimal]],
+    *,
+    baseline_cost: Mapping[str, Decimal],
+    saving: Mapping[str, Decimal],
+    n_cost_known: Decimal,
+) -> dict[str, dict[str, Decimal]]:
+    """The slices of a repriced result, every money figure in price-file units
+    (ADR-0036, ADR-0050). The total slices take the result's own token cost and
+    saving (none when not computed) and the repriced baseline's known rows;
+    recorded-unit keys (``baseline:*``, ``saving:*``, ``saving_share`` and the
+    share of a recorded saving) are dropped everywhere else. Counts stay."""
+    recorded = ("baseline:", "saving:")
+    out: dict[str, dict[str, Decimal]] = {}
+    for name, values in slices.items():
+        kept = {
+            k: v
+            for k, v in values.items()
+            if not k.startswith(recorded) and k not in ("saving_share", "share")
+        }
+        if name in TOTAL_SLICES:
+            kept["n_cost_known"] = n_cost_known
+            kept["baseline:token_cost"] = baseline_cost["token_cost"]
+            kept["baseline:total"] = baseline_cost["total"]
+            if saving:
+                kept["saving:token_cost"] = saving["token_cost"]
+                kept["saving:total"] = saving["total"]
+                if baseline_cost["token_cost"] > 0:
+                    kept["saving_share"] = _dec(
+                        float(saving["token_cost"] / baseline_cost["token_cost"])
+                    )
+        out[name] = kept
+    return out
+
+
 REPRICED_KEYS = ("premium_gpt_5_5", "todays_models", "best_single_cheap")
 
 
@@ -201,10 +240,13 @@ def lever_results_json(
     python_version: str,
     created_at: datetime,
     extra_assumptions: Sequence[str] = (),
+    split: str | None = None,
 ) -> dict[str, str]:
     """The scenario's ``LeverResult`` JSON text per baseline key: ``as_logged``
     always, and the three repriced baselines when ``repriced`` (from
-    ``repriced_savings``) is given. ``ctx`` goes into the manifest."""
+    ``repriced_savings``) is given. ``ctx`` goes into the manifest. ``split``
+    ``"report"`` marks the one report-split run (its ``lever_id`` carries it);
+    ``None`` is the tune-period run, whose IDs keep their Day 2 pattern."""
     from metis_auto.analysis.lever_result import LeverResult, build_manifest
     from metis_auto.analysis.levers import BLOCKS, summarise_slices
 
@@ -225,7 +267,11 @@ def lever_results_json(
         )
     known = slices["llm_only"]
     sc = res["scenario"]
-    config = {"lever": "rb2-cross-turn-chunk-policy", **sc, "period": "tune"}
+    config = {
+        "lever": "rb2-cross-turn-chunk-policy",
+        **sc,
+        "period": "tune" if split is None else split,
+    }
     manifest = build_manifest(
         config,
         ctx,
@@ -240,7 +286,10 @@ def lever_results_json(
         "visibility is assumed (history policy unidentified, EDA section 2)",
         f"chunk tokens = chars x {sc['tokens_per_char']:.4f} (EDA turn-0 slope)",
         "fees and output unchanged; within-message copies left to S-6",
-        "rows: period tune (a_timestamp); no fitted parameter, so no split",
+        "rows: period tune (a_timestamp); no fitted parameter, so no split"
+        if split is None
+        else "rows: the report split (split_by_session report), read once; "
+        "scenario frozen on the tune period",
         "timestamps are naive (Q-06)",
     )
     baselines: dict[str, dict[str, Any]] = {
@@ -255,9 +304,16 @@ def lever_results_json(
     }
     for key in REPRICED_KEYS if repriced is not None else ():
         base = repriced["before"][key]
+        cost = {"token_cost": base["token_cost"], "total": base["total"]}
         baselines[key] = {
-            "baseline_cost": {"token_cost": base["token_cost"], "total": base["total"]},
+            "baseline_cost": cost,
             "saving": dict(repriced["saving"][key]),
+            "slices": price_file_slices(
+                slices,
+                baseline_cost=cost,
+                saving=repriced["saving"][key],
+                n_cost_known=base["n_known"],
+            ),
             "assumptions": (
                 "saving = baseline_costs before minus after, input tokens lowered "
                 "by the net tokens removed (price-file units, never mixed)",
@@ -265,9 +321,11 @@ def lever_results_json(
         }
     out: dict[str, str] = {}
     for key, fields in baselines.items():
+        part = "" if split is None else f".{split}"
         result = LeverResult(
             lever_id=(
-                f"rb2.cross-turn.k-{window}.ptr-{sc['pointer_tokens']}.{ledger}.{key}"
+                f"rb2.cross-turn.k-{window}.ptr-{sc['pointer_tokens']}.{ledger}"
+                f"{part}.{key}"
             ),
             step="context",
             version=res["name"],
@@ -276,7 +334,7 @@ def lever_results_json(
             baseline=key,
             baseline_cost=fields["baseline_cost"],
             saving=fields["saving"],
-            slices=slices,
+            slices=fields.get("slices", slices),
             evidence_class="hypothetical reconstruction",
             correctness_state="unmeasured",
             assumptions=(

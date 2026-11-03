@@ -1,0 +1,121 @@
+{
+  "approval": "owner (Kimia, Pipeline B), 2026-11-03: one report-split run, like R-A1/R-A2",
+  "baselines": {
+    "as_logged": {
+      "fees": "65.502000000",
+      "n_known": "20744",
+      "n_requests": "20750",
+      "n_unknown": "6",
+      "token_cost": "80.995575405",
+      "total": "146.497575405"
+    },
+    "best_single_cheap": {
+      "n_known": "20744",
+      "n_requests": "20750",
+      "n_unknown": "6",
+      "token_cost": "39.751390761",
+      "total": "39.751390761"
+    },
+    "premium_gpt_5_5": {
+      "n_known": "20744",
+      "n_requests": "20750",
+      "n_unknown": "6",
+      "token_cost": "3737.892572150",
+      "total": "3737.892572150"
+    },
+    "todays_models": {
+      "n_known": "20707",
+      "n_requests": "20750",
+      "n_unknown": "43",
+      "token_cost": "242.621884795",
+      "total": "242.621884795"
+    }
+  },
+  "data_facts": {
+    "n_history": 349078,
+    "n_lookups_history": 136912,
+    "n_report": 73063,
+    "n_report_llm": 20750
+  },
+  "fees": {
+    "fee_avoided": 2.0140000000000002,
+    "fee_block": 67.13980000000001,
+    "fee_block_share_of_total": 0.45829973509383076,
+    "n_cost_known_llm": 20744,
+    "share_of_fee_block": 0.02999711050673371,
+    "share_of_fee_block_ci": [
+      0.027500073710361925,
+      0.03245227540987578
+    ],
+    "share_of_total_cost": 0.013747667798816428,
+    "share_of_total_cost_ci": [
+      0.012571623619930144,
+      0.014920512447432185
+    ],
+    "total_cost": 146.49757540500002
+  },
+  "frozen": {
+    "grid_ttl_days": [
+      1,
+      7,
+      30,
+      90
+    ],
+    "role": "stated default (1 day); the full TTL grid is reported",
+    "scope": "user",
+    "ttl_days": 1,
+    "ttl_rule_choice_days": 1
+  },
+  "lever": "R-B1 retrieval-result cache (exp-cache-002), report split",
+  "lever_results": [
+    "rb1.retrieval-cache.ttl-1d.user.report.as_logged",
+    "rb1.retrieval-cache.ttl-1d.user.report.best_single_cheap",
+    "rb1.retrieval-cache.ttl-1d.user.report.premium_gpt_5_5",
+    "rb1.retrieval-cache.ttl-1d.user.report.todays_models"
+  ],
+  "rates": {
+    "lookup_hit_rate_llm": 0.021970956656689945,
+    "n_lookups_llm": 45105,
+    "n_requests_all": 73063,
+    "n_requests_llm": 20750,
+    "n_requests_reused": 904,
+    "requests_reused_all": 0.012372883675731902,
+    "requests_reused_llm": 0.043566265060240965,
+    "requests_with_lookups_llm": 14882
+  },
+  "scope": "scored: split_by_session report; cache history: every tune- and report-period row (tune rows may warm the cache)",
+  "summary": {
+    "agreement": {
+      "mean": 0.9846907885252991,
+      "n_evaluable": 991,
+      "n_hits": 991,
+      "n_unknown": 0,
+      "p10": 1.0,
+      "p50": 1.0,
+      "share_at_least_0_9": 0.9717457114026236,
+      "share_exact": 0.9717457114026236,
+      "share_zero": 0.005045408678102927
+    },
+    "basis": {
+      "ttl_only": 991
+    },
+    "fee_avoided": 2.0140000000000002,
+    "n_lookups": 45105,
+    "reasons": {
+      "cold": 28725,
+      "expired": 2549,
+      "fee_unattributed": 12840
+    },
+    "shadow": {
+      "agree": 10,
+      "disagree": 0,
+      "sampled": 10,
+      "unknown": 0
+    },
+    "status": {
+      "hit": 991,
+      "ineligible": 12840,
+      "miss": 31274
+    }
+  }
+}

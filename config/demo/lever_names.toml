@@ -74,6 +74,18 @@ owner = "B"
 en = "Retrieval cache, {d} days"
 fa = "حافظه‌ی بازیابی، {d} روز"
 
+[[name]]  # R-B1, the one report-split run (frozen TTL)
+pattern = 'rb1\.retrieval-cache\.ttl-(?P<d>[0-9]+)d\.user\.report'
+owner = "B"
+en = "Retrieval cache, {d} days, report split"
+fa = "حافظه‌ی بازیابی، {d} روز، دوره‌ی گزارش"
+
+[[name]]  # R-B2, the one report-split run (frozen scenarios)
+pattern = 'rb2\.cross-turn\.k-(?P<k>[0-9]+)\.ptr-(?P<p>[0-9]+)\.pointer\.report'
+owner = "B"
+en = "Repeated passages, last {k} turns, {p}-token pointer, report split"
+fa = "قطعه‌های تکراری، {k} نوبت قبل، اشاره‌گر {p} توکنی، دوره‌ی گزارش"
+
 [[name]]  # R-B2, exp-ctx-002: chunks visible k turns back, a pointer of p tokens
 pattern = 'rb2\.cross-turn\.k-(?P<k>[0-9]+)\.ptr-(?P<p>[0-9]+)\.pointer'
 owner = "B"
@@ -103,6 +115,24 @@ pattern = 'rb3\.knn-router\.k-(?P<k>[0-9]+)\.tune'
 owner = "B"
 en = "Nearest-neighbour router, k = {k}"
 fa = "مسیریاب نزدیک‌ترین همسایه، k = {k}"
+
+[[name]]  # R-B3, the one report-split run (frozen k)
+pattern = 'rb3\.knn-router\.k-(?P<k>[0-9]+)\.report'
+owner = "B"
+en = "Nearest-neighbour router, k = {k}, report split"
+fa = "مسیریاب نزدیک‌ترین همسایه، k = {k}، دوره‌ی گزارش"
+
+[[name]]  # R-B3 secondary (ADR-0046 point 4): reasoning-billed candidates kept
+pattern = 'rb3\.knn-router\.with_reasoning_models\.k-(?P<k>[0-9]+)\.tune'
+owner = "B"
+en = "Nearest-neighbour router, k = {k}, with reasoning models"
+fa = "مسیریاب نزدیک‌ترین همسایه، k = {k}، با مدل‌های استدلالی"
+
+[[name]]
+pattern = 'rb3\.knn-router\.with_reasoning_models\.k-(?P<k>[0-9]+)\.report'
+owner = "B"
+en = "Nearest-neighbour router, k = {k}, with reasoning models, report split"
+fa = "مسیریاب نزدیک‌ترین همسایه، k = {k}، با مدل‌های استدلالی، دوره‌ی گزارش"
 
 # --- Pipeline C ---------------------------------------------------------------
 

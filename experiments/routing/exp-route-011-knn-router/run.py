@@ -1,13 +1,14 @@
 """R-B3 run helpers: session- and family-grouped folds, nested cross-validation
-of ``k`` inside the tune split, repricing through ``baselines_full`` and one
-``LeverResult`` per baseline (final plan R-B3; FR-ROUTE-03, QA-REPRO;
-ADR-0032, ADR-0036). Pure over frames; ``scripts/run_pipeline_b_day3.py`` does
-the file IO and passes the ``sprint.toml`` settings.
+of ``k`` inside the tune split, and one ``LeverResult`` per baseline from the
+version's ``baseline_frames`` (final plan R-B3; FR-ROUTE-03, QA-REPRO;
+ADR-0032, ADR-0036, ADR-0046 points 4 to 6 as R-A3 and R-C3). Pure over frames;
+``scripts/run_pipeline_b_day3.py`` does the file IO and passes the ``sprint.toml``
+settings.
 
-Units (ADR-0036 decisions 5 to 7): the routed cost is in price-file units, so
-the saving is computed against the three repriced baselines only. Against
-``as_logged`` (recorded units) it is **not computed**: ``saving`` is empty and
-recorded and price-file figures are never subtracted.
+Units (ADR-0036): each baseline is accounted in its own units with its own model
+as the incumbent. Repriced baselines in price-file units (``baseline_cost`` has no
+fees key); ``as_logged`` in recorded units, the target at implied recorded rates.
+Every slice of a result is in that result's units.
 """
 
 from __future__ import annotations
@@ -30,8 +31,16 @@ CRITERION = (
     "least aggressive: the grid k with the lowest share of requests moved in "
     "the inner folds (ties: smaller k); saving is never the criterion"
 )
-REPRICED_KEYS = ("premium_gpt_5_5", "todays_models", "best_single_cheap")
-OUT_OF_SCOPE = ("incumbent_unpriced", "unknown_tokens")
+OVER_TOKENS = 8000
+TOP_TENANTS = 5
+TOP_BOTS = 10
+POINT_6 = (
+    "Per baseline, the incumbent is that baseline's model for the request (logged "
+    "model for todays_models and as_logged, the premium model, the best single "
+    "cheap model) and 'cheaper' is tested in that baseline's units.",
+    "So each saving is the router's own effect and is >= 0 row by row; follows "
+    "ADR-0046 point 6, confirmed for Pipeline B by the owner 2026-11-03 (Q-B21).",
+)
 
 
 def _sibling(name: str) -> Any:
@@ -155,79 +164,8 @@ def nested_cv(
     }
 
 
-def _scope(after: pd.DataFrame) -> pd.Series:
-    return after["llm_request"].astype(bool) & ~after["route_reason"].isin(OUT_OF_SCOPE)
-
-
-def routed_baselines(
-    after: pd.DataFrame,
-    ctx: Any,
-    *,
-    premium_model: str,
-    cached_separately: frozenset[str],
-) -> dict[str, Any]:
-    """The four baselines and the routed cost over the rows the router can
-    price (``baselines_full.baseline_costs`` both times).
-
-    Routed cost: a copy with each row's ``bot_provider_model`` set to the
-    routed model and the input already effective (cached tokens added back
-    for the **logged** model), priced as ``todays_models``.
-    """
-    from metis_auto.analysis.baselines_full import baseline_costs
-
-    scope = _scope(after)
-    sub = after[scope]
-    kw = {"premium_model": premium_model}
-    before = baseline_costs(sub, ctx, cached_separately=cached_separately, **kw)
-    priced = sub.copy()
-    priced["a_bill_inputTokens"] = version.effective_tokens(sub, cached_separately)[
-        "input"
-    ]
-    priced["bot_provider_model"] = sub["routed_model"]
-    routed = baseline_costs(priced, ctx, cached_separately=frozenset(), **kw)[
-        "todays_models"
-    ]
-    if routed["n_known"] != before["todays_models"]["n_known"]:
-        raise ValueError("a routed model has no price; the difference is void")
-    saving = {
-        key: {
-            "token_cost": before[key]["token_cost"] - routed["token_cost"],
-            "total": before[key]["total"] - routed["total"],
-        }
-        for key in REPRICED_KEYS
-    }
-    return {
-        "before": before,
-        "routed": routed,
-        "saving": saving,
-        "n_scope": int(scope.sum()),
-        "n_left_out": int((~scope).sum()),
-    }
-
-
 def _dec(value: float) -> Decimal:
     return Decimal(f"{value + 0.0:.9f}")
-
-
-def row_baseline(
-    after: pd.DataFrame,
-    key: str,
-    ctx: Any,
-    *,
-    premium_model: str,
-    cached_separately: frozenset[str],
-) -> pd.Series:
-    """Per-row cost of baseline ``key`` (price-file units), for intervals and
-    slices; its sum equals ``baseline_costs`` (tested)."""
-    from metis_auto.analysis.baselines_full import best_single_cheap_model
-
-    if key == "todays_models":
-        return after["route_cost_incumbent"]
-    if key == "premium_gpt_5_5":
-        model = premium_model
-    else:
-        model = best_single_cheap_model(after, ctx, cached_separately=cached_separately)
-    return version.candidate_costs(after, [model], ctx, cached_separately)[model]
 
 
 def _label(value: object) -> str:
@@ -235,54 +173,119 @@ def _label(value: object) -> str:
     return "".join(c if c.isalnum() or c in "_.-" else "_" for c in text)
 
 
-def _share_slices(
-    sub: pd.DataFrame, base: pd.Series, saving: pd.Series, n_all: int
-) -> dict[str, dict[str, Decimal]]:
-    def block(mask: pd.Series, n: int) -> dict[str, Decimal]:
-        b = math.fsum(base[mask].to_numpy(dtype=float))
-        s = math.fsum(saving[mask].to_numpy(dtype=float))
-        out = {
-            "n_requests": Decimal(int(n)),
-            "n_cost_known": Decimal(int(mask.sum())),
-            "baseline:token_cost": _dec(b),
-            "saving:token_cost": _dec(s),
-        }
-        if b > 0:
-            out["saving_share"] = _dec(s / b)
-        return out
-
-    every = pd.Series(True, index=sub.index)
-    slices = {"all": block(every, n_all), "llm_only": block(every, len(sub))}
-    slices["traffic_weighted"] = dict(slices["all"])
-    for lang, rows in sub.groupby(sub["u_lang"].map(_label), sort=True):
-        slices[f"lang:{lang}"] = block(sub.index.isin(rows.index), len(rows))
-    tok = version.effective_tokens(sub, frozenset())
-    long = tok["input"] > 8000
-    slices["over_8k"] = block(long, int(long.sum()))
-    total = math.fsum(saving.to_numpy(dtype=float))
-    by_tenant = saving.groupby(sub["user_id"].astype(str)).sum()
-    by_tenant = by_tenant.sort_values(ascending=False, kind="stable")
-    for rank, (_, value) in enumerate(by_tenant.head(5).items(), start=1):
-        if total > 0:
-            slices[f"tenant_rank:{rank}"] = {"share": _dec(value / total)}
-    return slices
+def bot_ranks(after: pd.DataFrame) -> pd.Series:
+    """Rank per ``bot_id`` (1 = largest ``todays_models`` cost over the routed LLM
+    rows; unknown cost last; ties by more requests, then a stable order). R-A3's
+    rule."""
+    rows = after[after["route_reason"].notna()]
+    g = rows.groupby(rows["bot_id"].astype(str), sort=True)
+    stats = pd.DataFrame(
+        {"cost": g["route_cost_incumbent"].sum(min_count=1), "n": g.size()}
+    )
+    stats = stats.sort_values(
+        ["cost", "n"], ascending=[False, False], na_position="last", kind="stable"
+    )
+    return pd.Series(np.arange(1, len(stats) + 1), index=stats.index)
 
 
-def _routing_slice(after: pd.DataFrame) -> dict[str, Decimal]:
-    n = len(after)
-    moved = after["route_reason"] == "moved"
+def _block(base: pd.Series, saving: pd.Series, mask: pd.Series, n: int) -> dict:
+    b = math.fsum(base[mask].to_numpy(float))
+    s = math.fsum(saving[mask].to_numpy(float))
+    out = {
+        "n_requests": Decimal(int(n)),
+        "n_cost_known": Decimal(int(mask.sum())),
+        "baseline:total": _dec(b),
+        "saving:total": _dec(s),
+    }
+    if b > 0:
+        out["saving_share"] = _dec(s / b)
+    return out
+
+
+def routing_slice(
+    after: pd.DataFrame, b_after: pd.DataFrame, saving: pd.Series
+) -> dict[str, Decimal]:
+    """Counts only: the apply reasons and moves (the ``todays_models`` decision),
+    the requests moved and unknown in this baseline, saving by target model."""
+    llm = after["llm_request"].astype(bool)
+    n = int(llm.sum())
+    reason = after.loc[llm, "route_reason"]
+    moved = reason.eq("moved")
+    switched = b_after["route_moved_in_baseline"].astype(bool)
     out = {
         "n_requests_routed": Decimal(n),
         "n_moved": Decimal(int(moved.sum())),
+        "n_candidates_in_baseline": Decimal(int(b_after["route_candidate"].sum())),
+        "n_switched_in_baseline": Decimal(int(switched.sum())),
+        "n_saving_unknown": Decimal(int(b_after["route_saving_unknown"].sum())),
     }
     if n:
         out["moved_share"] = _dec(moved.sum() / n)
-    for r, c in after["route_reason"].value_counts().sort_index().items():
+        out["switched_share_llm"] = _dec(switched.sum() / n)
+    for r, c in reason.value_counts().sort_index().items():
         out[f"reason:{r}"] = Decimal(int(c))
-    for m, c in after.loc[moved, "routed_model"].value_counts().sort_index().items():
+    routed = after.loc[llm, "routed_model"]
+    for m, c in routed[moved].value_counts().sort_index().items():
         out[f"moved_to:{_label(m)}"] = Decimal(int(c))
     if moved.any():
-        out["support_median"] = _dec(float(after.loc[moved, "route_support"].median()))
+        support = after.loc[llm, "route_support"][moved]
+        out["support_median"] = _dec(float(support.median()))
+    by_target = saving[switched].groupby(after.loc[switched, "route_target"]).sum()
+    for m, value in by_target.sort_index().items():
+        out[f"saving_by_target:{_label(m)}"] = _dec(float(value))
+    return out
+
+
+def _baseline_note(key: str, premium_model: str, cheap_model: str) -> tuple[str, ...]:
+    if key == "as_logged":
+        return (
+            "Unit: recorded units (as_logged). Incumbent: the recorded token cost; "
+            "the target at its implied recorded rates (reports/full_eda/tables/"
+            "implied_unit_rates.csv, the ADR-0038 pattern).",
+            "A needed implied rate that is missing makes the request's saving "
+            "unknown (n_saving_unknown, out of both sides), never 0; requests not "
+            "moved save exactly 0; fees never change.",
+        )
+    model = {
+        "premium_gpt_5_5": f"{premium_model} (estimate only, never called, ADR-0026)",
+        "todays_models": "each request's logged model",
+        "best_single_cheap": f"{cheap_model}, the cheapest callable model over the "
+        "scored rows (cost only)",
+    }[key]
+    return (
+        f"Unit: price-file units ({key}). Fees are not priced, so baseline_cost has "
+        f"no fees key (ADR-0036). Incumbent: {model}.",
+    )
+
+
+def baseline_saving(
+    after: pd.DataFrame,
+    key: str,
+    ctx: Any,
+    *,
+    premium_model: str,
+    cheap_model: str,
+    cached_separately: frozenset[str],
+    rates: Mapping[str, Mapping[str, float | None]],
+) -> dict[str, Any]:
+    """Totals of one baseline over the LLM rows of ``after`` (``apply`` output):
+    baseline, saving, share, cost-known rows, rows moved in this baseline."""
+    before, b_after = version.baseline_frames(
+        after,
+        after,
+        ctx,
+        baseline=key,
+        premium_model=premium_model,
+        cheap_model=cheap_model,
+        cached_separately=cached_separately,
+        rates=rates,
+    )
+    cols = ["block_fees", "block_token_cost"]
+    base = before[cols].sum(axis=1, min_count=2)
+    saving = base - b_after[cols].sum(axis=1, min_count=2)
+    known = after["llm_request"].astype(bool) & base.notna()
+    out = _block(base, saving, known, int(after["llm_request"].astype(bool).sum()))
+    out["n_switched_in_baseline"] = Decimal(int(b_after[version.MOVED_B].sum()))
     return out
 
 
@@ -291,113 +294,177 @@ def lever_results_json(
     req_all: pd.DataFrame,
     *,
     k: int,
+    split: str,
+    with_reasoning: bool,
     ctx: Any,
     premium_model: str,
+    cheap_model: str,
     cached_separately: frozenset[str],
+    rates: Mapping[str, Mapping[str, float | None]],
     code_commit: str,
     python_version: str,
     created_at: datetime,
     extra_assumptions: Sequence[str] = (),
     config_extra: Mapping[str, object] | None = None,
+    tenant_cap: float = 0.35,
+    rates_version: str = "full-eda-implied-unit-rates",
 ) -> dict[str, str]:
-    """``LeverResult`` JSON per baseline key for the decisions in ``after``
-    (LLM rows of the scored split); ``req_all`` is every scored row (its
-    length is the ``all`` denominator)."""
+    """``LeverResult`` JSON per baseline key for the decisions in ``after`` (LLM
+    rows of the scored split, with the recorded blocks); ``req_all`` is every
+    scored row (its length is the ``all`` denominator). The slices of R-A3's
+    results, each baseline in its own units (ADR-0046 points 5 and 6)."""
+    import dataclasses
+
     from metis_auto.analysis.lever_result import LeverResult, build_manifest
+    from metis_auto.analysis.replay_scope import cap_tenant_share
     from metis_auto.analysis.stats import cluster_bootstrap_ratio
 
-    rb = routed_baselines(
-        after, ctx, premium_model=premium_model, cached_separately=cached_separately
-    )
-    scope = _scope(after)
-    sub = after[scope]
-    routing = _routing_slice(after)
+    lever = version.LEVER_WITH_REASONING if with_reasoning else version.LEVER
+    label = version.VERSION_WITH_REASONING if with_reasoning else version.VERSION
+    llm = after["llm_request"].astype(bool)
+    effective = version.effective_tokens(after, cached_separately)["input"]
+    over = effective.gt(OVER_TOKENS) & llm
+    ranks = bot_ranks(after)
+    bot_rank = after["bot_id"].astype(str).map(ranks)
+    users = after.loc[llm, "user_id"].astype(object).fillna("unknown")
+    tenant_order = users.value_counts(sort=True).index[:TOP_TENANTS]
+    all_users = after["user_id"].astype(object).fillna("unknown")
+    lang = after["u_lang"].map(_label)
     config = {
-        "lever": "rb3-knn-router",
+        "lever": lever,
         "k": k,
+        "split": split,
         "features": list(version.FEATURES),
         "cross_bot": version.CROSS_BOT,
         "criterion": CRITERION,
-        "rows": "split_by_session tune",
+        "premium_model": premium_model,
+        "best_single_cheap": cheap_model,
+        "tenant_cap": tenant_cap,
         **(config_extra or {}),
     }
-    manifest = build_manifest(
-        config,
-        ctx,
-        code_commit=code_commit,
-        python_version=python_version,
-        created_at=created_at,
-    )
-    common = (
-        *version.ASSUMPTIONS,
-        "rows: split_by_session tune, LLM; fitted on the same rows, own session "
-        "and duplicate family never a neighbour",
-        "baselines over the rows whose incumbent and tokens are priced; the "
-        "others keep their model and are counted in the routing slice",
-        "timestamps are naive (Q-06)",
-        *extra_assumptions,
-    )
     texts: dict[str, str] = {}
-    for key in ("premium_gpt_5_5", "as_logged", "todays_models", "best_single_cheap"):
-        before = rb["before"][key]
-        if key == "as_logged":
-            baseline_cost = {b: before[b] for b in ("fees", "token_cost", "total")}
-            saving: dict[str, Decimal] = {}
-            note = (
-                "saving not computed in recorded units: the routed cost is in "
-                "price-file units and units are never subtracted across"
+    for key in version.BASELINES:
+        before, b_after = version.baseline_frames(
+            after,
+            after,
+            ctx,
+            baseline=key,
+            premium_model=premium_model,
+            cheap_model=cheap_model,
+            cached_separately=cached_separately,
+            rates=rates,
+        )
+        cols = ["block_fees", "block_token_cost"]
+        base = before[cols].sum(axis=1, min_count=2)
+        saving = base - b_after[cols].sum(axis=1, min_count=2)
+        known = llm & base.notna()
+        slices = {
+            "all": _block(base, saving, known, len(req_all)),
+            "llm_only": _block(base, saving, known, int(llm.sum())),
+        }
+        tw = dict(slices["llm_only"])
+        sums = pd.DataFrame({"b": base[known], "s": saving[known]}).groupby(
+            after.loc[known, "bot_id"].astype(str)
+        )
+        sums = sums.sum()
+        sums = sums[sums["b"] > 0]
+        if len(sums):
+            tw["bot_mean_saving_share"] = _dec(float((sums["s"] / sums["b"]).mean()))
+        slices["traffic_weighted"] = tw
+        slices["over_8k"] = _block(base, saving, known & over, int(over.sum()))
+        for name in sorted(lang[llm].unique()):
+            mask = lang.eq(name)
+            slices[f"lang:{name}"] = _block(
+                base, saving, known & mask, int((llm & mask).sum())
             )
-            n_all, n_llm = Decimal(len(req_all)), Decimal(len(after))
-            known = Decimal(rb["n_scope"])
-            base_slice = {"n_requests": n_all, "n_cost_known": known}
-            slices: dict[str, dict[str, Decimal]] = {
-                "all": base_slice,
-                "llm_only": {"n_requests": n_llm, "n_cost_known": known},
-                "traffic_weighted": dict(base_slice),
+        for rank, user in enumerate(tenant_order, start=1):
+            mask = all_users.eq(user)
+            n = int((llm & mask).sum())
+            block = _block(base, saving, known & mask, n)
+            block["share"] = _dec(n / llm.sum())
+            slices[f"tenant_rank:{rank}"] = block
+        for rank in range(1, min(TOP_BOTS, len(ranks)) + 1):
+            mask = bot_rank.eq(rank)
+            slices[f"bot_rank:{rank}"] = _block(
+                base, saving, known & mask, int((llm & mask).sum())
+            )
+        try:
+            capped = cap_tenant_share(after[known], tenant_cap, seed=ctx.seed).index
+        except ValueError:  # too few tenants to cap: the slice is left out
+            capped = None
+        if capped is not None:
+            slices[f"tenant_capped_{tenant_cap}"] = _block(
+                base, saving, known & after.index.isin(capped), len(capped)
+            )
+        slices["routing"] = routing_slice(after, b_after, saving)
+        top = slices["llm_only"]
+        _, lo, hi = cluster_bootstrap_ratio(
+            saving[known].to_numpy(float),
+            base[known].to_numpy(float),
+            after.loc[known, "session_id"].astype(str).to_numpy(),
+            seed=ctx.seed,
+        )
+        if key == "as_logged":
+            fees = math.fsum(before.loc[known, "block_fees"].to_numpy(float))
+            token = math.fsum(before.loc[known, "block_token_cost"].to_numpy(float))
+            baseline_cost = {
+                "fees": _dec(fees),
+                "token_cost": _dec(token),
+                "total": top["baseline:total"],
             }
-            ci = (None, None)
+            saving_cost = {
+                "fees": Decimal(0),
+                "token_cost": top["saving:total"],
+                "total": top["saving:total"],
+            }
+            run_ctx = dataclasses.replace(ctx, price_table={"version": rates_version})
         else:
             baseline_cost = {
-                "token_cost": before["token_cost"],
-                "total": before["total"],
+                "token_cost": top["baseline:total"],
+                "total": top["baseline:total"],
             }
-            saving = dict(rb["saving"][key])
-            note = (
-                "saving = baseline minus routed cost, both from baseline_costs "
-                "(price-file units, token cost only)"
+            saving_cost = {
+                "token_cost": top["saving:total"],
+                "total": top["saving:total"],
+            }
+            run_ctx = ctx
+        manifest = build_manifest(
+            config | {"baseline": key},
+            run_ctx,
+            code_commit=code_commit,
+            python_version=python_version,
+            created_at=created_at,
+        )
+        extra: tuple[str, ...] = ()
+        if with_reasoning:
+            extra = (
+                f"{version.WITH_REASONING_LABEL} (ADR-0046 point 4): includes the "
+                "candidates the catalogue marks hidden_reasoning_billed_as_output.",
             )
-            base = row_baseline(
-                sub,
-                key,
-                ctx,
-                premium_model=premium_model,
-                cached_separately=cached_separately,
-            )
-            per_row = base - sub["route_cost_routed"]
-            slices = _share_slices(sub, base, per_row, len(req_all))
-            _, lo, hi = cluster_bootstrap_ratio(
-                per_row.to_numpy(),
-                base.to_numpy(),
-                sub["session_id"].to_numpy(),
-                seed=ctx.seed,
-            )
-            ci = (None, None) if math.isnan(lo) else (lo, hi)
-        slices["routing"] = routing
         result = LeverResult(
-            lever_id=f"rb3.knn-router.k-{k}.tune.{key}",
+            lever_id=f"{lever}.k-{k}.{split}.{key}",
             step="routing",
-            version=f"route.knn.k{k}",
+            version=f"{label}.k{k}",
             n_requests=len(req_all),
-            n_eligible=rb["n_scope"],
+            n_eligible=int(b_after[version.CANDIDATE].sum()),
             baseline=key,
             baseline_cost=baseline_cost,
-            saving=saving,
-            ci_low=ci[0],
-            ci_high=ci[1],
+            saving=saving_cost,
+            ci_low=None if math.isnan(lo) else lo,
+            ci_high=None if math.isnan(hi) else hi,
             slices=slices,
             evidence_class="simulation",
             correctness_state="unmeasured",
-            assumptions=(common[0], note, *common[1:]),
+            assumptions=(
+                *version.ASSUMPTIONS,
+                *_baseline_note(key, premium_model, cheap_model),
+                "Requests whose cost in a baseline is unknown are left out of both "
+                "sides (n_cost_known), never priced at zero; workflow rows have no "
+                "cost.",
+                *POINT_6,
+                *extra,
+                *extra_assumptions,
+            ),
             manifest=manifest,
         )
         texts[key] = result.to_json()

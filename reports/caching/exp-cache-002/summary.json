@@ -27,11 +27,11 @@
       "total": "4466.994047450"
     },
     "todays_models": {
-      "n_known": "88971",
+      "n_known": "208639",
       "n_requests": "209331",
-      "n_unknown": "120360",
-      "token_cost": "27.204601969",
-      "total": "27.204601969"
+      "n_unknown": "692",
+      "token_cost": "225.436152675",
+      "total": "225.436152675"
     }
   },
   "by_ttl": {
@@ -434,7 +434,7 @@
     "n_chunk_ids_hash_unknown": 0,
     "share_chunk_ids_changed": 0.00448638063022966
   },
-  "created_at": "2026-11-02T12:47:38.117792+00:00",
+  "created_at": "2026-11-03T10:34:35.201519+00:00",
   "data_facts": {
     "corpus_version_known": 0,
     "n_lookups_empty": 73,
@@ -464,6 +464,18 @@
       "90d": false,
       "none": false
     }
+  },
+  "frozen": {
+    "grid_ttl_days": [
+      1,
+      7,
+      30,
+      90
+    ],
+    "role": "stated default (1 day); the full TTL grid is reported",
+    "scope": "user",
+    "ttl_days": 1,
+    "ttl_rule_choice_days": 1
   },
   "lever": "R-B1 retrieval-result cache (exp-cache-002)",
   "lever_results": [
@@ -550,10 +562,10 @@
     }
   },
   "settings": {
-    "catalogue_version": "cat-metis-test-2026-10-18-s75-g55",
+    "catalogue_version": "cat-metis-replay-2026-11-02",
     "min_n": 30,
     "premium_model": "gpt-5.5",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "prices-metis-2026-10-18-logged",
     "seed": 20261102,
     "shadow_rate": 0.01,
     "sprint_config": "sprint-2026-11-02"

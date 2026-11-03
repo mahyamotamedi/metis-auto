@@ -1,18 +1,17 @@
 """The lever comparison command (S-2): JSON in, Markdown out. Every result file here
-is SYNTHETIC and written to a temporary folder; the loader under test is the
-interim stand-in for the shared ``LeverResult`` loader (S-1)."""
+is SYNTHETIC and written to a temporary folder; results are read with the shared
+``LeverResult`` (S-1, ``LeverResult.model_validate``)."""
 
 from __future__ import annotations
 
 import json
 import subprocess
 import sys
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
-import pytest
-
-from metis_auto.wiring import _interim_lever_json as interim
+from metis_auto.analysis.lever_result import LeverResult, Manifest
 from metis_auto.wiring.lever_compare import collect, write_comparison
 
 REPO = Path(__file__).resolve().parents[3]
@@ -32,6 +31,7 @@ def _result_json(**overrides: object) -> dict[str, object]:
         "ci_low": 0.08,
         "ci_high": 0.12,
         "slices": {
+            "all": {"saving_share": "0.10"},
             "llm_only": {"saving_share": "0.14"},
             "traffic_weighted": {"saving_share": "0.09"},
             "tenant_rank:1": {"share": "0.30"},
@@ -42,12 +42,12 @@ def _result_json(**overrides: object) -> dict[str, object]:
         "overhead_ms_p50": None,
         "overhead_ms_p95": None,
         "manifest": {
-            "data_revision": "rev-synthetic",
-            "code_commit": "commit-synthetic",
-            "config_hash": "cfg-synthetic",
+            "data_revision": "0" * 40,
+            "code_commit": "unknown",
+            "config_hash": "0" * 64,
             "seed": 7,
             "price_version": "prices-synthetic-1",
-            "python_version": "3.13",
+            "python_version": "3.13.0",
             "created_at": "2026-11-02T00:00:00Z",
         },
     }
@@ -79,25 +79,54 @@ def test_collect_reads_only_result_json_and_ignores_its_own_output(tmp_path):
     }
 
 
-def test_money_is_read_as_decimal_and_float_money_is_refused():
-    result = interim.result_from_json(_result_json())
-    assert result.saving == {"total": Decimal("10.5")}
-    assert result.slices["tenant_rank:1"]["share"] == Decimal("0.30")
-    assert result.assumptions == ("synthetic fixture",)
-    assert result.manifest.price_version == "prices-synthetic-1"
+def test_collect_returns_the_shared_lever_result(tmp_path):
+    """A real ``LeverResult`` (SYNTHETIC values) round-trips through ``collect``."""
+    real = LeverResult(
+        lever_id="route.synthetic-real",
+        step="routing",
+        version="v1",
+        n_requests=1000,
+        n_eligible=400,
+        baseline="todays_models",
+        baseline_cost={"token_cost": Decimal("100.5")},
+        saving={"token_cost": Decimal("10.25")},
+        slices={
+            "all": {"saving_share": Decimal("0.10")},
+            "llm_only": {"saving_share": Decimal("0.14")},
+        },
+        evidence_class="simulation",
+        correctness_state="unmeasured",
+        assumptions=("synthetic fixture",),
+        manifest=Manifest(
+            data_revision="0" * 40,
+            code_commit="unknown",
+            config_hash="0" * 64,
+            seed=7,
+            price_version="prices-synthetic-1",
+            python_version="3.13.0",
+            created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        ),
+    )
+    path = tmp_path / "route.synthetic-real.json"
+    path.write_text(real.to_json(), encoding="utf-8")
+    bad = _write(tmp_path / "bad.json", _result_json(step="nope"))
 
-    with pytest.raises(ValueError, match="decimal string"):
-        interim.result_from_json(_result_json(saving={"total": 10.5}))
+    results, skipped = collect([path, bad], out=tmp_path / "comparison.md")
+
+    assert results == [real]
+    assert isinstance(results[0], LeverResult)
+    assert results[0].saving == {"token_cost": Decimal("10.25")}
+    assert skipped == [bad]
 
 
-def test_write_comparison_labels_the_interim_loader(tmp_path):
+def test_write_comparison_has_no_interim_note(tmp_path):
     result = _write(tmp_path / "cache.synthetic-a.json", _result_json())
     out = tmp_path / "comparison.md"
 
     summary = write_comparison([result], out=out, max_tenant_share=Decimal("0.35"))
 
     text = out.read_text(encoding="utf-8")
-    assert "interim, not the shared implementation" in text
+    assert "interim" not in text.lower()
     assert "cache.synthetic-a" in text
     assert summary == {"results": 1, "skipped": 0, "out": str(out)}
 
