@@ -1,0 +1,14 @@
+## Decision router (System One), phase R0: verify before building (2026-11-02)
+
+Under the owner's master prompt for the System-One decision router (two modes: Jev through the Metis TypeSafe wrapper; a local open-weight model, THX-01 by default). Status: **awaiting review**; no product code, no live call, nothing committed. Findings: [router_r0_findings.md](../../references/router_r0_findings.md).
+
+- **Tests:** Linux 3.13 copy with the `db` lock: 1,136 passed, 2 failed (known missing tokenizer assets), 23 skipped; ruff clean. With the dev lock alone, collection stops on `wiring/golden_answers.py` (module-level SQLAlchemy import). Windows not re-run: this copy has no `.venv` and the bridge shell is a Linux VM.
+- **Ledger:** the Windows `msvcrt` lock exists since 2026-10-31 but is untested on Windows; no `data/spend/` on this copy, so the lifetime total would restart at zero here.
+- **Dataset:** revision and all 31 sha256 match `source_v1.toml`; all 10 tables match pinned rows and columns (footers only, no content). Every Parquet file is a single row group.
+- **Mode 1:** the Metis TypeSafe page is robots-blocked; the wire format is confirmed from four third-party descriptions; the Metis path, auth, price and limits stay unverified.
+- **Mode 2:** THX-01's repo root is the English checkpoint (Persian needs `subfolder="multilingual"`) **[wrong; corrected in the R5 follow-up: the root is the multilingual model, A-110]**; its `choice:11+` calibration bucket is broken (clamped by the package), which affects a 12-option intent question. Mizan's `/v1/systemone` serving is confirmed; whether `llama-server` applies its calibration is not.
+- **Open for the owner:** Windows test run, ledger carry-over, the Metis page, PostgreSQL state, licence reading for Mode 1, and the master prompt's section 14 questions.
+
+### Decision router R0 follow-up: owner answers (2026-11-02)
+
+The owner reviewed and approved R0. Recorded in the register (A-88…A-92, Q-49…Q-56, TODO-16) and in [router_r0_findings.md](../../references/router_r0_findings.md) §8: Windows suite 1,146 passed, 15 skipped, 0 failed after fetching the tokenizer assets (with a git-ignored `runs\win-extra.txt` for two Windows-only pins, TODO-16); the ledger's Windows branch runs in that suite; no ledger can be copied (earlier spend < 0.01 USD: lower the lifetime cap in `config/local.toml` before R6, never touch the ledger); the Metis TypeSafe page read (`https://api.metisai.ir/typesafe/v1/systemone`, Bearer Metis key, `jev-latest` only; no price, rate limits or error format stated); PostgreSQL not running, so the slice is built from Parquet; Mode 1 uses SYNTHETIC or owner-written text only; local router 60 ms p95; rules-only inline if THX-01 misses it; no `trust_remote_code`; tier-1 share 30% (also 20%, 40%); 150 records, two Persian reviewers, at least 20% double-annotated; heavy runs (slice build, benchmarks) on the owner's Windows machine from given commands.

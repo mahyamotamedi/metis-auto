@@ -29,6 +29,9 @@ from metis_auto.contracts import (
     AttemptOutcome,
     AttemptRecord,
     AttemptState,
+    BackendAttempt,
+    BackendCircuit,
+    BackendKind,
     CacheEntry,
     CacheKey,
     CacheKeyDraft,
@@ -39,6 +42,7 @@ from metis_auto.contracts import (
     Capability,
     CatalogueEntry,
     ChatTemplate,
+    CircuitState,
     CodeVersion,
     Component,
     ComponentComposition,
@@ -56,6 +60,20 @@ from metis_auto.contracts import (
     CostStatus,
     CounterfactualSource,
     DataQualityFlag,
+    DecisionAnswer,
+    DecisionError,
+    DecisionFailureReason,
+    DecisionLatencySource,
+    DecisionMeasured,
+    DecisionOption,
+    DecisionOutcome,
+    DecisionQuestion,
+    DecisionQuestionSet,
+    DecisionQuestionType,
+    DecisionResult,
+    DecisionSkipReason,
+    DecisionState,
+    DecisionStatus,
     DetectorVerdict,
     EmbedderRef,
     Embedding,
@@ -73,6 +91,7 @@ from metis_auto.contracts import (
     JudgeScore,
     KeyComponent,
     Language,
+    LastAssistantTurnKind,
     LatencySource,
     Limit,
     LoggedMessage,
@@ -98,6 +117,7 @@ from metis_auto.contracts import (
     PriceEntry,
     PriceTable,
     Provenance,
+    QuestionLanguage,
     Reference,
     ReplayCase,
     Request,
@@ -108,6 +128,8 @@ from metis_auto.contracts import (
     RetrievedContext,
     RetrievedItem,
     Role,
+    RouterPath,
+    RouterSummary,
     RoutingDecision,
     RunManifest,
     RunMode,
@@ -346,6 +368,161 @@ def request_features() -> RequestFeatures:
         traffic_source_kind="embedded_bot",
         traffic_source_provenance=Provenance.DECLARED,
         extra={"length_bucket": "short", "persian_share": 0.8},
+    )
+
+
+BACKEND = PolicyRef(name="synthetic-decider", version="0.0.0-synthetic")
+
+
+def local_cost() -> Cost:
+    return Cost(
+        status=CostStatus.COMPUTED, basis=CostBasis.LOCAL_COMPUTE, amount=usd("0")
+    )
+
+
+def decision_question_set() -> DecisionQuestionSet:
+    """Configured wording is operational, not content: no marker needed."""
+    return DecisionQuestionSet(
+        version="routing_qs_synthetic",
+        language_variant=QuestionLanguage.ENGLISH,
+        questions=(
+            DecisionQuestion(
+                id="complexity",
+                type=DecisionQuestionType.SCORE,
+                instructions="How complex is answering the latest message?",
+                levels=("greeting", "simple", "moderate", "complex"),
+            ),
+            DecisionQuestion(
+                id="needs_reasoning",
+                type=DecisionQuestionType.NOUL,
+                instructions="Answering well requires multi-step reasoning.",
+            ),
+            DecisionQuestion(
+                id="intent",
+                type=DecisionQuestionType.CHOICE,
+                instructions="What does the user want?",
+                options=(
+                    DecisionOption(name="chitchat", description="Small talk."),
+                    DecisionOption(name="code", description="Programming help."),
+                    DecisionOption(name="other", description="Anything else."),
+                ),
+            ),
+        ),
+    )
+
+
+def decision_state() -> DecisionState:
+    """Content: carries the marker so a leak into events is detected."""
+    return DecisionState(
+        message=MESSAGE,
+        previous_user_turn=Component.present(f"{MARKER} previous turn"),
+        last_assistant_turn_kind=LastAssistantTurnKind.ANSWER,
+        retrieved_state=ComponentState.PRESENT,
+        language=Language.PERSIAN,
+        turn_depth=1,
+        bot_role_class="support",
+        dataset_derived=False,
+    )
+
+
+def decision_result(*, cache_hit: bool = False) -> DecisionResult:
+    return DecisionResult(
+        answers=(
+            DecisionAnswer(
+                question_id="complexity",
+                type=DecisionQuestionType.SCORE,
+                score=1.2,
+                probabilities={"0": 0.1, "1": 0.6, "2": 0.2, "3": 0.1},
+                confidence=0.6,
+            ),
+            DecisionAnswer(
+                question_id="needs_reasoning",
+                type=DecisionQuestionType.NOUL,
+                p_yes=0.2,
+            ),
+            DecisionAnswer(
+                question_id="intent",
+                type=DecisionQuestionType.CHOICE,
+                choice="other",
+                probabilities={"chitchat": 0.1, "code": 0.05, "other": 0.85},
+                confidence=0.8,
+            ),
+        ),
+        backend=BACKEND,
+        backend_kind=BackendKind.LOCAL,
+        model_revision="rev-synthetic-0",
+        question_set_version="routing_qs_synthetic",
+        state_fingerprint=fingerprint("router_cache", MESSAGE),
+        latency_ms=0.0 if cache_hit else 12.5,
+        latency_source=DecisionLatencySource.MEASURED_LOCAL,
+        usage=TokenUsage(model_id="synthetic-decider", input=tokens(48)),
+        cost=local_cost(),
+        cache_hit=cache_hit,
+        calibrated=True,
+    )
+
+
+def decision_error() -> DecisionError:
+    return DecisionError(
+        backend=BACKEND, error_class=ErrorClass.TIMEOUT, latency_ms=60.0
+    )
+
+
+def decision_outcomes() -> tuple[DecisionOutcome, ...]:
+    answered = DecisionOutcome(
+        status=DecisionStatus.ANSWERED,
+        question_set_version="routing_qs_synthetic",
+        result=decision_result(),
+        attempts=(BackendAttempt(backend=BACKEND, answered=True, latency_ms=12.5),),
+        total_ms=13.0,
+    )
+    skipped = DecisionOutcome(
+        status=DecisionStatus.SKIPPED,
+        skip_reason=DecisionSkipReason.RULES_DECISIVE,
+        rule_id="gate.greeting",
+    )
+    failed = DecisionOutcome(
+        status=DecisionStatus.FAILED,
+        question_set_version="routing_qs_synthetic",
+        failure_reason=DecisionFailureReason.ERROR,
+        error_class=ErrorClass.TIMEOUT,
+        attempts=(
+            BackendAttempt(
+                backend=BACKEND,
+                answered=False,
+                failure_reason=DecisionFailureReason.ERROR,
+                error_class=ErrorClass.TIMEOUT,
+                latency_ms=60.0,
+            ),
+        ),
+        total_ms=61.0,
+    )
+    cached = DecisionOutcome(
+        status=DecisionStatus.ANSWERED,
+        question_set_version="routing_qs_synthetic",
+        result=decision_result(cache_hit=True),
+        total_ms=0.2,
+    )
+    return answered, skipped, failed, cached
+
+
+def request_features_with_decision() -> RequestFeatures:
+    return request_features().model_copy(update={"decision": decision_outcomes()[0]})
+
+
+def routing_decision_with_router() -> RoutingDecision:
+    return routing_decision().model_copy(
+        update={
+            "policy": PolicyRef(name="decision_router", version="0.0.0-synthetic"),
+            "reason_code": "decision.tier0.cheap_ok",
+            "router_summary": RouterSummary(
+                path=RouterPath.SLOW_LOCAL,
+                backend=BACKEND,
+                mapped_tier=0,
+                thresholds_fired=("tau_ok",),
+                reasoning_effort="minimal",
+            ),
+        }
     )
 
 
@@ -827,6 +1004,10 @@ def run_manifest() -> RunManifest:
     )
 
 
+SPANS = {"routing_decided": SpanName.ROUTE, "decision_measured": SpanName.ROUTE_DECIDE}
+DURATIONS = {"routing_decided": 0.3, "decision_measured": 13.0}
+
+
 def events() -> tuple[Event, ...]:
     """One event per payload type, as the recorder would emit them in replay."""
     _, error, _ = model_results()
@@ -840,6 +1021,13 @@ def events() -> tuple[Event, ...]:
         ),
         FeaturesExtracted(
             features=request_features(), measurements=request_measurements().records
+        ),
+        DecisionMeasured(
+            outcome=decision_outcomes()[0],
+            router_mode="local",
+            circuits=(
+                BackendCircuit(backend="synthetic-decider", state=CircuitState.CLOSED),
+            ),
         ),
         RoutingDecided(decision=routing_decision()),
         CacheLookedUp(result=cache_lookup_results()[0]),
@@ -896,10 +1084,8 @@ def events() -> tuple[Event, ...]:
                 case_id=None if run_level else "case-1",
                 timestamp=NOW,
                 logged_timestamp=None if run_level else LOGGED,
-                span=SpanName.ROUTE
-                if payload.event_type == "routing_decided"
-                else None,
-                duration_ms=0.3 if payload.event_type == "routing_decided" else None,
+                span=SPANS.get(payload.event_type),
+                duration_ms=DURATIONS.get(payload.event_type),
                 versions=VERSIONS,
                 payload=payload,
             )
@@ -1007,6 +1193,12 @@ def all_examples() -> dict[str, object]:
         "tiered_price_table": tiered_price_table(),
         "accounted_usage": accounted_usage(),
         "savings_decomposition": savings_decomposition(),
+        "decision_question_set": decision_question_set(),
+        "decision_state": decision_state(),
+        "decision_result": decision_result(),
+        "decision_error": decision_error(),
+        "request_features_with_decision": request_features_with_decision(),
+        "routing_decision_with_router": routing_decision_with_router(),
     }
     groups = {
         "cache_lookup": cache_lookup_results(),
@@ -1017,6 +1209,7 @@ def all_examples() -> dict[str, object]:
         "store_decision": store_decisions(),
         "judge_score": judge_scores(),
         "event": events(),
+        "decision_outcome": decision_outcomes(),
     }
     for prefix, items in groups.items():
         for i, item in enumerate(items):

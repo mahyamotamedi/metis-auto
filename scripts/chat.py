@@ -43,6 +43,7 @@ from pathlib import Path
 
 from metis_auto.settings import SettingsError
 from metis_auto.wiring.chat import (
+    ROUTER_MODES,
     ChatSession,
     CompressionMode,
     RoutingMode,
@@ -61,6 +62,13 @@ def main() -> int:
         choices=[m.value for m in RoutingMode if m != RoutingMode.FIXED],
         default=RoutingMode.STICKY_V1.value,
         help="routing mode when no --model is given",
+    )
+    parser.add_argument(
+        "--router-mode",
+        choices=list(ROUTER_MODES),
+        default="local",
+        help="with --mode decision_router: the decision backends to ask "
+        "(local = THX-01, hosted = Jev via Metis; SYNTHETIC or your own text only)",
     )
     parser.add_argument("--fake", action="store_true", help="offline fake answers")
     parser.add_argument("--instructions", default=None, help="bot instructions")
@@ -89,6 +97,7 @@ def main() -> int:
             retrieved=retrieved,
             allow_unknown_window=args.allow_unknown_window,
             routing=None if args.model else RoutingMode(args.mode),
+            router_mode=args.router_mode,
         )
     except (SettingsError, ValueError) as exc:
         print(f"cannot start: {exc}")

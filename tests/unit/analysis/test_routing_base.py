@@ -397,11 +397,15 @@ def test_matches_b_interim_rules():
 
 def test_sprint_config_and_replay_catalogue_load():
     """The committed config works as ``rules`` and ``catalogue`` unchanged."""
-    sprint = tomllib.loads((ROOT / "config/evaluation/sprint.toml").read_text())
+    sprint = tomllib.loads(
+        (ROOT / "config/evaluation/sprint.toml").read_text(encoding="utf-8")
+    )
     routing = sprint["routing"]
     assert routing["avoid_long_context_tier"] is True
     assert candidate_list(routing) == tuple(routing["candidates"])
-    cat = tomllib.loads((ROOT / sprint["baselines"]["catalogue"]).read_text())
+    cat = tomllib.loads(
+        (ROOT / sprint["baselines"]["catalogue"]).read_text(encoding="utf-8")
+    )
     # tier and equivalence_group are placeholders (A-48); disabled models and
     # the retiring one never appear; no tier above 1 is enabled.
     assert failover("gpt-5-nano", cat, retiring=routing["retiring"]) == (

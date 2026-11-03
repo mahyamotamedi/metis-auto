@@ -19,18 +19,25 @@ from metis_auto.contracts import (
     PAYLOAD_TYPES,
     AccountedUsage,
     AttemptState,
+    BackendAvailability,
     CacheEntry,
     CacheKeyDraft,
     CacheLookupResult,
     ChatTemplate,
     CompositionRecord,
     ContractModel,
+    DecisionError,
+    DecisionOutcome,
+    DecisionQuestionSet,
+    DecisionResult,
+    DecisionState,
     EvaluationResult,
     Event,
     Privacy,
     Request,
     RequestFeatures,
     ResponseMetadata,
+    RouterSummary,
     RoutingDecision,
     RunManifest,
     SavingsDecomposition,
@@ -73,6 +80,14 @@ CONTENT_FREE = [
     AccountedUsage,
     SavingsDecomposition,
     ChatTemplate,
+    # Decision router (ADR-XXXX (system-one-decision-router)): everything but the state
+    # leaves the boundary.
+    DecisionQuestionSet,
+    DecisionResult,
+    DecisionError,
+    DecisionOutcome,
+    RouterSummary,
+    BackendAvailability,
 ]
 
 
@@ -96,6 +111,14 @@ def test_content_bearing_contracts_are_detected():
     request_paths = set(content_paths(Request))
     assert {"message", "history", "instructions", "retrieved"} <= request_paths
     assert {"answer", "embedding"} <= set(content_paths(CacheEntry))
+
+
+def test_the_decision_state_is_content():
+    # The state sent to a decision backend never reaches an event
+    # (ADR-XXXX (system-one-decision-router)).
+    paths = set(content_paths(DecisionState))
+    assert {"message", "previous_user_turn"} <= paths
+    assert DecisionState not in CONTENT_FREE
 
 
 def test_inherit_resolves_to_the_enclosing_class():
@@ -135,4 +158,5 @@ def test_serialised_records_carry_no_synthetic_content(name):
 def test_marker_check_would_see_content():
     # The dynamic check is meaningful: content-bearing examples do contain it.
     assert MARKER in all_examples()["request"].model_dump_json()
+    assert MARKER in all_examples()["decision_state"].model_dump_json()
     assert len(CONTENT_FREE_EXAMPLES) >= len(PAYLOAD_TYPES)

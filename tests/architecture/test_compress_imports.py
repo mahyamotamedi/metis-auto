@@ -9,6 +9,11 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parents[2] / "src" / "metis_auto"
 COMPRESS_LIBRARIES = {"torch", "transformers", "llmlingua", "accelerate", "nltk"}
 ALLOWED = {SRC / "adapters" / "compressors" / "llmlingua2.py"}
+SHARED = {"torch", "transformers"}
+"""Shared with the decision router's THX-01 adapter
+(ADR-XXXX (system-one-decision-router), R5), which
+``tests/architecture/test_router_imports.py`` holds to its own rule."""
+SHARED_ALLOWED = {SRC / "adapters" / "routers" / "thx01_local.py"}
 
 
 def _roots(tree: ast.AST) -> set[str]:
@@ -26,7 +31,12 @@ def test_compression_libraries_only_in_the_adapter():
         path.relative_to(SRC).as_posix()
         for path in SRC.rglob("*.py")
         if path not in ALLOWED
-        and _roots(ast.parse(path.read_text(encoding="utf-8"))) & COMPRESS_LIBRARIES
+        and _roots(ast.parse(path.read_text(encoding="utf-8")))
+        & (
+            COMPRESS_LIBRARIES - SHARED
+            if path in SHARED_ALLOWED
+            else COMPRESS_LIBRARIES
+        )
     ]
     assert offenders == []
 

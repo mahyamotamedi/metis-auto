@@ -56,6 +56,7 @@ Each is a `routing_policy` candidate (pure `choose(features, eligible)`) unless 
 | R6 | **LLM-based routing / judging**: a cheap model classifies difficulty, or judges whether the cheap answer suffices | live calls (its cost and latency are router overhead) | `exp-route-007` |
 | R7 | **cascades**: the cheap model first, a detector decides escalation (ADR-0013); detectors: truncation, empty output (exist), refusal, language mismatch, self-reported uncertainty, a judge (opt-in) | answers from both tiers; L1 for detector accuracy | `exp-route-008` |
 | R8 | **sticky routing v1** and its variants (§5) | R1's rules; session order | `exp-route-010` |
+| R9 | **System-One decision router** ([ADR-XXXX (system-one-decision-router)](../adr/draft-system-one-decision-router.md), [routing.md §7](../architecture/routing.md#7-the-system-one-decision-router-placeholder-until-exp-route-013)): THX-01 (local) and Jev (hosted, shadow only) answers mapped to tiers; also as sticky's inner router | the routing dev slice (tune / check), L3 human tier labels, golden-v2 as the final test | `exp-route-013` |
 
 ## 5. Sticky routing v1 (owner brief §7)
 

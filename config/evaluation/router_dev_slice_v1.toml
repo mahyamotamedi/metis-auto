@@ -1,0 +1,110 @@
+# Routing dev slice v1 (ADR-XXXX (system-one-decision-router) point 10; guide docs/evaluation/router_dev_slice_v1.md).
+# Content-free and machine-independent: no paths outside the repository. The
+# dataset location comes from [data] full_data_root (config/local.toml or
+# METIS__DATA__FULL_DATA_ROOT), never from this file.
+#
+# Every number below is a development PLACEHOLDER, not evidence. Shares are
+# SOFT quotas (deficit-weighted seeded fill); caps and ceilings are hard. The
+# code refuses a size above 200 whatever this file says (owner, 2026-11-02).
+# Feature definitions (eligibility, language groups, rule intents, greeting
+# vocabulary, cohort names, duplicate families) are golden-v1's, read from
+# features_config, so slice strata mean the same as eval.request's.
+
+[slice]
+slice_id = "router-dev-slice-v1"
+record_prefix = "rs1"
+size = 150
+seed = 20261102
+revision = "30f578f283b903cdbd06cd1b5f7f962f76452ded"
+candidate_pool = 1500          # targets whose sessions are read in full in pass 2
+pool_flag_oversample = 3.0     # rare flags drawn 3x their final minimum into the pool
+
+[inputs]
+source_config = "config/evaluation/source_v1.toml"
+features_config = "config/evaluation/golden_v1.toml"
+label_mapping = "config/reference/label-mapping-full-v1.toml"
+golden_exports = [
+  "reports/evaluation/golden_v1/golden_v1_shareable.jsonl",
+  "reports/evaluation/golden_v2/golden_v2_shareable.jsonl",
+]
+
+[exclusions]
+workflow_provider_names = ["workflow"]
+workflow_provider_models = ["workflow", "default"]
+exclude_platform_default_instructions = true   # the <WORKFLOW INSTRUCTIONS> placeholder
+exclude_bot_classes = ["workflow_unknown_config"]
+exclude_golden_sessions = true                 # golden-v2 stays the held-out test
+exclude_golden_families = true                 # no exact or near duplicate of a golden record
+
+[caps]
+per_session = 1
+per_bot = 10
+per_family = 1
+
+[thresholds]
+short_followup_max_chars = 15
+long_message_min_chars = 400
+high_input_min_tokens = 8000   # recorded billing input tokens of the logged answer
+
+[split]
+tune_share = 0.7               # by session; thresholds tuned on tune, frozen before check
+
+[record]
+history_max_turns = 20
+
+[review]
+reviewers = ["R1", "R2"]
+double_share = 0.2             # at least 20% double-annotated (owner, 2026-11-02)
+message_max_chars = 1500
+context_max_chars = 300
+instructions_max_chars = 500
+
+# Soft share targets (fractions of the slice).
+[quotas.language_group]
+persian = 0.62
+english = 0.08
+mixed = 0.06
+other_arabic_script = 0.05
+
+[quotas.position]
+first = 0.35
+follow_up = 0.65
+
+[quotas.bot_class]
+instruction_rag = 0.40
+instruction_only = 0.40
+blank_no_config = 0.12
+rag_only = 0.04
+
+# Per-cohort targets (owner, 2026-11-02): golden-v1's allocation
+# (docs/full_eda/session_config_report.md §8: 60 reserved for the remaining
+# accounts, the rest a floor plus the square root of traffic) halved from 300
+# to 150. Each target is also a hard ceiling plus `tolerance`. The pool is
+# drawn per cohort, in proportion to these targets (10× at 1,500), at least
+# `pool_min_multiple` × target or every eligible session if fewer.
+[cohorts]
+targets = { "Remaining accounts" = 30, "User A" = 31, "User B" = 30, "User C" = 22, "User D" = 21, "User E" = 16 }
+tolerance = 2
+pool_min_multiple = 5.0
+waive_per_bot_if_cohort_bots_at_most = 2   # golden-v1's rule: no per-bot cap for such a cohort
+
+# Hard maximum shares (owner, 2026-11-02): an upper bound on top of the cohort
+# ceilings above (0.30 × 150 = 45; the cohort ceiling of 32 is lower).
+[ceilings.cohort]
+"Remaining accounts" = 0.30
+
+# Per-record traffic weights (owner, 2026-11-02): cohort traffic share / slice
+# share, so R8 reports traffic-weighted metrics next to the balanced ones.
+[weights]
+traffic_basis = "eligible_targets"   # or "user_messages"
+
+# Soft minimum counts for rare signals.
+[minimums]
+short_followup = 10
+short_uncertain = 8
+greeting = 8
+coding = 10
+long_message = 8
+attachments = 4
+high_input = 8
+rag_on_answer = 30

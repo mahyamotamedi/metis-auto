@@ -16,13 +16,16 @@ from .detectors import (
 )
 from .extractor import (
     FEATURE_SET_VERSION,
+    ROUTER_FEATURE_SET_VERSION,
     FeatureConfig,
     extract_features,
     history_turn_features,
+    router_feature_set,
 )
 
 __all__ = [
     "FEATURE_SET_VERSION",
+    "ROUTER_FEATURE_SET_VERSION",
     "CodeConfig",
     "CodingIntentConfig",
     "FeatureConfig",
@@ -33,6 +36,7 @@ __all__ = [
     "detect_language",
     "extract_features",
     "history_turn_features",
+    "router_feature_set",
     "is_greeting",
     "length_bucket",
     "normalise_phrase",

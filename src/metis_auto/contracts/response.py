@@ -32,6 +32,9 @@ class SpanName(StrEnum):
     MEASURE = "measure"
     FEATURES = "features"
     ROUTE = "route"
+    ROUTE_DECIDE = "route.decide"
+    """The decision-router cascade before routing
+    (ADR-XXXX (system-one-decision-router)): overhead."""
     CACHE_LOOKUP_EXACT = "cache_lookup.exact"
     CACHE_LOOKUP_SEMANTIC = "cache_lookup.semantic"
     EMBED = "embed"

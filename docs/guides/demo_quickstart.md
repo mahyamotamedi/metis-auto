@@ -8,6 +8,8 @@ Deeper background, if you want it: [local development guide](local_development.m
 
 ---
 
+> **Decision router (in progress):** the System-One router ([ADR-XXXX (system-one-decision-router)](../adr/draft-system-one-decision-router.md)) has its own [router quickstart](router_quickstart.md); it is off by default and does not change this demo.
+
 ## 1. What the demo is and what it shows
 
 Metis-Auto is **cost-reducing middleware** between a chat application and LLM providers. For each message it decides how to answer it as cheaply as possible without hurting quality, and it shows where the money went. The demo is a chat window in your browser (or, more bare-bones, in the terminal) over the real Metis-Auto pipeline that makes those decisions visible:

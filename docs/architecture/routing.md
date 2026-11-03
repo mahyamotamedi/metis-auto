@@ -106,3 +106,69 @@ flowchart TD
   A greeting never anchors. In an anchored session it stays on the anchor (owner decision Q-41, 2026-10-19: the provider's prefix cache stays warm, and a greeting costs almost nothing on any model); only in an unanchored session, or when the anchor is not eligible, does it go to the cheapest model.
 
   Escalation happens in the attempt loop along the policy's chain (ADR-0013); the next request sees the stronger producer and stays on it. The policy is stateless: nothing is kept between requests (P-8). Cost: below 0.1 ms per decision with 43 earlier turns (reports/cost).
+
+
+## 7. The System-One decision router (placeholder until exp-route-013)
+
+Decision record: [ADR-XXXX (system-one-decision-router)](../adr/draft-system-one-decision-router.md).
+
+A decision model answers typed questions about a minimised state (no text is generated); the pure `decision_router` policy maps the answers to a tier, then to the tier's cheapest eligible model by effective cost. Infrastructure (mode, backends, deadline, cache, circuit breaker) is `[router]`; the policy is `[pipeline.routing.decision_router]`. With `router.mode = "off"` there are no answers and the policy routes by the rules, then the safe tier.
+
+```mermaid
+flowchart TD
+    F[RequestFeatures] --> G{Gate rule decisive?<br/>greeting, code, coding intent,<br/>attachment, long message}
+    G -- yes --> FR[fast_rules: gate tier]
+    G -- no --> C{Router cache hit?}
+    C -- yes --> FC[fast_cache: cached answers]
+    C -- no --> B[Backend chain under the deadline<br/>circuit breaker, spend guard, approval]
+    B -- answered, confident --> S[slow_local / slow_hosted: answers]
+    B -- timeout, error, invalid, budget,<br/>low confidence, not approved --> FB
+    FC --> M{Mapping fires?}
+    S --> M
+    M -- yes --> T[tier from answers]
+    M -- no --> FB{A rule other than the default matches?}
+    FB -- yes --> RT[fallback_rules: rule tier]
+    FB -- no --> ST[fallback_safe_tier]
+    FR --> K[Criteria: long context raises, max tier clamps,<br/>tight deadline prefers verified low_latency, cost cap flagged]
+    T --> K
+    RT --> K
+    ST --> K
+    K --> E[Eligibility-filtered cheapest effective model<br/>plus reasoning-effort hint] --> D[RoutingDecision + RouterSummary]
+```
+
+Gate, cache and backend chain run in the application cascade (R4); everything after "answers" is pure domain code.
+
+**The cascade (R4, `application/routing/`).** With `router.mode` other than `off`, the pipeline's features stage runs `RouterCascade.decide` once per request (span `route.decide`, event `decision_measured`), puts the outcome in `RequestFeatures.decision`, and then emits `features_extracted` (feature set `fs-0.4.0-router`). In order:
+
+1. **Gate** (`domain.routing.decision.needs_decision`): `skipped(rules_decisive)` with the rule ID; no backend is called.
+2. **State** (`build_state`): the truncated message, optionally the previous user turn, derived labels. No state → `skipped(ineligible_state)`. A run is treated as dataset-derived unless its caller says it sends only SYNTHETIC or owner-written text (A-102).
+3. **Router cache:** a keyed fingerprint of the state with its text folded (`[router.cache] normalisation`), plus the question set and language, looked up per chain backend under the model revision last seen from it. A hit is `answered` with `cache_hit`, zero cost, and no attempts. A backend reporting a new revision has its entries dropped, and the change is recorded and logged (ADR-XXXX (system-one-decision-router) point 8).
+4. **Backend chain** under the step budget: `router.deadline_ms`, tightened to the request's `deadline_ms` minus `reserved_pipeline_ms`. For each backend, the cascade checks, in order:
+   - **time left:** with none, the step stops with `timeout`;
+   - **availability:** `unavailable` if the backend can't be called now;
+   - for **hosted** backends, the **approval check:** a dataset-derived state is refused (`real_data_approved`, owner: false);
+   - for hosted backends, the **spend guard:** the pre-call estimate must fit the cap; an unpriced backend is allowed only with `allow_unpriced`, and the guard then stops after that call;
+   - the **circuit breaker:** `circuit_open`; in the half-open state one trial call is let through.
+
+   A call gets `min(backend timeout, time left)` plus `deadline_grace_ms`. An answer that arrives within the grace is kept and flagged `overran_deadline`. A `DecisionError`, or an answer that doesn't match the asked questions (`check_result`), is a failure counted by the breaker, and the next backend is tried.
+5. **Confidence gate:** the lowest confidence the backend reported (`result_confidence`; none reported → no gate) below `min_confidence` → `failed(low_confidence)`, with the answers kept as soft signals only if configured. By default the chain does not continue (A-103); with `[router] escalate_on_low_confidence = true` the next backend is asked while time and budget remain, a low-confidence answer is never cached, and if none answers confidently the outcome stays `failed(low_confidence)`. A backend that reports no confidence is not gated, but an unknown confidence never satisfies the tier-0 rule's `tau_conf` (A-105, P-6).
+
+The step's duration and cost are an overhead `MeasurementRecord`, summed into the response's `overhead_cost`:
+- a local answer costs zero (`local_compute`);
+- a hosted answer costs its own cost;
+- a hosted error charges the pre-call estimate, and its cost is recorded as not computed. The router's spend guard then stops hosted router calls for the run (A-104). That guard is its own `SpendGuard` over the shared ledger, so answering calls are not stopped.
+
+With the router off, none of this is built, and every event and response is byte-identical to the pipeline before R4 (`tests/integration/test_router_pipeline.py`, digests in `tests/fixtures/synthetic/router_off_golden.json`). Shadow use: a router may run with any routing policy. With `fixed_model` the decision is measured and recorded but changes nothing.
+
+| Order | Condition (all thresholds are placeholders) | Tier | Reason code |
+|---|---|---|---|
+| gate | greeting or small talk / code or coding intent / attachment / message ≥ `long_message_chars` | 0 / 1 / 1 / 1 | `decision.gate.<rule>` |
+| 1 | `complexity.score ≥ tau_complex` (2.0) or `needs_reasoning ≥ tau_reason` (0.6) | high (1) | `decision.tier1.complex` / `.needs_reasoning` |
+| 2 | `cheap_model_ok ≥ tau_ok` (0.7) and complexity confidence `≥ tau_conf` (0.6) | low (0) | `decision.tier0.cheap_ok` |
+| 3 | `intent ∈ high_tier_intents` (code, math_reasoning, analysis) | high (1) | `decision.tier1.intent.<intent>` |
+| 4 | a rule other than the default matches | the rule's tier | `decision.fallback.rules.<rule>` |
+| 5 | otherwise | `safe_tier` (1) | `decision.fallback.safe_tier` |
+
+An unknown answer never satisfies a condition (P-6). Reasoning effort: `needs_reasoning < low_below` (0.3) → `minimal` for the models listed in `effort.models`; at or above `tau_reason` → `high_effort` (unset: the model's default).
+
+**Sticky interplay** (`[pipeline.routing.sticky] inner = "decision_router"`): first and re-routed messages use the decision router; on an anchored, similar message a higher decided tier moves up at once, a lower one stays when the message depends on history (`depends_on_history ≥ tau_hist`) and moves down only after `downgrade_after_n` low-complexity user turns (a proxy from cheap turn features: no code, no coding intent, short), and a fallback decision never moves the session. Greetings never anchor.

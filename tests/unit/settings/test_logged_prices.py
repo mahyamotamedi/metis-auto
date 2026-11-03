@@ -146,7 +146,9 @@ def _frame(labels: list[str]) -> pd.DataFrame:
 
 @pytest.mark.parametrize("path", sorted(KEPT), ids=lambda p: p.name)
 def test_the_old_price_file_and_live_catalogue_are_unchanged(path):
-    assert hashlib.sha256(path.read_bytes()).hexdigest() == KEPT[path]
+    # Line endings normalised: a Windows checkout (core.autocrlf) has CRLF.
+    data = path.read_bytes().replace(b"\r\n", b"\n")
+    assert hashlib.sha256(data).hexdigest() == KEPT[path]
 
 
 def test_defaults_still_load_the_live_files():

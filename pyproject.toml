@@ -48,6 +48,23 @@ compress = [
     "accelerate>=1.15,<2",
     "llmlingua==0.2.2",
 ]
+# Local decision router (ADR-XXXX (system-one-decision-router), decision router R5): THX-01 in process,
+# imported only in adapters/routers/thx01_local.py (tested). Heavy (torch);
+# never in the runtime lock or the dev lock: its own lock,
+# requirements-router-local.lock (= the dev lock + this extra, shared pins equal
+# to requirements-compress.lock). Model files come from
+# scripts/fetch_router_assets.py (pinned by commit and sha256), never at run time.
+router-local = [
+    "thx01==1.0.0",
+    "torch>=2.14,<2.15",
+    "transformers>=5.18,<5.19",
+    "safetensors>=0.8,<0.9",
+    "huggingface-hub>=1.33,<2",
+    "numpy>=2.5,<3",
+    # The router's HTTP client (Jev via Metis, a local /v1/systemone server);
+    # already in every lock through huggingface-hub, so no pin changes (TODO-18).
+    "httpx>=0.28,<0.29",
+]
 # Demo UI (Demo milestone B): Streamlit, imported only by scripts/demo_ui.py
 # (tested). Never in the runtime lock or the dev lock: its own lock,
 # requirements-ui.lock (= the dev lock + this extra, shared pins equal to

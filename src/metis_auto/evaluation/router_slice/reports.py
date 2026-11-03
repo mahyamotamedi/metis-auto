@@ -1,0 +1,478 @@
+"""Content-free outputs of the routing dev slice, the review sheet, and label
+import (pure; QA-PRIV, FR-EVAL-04/09, ADR-XXXX (system-one-decision-router)).
+
+Committable outputs (``reports/routing/dev_slice_v1/``) hold record IDs,
+strata codes, cohort pseudonyms and counts only: no text and no hashes of
+text. The review sheet with text is built for local use only
+(``runs/routing/dev_slice_v1/review_LOCAL_ONLY.csv``, git-ignored).
+"""
+
+from __future__ import annotations
+
+import csv
+import hashlib
+import io
+import json
+import math
+from collections import Counter
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any
+
+from .config import DIMENSIONS, FLAGS, SliceConfig
+from .select import Selection, Targets, tiebreak
+from .weights import format_weight
+
+ID_COLUMNS = (
+    "slice_record_id",
+    "split",
+    "language_group",
+    "position",
+    "bot_class",
+    "cohort",
+    "rule_intent",
+    "flags",
+    "traffic_weight",
+)
+TIER_VALUES = ("0", "1", "unsure")
+OK_VALUES = ("yes", "no", "unsure")
+LABEL_COLUMNS = ("slice_record_id", "reviewer", "tier_needed", "small_model_ok")
+
+
+def id_rows(records: Sequence[Mapping[str, Any]]) -> list[dict[str, str]]:
+    rows = []
+    for r in sorted(records, key=lambda r: r["slice_record_id"]):
+        rows.append(
+            {
+                "slice_record_id": r["slice_record_id"],
+                "split": r["split"],
+                "language_group": r["language_group"],
+                "position": "first" if r["turn_index"] == 1 else "follow_up",
+                "bot_class": r["bot_class"],
+                "cohort": r["cohort"],
+                "rule_intent": r["rule_intent"],
+                "flags": ";".join(json.loads(r["flags"])),
+                "traffic_weight": format_weight(r.get("traffic_weight")),
+            }
+        )
+    return rows
+
+
+def to_csv(rows: Sequence[Mapping[str, Any]], columns: Sequence[str]) -> str:
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=list(columns), lineterminator="\n")
+    writer.writeheader()
+    for row in rows:
+        writer.writerow({c: row.get(c, "") for c in columns})
+    return buffer.getvalue()
+
+
+def digest(value: Any) -> str:
+    canonical = json.dumps(
+        value, sort_keys=True, ensure_ascii=False, separators=(",", ":")
+    )
+    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def fingerprint(
+    cfg: SliceConfig,
+    config_hash: str,
+    pinned_files: Mapping[str, str],
+    ids: Sequence[Mapping[str, str]],
+) -> dict[str, Any]:
+    """What makes two builds identical: config, pinned source, and the
+    selected IDs with their strata. Content-free (IDs and codes only)."""
+    return {
+        "fingerprint_version": 1,
+        "slice_id": cfg.slice.slice_id,
+        "revision": cfg.slice.revision,
+        "seed": cfg.slice.seed,
+        "config_hash": config_hash,
+        "source_files_hash": digest(sorted(pinned_files.items())),
+        "records": len(ids),
+        "splits": dict(sorted(Counter(r["split"] for r in ids).items())),
+        "ids_hash": digest([[r[c] for c in ID_COLUMNS] for r in ids]),
+    }
+
+
+def compare_fingerprints(
+    expected: Mapping[str, Any], actual: Mapping[str, Any]
+) -> list[str]:
+    keys = sorted(set(expected) | set(actual))
+    return [
+        f"{k}: expected {expected.get(k)!r}, found {actual.get(k)!r}"
+        for k in keys
+        if expected.get(k) != actual.get(k)
+    ]
+
+
+def selection_stats(
+    selection: Selection, targets: Targets, *, splits: Mapping[str, Counter[str]]
+) -> dict[str, Any]:
+    """The final draw as plain counts (stored in the manifest, read by
+    ``composition_markdown``)."""
+    return {
+        "records": len(selection.chosen),
+        "targets": {
+            "shares": {d: dict(v) for d, v in targets.shares.items()},
+            "minimums": dict(targets.minimums),
+            "ceilings": {d: dict(v) for d, v in targets.ceilings.items()},
+        },
+        "achieved": {d: dict(c) for d, c in selection.achieved.items()},
+        "available": {d: dict(c) for d, c in selection.available.items()},
+        "flag_counts": dict(selection.flag_counts),
+        "flag_available": dict(selection.flag_available),
+        "skipped_by_cap": dict(selection.skipped_by_cap),
+        "shortfalls": [list(x) for x in selection.shortfalls(targets)],
+        "splits": {k: dict(v) for k, v in splits.items()},
+    }
+
+
+def composition_markdown(
+    cfg: SliceConfig, config_hash: str, stats: Mapping[str, Any]
+) -> str:
+    """``stats``: ``selection_stats`` plus ``exclusions``, ``eligible_targets``,
+    ``pool_size`` and ``pool_lost`` (all counts)."""
+    n = stats["records"]
+    shares = stats["targets"]["shares"]
+    ceilings = stats["targets"].get("ceilings", {})
+    minimums = stats["targets"]["minimums"]
+    lines = [
+        f"# Routing dev slice `{cfg.slice.slice_id}`: composition",
+        "",
+        "Generated by `scripts/build_router_dev_slice.py`. Content-free: codes and "
+        "counts only. Targets are **soft** quotas; shortfalls are listed and "
+        "explained, never filled by relaxing an exclusion. Guide: "
+        "[router_dev_slice_v1.md](../../../docs/evaluation/router_dev_slice_v1.md).",
+        "",
+        f"- Dataset revision: `{cfg.slice.revision}`",
+        f"- Seed: `{cfg.slice.seed}`; config hash: `{config_hash}`",
+        f"- Records: **{n}** (configured {cfg.slice.size}; hard maximum 200)",
+        f"- Eligible targets after pass-1 exclusions: {stats['eligible_targets']:,}",
+        f"- Candidate pool read in full in pass 2: {stats['pool_size']:,}",
+        "",
+        "## Strata: target vs achieved",
+        "",
+        "Target is a soft floor; Ceiling is a hard maximum.",
+        "",
+        "| Dimension | Value | Target | Ceiling | Achieved | Share | "
+        "Available in pool |",
+        "|---|---|---:|---:|---:|---:|---:|",
+    ]
+    for dim in DIMENSIONS:
+        targets = shares.get(dim, {})
+        caps = ceilings.get(dim, {})
+        achieved = stats["achieved"].get(dim, {})
+        available = stats["available"].get(dim, {})
+        for value in sorted(set(targets) | set(caps) | set(achieved) | set(available)):
+            got = achieved.get(value, 0)
+            share = f"{got / n:.0%}" if n else "—"
+            lines.append(
+                f"| {dim} | {value or '(none)'} | {targets.get(value, '—')} | "
+                f"{caps.get(value, '—')} | {got} | {share} | "
+                f"{available.get(value, 0)} |"
+            )
+    pool_plan = stats.get("pool_by_cohort") or {}
+    if pool_plan:
+        lines += [
+            "",
+            "## Candidate pool by cohort",
+            "",
+            "Drawn per cohort, in proportion to the cohort targets and capped by "
+            "eligible sessions (one candidate per session). Minimum = "
+            "`pool_min_multiple` × target, or every eligible session if fewer. "
+            "A cohort with very few bots has no per-bot cap.",
+            "",
+            "| Cohort | Target | Eligible sessions | Eligible bots | Per-bot cap "
+            "| Pool minimum | Pool planned | Pool drawn | Below minimum |",
+            "|---|---:|---:|---:|---|---:|---:|---:|---|",
+        ]
+        for cohort, row in pool_plan.items():
+            lines.append(
+                f"| {cohort} | {row['target']} | {row['eligible_sessions']:,} | "
+                f"{row['eligible_bots']:,} | "
+                f"{'waived' if row['per_bot_cap_waived'] else 'applies'} | "
+                f"{row['pool_minimum']:,} | {row['pool_planned']:,} | "
+                f"{row.get('pool_drawn', 0):,} | "
+                f"{'**yes**' if row.get('pool_below_minimum') else 'no'} |"
+            )
+    lines += [
+        "",
+        "## Flags: minimum vs achieved",
+        "",
+        "| Flag | Minimum | Achieved | Available in pool |",
+        "|---|---:|---:|---:|",
+    ]
+    for flag in FLAGS:
+        lines.append(
+            f"| {flag} | {minimums.get(flag, '—')} | "
+            f"{stats['flag_counts'].get(flag, 0)} | "
+            f"{stats['flag_available'].get(flag, 0)} |"
+        )
+    lines += ["", "## Shortfalls", ""]
+    if stats["shortfalls"]:
+        lines += [
+            "| Dimension | Value | Target | Achieved | Why |",
+            "|---|---|---:|---:|---|",
+        ]
+        for dim, value, target, got in stats["shortfalls"]:
+            pool = (
+                stats["flag_available"].get(value, 0)
+                if dim == "flag"
+                else stats["available"].get(dim, {}).get(value, 0)
+            )
+            why = (
+                "not enough in the pool"
+                if pool < target
+                else "competing quotas or caps (per session, bot, family)"
+            )
+            lines.append(f"| {dim} | {value} | {target} | {got} | {why} |")
+    else:
+        lines.append("None: every target was met.")
+    lines += ["", "## Exclusions", "", "| Stage | Reason | Count |", "|---|---|---:|"]
+    for reason, count in sorted(stats["exclusions"].items()):
+        lines.append(f"| pass 1 | {reason} | {count:,} |")
+    for reason, count in sorted(stats["pool_lost"].items()):
+        lines.append(f"| pass 2 (pool) | {reason} | {count:,} |")
+    for reason, count in sorted(stats["skipped_by_cap"].items()):
+        stage = (
+            "final draw, ceiling"
+            if reason.startswith("ceiling:")
+            else ("final draw, cap")
+        )
+        lines.append(f"| {stage} | {reason.removeprefix('ceiling:')} | {count:,} |")
+    traffic = stats.get("traffic")
+    if traffic:
+        lines += [
+            "",
+            f"## Traffic weights (by {traffic['dimension']})",
+            "",
+            f"Basis: `{traffic['basis']}`. Each record's `traffic_weight` (in "
+            "`ids.csv` and the local record file) is the cohort's traffic share "
+            "divided by its slice share; a traffic-weighted metric is "
+            "Σ w·m / Σ w. Uncovered traffic share (cohorts with no record): "
+            f"{traffic['uncovered_share']:.2%}.",
+            "",
+            "| Cohort | Traffic | Traffic share | Records | Slice share | Weight |",
+            "|---|---:|---:|---:|---:|---:|",
+        ]
+        for value, w in traffic["by_value"].items():
+            lines.append(
+                f"| {value} | {w['traffic']:,} | {w['traffic_share']:.2%} | "
+                f"{w['records']} | {w['slice_share']:.2%} | "
+                f"{format_weight(w['weight']) or '—'} |"
+            )
+    groups = sorted({g for c in stats["splits"].values() for g in c})
+    lines += [
+        "",
+        "## Splits (by session; language group counts)",
+        "",
+        "| Split | Records | " + " | ".join(groups) + " |",
+        "|---|---:|" + "---:|" * len(groups),
+    ]
+    for split in ("tune", "check"):
+        counts = stats["splits"].get(split, {})
+        lines.append(
+            f"| {split} | {sum(counts.values())} | "
+            + " | ".join(str(counts.get(g, 0)) for g in groups)
+            + " |"
+        )
+    lines += [
+        "",
+        "With 100–200 records most strata are small: per-stratum results from this "
+        "slice are descriptive only (A-91).",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+# --- Review sheet (local, with text) and its ID-only template ----------------------
+
+
+def review_assignment(
+    ids: Sequence[str], reviewers: Sequence[str], double_share: float, *, seed: int
+) -> list[tuple[str, str]]:
+    """(record ID, reviewer) pairs: each record once, round-robin in seeded
+    order; at least ``double_share`` of the records (rounded up) get a second
+    reviewer, the next one in the rotation."""
+    order = sorted(ids, key=lambda i: tiebreak(seed, "review", i))
+    n_double = math.ceil(len(order) * double_share)
+    pairs: list[tuple[str, str]] = []
+    for i, rid in enumerate(order):
+        pairs.append((rid, reviewers[i % len(reviewers)]))
+        if i < n_double:
+            pairs.append((rid, reviewers[(i + 1) % len(reviewers)]))
+    return sorted(pairs, key=lambda p: (p[1], p[0]))
+
+
+def _cut(text: str | None, limit: int) -> str:
+    text = (text or "").replace("\r\n", "\n").strip()
+    return text if len(text) <= limit else text[:limit] + " …"
+
+
+REVIEW_COLUMNS = (
+    "slice_record_id",
+    "reviewer",
+    "language_group",
+    "position",
+    "instructions_present",
+    "retrieved_present",
+    "attachment_types",
+    "previous_user_turn",
+    "last_assistant_turn",
+    "message",
+    "instructions_excerpt",
+    "tier_needed",
+    "small_model_ok",
+)
+
+
+def review_rows(
+    records: Sequence[Mapping[str, Any]], cfg: SliceConfig
+) -> list[dict[str, str]]:
+    """LOCAL ONLY: rows with text for the Persian-capable reviewers. Question:
+    which tier is needed, and would a small model's answer be acceptable?"""
+    rc = cfg.review
+    by_id = {r["slice_record_id"]: r for r in records}
+    rows = []
+    for rid, reviewer in review_assignment(
+        list(by_id), rc.reviewers, rc.double_share, seed=cfg.slice.seed
+    ):
+        r = by_id[rid]
+        turns = json.loads(r["history_json"])
+        prev_user = next(
+            (t["text"] for t in reversed(turns) if t["role"] == "user"), ""
+        )
+        last_ai = next(
+            (t["text"] for t in reversed(turns) if t["role"] == "assistant"), ""
+        )
+        rows.append(
+            {
+                "slice_record_id": rid,
+                "reviewer": reviewer,
+                "language_group": r["language_group"],
+                "position": "first" if r["turn_index"] == 1 else "follow_up",
+                "instructions_present": str(
+                    r["instructions_state"] == "present"
+                ).lower(),
+                "retrieved_present": str(json.loads(r["retrieved_json"]) != []).lower(),
+                "attachment_types": ";".join(json.loads(r["attachment_types_json"])),
+                "previous_user_turn": _cut(prev_user, rc.context_max_chars),
+                "last_assistant_turn": _cut(last_ai, rc.context_max_chars),
+                "message": _cut(r["message"], rc.message_max_chars),
+                "instructions_excerpt": _cut(
+                    r["instructions"], rc.instructions_max_chars
+                )
+                if rc.instructions_max_chars
+                else "",
+                "tier_needed": "",
+                "small_model_ok": "",
+            }
+        )
+    return rows
+
+
+def review_template_rows(ids: Sequence[str], cfg: SliceConfig) -> list[dict[str, str]]:
+    """Committable: the same assignment with IDs only and empty label columns."""
+    rc = cfg.review
+    return [
+        {
+            "slice_record_id": rid,
+            "reviewer": reviewer,
+            "tier_needed": "",
+            "small_model_ok": "",
+        }
+        for rid, reviewer in review_assignment(
+            ids, rc.reviewers, rc.double_share, seed=cfg.slice.seed
+        )
+    ]
+
+
+# --- Label import (L3: ID + label only) ---------------------------------------------
+
+
+@dataclass
+class LabelImport:
+    labels: list[dict[str, str]]
+    problems: list[str]
+    agreement: dict[str, Any]
+
+
+def _kappa(pairs: Sequence[tuple[str, str]]) -> float | None:
+    """Cohen's kappa for two raters over nominal categories; None if undefined."""
+    if not pairs:
+        return None
+    n = len(pairs)
+    observed = sum(a == b for a, b in pairs) / n
+    first = Counter(a for a, _ in pairs)
+    second = Counter(b for _, b in pairs)
+    expected = sum(first[c] * second[c] for c in set(first) | set(second)) / (n * n)
+    if math.isclose(expected, 1.0):
+        return None
+    return (observed - expected) / (1 - expected)
+
+
+def import_labels(
+    rows: Iterable[Mapping[str, str]],
+    known_ids: set[str],
+    reviewers: Sequence[str],
+) -> LabelImport:
+    """Keep only ID, reviewer and the two labels; refuse unknown IDs, reviewers
+    or values; a blank label is "not yet labelled" and is skipped."""
+    labels: dict[tuple[str, str], dict[str, str]] = {}
+    problems: list[str] = []
+    for line, row in enumerate(rows, 2):
+        rid = (row.get("slice_record_id") or "").strip()
+        reviewer = (row.get("reviewer") or "").strip()
+        tier = (row.get("tier_needed") or "").strip().lower()
+        ok = (row.get("small_model_ok") or "").strip().lower()
+        if not tier and not ok:
+            continue
+        if rid not in known_ids:
+            problems.append(f"line {line}: unknown slice_record_id")
+            continue
+        if reviewer not in reviewers:
+            problems.append(f"line {line}: unknown reviewer {reviewer!r}")
+            continue
+        if tier not in TIER_VALUES or ok not in OK_VALUES:
+            problems.append(
+                f"line {line}: tier_needed must be one of {TIER_VALUES} and "
+                f"small_model_ok one of {OK_VALUES}"
+            )
+            continue
+        if (rid, reviewer) in labels:
+            problems.append(
+                f"line {line}: duplicate label for this record and reviewer"
+            )
+            continue
+        labels[(rid, reviewer)] = {
+            "slice_record_id": rid,
+            "reviewer": reviewer,
+            "tier_needed": tier,
+            "small_model_ok": ok,
+        }
+    by_record: dict[str, list[dict[str, str]]] = {}
+    for label in labels.values():
+        by_record.setdefault(label["slice_record_id"], []).append(label)
+    doubles = [
+        sorted(v, key=lambda x: x["reviewer"])[:2]
+        for v in by_record.values()
+        if len(v) >= 2
+    ]
+    agreement: dict[str, Any] = {
+        "records_labelled": len(by_record),
+        "labels": len(labels),
+        "double_annotated": len(doubles),
+    }
+    for field_name in ("tier_needed", "small_model_ok"):
+        pairs = [(a[field_name], b[field_name]) for a, b in doubles]
+        agreement[field_name] = {
+            "percent_agreement": round(sum(x == y for x, y in pairs) / len(pairs), 4)
+            if pairs
+            else None,
+            "cohen_kappa": None if (k := _kappa(pairs)) is None else round(k, 4),
+        }
+    ordered = sorted(
+        labels.values(), key=lambda x: (x["slice_record_id"], x["reviewer"])
+    )
+    return LabelImport(labels=ordered, problems=problems, agreement=agreement)

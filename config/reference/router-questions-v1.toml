@@ -1,0 +1,127 @@
+# System-One question sets for the decision router (ADR-XXXX (system-one-decision-router) point 9).
+# Our own configured wording: operational configuration, never request content.
+# Every set exists in English (en) and Persian (fa) with the SAME question IDs,
+# types, option names and level counts (checked by the loader); the language
+# of the wording is an A/B dimension (router.question_language).
+#
+# PROVISIONAL wording (R3, 2026-11-02): not tuned; the Persian phrasing is to be
+# reviewed by the owner's Persian-capable reviewers before any evaluation run.
+# A wording change = a new set version, never an edit of a used one.
+#
+# choice questions have at most 10 options (owner decision 2026-11-02): THX-01's
+# calibration bucket for 11+ options is broken (R0 findings §5). The intent
+# question therefore merges summarisation into writing and media requests into
+# other.
+
+version = "router-questions-v1"
+
+# intent option → analysis/prompt_labels.py categories (the rule labels of the
+# EDA and the golden sets), for comparing decision answers with rule labels.
+# Approximate by design: rule categories are proposals, never ground truth.
+[intent_mapping]
+chitchat = ["conversational_support"]
+factual_qa = ["factual_question"]
+rag_lookup = []                         # no rule category; RAG use is a separate feature
+account_support = ["account_service_support"]
+writing = ["writing_editing", "summarization_extraction"]
+translation = ["translation_language"]
+code = ["coding_intent_debugging"]
+math_reasoning = ["reasoning_math"]
+analysis = ["advice_planning"]          # closest rule category; approximate
+other = ["media_generation", "unknown_uncertain"]
+
+# --- routing_qs_v1, English -----------------------------------------------------
+[[sets]]
+version = "routing_qs_v1"
+language_variant = "en"
+
+[[sets.questions]]
+id = "complexity"
+type = "score"
+instructions = "How demanding is it to answer the user's latest message well?"
+levels = [
+  "Greeting, thanks, acknowledgement or small talk",
+  "Simple factual or conversational reply",
+  "Moderate: explain, summarise, translate or rewrite",
+  "Complex: multi-step reasoning, technical work, code, math or analysis",
+]
+
+[[sets.questions]]
+id = "needs_reasoning"
+type = "noul"
+instructions = "Answering the latest message well requires multi-step reasoning."
+
+[[sets.questions]]
+id = "cheap_model_ok"
+type = "noul"
+instructions = "A small, fast assistant model can answer the latest message fully and correctly."
+
+[[sets.questions]]
+id = "intent"
+type = "choice"
+instructions = "What does the user want in the latest message?"
+options = [
+  { name = "chitchat", description = "Greeting, thanks or casual conversation" },
+  { name = "factual_qa", description = "A factual question with a short answer" },
+  { name = "rag_lookup", description = "Information from the service's own documents or knowledge base" },
+  { name = "account_support", description = "Help with an account, order, payment or the service itself" },
+  { name = "writing", description = "Write, rewrite, edit or summarise text" },
+  { name = "translation", description = "Translate text between languages" },
+  { name = "code", description = "Write, explain or fix program code" },
+  { name = "math_reasoning", description = "Math, calculation or logical reasoning" },
+  { name = "analysis", description = "Analyse, compare, plan or give a reasoned recommendation" },
+  { name = "other", description = "Anything else, including image or media requests" },
+]
+
+[[sets.questions]]
+id = "depends_on_history"
+type = "noul"
+instructions = "The latest message only makes sense together with the earlier conversation."
+
+# --- routing_qs_v1, Persian ------------------------------------------------------
+[[sets]]
+version = "routing_qs_v1"
+language_variant = "fa"
+
+[[sets.questions]]
+id = "complexity"
+type = "score"
+instructions = "پاسخ دادن درست به آخرین پیام کاربر چقدر دشوار است؟"
+levels = [
+  "سلام، تشکر، تأیید یا گفت‌وگوی کوتاه و دوستانه",
+  "پاسخ ساده‌ی اطلاعاتی یا گفت‌وگویی",
+  "متوسط: توضیح، خلاصه، ترجمه یا بازنویسی",
+  "پیچیده: استدلال چندمرحله‌ای، کار فنی، کد، ریاضی یا تحلیل",
+]
+
+[[sets.questions]]
+id = "needs_reasoning"
+type = "noul"
+instructions = "پاسخ درست به آخرین پیام به استدلال چندمرحله‌ای نیاز دارد."
+
+[[sets.questions]]
+id = "cheap_model_ok"
+type = "noul"
+instructions = "یک مدل دستیار کوچک و سریع می‌تواند به آخرین پیام به‌طور کامل و درست پاسخ دهد."
+
+[[sets.questions]]
+id = "intent"
+type = "choice"
+instructions = "کاربر در آخرین پیام چه می‌خواهد؟"
+options = [
+  { name = "chitchat", description = "سلام، تشکر یا گفت‌وگوی دوستانه" },
+  { name = "factual_qa", description = "پرسش اطلاعاتی با پاسخ کوتاه" },
+  { name = "rag_lookup", description = "اطلاعاتی از اسناد یا پایگاه دانش خود سرویس" },
+  { name = "account_support", description = "کمک درباره‌ی حساب کاربری، سفارش، پرداخت یا خود سرویس" },
+  { name = "writing", description = "نوشتن، بازنویسی، ویرایش یا خلاصه کردن متن" },
+  { name = "translation", description = "ترجمه‌ی متن از یک زبان به زبان دیگر" },
+  { name = "code", description = "نوشتن، توضیح یا رفع اشکال کد برنامه" },
+  { name = "math_reasoning", description = "ریاضی، محاسبه یا استدلال منطقی" },
+  { name = "analysis", description = "تحلیل، مقایسه، برنامه‌ریزی یا پیشنهاد مستدل" },
+  { name = "other", description = "هر چیز دیگر، از جمله درخواست تصویر یا رسانه" },
+]
+
+[[sets.questions]]
+id = "depends_on_history"
+type = "noul"
+instructions = "آخرین پیام فقط همراه با گفت‌وگوی قبلی معنا پیدا می‌کند."

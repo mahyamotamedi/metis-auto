@@ -7,6 +7,7 @@ from enum import StrEnum
 from pydantic import model_validator
 
 from ._base import ContractModel, Name, NonNegInt, PolicyRef, PosInt, Privacy, field
+from .decision import RouterSummary
 
 
 class ExclusionReason(StrEnum):
@@ -69,6 +70,13 @@ class RoutingDecision(ContractModel):
     anchor_model_id: Name | None = field(
         Privacy.OPERATIONAL,
         "Sticky routing: the session's anchor model before this request, if any.",
+        default=None,
+    )
+    router_summary: RouterSummary | None = field(
+        Privacy.OPERATIONAL,
+        "Decision-router path, backend, mapped tier and thresholds "
+        "(ADR-XXXX (system-one-decision-router)); "
+        "None for policies that use no decision router.",
         default=None,
     )
 
