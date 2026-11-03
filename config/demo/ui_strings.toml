@@ -1,8 +1,9 @@
 # UI strings of the demo (spec UI-V06): one key, every language (fa, en).
 # Read through metis_auto.wiring.ui_config.load_strings; pages hold no text of
 # their own. Stage 1 holds the Results page (D-2); Stage 2 (2026-11-03) adds the
-# header, the shell and the chat page. Texts built by wiring.demo_ui (banner
-# details, per-message detail rows, failure texts, term names) stay English.
+# header, the shell and the chat page. Stage 2b (2026-11-03) adds the texts built
+# by wiring.demo_ui ([demo_ui]: banner details, per-message detail rows, failure
+# texts, cost term names, routing badges); their English is unchanged.
 # Persian strings are [PLACEHOLDER: Persian review] until reviewed (K-2/K-3):
 # written by the agent, not by a Persian reviewer. Format fields in braces.
 
@@ -46,6 +47,7 @@ col_status = { en = "Status", fa = "وضعیت" }
 col_version = { en = "Version", fa = "نسخه" }
 col_group = { en = "Group", fa = "گروه" }
 col_eligible = { en = "Eligible", fa = "واجد شرایط" }
+eligible_of = { en = "{a} of {b}", fa = "{a} از {b}" }
 col_correctness = { en = "Correctness", fa = "درستی" }
 col_evidence = { en = "Evidence", fa = "نوع شاهد" }
 col_tenant = { en = "Largest tenant", fa = "بزرگ‌ترین مستأجر" }
@@ -102,6 +104,16 @@ slice_llm_only = { en = "LLM requests only", fa = "فقط درخواست‌ها�
 slice_over_8k = { en = "Over 8,000 tokens", fa = "بیش از ۸۰۰۰ توکن" }
 slice_traffic_weighted = { en = "Traffic-weighted", fa = "وزن‌دار با ترافیک" }
 slice_lang = { en = "Language: {code}", fa = "زبان: {code}" }
+lang_code_fa = { en = "Persian", fa = "فارسی" }
+lang_code_en = { en = "English", fa = "انگلیسی" }
+lang_code_fa_en_mixed = { en = "Persian-English mix", fa = "آمیخته‌ی فارسی و انگلیسی" }
+lang_code_finglish = { en = "Finglish", fa = "فینگلیش" }
+lang_code_arabic_script_other = { en = "Other Arabic script", fa = "خط عربی دیگر" }
+lang_code_structured = { en = "Structured text", fa = "متن ساخت‌یافته" }
+lang_code_short_uncertain = { en = "Short, uncertain", fa = "کوتاه، نامطمئن" }
+lang_code_other = { en = "Other", fa = "دیگر" }
+lang_code_missing = { en = "Missing", fa = "بدون متن" }
+lang_code_unknown = { en = "Unknown", fa = "نامعلوم" }
 slice_missing = { en = "This slice is not in the result.", fa = "این برش در نتیجه نیست." }
 slice_other_units = { en = "This slice is in recorded units inside a repriced result: not shown (units are never mixed).", fa = "این برش با واحد ثبت‌شده در نتیجه‌ای با قیمت‌گذاری دوباره است؛ نشان داده نمی‌شود چون واحدها هرگز مخلوط نمی‌شوند." }
 inconsistent = { en = "The blocks do not add up to the stored total: not shown.", fa = "جمع بخش‌ها با کل ثبت‌شده برابر نیست؛ نشان داده نمی‌شود." }
@@ -122,18 +134,34 @@ chart_blocks = { en = "Before and after, by cost block", fa = "قبل و بعد�
 chart_breakdown = { en = "Where the baseline cost goes", fa = "تجزیه هزینه مبنا" }
 part_remaining = { en = "Cost left after the step", fa = "هزینه باقی‌مانده پس از این مرحله" }
 part_saved = { en = "Saved: {block}", fa = "صرفه‌جویی: {block}" }
+name_missing = { en = "no display name", fa = "بدون نام نمایشی" }
+id_caption = { en = "id", fa = "شناسه" }
+tab_per_bot = { en = "Per bot", fa = "به تفکیک بات" }
+chart_comparison = { en = "Saving share by version", fa = "سهم صرفه‌جویی به تفکیک نسخه" }
+chart_bots = { en = "Share of the routing saving, first {n} bots", fa = "سهم از صرفه‌جویی مسیریابی، {n} بات نخست" }
+chart_tenants = { en = "Share of requests by tenant", fa = "سهم درخواست‌ها به تفکیک مستأجر" }
+legend_ranked = { en = "ranked", fa = "رتبه‌دار" }
+legend_unranked = { en = "not ranked", fa = "بدون رتبه" }
+bots_count = { en = "Bots in the table", fa = "بات‌های جدول" }
+tenants_over_cap = { en = "Tenants over the cap", fa = "مستأجرهای بالای سقف" }
+sum_waterfall = { en = "Table: {n} cost blocks", fa = "جدول: {n} بخش هزینه" }
+sum_comparison = { en = "Table: {n} versions, {ranked} ranked", fa = "جدول: {n} نسخه، {ranked} رتبه‌دار" }
+sum_cache = { en = "Cache monitor details: {n} versions", fa = "جزئیات پایش حافظه‌ی نهان: {n} نسخه" }
+sum_bots = { en = "Per-bot table: {n} bots, {few} with too few requests", fa = "جدول بات‌ها: {n} بات، {few} با درخواست کم" }
+sum_tenants = { en = "Per-tenant table: {n} tenants, {over} over the cap", fa = "جدول مستأجرها: {n} مستأجر، {over} بالای سقف" }
 
 [shell]
-brand_wordmark = { en = "Metis", fa = "متیس" }
+brand_wordmark = { en = "Metis-Auto", fa = "متیس‌اتو" }
+brand_prototype = { en = "prototype", fa = "نمونه‌ی آزمایشی" }
 nav_chat = { en = "Chat", fa = "گفتگو" }
 nav_results = { en = "Results", fa = "نتایج" }
 theme_dark = { en = "Dark theme", fa = "پوسته تیره" }
 theme_help = { en = "Switch between the dark and the light theme.", fa = "جابه‌جایی بین پوسته تیره و روشن." }
 mode_fake = { en = "Fake", fa = "آزمایشی" }
 mode_live = { en = "Live", fa = "زنده" }
-fake_mode = { en = "Fake mode", fa = "حالت آزمایشی" }
-budget_left = { en = "Budget left:", fa = "بودجه باقی‌مانده:" }
-budget_title = { en = "Lifetime live-call budget left (ADR-0018). No top-up from here.", fa = "بودجه باقی‌مانده تماس‌های زنده در کل پروژه. افزایش آن از این‌جا ممکن نیست." }
+budget_label = { en = "Budget:", fa = "بودجه:" }
+budget_of = { en = "of", fa = "از" }
+budget_title = { en = "Lifetime live-call budget left of the cap, from the spend ledger (ADR-0018). No top-up from here.", fa = "بودجه‌ی باقی‌مانده‌ی تماس‌های زنده از سقف کل پروژه، از دفتر هزینه. افزایش آن از این‌جا ممکن نیست." }
 budget_none = { en = "No budget configured.", fa = "بودجه‌ای تنظیم نشده است." }
 local_demo = { en = "Local demo", fa = "نسخه محلی" }
 
@@ -234,3 +262,82 @@ budget_over = { en = "Over {share} of the lifetime budget.", fa = "بیش از {
 budget_note = { en = "Warnings at {marks} of the lifetime cap. The ledger is per computer.", fa = "هشدار در {marks} سقف کل. دفتر هزینه برای هر رایانه جداست." }
 budget_fake_free = { en = "Fake mode charges nothing.", fa = "حالت آزمایشی هزینه‌ای ندارد." }
 budget_live_charged = { en = "Every live call is charged here.", fa = "هر تماس زنده این‌جا ثبت و حساب می‌شود." }
+
+[demo_ui]
+# Texts built by wiring.demo_ui (Stage 2b). The English is the text the view
+# returned before Stage 2b, unchanged. Persian: [PLACEHOLDER: Persian review].
+not_computed = { en = "not computed", fa = "محاسبه نشده" }
+term_premium_estimate = { en = "Premium estimate", fa = "تخمین مدل گران" }
+term_routing = { en = "Routing", fa = "مسیریابی" }
+term_compression = { en = "Compression", fa = "فشرده‌سازی" }
+term_cache = { en = "Cache", fa = "حافظه‌ی نهان" }
+term_provider_cache = { en = "Provider cache", fa = "حافظه‌ی نهان ارائه‌دهنده" }
+term_extra_cost = { en = "Extra cost", fa = "هزینه‌ی اضافه" }
+term_actually_paid = { en = "Actually paid", fa = "پرداخت واقعی" }
+banner_detail_stopped = { en = "{stopped}. Switch to fake mode and back to start a new run.", fa = "{stopped}. برای شروع اجرای تازه، به حالت آزمایشی و دوباره به حالت زنده بروید." }
+banner_detail_on = { en = "Every call goes through the spend guard and the ledger. Use only your own or SYNTHETIC messages.", fa = "هر تماس از نگهبان هزینه و دفتر هزینه می‌گذرد. فقط پیام‌های خودتان یا ساختگی (SYNTHETIC) را به کار ببرید." }
+banner_detail_off_allowed = { en = "Answers are canned [SYNTHETIC] text; the routing, cache, and cost numbers are real. Live mode is available on this computer.", fa = "پاسخ‌ها متن آماده‌ی ساختگی ([SYNTHETIC]) هستند؛ اعداد مسیریابی، حافظه‌ی نهان و هزینه واقعی‌اند. حالت زنده روی این رایانه در دسترس است." }
+banner_detail_off_blocked = { en = "Answers are canned [SYNTHETIC] text; the routing, cache, and cost numbers are real. Live mode is blocked here: {why}.", fa = "پاسخ‌ها متن آماده‌ی ساختگی ([SYNTHETIC]) هستند؛ اعداد مسیریابی، حافظه‌ی نهان و هزینه واقعی‌اند. حالت زنده این‌جا مسدود است: {why}." }
+banner_detail_blocked = { en = "{text}. See the quickstart §4–§5 (.env and config/local.toml).", fa = "{text}. راهنمای شروع سریع، بخش ۴ و ۵ را ببینید (.env و config/local.toml)." }
+fail_stopped = { en = "Live calls were stopped for this run: a call failed without reporting its cost, so its estimate was charged to be safe. Switch to fake mode and back to start a new run; if it repeats, check the key and network.", fa = "تماس‌های زنده برای این اجرا متوقف شد: یک تماس بدون گزارش هزینه شکست خورد، پس برای احتیاط تخمین آن حساب شد. برای اجرای تازه به حالت آزمایشی و دوباره به حالت زنده بروید؛ اگر تکرار شد، کلید و شبکه را بررسی کنید." }
+fail_budget = { en = "The budget guard stopped this call before it was made: it could go over the per-run or lifetime cap{where}. Nothing was charged. Start a new run (switch to fake and back), or ask the project owner.", fa = "نگهبان بودجه این تماس را پیش از انجام متوقف کرد: ممکن بود از سقف این اجرا یا سقف کل بگذرد{where}. هزینه‌ای ثبت نشد. اجرای تازه‌ای شروع کنید (به حالت آزمایشی و برگشت) یا از مالک پروژه بپرسید." }
+fail_budget_where = { en = " (this run: {rs} of {rc} {c}; lifetime: {ls} of {lc})", fa = " (این اجرا: {rs} از {rc} {c}؛ کل: {ls} از {lc})" }
+fail_no_model = { en = "No model could take this message (disabled or unknown limits).", fa = "هیچ مدلی نتوانست این پیام را بپذیرد (غیرفعال یا با محدودیت نامعلوم)." }
+fail_other = { en = "No answer: {failure}.", fa = "بدون پاسخ: {failure}." }
+rkind_cache = { en = "cache", fa = "حافظه‌ی نهان" }
+rkind_greeting = { en = "greeting", fa = "احوال‌پرسی" }
+rkind_re_routed = { en = "re-routed", fa = "مسیر دوباره" }
+rkind_stayed = { en = "stayed", fa = "ماند" }
+rkind_anchored = { en = "anchored", fa = "لنگر شد" }
+rkind_per_request = { en = "per request", fa = "برای هر درخواست" }
+rkind_routed = { en = "routed", fa = "مسیریابی شد" }
+rkind_fixed_model = { en = "fixed model", fa = "مدل ثابت" }
+rkind_escalated = { en = "escalated", fa = "ارتقا یافت" }
+served_model = { en = "model", fa = "مدل" }
+served_cache = { en = "cache", fa = "حافظه‌ی نهان" }
+served_none = { en = "none", fa = "هیچ‌کدام" }
+det_sec_served = { en = "Served", fa = "پاسخ‌دهنده" }
+det_sec_routing = { en = "Routing", fa = "مسیریابی" }
+det_sec_features = { en = "Features", fa = "ویژگی‌ها" }
+det_sec_cache = { en = "Cache lookups", fa = "جست‌وجوهای حافظه‌ی نهان" }
+det_sec_tokens = { en = "Tokens", fa = "توکن‌ها" }
+det_sec_cost = { en = "Cost", fa = "هزینه" }
+det_sec_compression = { en = "Compression", fa = "فشرده‌سازی" }
+det_sec_overhead = { en = "Overhead", fa = "سربار" }
+det_served_by = { en = "served by", fa = "پاسخ از" }
+det_model = { en = "model", fa = "مدل" }
+det_seed_model = { en = "demo-seed (a LOGGED sample answer, shown locally, never sent)", fa = "demo-seed (پاسخ نمونه‌ی ثبت‌شده، فقط محلی نشان داده می‌شود و هرگز فرستاده نمی‌شود)" }
+det_provider_model = { en = "provider-reported model", fa = "مدل گزارش‌شده‌ی ارائه‌دهنده" }
+det_status = { en = "status", fa = "وضعیت" }
+det_decision = { en = "decision", fa = "تصمیم" }
+det_reason_code = { en = "reason code", fa = "کد دلیل" }
+det_target = { en = "target", fa = "مقصد" }
+det_anchor_before = { en = "anchor before", fa = "لنگر پیشین" }
+det_chain = { en = "escalation chain", fa = "زنجیره‌ی ارتقا" }
+det_policy = { en = "policy", fa = "سیاست" }
+det_language = { en = "language", fa = "زبان" }
+det_code = { en = "code", fa = "کد" }
+det_coding_intent = { en = "coding intent", fa = "قصد برنامه‌نویسی" }
+det_length_bucket = { en = "length bucket", fa = "دسته‌ی طول" }
+det_greeting = { en = "greeting", fa = "احوال‌پرسی" }
+det_turn_depth = { en = "earlier user turns", fa = "نوبت‌های پیشین کاربر" }
+det_lookup = { en = "lookup", fa = "جست‌وجو" }
+det_input = { en = "input", fa = "ورودی" }
+det_cached_input = { en = "cached input (provider)", fa = "ورودی ذخیره‌شده (ارائه‌دهنده)" }
+det_output = { en = "output", fa = "خروجی" }
+det_reasoning = { en = "reasoning (hidden)", fa = "استدلال (پنهان)" }
+det_template_overhead = { en = "template overhead", fa = "سربار قالب" }
+det_tokens = { en = "tokens", fa = "توکن‌ها" }
+det_no_call = { en = "none: no model call", fa = "هیچ: تماسی با مدل نبود" }
+det_cost = { en = "cost", fa = "هزینه" }
+det_cost_caveats = { en = "cost caveats", fa = "هشدارهای هزینه" }
+det_premium = { en = "premium estimate (gpt-5.5, never called)", fa = "تخمین مدل گران (gpt-5.5، هرگز فراخوانده نشد)" }
+det_premium_caveats = { en = "premium caveats", fa = "هشدارهای تخمین مدل گران" }
+det_compressor = { en = "compressor", fa = "فشرده‌ساز" }
+det_shortened = { en = "what it shortened", fa = "آنچه کوتاه شد" }
+det_token_method = { en = "token method", fa = "روش شمارش توکن" }
+det_time = { en = "time", fa = "زمان" }
+det_compression = { en = "compression", fa = "فشرده‌سازی" }
+det_off = { en = "off", fa = "خاموش" }
+det_overhead_time = { en = "Metis-Auto time", fa = "زمان پردازش متیس‌اتو" }
+det_helper_calls = { en = "helper calls", fa = "تماس‌های کمکی" }

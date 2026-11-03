@@ -9,6 +9,13 @@ first element (UI-T04) and passes ``altair_config`` to every chart (UI-G05,
 UI-G06). Fragments carry no message content: only strings from the strings
 table and numbers, HTML-escaped.
 
+Stage 2b (owner review 2026-11-03, ADR-0052 Amendment 1): the wordmark is
+"متیس‌اتو" / "Metis-Auto" with a "prototype" pill; the header shows the real
+budget in both modes (``budget_html``); chart legends are an HTML row centred
+under the chart (``legend_html``), Vega's own legend is hidden; horizontal bars
+read right to left in Persian (``bar_layout``). Numbers go through
+``wiring.ui_format.fmt``.
+
 Streamlit selectors (``data-testid``, ``data-baseweb``) are those of Streamlit
 1.65.0 (requirements-ui.lock), checked in the browser on 2026-11-03; re-check
 them on an upgrade.
@@ -30,15 +37,13 @@ from typing import Any
 
 from metis_auto.wiring.demo_ui import BudgetView
 from metis_auto.wiring.ui_config import FONT_DIR, Text, Theme, direction
+from metis_auto.wiring.ui_format import AXIS_FORMAT, fmt
 
 LRI, PDI = "⁦", "⁩"
 """Unicode left-to-right isolate and its end (UI-V07): plain-text isolation that
 works in widget labels, metric values and chart text, where HTML cannot go."""
 ICON_FONT = '"Material Symbols Rounded"'
 """Streamlit's bundled icon font (ligatures), reused for icons in fragments."""
-PROTOTYPE_LABEL = "Metis-Auto prototype"
-"""The app's name next to the wordmark (UI-R08, owner decision 2): a product
-name, the same in every language."""
 
 
 # --- LTR isolation (UI-V07) -------------------------------------------------------
@@ -195,6 +200,7 @@ _HEADER = """
   line-height: 1.4; }
 .mx-budget { font-size: 15px; color: var(--text); white-space: nowrap; }
 .mx-budget b { color: var(--accent-text); font-weight: 700; }
+.mx-budget .mx-ltr { font-variant-numeric: tabular-nums; }
 .mx-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px;
   padding: 0 12px; border-radius: var(--radius-pill); border: 1px solid var(--border);
   background: transparent; color: var(--text); font-size: var(--font-small);
@@ -473,6 +479,18 @@ _STATES = """
 #vg-tooltip-element td.key { color: var(--text-muted) !important; }
 #vg-tooltip-element td.value { color: var(--text) !important; }
 [data-testid="stVegaLiteChart"] details, .vega-embed summary { display: none; }
+/* legends centred under each chart (Stage 2b, images 3 to 6) */
+.mx-legend { display: flex; justify-content: center; align-items: center;
+  flex-wrap: wrap; gap: 6px 18px; margin: 2px 0 6px; font-size: 13px;
+  color: var(--text); }
+.mx-legend-item { display: inline-flex; align-items: center; gap: 6px;
+  white-space: nowrap; }
+.mx-swatch { width: 9px; height: 9px; border-radius: 2px; display: inline-block;
+  flex: none; }
+.mx-id { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+.mx-data { direction: ltr; text-align: left; margin: 0; padding-left: 18px;
+  color: var(--text-muted); font-size: var(--font-small); line-height: 1.7; }
+.mx-id .mx-ltr { font-family: var(--font-mono); font-size: 11px; }
 """
 
 
@@ -609,13 +627,14 @@ def _icon(name: str) -> str:
 
 
 def header_brand_html(t: Text) -> str:
-    """The text wordmark and the prototype label (UI-H02, UI-R08): no logo is
-    drawn; ``assets/brand/logo.svg`` does not exist, and the Metis logo is never
-    redrawn or cropped."""
+    """The text wordmark "متیس‌اتو" / "Metis-Auto" and the prototype pill
+    (UI-H02, UI-R08): never Metis's own name alone, and no logo is drawn
+    (``assets/brand/logo.svg`` does not exist; the Metis logo is never redrawn
+    or cropped)."""
     return (
         '<div class="mx-brand">'
         f'<span class="mx-wordmark">{html.escape(t("brand_wordmark"))}</span>'
-        f'<span class="mx-brand-sub mx-ltr">{PROTOTYPE_LABEL}</span>'
+        f'<span class="mx-brand-sub">{html.escape(t("brand_prototype"))}</span>'
         "</div>"
     )
 
@@ -629,24 +648,103 @@ def chip_html(text: str, *, kind: str = "neutral", icon: str | None = None) -> s
     return f'<span class="{css}">{lead}{html.escape(text)}</span>'
 
 
-def _money(value: Decimal, currency: str) -> str:
-    return f"${value:,.2f}" if currency == "USD" else f"{value:,.2f} {currency}"
-
-
-def budget_html(t: Text, *, live: bool, budget: BudgetView | None) -> str:
-    """The budget in the place of Metis's credit (UI-H04): fake mode says so;
-    live mode shows the lifetime budget left. No top-up (nothing fake)."""
-    if not live:
-        return f'<div class="mx-budget"><b>{html.escape(t("fake_mode"))}</b></div>'
+def budget_html(t: Text, *, budget: BudgetView | None) -> str:
+    """The real lifetime budget in the place of Metis's credit (UI-H04), in
+    both modes: "بودجه: $7.40 از $20.00", the amount left in accent bold,
+    LTR-isolated. The mode is only in the Fake/Live chip. No budget read →
+    "بودجه: نامعلوم", never a made-up number. No top-up (nothing fake)."""
+    label = html.escape(t("budget_label"))
     if budget is None:
-        return f'<div class="mx-budget">{html.escape(t("budget_none"))}</div>'
+        return (
+            f'<div class="mx-budget">{label} <b>{html.escape(t("unknown"))}</b></div>'
+        )
     left = max(budget.lifetime_cap - budget.lifetime_spent, Decimal(0))
+    cur = budget.currency
     return (
         f'<div class="mx-budget" title="{html.escape(t("budget_title"))}">'
-        f"{html.escape(t('budget_left'))} "
-        f"<b>{ltr_html(_money(left, budget.currency))}</b>"
+        f"{label} <b>{ltr_html(fmt(left, 'money', currency=cur))}</b> "
+        f"{html.escape(t('budget_of'))} "
+        f"{ltr_html(fmt(budget.lifetime_cap, 'money', currency=cur))}"
         "</div>"
     )
+
+
+# --- charts: legends and direction (Stage 2b) ------------------------------------
+
+
+def legend_html(items: list[tuple[str, str]] | tuple[tuple[str, str], ...]) -> str:
+    """A legend centred under a chart, as in Metis (images 3 to 6): small
+    square swatches and labels. ``items`` are (label, colour) with the colour
+    taken from the theme; labels that hold no Persian letter (model ids, bot
+    ranks) are LTR-isolated. Vega-Lite cannot centre its own legend, so every
+    chart hides it and the page draws this one. Empty for no items."""
+    if not items:
+        return ""
+    parts = []
+    for label, colour in items:
+        text = (
+            html.escape(label)
+            if re.search(r"[\u0600-\u06FF]", label)
+            else ltr_html(label)
+        )
+        parts.append(
+            '<span class="mx-legend-item">'
+            f'<span class="mx-swatch" style="background:{html.escape(colour)}">'
+            f"</span>{text}</span>"
+        )
+    return f'<div class="mx-legend">{"".join(parts)}</div>'
+
+
+def palette(theme: Theme) -> list[str]:
+    """Series colours in order, from the mode's chart palette (UI-G03)."""
+    c = theme.chart
+    return [c["cat_1"], c["cat_2"], c["series_a"], c["series_b"], c["trend"]]
+
+
+def series_scale(theme: Theme, labels: list[str]) -> tuple[list[str], list[str]]:
+    """(domain, colours) for a colour encoding over ``labels``, in order; the
+    same pairs feed ``legend_html``, so the chart and its legend agree."""
+    colours = palette(theme)
+    return labels, [colours[n % len(colours)] for n in range(len(labels))]
+
+
+def bar_layout(lang: str) -> dict[str, object]:
+    """Horizontal bars in Persian read right to left: category labels on the
+    right and bars growing leftwards; English keeps them on the left. Numbers
+    on the value axis stay LTR (Vega draws them as plain text)."""
+    rtl = direction(lang) == "rtl"
+    return {"y_orient": "right" if rtl else "left", "x_reverse": rtl}
+
+
+def axis_format(kind: str) -> str:
+    """The d3 format of a value axis (``ui_format.AXIS_FORMAT``)."""
+    return AXIS_FORMAT[kind]
+
+
+def id_caption_html(label: str, version_id: str) -> str:
+    """The raw version id, small and muted, next to its display name: the only
+    place an id is on screen besides chart tooltips (owner review point 3)."""
+    return f'<div class="mx-id">{html.escape(label)}: {ltr_html(version_id)}</div>'
+
+
+def data_list_html(items: tuple[str, ...] | list[str]) -> str:
+    """Texts stored in a result by its writer (a routing result's
+    assumptions): English data, not UI strings, so shown as a left-to-right
+    English block marked ``mx-data`` rather than translated or reordered."""
+    rows = "".join(f"<li>{html.escape(item)}</li>" for item in items)
+    return f'<ul class="mx-data" dir="ltr" lang="en">{rows}</ul>'
+
+
+def md_safe(text: str) -> str:
+    """``text`` for a Streamlit markdown label: ``$`` escaped, because
+    Streamlit reads the text between two ``$`` as LaTeX ("$12.60 of $20.00"
+    would lose its numbers). Idempotent."""
+    return re.sub(r"(?<!\\)\$", r"\\$", text)
+
+
+def faded(colour: str) -> str:
+    """The swatch colour of a faded bar (unranked versions: opacity 0.35)."""
+    return f"color-mix(in srgb, {colour} 35%, transparent)"
 
 
 def labelled(name: str, value: str) -> str:
