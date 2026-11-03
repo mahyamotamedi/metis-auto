@@ -38,6 +38,7 @@ injected frames. ``eligible_models`` is a constructor argument, never imported.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -52,6 +53,7 @@ from metis_auto.analysis.baselines_full import (
 )
 from metis_auto.analysis.levers import BLOCKS, block_column
 from metis_auto.analysis.replay_scope import bot_sufficiency
+from metis_auto.analysis.resumable import cached_blocks
 
 NUMERIC = (
     "n_prior_msgs",
@@ -92,6 +94,9 @@ BASELINES = ("premium_gpt_5_5", "as_logged", "todays_models", "best_single_cheap
 CANDIDATE = "route_candidate"
 MOVED_B = "route_moved_in_baseline"
 SAVING_UNKNOWN = "route_saving_unknown"
+
+BLOCK_QUERIES = 20_000
+"""Queries per stored block of the neighbour search (resume granularity)."""
 
 REASONS = (
     "moved",
@@ -405,7 +410,14 @@ class KnnRouter:
         cached_separately: frozenset[str] = frozenset(),
         label_source: str | None = None,
         chunk: int = 128,
+        neighbours: Any = None,
+        progress: Callable[[int], Any] | None = None,
     ) -> None:
+        """``neighbours``: an optional ``analysis.resumable.NeighbourCache``;
+        the nearest-neighbour search is then done in blocks of queries that are
+        stored and reused (resume, and the second candidate list of one run).
+        ``progress(n_queries)`` returns a ``Progress`` for one search. Neither
+        changes a result."""
         if label_source is not None:
             raise ValueError(
                 f"supervised use blocked: label source {label_source!r} is not a "
@@ -425,6 +437,8 @@ class KnnRouter:
         }
         self.cached_separately = cached_separately
         self.chunk = chunk
+        self.neighbours = neighbours
+        self.progress = progress
         train = train.sort_index(kind="stable")
         raw = profile_matrix(train)
         self.scaler = Scaler.fit(raw)
@@ -476,14 +490,18 @@ class KnnRouter:
                 q["session_id"].astype(str).to_numpy(),
                 family_key(q).to_numpy(dtype=object),
             )
-            idx = nearest(
-                self._x,
-                self.scaler.transform(profile_matrix(q)),
-                k=self.k,
-                train_groups=tgroups,
-                query_groups=qgroups,
-                chunk=self.chunk,
-            )
+            qx = self.scaler.transform(profile_matrix(q))
+            if self.neighbours is None:
+                idx = nearest(
+                    self._x,
+                    qx,
+                    k=self.k,
+                    train_groups=tgroups,
+                    query_groups=qgroups,
+                    chunk=self.chunk,
+                )
+            else:
+                idx = self._cached_nearest(qx, tgroups, qgroups)
         cand = set(self.candidates)
         out: dict[int, pd.DataFrame] = {}
         for k in ks:
@@ -528,6 +546,35 @@ class KnnRouter:
             frame["route_cost_routed"] = routed_cost
             out[k] = frame
         return out
+
+    def _cached_nearest(self, qx, tgroups, qgroups) -> np.ndarray:
+        """``nearest`` in blocks of queries through the neighbour cache. The
+        cache key hashes the training matrix and groups, the whole query set
+        and ``k``, so only an identical search is ever reused."""
+        digest = hashlib.sha256()
+        for part in (self._x, *tgroups, qx, *qgroups):
+            digest.update(np.ascontiguousarray(part).tobytes())
+        key = digest.hexdigest()
+
+        def compute(a: int, b: int) -> np.ndarray:
+            return nearest(
+                self._x,
+                qx[a:b],
+                k=self.k,
+                train_groups=tgroups,
+                query_groups=(qgroups[0][a:b], qgroups[1][a:b]),
+                chunk=self.chunk,
+            )
+
+        return cached_blocks(
+            self.neighbours,
+            key,
+            len(qx),
+            BLOCK_QUERIES,
+            compute,
+            k=self.k,
+            progress=self.progress(len(qx)) if self.progress else None,
+        )
 
     def _eligible(self, req, tok, incumbent, i, ctx) -> tuple[str, ...]:
         row = req.iloc[i]

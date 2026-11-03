@@ -37,11 +37,13 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import hashlib
 import importlib.util
 import json
 import math
 import platform
 import sys
+import time
 import tomllib
 from collections.abc import Mapping
 from datetime import UTC, datetime
@@ -63,6 +65,7 @@ from metis_auto.analysis.replay_scope import (
     scope,
     split_by_session,
 )
+from metis_auto.analysis.resumable import ResumeLedger
 from metis_auto.analysis.stats import cluster_bootstrap_ratio
 from metis_auto.wiring.experiments import code_version
 
@@ -185,6 +188,7 @@ def write_levers(
     tenant_cap: float,
     config_extra: Mapping[str, object] = {},
     strict: bool = False,
+    ledger: ResumeLedger | None = None,
 ) -> list[Path]:
     """Apply both versions to ``req`` (scoped, one split, with blocks) and write
     one ``LeverResult`` per version and baseline into ``out_dir``. With
@@ -204,6 +208,10 @@ def write_levers(
     out_dir.mkdir(parents=True, exist_ok=True)
     paths = []
     for set_name, version in versions.items():
+        if ledger is not None and ledger.done(set_name):
+            print(f"{set_name}: already written (--resume), skipped")
+            continue
+        started = time.monotonic()
         out = combine(req, None, None, version, ctx)
         for key in BASELINE_KEYS:
             before, after = v.baseline_frames(
@@ -258,6 +266,9 @@ def write_levers(
             path = out_dir / f"{result.lever_id}.json"
             path.write_text(result.to_json())
             paths.append(path)
+        if ledger is not None:
+            ledger.mark(set_name)
+        print(f"{set_name}: done in {time.monotonic() - started:.0f}s")
     return paths
 
 
@@ -551,6 +562,12 @@ def main() -> int:
     ap.add_argument("--levers-dir", type=Path, default=ROOT / "reports/levers")
     ap.add_argument("--checks", type=Path, default=None)
     ap.add_argument("--strict", action="store_true")
+    ap.add_argument(
+        "--resume",
+        action="store_true",
+        help="skip versions already written by an interrupted run of the same "
+        "settings (ledger under runs/resume/); without it everything is re-run",
+    )
     ap.add_argument("--flags", type=Path, default=FLAGS)
     args = ap.parse_args()
     if args.checks is None:
@@ -623,6 +640,22 @@ def main() -> int:
     if MAX_INPUT_TOKENS is None:
         raise SystemExit("MAX_INPUT_TOKENS is not frozen yet: run --checks-only first")
     code = code_version(ROOT)
+    key = hashlib.sha256(
+        json.dumps(
+            [
+                (ROOT / "config/evaluation/sprint.toml").read_text(),
+                args.split,
+                args.strict,
+                MAX_U_CHARS,
+                MAX_INPUT_TOKENS,
+            ]
+        ).encode()
+    ).hexdigest()
+    ledger = ResumeLedger(
+        ROOT / "runs" / "resume" / f"small_classifier-{args.split}-{args.strict}.json",
+        key=key,
+        resume=args.resume,
+    )
     split = req[(req["split"] == args.split) & (req["period"] == args.split)]
     paths = write_levers(
         split,
@@ -641,6 +674,7 @@ def main() -> int:
         tenant_cap=sprint["sample"]["tenant_cap"],
         config_extra={"split": args.split, "sprint": sprint["version"]},
         strict=args.strict,
+        ledger=ledger,
     )
     print(f"wrote {len(paths)} lever results to {args.levers_dir}")
     return 0
