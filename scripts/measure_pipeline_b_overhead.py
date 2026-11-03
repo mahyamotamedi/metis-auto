@@ -30,7 +30,7 @@ the plan and reads and writes nothing.
 Why a second script beside Pipeline A's ``measure_lever_overhead.py``: that
 script has another owner, has no B targets (it stops with "no known version" on
 ``rb1``/``rb2``/``rb3``) and samples report-period rows. It can be merged into
-A's script later, with A's OK (ADR-XXXX (pipeline-b-lever-overhead)). Prints
+A's script later, with A's OK (ADR-0055). Prints
 aggregates only: no text, hash, or bot, user, session or chunk ID. No network.
 Traces: QA-LAT (100 ms p95, Q-14), FR-ROUTE-04, L-1, ADR-0032.
 """

@@ -1,4 +1,4 @@
-# ADR-XXXX (pipeline-b-lever-overhead): Pipeline B measures its own lever overhead with a second script beside Pipeline A's
+# ADR-0055: Pipeline B measures its own lever overhead with a second script beside Pipeline A's
 
 - Status: **provisional**, 2026-11-03 (Kimia, Pipeline B, sprint task L-1 for R-B1, R-B2 and R-B3). Can be merged into Pipeline A's script later with A's OK (then this record is amended, not deleted).
 - Date: 2026-11-03

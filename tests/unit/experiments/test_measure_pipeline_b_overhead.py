@@ -3,7 +3,7 @@ Pipeline B). Every frame, version and file here is [SYNTHETIC]; the clock is
 injected, so timings are exact and no real data is read.
 
 Traces: QA-LAT (Q-14, 100 ms p95), FR-ROUTE-04, ADR-0032,
-ADR-XXXX (pipeline-b-lever-overhead).
+ADR-0055.
 """
 
 from __future__ import annotations

@@ -2,7 +2,7 @@
 
 Status: **B's versions only**, 2026-11-02; **updated 2026-11-03** (logged-model prices ADR-0041, R-B3 on the routing base ADR-0045 with per-baseline accounting ADR-0046 points 4 to 6, one report-split run per version, overhead measured). This file feeds the team's Day 3 decision; it declares **no cross-pipeline winner**. The team picks one version per step with the plan's decision rules ([final plan](../2026-11-01-final-plan.md), "Decision rules"). A shared `docs/experiments/sprint_decisions.md` exists on no branch (checked 2026-11-02), so this is a separate file with one block per step that can be copied into it.
 
-Common to every block: tune period March–July 2026 (`a_timestamp`, naive, Q-06); fitted values and tune results on `split_by_session == "tune"` rows unless stated (ADR-0036); settings frozen on tune before **one report-split run** per version (owner decision 2026-11-03; report split 73,063 requests, 20,750 LLM, the same scope as A's report results); workflow rows never count; recorded and price-file units are never mixed; unknown is never 0; `code_commit` 9f05b25. Overhead (L-1): offline per-request estimates from `scripts/measure_pipeline_b_overhead.py` (tune-period sample; ADR-XXXX (pipeline-b-lever-overhead)), per block below.
+Common to every block: tune period March–July 2026 (`a_timestamp`, naive, Q-06); fitted values and tune results on `split_by_session == "tune"` rows unless stated (ADR-0036); settings frozen on tune before **one report-split run** per version (owner decision 2026-11-03; report split 73,063 requests, 20,750 LLM, the same scope as A's report results); workflow rows never count; recorded and price-file units are never mixed; unknown is never 0; `code_commit` 9f05b25. Overhead (L-1): offline per-request estimates from `scripts/measure_pipeline_b_overhead.py` (tune-period sample; ADR-0055), per block below.
 
 ## Cache: R-B1 retrieval-result cache (`exp-cache-002`)
 
@@ -48,7 +48,7 @@ Tune split, R-B1 1-day TTL + R-B2 + R-B3 k = 5 (primary candidates), `code_commi
 
 ## Overhead (L-1, offline per-request estimate)
 
-`scripts/measure_pipeline_b_overhead.py` ([ADR-XXXX (pipeline-b-lever-overhead)](../adr/draft-pipeline-b-lever-overhead.md)): `apply` on one-row frames, 987 seeded tune-period, tune-split LLM rows (tenant cap 0.35), one warm-up, Intel i5 laptop; not a load test (Q-14). Pipeline A's R-A3 figure (54.2 ms p95) used report-period rows, so the samples differ. Target: 100 ms p95 (QA-LAT).
+`scripts/measure_pipeline_b_overhead.py` ([ADR-0055](../adr/0055-pipeline-b-lever-overhead.md)): `apply` on one-row frames, 987 seeded tune-period, tune-split LLM rows (tenant cap 0.35), one warm-up, Intel i5 laptop; not a load test (Q-14). Pipeline A's R-A3 figure (54.2 ms p95) used report-period rows, so the samples differ. Target: 100 ms p95 (QA-LAT).
 
 | Version family | p50 | p95 | Target |
 |---|---|---|---|
