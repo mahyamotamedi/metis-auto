@@ -1,6 +1,8 @@
 # UI strings of the demo (spec UI-V06): one key, every language (fa, en).
 # Read through metis_auto.wiring.ui_config.load_strings; pages hold no text of
-# their own. Stage 1 holds the Results page (D-2); Stage 2 adds the rest.
+# their own. Stage 1 holds the Results page (D-2); Stage 2 (2026-11-03) adds the
+# header, the shell and the chat page. Texts built by wiring.demo_ui (banner
+# details, per-message detail rows, failure texts, term names) stay English.
 # Persian strings are [PLACEHOLDER: Persian review] until reviewed (K-2/K-3):
 # written by the agent, not by a Persian reviewer. Format fields in braces.
 
@@ -115,3 +117,120 @@ baseline_as_logged = { en = "As-logged recorded cost", fa = "هزینه ثبت�
 baseline_todays_models = { en = "Today's logged models", fa = "مدل‌های فعلی ثبت‌شده" }
 baseline_best_single_cheap = { en = "Best single cheap model", fa = "بهترین مدل ارزان واحد" }
 skipped_files = { en = "Files that are not lever results: {n} (not shown).", fa = "فایل‌هایی که نتیجه نیستند: {n} (نشان داده نمی‌شوند)." }
+show_table = { en = "Show the table", fa = "نمایش جدول" }
+chart_blocks = { en = "Before and after, by cost block", fa = "قبل و بعد، به تفکیک بخش هزینه" }
+chart_breakdown = { en = "Where the baseline cost goes", fa = "تجزیه هزینه مبنا" }
+part_remaining = { en = "Cost left after the step", fa = "هزینه باقی‌مانده پس از این مرحله" }
+part_saved = { en = "Saved: {block}", fa = "صرفه‌جویی: {block}" }
+
+[shell]
+brand_wordmark = { en = "Metis", fa = "متیس" }
+nav_chat = { en = "Chat", fa = "گفتگو" }
+nav_results = { en = "Results", fa = "نتایج" }
+theme_dark = { en = "Dark theme", fa = "پوسته تیره" }
+theme_help = { en = "Switch between the dark and the light theme.", fa = "جابه‌جایی بین پوسته تیره و روشن." }
+mode_fake = { en = "Fake", fa = "آزمایشی" }
+mode_live = { en = "Live", fa = "زنده" }
+fake_mode = { en = "Fake mode", fa = "حالت آزمایشی" }
+budget_left = { en = "Budget left:", fa = "بودجه باقی‌مانده:" }
+budget_title = { en = "Lifetime live-call budget left (ADR-0018). No top-up from here.", fa = "بودجه باقی‌مانده تماس‌های زنده در کل پروژه. افزایش آن از این‌جا ممکن نیست." }
+budget_none = { en = "No budget configured.", fa = "بودجه‌ای تنظیم نشده است." }
+local_demo = { en = "Local demo", fa = "نسخه محلی" }
+
+[chat]
+chat_title = { en = "Metis-Auto demo", fa = "نسخه نمایشی Metis-Auto" }
+chat_subtitle = { en = "Cost-reducing middleware between a chat app and LLM providers: routing, caching, and compression, with every cent accounted for.", fa = "میان‌افزار کاهش هزینه بین برنامه گفتگو و ارائه‌دهندگان مدل زبانی: مسیریابی، حافظه نهان و فشرده‌سازی، با حساب هر سنت." }
+banner_off = { en = "Fake mode: live calls OFF (free)", fa = "حالت آزمایشی: تماس زنده خاموش (رایگان)" }
+banner_on = { en = "Live calls ON: real models, real money", fa = "تماس زنده روشن: مدل واقعی، هزینه واقعی" }
+banner_blocked = { en = "Live calls BLOCKED: still in fake mode", fa = "تماس زنده مسدود است: هنوز در حالت آزمایشی" }
+banner_stopped = { en = "Live calls STOPPED for this run", fa = "تماس زنده برای این اجرا متوقف شد" }
+bot_setup = { en = "Bot setup", fa = "تنظیم بات" }
+presets_note = { en = "Presets are SYNTHETIC: written for the demo, never sample data.", fa = "پیش‌تنظیم‌ها ساختگی‌اند (SYNTHETIC): برای دمو نوشته شده‌اند و از داده نمونه نیستند." }
+instructions = { en = "Instructions", fa = "دستورالعمل" }
+retrieved_context = { en = "**Retrieved context** (one document per block)", fa = "**متن بازیابی‌شده** (هر بلوک یک سند)" }
+document_n = { en = "Document {n}", fa = "سند {n}" }
+remove_document_n = { en = "Remove document {n}", fa = "حذف سند {n}" }
+add_document = { en = "Add document", fa = "افزودن سند" }
+clear_bot = { en = "Clear bot", fa = "پاک کردن بات" }
+settings = { en = "Settings", fa = "تنظیمات" }
+mode = { en = "Mode", fa = "حالت" }
+mode_fake_option = { en = "Fake (free, no key)", fa = "آزمایشی (رایگان، بدون کلید)" }
+mode_live_option = { en = "Live (real models, budgeted)", fa = "زنده (مدل واقعی، با بودجه)" }
+routing_label = { en = "Routing", fa = "مسیریابی" }
+routing_sticky_v1 = { en = "Sticky v1", fa = "چسبنده نسخه ۱" }
+routing_per_request = { en = "Per request", fa = "برای هر درخواست" }
+routing_fixed = { en = "Fixed model", fa = "مدل ثابت" }
+routing_decision_router = { en = "Decision router", fa = "مسیریاب تصمیم" }
+routing_help = { en = "Sticky v1: the first real question anchors the conversation on a model; similar follow-ups stay, very different ones re-route. Per request: the rules on every message. Fixed: one model. Decision router: a System-One model answers routing questions first.", fa = "چسبنده: نخستین پرسش واقعی گفتگو را به یک مدل می‌بندد؛ پرسش‌های مشابه همان‌جا می‌مانند و پرسش‌های بسیار متفاوت دوباره مسیریابی می‌شوند. برای هر درخواست: قواعد روی هر پیام. ثابت: یک مدل. مسیریاب تصمیم: یک مدل System-One ابتدا به پرسش‌های مسیریابی پاسخ می‌دهد." }
+decision_backends = { en = "Decision backends", fa = "پشتیبان‌های تصمیم" }
+decision_backends_help = { en = "Placeholder demo component (no evidence yet). Local needs the router-local extra and the pinned THX-01 files; hosted needs live mode and sends your own text only.", fa = "جزء نمایشی موقت (هنوز بدون شاهد). حالت محلی به افزونه router-local و فایل‌های پین‌شده THX-01 نیاز دارد؛ حالت میزبانی‌شده به حالت زنده نیاز دارد و فقط متن خود شما را می‌فرستد." }
+router_off = { en = "Off (rules only)", fa = "خاموش (فقط قواعد)" }
+router_local = { en = "Local (THX-01)", fa = "محلی (THX-01)" }
+router_hosted = { en = "Hosted (Jev via Metis)", fa = "میزبانی‌شده (Jev از طریق متیس)" }
+router_hybrid_local_first = { en = "Local, then Jev", fa = "اول محلی، بعد Jev" }
+router_hybrid_hosted_first = { en = "Jev, then local", fa = "اول Jev، بعد محلی" }
+model = { en = "Model", fa = "مدل" }
+bot_cache = { en = "Bot-level cache [DEMO]", fa = "حافظه نهان سطح بات [DEMO]" }
+bot_cache_help = { en = "DEMO setting, not the serving default: users of the same bot (same instructions and documents) share cached answers. Try it with “New user”.", fa = "تنظیم نمایشی، نه پیش‌فرض سرویس: کاربران یک بات (با دستورالعمل و اسناد یکسان) پاسخ‌های ذخیره‌شده را به اشتراک می‌گذارند. با «کاربر جدید» امتحان کنید." }
+demo_seed = { en = "Demo seed [DEMO, local only]", fa = "بذر دمو [DEMO، فقط محلی]" }
+demo_seed_help = { en = "Answers a few first-turn SAMPLE questions from logged answers, locally; never sent to a provider. Needs the sample data on this computer.", fa = "به چند پرسش نمونه نوبت اول از پاسخ‌های ثبت‌شده، به‌صورت محلی پاسخ می‌دهد؛ هرگز به ارائه‌دهنده فرستاده نمی‌شود. به داده نمونه روی همین رایانه نیاز دارد." }
+compression = { en = "Compression [EXPERIMENTAL]", fa = "فشرده‌سازی [آزمایشی]" }
+compression_off = { en = "Off", fa = "خاموش" }
+compression_fake = { en = "Fake (mechanics only)", fa = "ساختگی (فقط سازوکار)" }
+compression_llmlingua2 = { en = "LLMLingua-2", fa = "فشرده‌سازی LLMLingua-2" }
+llmlingua_warning = { en = "LLMLingua-2 is EXPERIMENTAL: slow on CPU (about 0.3 s per long text, seconds per message), quality unmeasured, and it drops the Persian half-space (ZWNJ). Instructions are never compressed.", fa = "LLMLingua-2 آزمایشی است: روی CPU کند است (حدود ۰٫۳ ثانیه برای هر متن بلند، چند ثانیه برای هر پیام)، کیفیتش سنجیده نشده و نیم‌فاصله فارسی را حذف می‌کند. دستورالعمل هرگز فشرده نمی‌شود." }
+compression_fake_note = { en = "A labelled fake: shows the mechanics, measures nothing.", fa = "ساختگیِ برچسب‌دار: سازوکار را نشان می‌دهد و چیزی نمی‌سنجد." }
+thinking = { en = "DeepSeek thinking", fa = "حالت تفکر مدل DeepSeek" }
+thinking_help = { en = "On is DeepSeek's default; off sends thinking disabled.", fa = "روشن پیش‌فرض DeepSeek است؛ خاموش، تفکر را غیرفعال می‌فرستد." }
+new_user = { en = "New user (same bot)", fa = "کاربر جدید (همان بات)" }
+reset_conversation = { en = "Reset conversation", fa = "شروع دوباره گفتگو" }
+more_fake = { en = "More (fake mode)", fa = "بیشتر (حالت آزمایشی)" }
+cut_off_next = { en = "Cut off the next answer (escalation)", fa = "بریدن پاسخ بعدی (ارتقا)" }
+seeded_questions = { en = "Seeded questions (SAMPLE CONTENT, local only)", fa = "پرسش‌های بذر (محتوای نمونه، فقط محلی)" }
+seeded_note = { en = "Logged sample questions: shown on this computer only. Don't share screenshots of them or paste them anywhere.", fa = "پرسش‌های نمونه ثبت‌شده: فقط روی همین رایانه نشان داده می‌شوند. از آن‌ها تصویر نگیرید و جایی نچسبانید." }
+run_footer = { en = "Run {run} · user {user}", fa = "اجرا {run} · کاربر {user}" }
+notice_new_run = { en = "New {mode} run {run}: conversation cleared.", fa = "اجرای {mode} تازه {run}: گفتگو پاک شد." }
+notice_setting_failed = { en = "Could not change that setting: {error}", fa = "تغییر این تنظیم ممکن نشد: {error}" }
+notice_new_user = { en = "User {n} of the same bot: new conversation, same cache.", fa = "کاربر {n} همان بات: گفتگوی تازه، همان حافظه نهان." }
+notice_reset = { en = "Conversation reset (the cache keeps its entries).", fa = "گفتگو از نو شروع شد (حافظه نهان ورودی‌هایش را نگه می‌دارد)." }
+notice_degrade = { en = "The next model answer comes back cut off (fake mode): watch it escalate.", fa = "پاسخ بعدی مدل بریده برمی‌گردد (حالت آزمایشی): ارتقای آن را ببینید." }
+notice_preset = { en = "Loaded the SYNTHETIC preset “{title}”: new conversation.", fa = "پیش‌تنظیم ساختگی «{title}» بارگذاری شد: گفتگوی تازه." }
+spinner_answering = { en = "Routing and answering …", fa = "در حال مسیریابی و پاسخ …" }
+no_answer = { en = "*(no answer)*", fa = "*(بدون پاسخ)*" }
+served_by = { en = "served by {by}", fa = "پاسخ از {by}" }
+badge_paid = { en = "paid {paid} vs premium est. {premium}{saved}", fa = "پرداخت‌شده {paid} در برابر تخمین مدل گران {premium}{saved}" }
+badge_less = { en = ", {share} less", fa = "، {share} کمتر" }
+details = { en = "Details", fa = "جزئیات" }
+col_value = { en = "value", fa = "مقدار" }
+col_term = { en = "term", fa = "جزء" }
+col_message = { en = "message", fa = "پیام" }
+col_session = { en = "session", fa = "نشست" }
+chat_empty = { en = "No messages yet.", fa = "هنوز پیامی نیست." }
+chat_empty_action = { en = "Pick a SYNTHETIC preset in the sidebar (or write your own bot), then say hello. Use only your own or synthetic messages.", fa = "یک پیش‌تنظیم ساختگی را از نوار کناری انتخاب کنید (یا بات خودتان را بنویسید) و سلام کنید. فقط پیام‌های خودتان یا ساختگی را به کار ببرید." }
+try_synthetic = { en = "Try (SYNTHETIC)", fa = "امتحان کنید (ساختگی)" }
+chat_placeholder = { en = "Type a message …", fa = "پیامی بنویسید …" }
+nothing_computed = { en = "Nothing computed yet.", fa = "هنوز چیزی محاسبه نشده است." }
+no_answer_yet = { en = "No answered message yet ({scope}).", fa = "هنوز پیامی پاسخ نگرفته است ({scope})." }
+actually_paid = { en = "Actually paid", fa = "پرداخت واقعی" }
+premium_estimate = { en = "Premium estimate", fa = "تخمین مدل گران" }
+saved = { en = "Saved", fa = "صرفه‌جویی" }
+cost = { en = "Cost", fa = "هزینه" }
+tab_message = { en = "This message", fa = "این پیام" }
+tab_session = { en = "Session", fa = "نشست" }
+scope_message = { en = "this message", fa = "این پیام" }
+scope_session = { en = "this run", fa = "این اجرا" }
+session_counts = { en = "{messages} answered messages in this run (all users), {hits} from the cache.", fa = "{messages} پیام پاسخ‌گرفته در این اجرا (همه کاربران)، {hits} از حافظه نهان." }
+decomposition_note = { en = "Premium − routing − compression − cache − provider cache + extra cost = actually paid (USD; savings shown negative). It always adds up.", fa = "مدل گران − مسیریابی − فشرده‌سازی − حافظه نهان − حافظه نهان ارائه‌دهنده + هزینه اضافه = پرداخت واقعی (دلار؛ صرفه‌جویی منفی نشان داده می‌شود). جمع همیشه درست است." }
+premium_caveat = { en = "The premium figure is an estimate for gpt-5.5, never a call: it assumes the premium answer has the same length, and hidden reasoning is not counted (a lower bound).", fa = "رقم مدل گران تخمینی برای gpt-5.5 است، نه یک تماس واقعی: فرض می‌کند پاسخ هم‌طول است و استدلال پنهان شمرده نمی‌شود (کران پایین)." }
+demo_caveat = { en = "Routing rules, cache sharing, and compression are placeholder demo settings, not tuned: they show the mechanism, not a measured saving.", fa = "قواعد مسیریابی، اشتراک حافظه نهان و فشرده‌سازی تنظیمات نمایشی موقت‌اند و تنظیم نشده‌اند: سازوکار را نشان می‌دهند، نه صرفه‌جویی سنجیده‌شده." }
+kind_total = { en = "Total", fa = "کل" }
+kind_saving = { en = "Saving", fa = "صرفه‌جویی" }
+kind_extra_cost = { en = "Extra cost", fa = "هزینه اضافه" }
+budget = { en = "Budget", fa = "بودجه" }
+budget_lifetime = { en = "Lifetime: {spent} of {cap} ({share})", fa = "مصرف کل پروژه: {spent} از سقف {cap} ({share})" }
+budget_run = { en = "This run: {spent} of {cap}", fa = "این اجرا: {spent} از {cap}" }
+budget_over_tell = { en = "Over {share} of the lifetime budget: tell the owner.", fa = "بیش از {share} بودجه کل مصرف شده است: به مالک پروژه خبر دهید." }
+budget_over = { en = "Over {share} of the lifetime budget.", fa = "بیش از {share} بودجه کل مصرف شده است." }
+budget_note = { en = "Warnings at {marks} of the lifetime cap. The ledger is per computer.", fa = "هشدار در {marks} سقف کل. دفتر هزینه برای هر رایانه جداست." }
+budget_fake_free = { en = "Fake mode charges nothing.", fa = "حالت آزمایشی هزینه‌ای ندارد." }
+budget_live_charged = { en = "Every live call is charged here.", fa = "هر تماس زنده این‌جا ثبت و حساب می‌شود." }

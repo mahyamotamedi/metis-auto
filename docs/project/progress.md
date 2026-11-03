@@ -37,6 +37,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 ## Entries, newest first
 
 <!-- progress-index:start -->
+- 2026-11-03: [Sprint Day 3, Pipeline C: demo UI design system, UI spec Stage 2](progress/2026-11-03-sprint-day-3-pipeline-c-ui-design-system.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: small classifier, strict content rules](progress/2026-11-03-sprint-day-3-pipeline-c-small-classifier-strict.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: small classifier routing, threshold rule and logistic mode](progress/2026-11-03-sprint-day-3-pipeline-c-small-classifier-routing.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: routing base, eligibility, failover and candidate cost replay](progress/2026-11-03-sprint-day-3-pipeline-c-routing-base-eligibility-failover.md)
