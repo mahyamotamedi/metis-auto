@@ -1,4 +1,4 @@
-# ADR-XXXX (demo-real-bots): The demo lists the dataset's bots as content-free cards and sends a real bot's content only to the model
+# ADR-0056: The demo lists the dataset's bots as content-free cards and sends a real bot's content only to the model
 
 - Status: **provisional**, the agent's reading of the approved UI spec (`docs/design/metis-auto-ui-spec.md` §4.1, §4.4, Stage 4) and the owner's decisions of 2026-11-03 (Pipeline C, Day 3), until the owner reviews it.
 - Date: 2026-11-03

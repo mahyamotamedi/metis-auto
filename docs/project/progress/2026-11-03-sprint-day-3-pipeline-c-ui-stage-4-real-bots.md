@@ -1,6 +1,6 @@
 ## Pipeline C, UI Stage 4: real bots from the local database (2026-11-03)
 
-Branch `ui-stage4-real-bots` (main at 97cfbc2, #45). Spec `docs/design/metis-auto-ui-spec.md` Stage 4 (UI-A01..A06, UI-A33); owner decisions of 2026-11-03; ADR draft `docs/adr/draft-demo-real-bots.md`.
+Branch `ui-stage4-real-bots` (main at 97cfbc2, #45). Spec `docs/design/metis-auto-ui-spec.md` Stage 4 (UI-A01..A06, UI-A33); owner decisions of 2026-11-03; ADR draft `docs/adr/0056-demo-real-bots.md`.
 
 **Done**
 - New `wiring/demo_bots.py`: `BotCard` (label `bot-001`.. ranked by traffic, language label of the instructions, RAG and top-k, memory, summariser, configured model, instruction length, sessions; no id, no text), `BotDirectory` (private ids, prints nothing), `BotProfile` (a real bot's instructions and passages read once, only for the model request), `filter_cards`, `real_data_reasons`, `PostgresBotSource`. A database that cannot be read gives the unavailable state.
