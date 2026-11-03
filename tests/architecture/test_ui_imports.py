@@ -1,8 +1,8 @@
 """The UI libraries (extra ``ui``: Streamlit and the Altair and pandas it
 brings) are imported only by the demo page, ``scripts/demo_ui.py`` (Demo B),
 its page files ``scripts/demo_pages/results.py`` (D-2) and
-``scripts/demo_pages/workspace.py`` (Stage 3: entry, settings, workspaces; spec
-UI-R01),
+``scripts/demo_pages/workspace.py`` (Stage 3 and 4: entry, bot selection,
+settings, workspaces; spec UI-R01),
 its live smoke test (``scripts/demo_ui_live_check.py``, which drives the page
 with Streamlit's test runner), and the page's tests; the package never needs
 them. Static check (``ast``)."""
@@ -19,6 +19,7 @@ ALLOWED = {
     REPO / "scripts" / "demo_ui_live_check.py",
     REPO / "tests" / "integration" / "test_demo_ui_app.py",
     REPO / "tests" / "integration" / "test_demo_ui_journeys.py",
+    REPO / "tests" / "integration" / "test_demo_ui_bots.py",
 }
 
 

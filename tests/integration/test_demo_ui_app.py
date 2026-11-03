@@ -22,6 +22,23 @@ from metis_auto.wiring.demo_ui import load_presets  # noqa: E402
 from metis_auto.wiring.ui_config import load_strings  # noqa: E402
 
 PAGE = str(Path(__file__).resolve().parents[2] / "scripts" / "demo_ui.py")
+
+
+class NoBots:
+    """A hermetic stand-in for the local database (UI Stage 4): the page never
+    reaches a real one in a test. The bot list is empty; the synthetic samples
+    remain."""
+
+    def directory_rows(self):
+        return []
+
+    def instructions(self, bot_id):
+        raise AssertionError("no real bot in this test")
+
+    def rag_texts(self, bot_id):
+        raise AssertionError("no real bot in this test")
+
+
 MARKER = "SYNTHETIC-CONTENT-MARKER-91c2"
 SYNTHETIC_KEY = "sk-SYNTHETIC-not-a-key"
 FAKE, LIVE = "Fake (free, no key)", "Live (real models, budgeted)"
@@ -51,6 +68,7 @@ def page(tmp_path, *, loader=None, client_factory=None, lang="en") -> AppTest:
     Persian since Stage 2 (UI-V06); the assertions below read the English
     strings."""
     at = AppTest.from_file(PAGE, default_timeout=60)
+    at.session_state["_test_bot_source"] = NoBots
     at.query_params["lang"] = lang
     at.session_state["_test_settings_loader"] = loader or make_loader(tmp_path)
     at.session_state["_test_client_factory"] = client_factory or (
@@ -68,9 +86,10 @@ def direct(tmp_path, **kwargs) -> AppTest:
 def chatbot(tmp_path, bot: str | None = None, **kwargs) -> AppTest:
     """Journey A: entry -> (a bot) -> settings -> "Start chatting" (UI-S05)."""
     at = page(tmp_path, **kwargs)
-    at = at.button(key="mx-cta-entry-chatbot").click().run()
+    at = at.button(key="mx-cta-entry-chatbot").click().run()  # S02
     if bot:
         at = at.button(key=f"mx-bot-{bot}").click().run()
+    at = at.button(key="mx-cta-continue").click().run()  # S02 -> S04
     return at.button(key="mx-cta-start").click().run()
 
 
@@ -166,6 +185,7 @@ def test_a_failed_toggle_is_reported_and_reverted(tmp_path):
         raise ValueError("compression unavailable: [SYNTHETIC] test")
 
     at = AppTest.from_file(PAGE, default_timeout=60)
+    at.session_state["_test_bot_source"] = NoBots
     at.query_params["lang"] = "en"
     at.session_state["_test_settings_loader"] = make_loader(tmp_path)
     at.session_state["_test_client_factory"] = lambda _l, _r: FakeModelClient()
@@ -289,6 +309,7 @@ def _synthetic_levers(folder: Path) -> Path:
 
 def results_page(tmp_path, levers: Path) -> AppTest:
     at = AppTest.from_file(PAGE, default_timeout=60)
+    at.session_state["_test_bot_source"] = NoBots
     at.session_state["_test_settings_loader"] = make_loader(tmp_path)
     at.session_state["_test_client_factory"] = lambda _l, _r: FakeModelClient()
     at.session_state["_test_levers_dir"] = str(levers)
@@ -385,6 +406,7 @@ def _visible_text(at: AppTest) -> str:
 
 def _app(tmp_path, *, theme: str, lang: str, levers: Path | None = None) -> AppTest:
     at = AppTest.from_file(PAGE, default_timeout=60)
+    at.session_state["_test_bot_source"] = NoBots
     at.query_params["theme"] = theme
     at.query_params["lang"] = lang
     at.session_state["_test_settings_loader"] = make_loader(tmp_path)
@@ -429,6 +451,7 @@ def test_query_parameters_restore_theme_and_language(tmp_path):
 
 def test_default_is_dark_and_persian(tmp_path):
     at = AppTest.from_file(PAGE, default_timeout=60)
+    at.session_state["_test_bot_source"] = NoBots
     at.session_state["_test_settings_loader"] = make_loader(tmp_path)
     at.session_state["_test_client_factory"] = lambda _l, _r: FakeModelClient()
     at.run()
@@ -604,7 +627,8 @@ def test_no_english_ui_string_in_persian_on_either_page(tmp_path):
     assert len(english) > 100
     at = _app(tmp_path, theme="dark", lang="fa", levers=REAL_LEVERS)
     pages = [_persian_page_text(at)]  # the entry screen
-    at = at.button(key="mx-cta-entry-chatbot").click().run()
+    at = at.button(key="mx-cta-entry-chatbot").click().run()  # S02
+    at = at.button(key="mx-cta-continue").click().run()  # S04
     pages.append(_persian_page_text(at))  # settings
     at = at.button(key="mx-cta-start").click().run()
     at = send(at, "سلام")

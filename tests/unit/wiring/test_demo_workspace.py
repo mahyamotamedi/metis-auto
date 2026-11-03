@@ -78,10 +78,12 @@ def test_starts_on_the_entry_screen_with_no_journey(workspace):
     assert workspace.screen == Screen.ENTRY
 
 
-def test_chatbot_journey_goes_to_settings_then_chat(workspace):
+def test_chatbot_journey_goes_to_selection_then_settings_then_chat(workspace):
     workspace.choose_journey(Journey.CHATBOT)
-    assert (workspace.journey, workspace.screen) == (Journey.CHATBOT, Screen.SETTINGS)
+    assert (workspace.journey, workspace.screen) == (Journey.CHATBOT, Screen.BOTS)
     assert workspace.bot_key == workspace.bots[0].key  # a bot is always selected
+    assert workspace.continue_to_settings() is None
+    assert workspace.screen == Screen.SETTINGS
     workspace.start_chatting()
     assert workspace.screen == Screen.CHAT
 
@@ -104,6 +106,8 @@ def test_the_brand_returns_to_the_entry_screen_and_keeps_every_conversation(work
 def test_the_chat_tab_returns_to_the_current_workspace_or_the_entry(workspace):
     assert workspace.chat_target() == Screen.ENTRY
     workspace.choose_journey(Journey.CHATBOT)
+    assert workspace.chat_target() == Screen.BOTS
+    workspace.continue_to_settings()
     assert workspace.chat_target() == Screen.SETTINGS
     workspace.start_chatting()
     assert workspace.chat_target() == Screen.CHAT
