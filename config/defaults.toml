@@ -32,16 +32,18 @@ enabled = false
 # ADR-0018. Amounts are decimal strings in `currency`.
 currency = "USD"
 # Hard ceiling for the whole project. May be set ONLY in this file; raising it
-# needs a reviewed commit and a decision record. 20 USD = the Metis account
-# credit (owner decision 2026-11-01, ADR-0018 amendment 2).
-lifetime_ceiling = "20"
+# needs a reviewed commit and a decision record. 92 USD = the team lifetime
+# spend so far (12.03 USD, golden answers) plus the 80 USD remaining Metis
+# credit, rounded down (owner decision 2026-11-03, ADR-0018 amendment 3;
+# amendment 2 had 20).
+lifetime_ceiling = "92"
 # Lifetime cap across all runs (<= ceiling). Live calls are refused without it.
-# 20 USD = the Metis account credit (owner decision 2026-11-01, ADR-0018
-# amendment 2; it was 10, the dashboard limit of Q-29, amendment 1). The golden
-# answers for golden-v2 (ADR-0030) are estimated at 15 to 19 USD and fit within
-# it. If a run runs short it halts; after a top-up a new amendment raises both
-# values, and the run resumes.
-lifetime_cap = "20"
+# 92 USD, equal to the ceiling (owner decision 2026-11-03, ADR-0018 amendment 3,
+# for the paid benchmark of ADR-0053 plus a reserve; it was 20, amendment 2, and
+# 10 before that, the dashboard limit of Q-29, amendment 1). If a run runs
+# short it halts; after a top-up a new amendment raises both values, and the
+# run resumes.
+lifetime_cap = "92"
 # Per-run cap (<= lifetime cap). Placeholder proposed in Stage 6 (A-49).
 run_cap = "1"
 # Operator warnings when lifetime spend crosses these fractions of the cap.

@@ -60,6 +60,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-03: [Decision router R5 finished, R6: Jev via Metis, the LLM backup, the live check](progress/2026-11-03-decision-router-r5-finish-and-r6-hosted-backends.md)
 - 2026-11-03: [Decision router: the Jev synthetic result recorded in ADR-0047 and the register](progress/2026-11-03-decision-router-jev-result-in-adr-and-register.md)
 - 2026-11-03: [Decision router: final results and decisions](progress/2026-11-03-decision-router-final-results.md)
+- 2026-11-03: [Budget: ADR-0018 amendment 3, ceiling and lifetime cap 92 USD](progress/2026-11-03-budget-amendment-3-92-usd.md)
 - 2026-11-02: [Replay pricing for the logged models](progress/2026-11-02-sprint-pipeline-b-replay-pricing-logged-models.md)
 - 2026-11-02: [Sprint Day 3, Pipeline B: kNN router, Redis cache store, B-only combined dry run](progress/2026-11-02-sprint-day-3-pipeline-b-knn-router-redis-store-combined-replay.md)
 - 2026-11-02: [Sprint Day 2, Pipeline C: within-message chunk dedup and stable prompt order](progress/2026-11-02-sprint-day-2-pipeline-c-within-message-chunk-dedup.md)

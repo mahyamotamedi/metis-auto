@@ -49,7 +49,7 @@ Without the database, the cost bounds say "need the golden-v2 database".
 ## 4. Paid steps (only after the gates; owner approval in chat per run)
 
 Gates (final plan):
-1. ADR-0018 amendment 2 committed. It is (20 USD), but it was approved for the golden answers; the benchmark's share is the owner's call (Q-62).
+1. ADR-0018 amendment 2 committed. It is (20 USD), but it was approved for the golden answers; the benchmark's share is the owner's call (Q-62). Amendment 3 (2026-11-03) raised the ceiling and cap to 92 USD for this benchmark.
 2. Metis's written answer that samples may be sent to model APIs. Set it in `[gates]` with its reference.
 3. The owner's approval in chat for this run, after the printed estimate.
 

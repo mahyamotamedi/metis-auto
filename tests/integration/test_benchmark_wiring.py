@@ -296,7 +296,7 @@ def test_generate_judge_label_and_spot_check_over_mocked_http(root, tmp_path):
 
 
 def test_spend_guard_stops_live_calls_at_the_shared_ceiling(root, tmp_path):
-    """Another machine's summary leaves almost nothing under the 20 USD
+    """Another machine's summary leaves almost nothing under the 92 USD
     ceiling: every live call is refused by the guard, recorded as an error,
     and the run goes on (no crash, nothing sent)."""
     _bench(root, tmp_path)  # writes the owner-set config
@@ -313,7 +313,7 @@ def test_spend_guard_stops_live_calls_at_the_shared_ceiling(root, tmp_path):
                 "format": "ledger-summary-v1",
                 "machine": "syn-other",
                 "currency": "USD",
-                "total": "19.9999999",
+                "total": "91.9999999",
                 "charges": 1,
                 "by_run": {},
                 "newest_charge": None,

@@ -462,7 +462,7 @@ def test_header_has_brand_mode_chip_budget_and_no_login(tmp_path):
     # Stage 2b point 2: the real budget (cap 20, empty test ledger) in fake
     # mode too; the mode only in the chip, never twice
     assert '<div class="mx-budget"' in html and "بودجه:" in html
-    assert '<b><bdi dir="ltr" class="mx-ltr">$20.00</bdi></b>' in html
+    assert '<b><bdi dir="ltr" class="mx-ltr">$92.00</bdi></b>' in html
     assert "حالت آزمایشی" not in html and html.count("آزمایشی") == 2  # chip, pill
     text = html.lower()
     for absent in ("login", "sign up", "ورود", "avatar", "+</"):
