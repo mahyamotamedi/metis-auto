@@ -270,7 +270,6 @@ def test_lever_result_has_all_blocks_and_total(version, baseline):
     assert LeverResult.from_json(result.to_json()) == result
     view = waterfall(result)
     assert view.saving_total == result.saving["total"]
-    if baseline == "as_logged":
-        assert view.baseline_total == result.baseline_cost["total"]
-    else:
-        assert view.baseline_total is None  # fees unknown in price-file units
+    assert view.baseline_total == result.baseline_cost["total"]
+    if baseline != "as_logged":  # D-2: fees not priced in price-file units
+        assert view.note == "token cost only, fees not priced"

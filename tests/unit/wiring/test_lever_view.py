@@ -135,7 +135,15 @@ def test_rank_labels_not_ids(tmp_path):
 
 def test_waterfall_rows_sum_to_total(tmp_path):
     _write(tmp_path, _result("cache.synthetic-a"))
-    _write(tmp_path, _result("route.synthetic-c", baseline="best_single_cheap"))
+    _write(  # repriced: token cost only, no fees key (ADR-0036)
+        tmp_path,
+        _result(
+            "route.synthetic-c",
+            baseline="best_single_cheap",
+            baseline_cost={"token_cost": "6", "total": "6"},
+            saving={"token_cost": "1.5", "total": "1.5"},
+        ),
+    )
     _write(
         tmp_path,
         _result(
@@ -162,6 +170,8 @@ def test_waterfall_rows_sum_to_total(tmp_path):
 
     repriced = waterfall(view.for_baseline("best_single_cheap")[0])
     assert repriced.unit == "repriced"
+    assert repriced.baseline_total == Decimal(6)  # token cost only, never unknown
+    assert repriced.note == "token cost only, fees not priced"
 
     partial = waterfall(
         next(r for r in recorded if r.lever_id == "context.synthetic-b")
