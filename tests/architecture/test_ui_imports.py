@@ -1,6 +1,8 @@
 """The UI libraries (extra ``ui``: Streamlit and the Altair and pandas it
 brings) are imported only by the demo page, ``scripts/demo_ui.py`` (Demo B),
-its Results page file ``scripts/demo_pages/results.py`` (D-2, spec UI-R01),
+its page files ``scripts/demo_pages/results.py`` (D-2) and
+``scripts/demo_pages/workspace.py`` (Stage 3: entry, settings, workspaces; spec
+UI-R01),
 its live smoke test (``scripts/demo_ui_live_check.py``, which drives the page
 with Streamlit's test runner), and the page's tests; the package never needs
 them. Static check (``ast``)."""
@@ -13,8 +15,10 @@ UI_LIBRARIES = {"streamlit", "altair"}
 ALLOWED = {
     REPO / "scripts" / "demo_ui.py",
     REPO / "scripts" / "demo_pages" / "results.py",
+    REPO / "scripts" / "demo_pages" / "workspace.py",
     REPO / "scripts" / "demo_ui_live_check.py",
     REPO / "tests" / "integration" / "test_demo_ui_app.py",
+    REPO / "tests" / "integration" / "test_demo_ui_journeys.py",
 }
 
 
@@ -40,11 +44,20 @@ def test_ui_libraries_only_in_the_demo_page():
 
 
 def test_the_page_never_touches_the_key_or_logs():
-    tree = ast.parse((REPO / "scripts" / "demo_ui.py").read_text(encoding="utf-8"))
-    tree.body = tree.body[1:]  # the docstring explains the key; the code never uses it
-    source = ast.unparse(tree)
-    for forbidden in ("METIS_API_KEY", "get_secret_value", ".env", "logging", "print("):
-        assert forbidden not in source, forbidden
+    for name in ("demo_ui.py", "demo_pages/workspace.py"):
+        tree = ast.parse((REPO / "scripts" / name).read_text(encoding="utf-8"))
+        tree.body = tree.body[
+            1:
+        ]  # the docstring explains the key; the code never uses it
+        source = ast.unparse(tree)
+        for forbidden in (
+            "METIS_API_KEY",
+            "get_secret_value",
+            ".env",
+            "logging",
+            "print(",
+        ):
+            assert forbidden not in source, (name, forbidden)
 
 
 def test_new_page_files_hold_no_colours():
@@ -52,7 +65,7 @@ def test_new_page_files_hold_no_colours():
     it with the full token table); the Results page names none."""
     import re
 
-    page = REPO / "scripts" / "demo_pages" / "results.py"
-    source = page.read_text(encoding="utf-8")
-    assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", source)
-    assert "rgb(" not in source and "hsl(" not in source
+    for name in ("results.py", "workspace.py"):
+        source = (REPO / "scripts" / "demo_pages" / name).read_text(encoding="utf-8")
+        assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", source), name
+        assert "rgb(" not in source and "hsl(" not in source, name
