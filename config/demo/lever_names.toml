@@ -1,0 +1,155 @@
+# Display names of the lever versions on the Results page (UI Stage 2b, owner
+# review 2026-11-03 point 3; ADR-0052 Amendment 1). Read through
+# metis_auto.wiring.lever_view.load_lever_names.
+#
+# Each [[name]] maps a version id pattern (a regular expression over the
+# lever_id without its baseline suffix, matched in full) to a short name in fa
+# and en and the pipeline that owns it. Named groups fill the {fields}: digits
+# get thousands separators, and Persian digits in fa. The first match wins.
+# The page shows "name (owner)"; the raw id only in a small muted "id" caption
+# or a tooltip. An id with no match shows the raw id with a "no display name"
+# marker (tested: every id in reports/levers/ has a name).
+#
+# Persian names are [PLACEHOLDER: Persian review] (K-2/K-3), written by the
+# agent. Meanings from the owners' progress entries and READMEs (2026-11-03).
+
+[meta]
+persian_review = "[PLACEHOLDER: Persian review]"
+
+# --- Pipeline A ---------------------------------------------------------------
+
+[[name]]  # R-A1, exp-cache-003; pq-v1 (no TTL)
+pattern = 'cache\.popular_question\.first_turn'
+owner = "A"
+en = "Popular questions, first turn"
+fa = "پرسش‌های پرتکرار، نوبت اول"
+
+[[name]]
+pattern = 'cache\.popular_question\.all_turns'
+owner = "A"
+en = "Popular questions, all turns"
+fa = "پرسش‌های پرتکرار، همه‌ی نوبت‌ها"
+
+[[name]]  # pq-v2: a hit only if the stored answer is under ttl hours old
+pattern = 'cache\.popular_question\.first_turn\.ttl(?P<h>[0-9]+)h'
+owner = "A"
+en = "Popular questions, first turn, {h} h"
+fa = "پرسش‌های پرتکرار، نوبت اول، {h} ساعت"
+
+[[name]]
+pattern = 'cache\.popular_question\.all_turns\.ttl(?P<h>[0-9]+)h'
+owner = "A"
+en = "Popular questions, all turns, {h} h"
+fa = "پرسش‌های پرتکرار، همه‌ی نوبت‌ها، {h} ساعت"
+
+[[name]]  # R-A2, ADR-0040
+pattern = 'context\.reranker_cut\.observed_relevancy'
+owner = "A"
+en = "Reranker cut, observed relevance"
+fa = "برش بازرتبه‌بندی، ارتباط مشاهده‌شده"
+
+[[name]]
+pattern = 'context\.reranker_cut\.lexical_overlap'
+owner = "A"
+en = "Reranker cut, word overlap"
+fa = "برش بازرتبه‌بندی، هم‌پوشانی واژه‌ها"
+
+[[name]]  # R-A3, ADR-0051
+pattern = 'route\.per_bot'
+owner = "A"
+en = "Per-bot reassignment"
+fa = "جابه‌جایی مدل برای هر بات"
+
+[[name]]
+pattern = 'route\.per_bot\.with_reasoning_models'
+owner = "A"
+en = "Per-bot reassignment, with reasoning models"
+fa = "جابه‌جایی مدل برای هر بات، با مدل‌های استدلالی"
+
+# --- Pipeline B ---------------------------------------------------------------
+
+[[name]]  # R-B1, retrieval-result cache with a TTL in days
+pattern = 'rb1\.retrieval-cache\.ttl-(?P<d>[0-9]+)d\.user\.tune'
+owner = "B"
+en = "Retrieval cache, {d} days"
+fa = "حافظه‌ی بازیابی، {d} روز"
+
+[[name]]  # R-B2, exp-ctx-002: chunks visible k turns back, a pointer of p tokens
+pattern = 'rb2\.cross-turn\.k-(?P<k>[0-9]+)\.ptr-(?P<p>[0-9]+)\.pointer'
+owner = "B"
+en = "Repeated passages, last {k} turns, {p}-token pointer"
+fa = "قطعه‌های تکراری، {k} نوبت قبل، اشاره‌گر {p} توکنی"
+
+[[name]]
+pattern = 'rb2\.cross-turn\.k-(?P<k>[0-9]+)\.ptr-(?P<p>[0-9]+)\.ledger'
+owner = "B"
+en = "Repeated passages, last {k} turns, session ledger"
+fa = "قطعه‌های تکراری، {k} نوبت قبل، دفتر نشست"
+
+[[name]]
+pattern = 'rb2\.cross-turn\.k-all\.ptr-(?P<p>[0-9]+)\.pointer'
+owner = "B"
+en = "Repeated passages, all turns, {p}-token pointer"
+fa = "قطعه‌های تکراری، همه‌ی نوبت‌ها، اشاره‌گر {p} توکنی"
+
+[[name]]
+pattern = 'rb2\.cross-turn\.k-all\.ptr-(?P<p>[0-9]+)\.ledger'
+owner = "B"
+en = "Repeated passages, all turns, session ledger"
+fa = "قطعه‌های تکراری، همه‌ی نوبت‌ها، دفتر نشست"
+
+[[name]]  # R-B3, ADR-0048
+pattern = 'rb3\.knn-router\.k-(?P<k>[0-9]+)\.tune'
+owner = "B"
+en = "Nearest-neighbour router, k = {k}"
+fa = "مسیریاب نزدیک‌ترین همسایه، k = {k}"
+
+# --- Pipeline C ---------------------------------------------------------------
+
+[[name]]  # R-C1, ADR-0039
+pattern = 'cache\.session_memo_gate'
+owner = "C"
+en = "Session memo + greeting gate"
+fa = "یادداشت نشست و دروازه‌ی احوال‌پرسی"
+
+[[name]]  # S-6
+pattern = 'ctx\.within_message_dedup'
+owner = "C"
+en = "Duplicate passages in one message"
+fa = "حذف قطعه‌های تکراری در یک پیام"
+
+[[name]]  # R-C2, exp-ctx-004
+pattern = 'ctx\.history_budget\.b(?P<n>[0-9]+)'
+owner = "C"
+en = "History budget, {n} tokens"
+fa = "بودجه‌ی تاریخچه، {n} توکن"
+
+[[name]]
+pattern = 'ctx\.history_budget\.half_over_8k'
+owner = "C"
+en = "History budget, half above 8k"
+fa = "بودجه‌ی تاریخچه، نصف بالای ۸ هزار"
+
+[[name]]  # R-C3, ADR-0046
+pattern = 'route\.small_classifier\.rules'
+owner = "C"
+en = "Small classifier, rules"
+fa = "طبقه‌بند کوچک، قواعد"
+
+[[name]]
+pattern = 'route\.small_classifier\.rules\.with_reasoning_models'
+owner = "C"
+en = "Small classifier, rules, with reasoning models"
+fa = "طبقه‌بند کوچک، قواعد، با مدل‌های استدلالی"
+
+[[name]]  # ADR-0046 Amendment 1
+pattern = 'route\.small_classifier\.strict'
+owner = "C"
+en = "Small classifier, strict"
+fa = "طبقه‌بند کوچک، سخت‌گیرانه"
+
+[[name]]
+pattern = 'route\.small_classifier\.strict_unknown_blocked'
+owner = "C"
+en = "Small classifier, strict, unknown blocked"
+fa = "طبقه‌بند کوچک، سخت‌گیرانه، نامعلوم مسدود"

@@ -31,3 +31,35 @@ The spec makes the colours tokens in one table (UI-V03, UI-T05), asks for both t
 - In light mode, anything Streamlit draws on a canvas or in an element the CSS does not reach keeps the dark config colours; `st.dataframe` is avoided for that reason.
 - Texts built by `wiring.demo_ui` (banner details, per-message detail rows, failure texts, decomposition term names) stay English in both languages until they move to the strings table (Stage 3).
 - The header's brand does not yet return to an entry screen (UI-S01 is Stage 3).
+
+## Amendment 1 (2026-11-03): polish rules
+
+Owner review of Stage 2 (2026-11-03), eight points, applied in UI Stage 2b (Pipeline C). Status: **decided by the owner** for the rules; the Persian wording stays `[PLACEHOLDER: Persian review]` (K-2/K-3).
+
+1. **Wordmark.** The brand text is "متیس‌اتو" (fa) / "Metis-Auto" (en), heavy weight, with the small "نمونه‌ی آزمایشی" / "prototype" pill. "متیس" alone is never shown, because it reads as Metis's own product (UI-R08). Still no logo.
+2. **Header budget.** The credit position shows the real lifetime budget from the spend ledger in **both** modes: "بودجه: **$7.40** از $20.00", the amount left in accent bold, LTR-isolated (`ui_style.budget_html`, `demo_ui.header_budget`). No budget configured, or a ledger that cannot be read → "بودجه: نامعلوم", never a number. The mode appears only in the Fake/Live chip. The header reads the ledger only; it never writes it.
+3. **Readable version names.** `config/demo/lever_names.toml` maps each version id pattern (a regular expression over the lever_id without its baseline suffix) to a short fa and en name and the owner pipeline: "name (A|B|C)". Named groups fill the name (thousands separators; Persian digits in fa). The raw id appears only in a small muted "شناسه / id" caption and in chart tooltips. An id with no pattern shows the raw id with "no display name". Every id in `reports/levers/` must have a name (tested), so a new result needs a row before it reaches the demo.
+4. **One number formatter.** `wiring/ui_format.fmt(value, kind)`:
+   - money and recorded units: 2 decimals at |v| ≥ 1 with thousands separators; below 1, 4 significant digits with trailing zeros dropped ("$0.001921", "$0.00032"); `$` for USD, the unit otherwise as a muted caption;
+   - counts: thousands separators;
+   - percentages: 1 decimal;
+   - intervals: "[2.3%, 2.8%]".
+   Rounding is half up. Values are never changed, only their text. Chart axes use the matching d3 formats (`AXIS_FORMAT`). In Streamlit markdown labels, `$` is escaped (`md_safe`), because Streamlit reads the text between two `$` signs as LaTeX.
+5. **Compact Results layout.** A filter row, then tabs Cache / Context / Routing / Per bot. Inside a tab:
+   - the version switch with the id caption;
+   - the KPI row;
+   - charts in two columns at 3:2, the wider first, so it sits on the right in fa: waterfall | donut, then version comparison | before-and-after blocks;
+   - long tables in collapsed expanders labelled with a one-line summary from wiring.
+   The version comparison is one horizontal bar chart per step, labelled with display names.
+6. **Legends.** Every chart hides the Vega-Lite legend, which cannot be centred. Wiring draws an HTML row of square swatches and labels centred under the chart (`legend_html`), using the same colour scale as the chart (`series_scale`).
+7. **Right-to-left charts.** In fa, horizontal bar charts put category labels on the right and grow from right to left (`bar_layout`). The before-and-after chart puts "before" on the right. Card titles and axis titles are Persian; numbers on axes stay LTR.
+8. **Persian everywhere.** Every visible text built by `wiring.demo_ui` (banner details, detail sections and labels, failure texts, cost term names, routing badges, "served by") comes from the strings table through an optional translator; English stays the default and is unchanged. The calculations, the terms and their order are unchanged: `cost_view` and `waterfall_rows` keep their English keys, and the page translates at display time (`term_text`, `routing_kind_text`). Some text stays as it is, by rule, and is shown LTR where it is a block:
+   - model ids;
+   - units;
+   - settings reasons (e.g. "live.enabled is false");
+   - router decision texts;
+   - routing results' stored assumptions, shown as an English data block (`data_list_html`);
+   - SYNTHETIC preset titles.
+   Language slice codes get names (`lang_code_*`); compare's "N of M" and tenant flags are translated in `lever_view`.
+
+Consequence: this replaces the Stage 2 consequence that `wiring.demo_ui` texts stay English. A test renders both pages in fa and fails if a known English UI string remains.

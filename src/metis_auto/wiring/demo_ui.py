@@ -14,8 +14,16 @@ routing, caching, or accounting logic of its own:
 
 Everything is content-free except ``Preset`` (synthetic texts) and
 ``text_direction`` (reads a text, returns only "rtl" or "ltr").
+
+Language (UI Stage 2b, ADR-0052 Amendment 1): every visible text comes from
+``config/demo/ui_strings.toml`` through an optional translator ``t``; without
+one the text is English, as before. Only the texts move: the calculations, the
+terms and their order are unchanged. ``term_text`` and ``routing_kind_text``
+translate a term label or a badge at display time, so ``cost_view`` and
+``waterfall_rows`` keep their English keys.
+
 Called by: scripts/demo_ui.py, tests. Calls: settings, wiring.{chat, live,
-from_settings}, contracts.
+from_settings, ui_config}, contracts.
 """
 
 from __future__ import annotations
@@ -28,12 +36,14 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from metis_auto.adapters.system.ledger import LedgerError
 from metis_auto.contracts import DecompositionTerm, SavingsDecomposition
 from metis_auto.settings import LoadedSettings, SettingsError, repo_root
 
 from .chat import ChatSession, TurnReport
 from .from_settings import live_permission
 from .live import live_overrides
+from .ui_config import STRINGS_PATH, Text, load_strings, translator
 
 PRESETS_PATH = Path("config") / "demo" / "presets-synthetic.toml"
 
@@ -46,6 +56,10 @@ TERM_LABELS: dict[DecompositionTerm, str] = {
     DecompositionTerm.EXTRA_COST: "Extra cost",
     DecompositionTerm.ACTUALLY_PAID: "Actually paid",
 }
+TERM_KEYS: dict[str, str] = {
+    label: "term_" + label.lower().replace(" ", "_") for label in TERM_LABELS.values()
+}
+"""English term label → its key in the strings table."""
 SAVING_TERMS = frozenset(
     {
         DecompositionTerm.ROUTING_SAVING,
@@ -63,6 +77,16 @@ DEMO_CAVEAT = (
     "Routing rules, cache sharing, and compression are placeholder demo settings, "
     "not tuned: they show the mechanism, not a measured saving."
 )
+
+
+def _english() -> Text:
+    return translator(load_strings(repo_root() / STRINGS_PATH), "en")
+
+
+def term_text(label: str, t: Text) -> str:
+    """A decomposition term (``CostView.terms`` label) in ``t``'s language."""
+    return t(TERM_KEYS[label]) if label in TERM_KEYS else label
+
 
 # --- presets (SYNTHETIC content) ---
 
@@ -153,42 +177,30 @@ def live_banner(
     allowed: bool,
     reasons: tuple[str, ...],
     stopped: str | None = None,
+    t: Text | None = None,
 ) -> LiveBanner:
+    """The banner's state, title and detail. ``reasons`` and ``stopped`` come
+    from the settings and the pipeline as they are (not translated)."""
+    t = t or _english()
     if live and stopped:
-        return LiveBanner(
-            "stopped",
-            "Live calls STOPPED for this run",
-            f"{stopped}. Switch to fake mode and back to start a new run.",
-        )
-    if live:
-        return LiveBanner(
-            "on",
-            "Live calls ON: real models, real money",
-            "Every call goes through the spend guard and the ledger. Use only "
-            "your own or SYNTHETIC messages.",
-        )
-    why = "; ".join(reasons) if reasons else ""
-    if allowed:
-        return LiveBanner(
-            "off",
-            "Fake mode: live calls OFF (free)",
-            "Answers are canned [SYNTHETIC] text; the routing, cache, and cost "
-            "numbers are real. Live mode is available on this computer.",
-        )
-    return LiveBanner(
-        "off",
-        "Fake mode: live calls OFF (free)",
-        "Answers are canned [SYNTHETIC] text; the routing, cache, and cost numbers "
-        f"are real. Live mode is blocked here: {why}.",
-    )
+        state, detail = "stopped", t("banner_detail_stopped", stopped=stopped)
+    elif live:
+        state, detail = "on", t("banner_detail_on")
+    elif allowed:
+        state, detail = "off", t("banner_detail_off_allowed")
+    else:
+        why = "; ".join(reasons) if reasons else ""
+        state, detail = "off", t("banner_detail_off_blocked", why=why)
+    return LiveBanner(state, t(f"banner_{state}"), detail)
 
 
-def blocked_banner(reasons: tuple[str, ...] | str) -> LiveBanner:
+def blocked_banner(
+    reasons: tuple[str, ...] | str, *, t: Text | None = None
+) -> LiveBanner:
+    t = t or _english()
     text = reasons if isinstance(reasons, str) else "; ".join(reasons)
     return LiveBanner(
-        "blocked",
-        "Live calls BLOCKED: still in fake mode",
-        f"{text}. See the quickstart §4–§5 (.env and config/local.toml).",
+        "blocked", t("banner_blocked"), t("banner_detail_blocked", text=text)
     )
 
 
@@ -242,6 +254,7 @@ def cost_view(parts: SavingsDecomposition | None) -> CostView | None:
 
 
 def money(value: Decimal | None, currency: str = "USD") -> str:
+    """Plain-text amount (English; the page formats with ``ui_format.fmt``)."""
     return "not computed" if value is None else f"{value:.6f} {currency}"
 
 
@@ -319,6 +332,16 @@ def budget_view(chat: ChatSession) -> BudgetView | None:
     )
 
 
+def header_budget(chat: ChatSession) -> BudgetView | None:
+    """``budget_view`` for the header, in both modes (UI Stage 2b): None when
+    no budget is configured or the ledger cannot be read, which the header
+    shows as unknown, never as a number."""
+    try:
+        return budget_view(chat)
+    except LedgerError:
+        return None
+
+
 # --- per-message details ---
 
 ROUTING_KINDS = (  # first match wins: "re-routed … re-anchored" before "anchored"
@@ -344,21 +367,40 @@ def routing_kind(report: TurnReport) -> str:
     return kind
 
 
-def detail_sections(report: TurnReport) -> list[tuple[str, list[tuple[str, str]]]]:
-    """(section, rows) for the expandable per-message details. Content-free."""
+def routing_kind_text(kind: str, t: Text) -> str:
+    """A ``routing_kind`` badge in ``t``'s language (``-`` stays)."""
+    base, plus, _ = kind.partition(" + ")
+    if base == "-":
+        return base
+    text = t("rkind_" + base.replace("-", "_").replace(" ", "_"))
+    return f"{text} + {t('rkind_escalated')}" if plus else text
+
+
+def served_text(served_by: str, t: Text) -> str:
+    """``model``, ``cache`` or ``none`` in ``t``'s language."""
+    key = f"served_{served_by}"
+    return t(key) if served_by in ("model", "cache", "none") else served_by
+
+
+def detail_sections(
+    report: TurnReport, *, t: Text | None = None
+) -> list[tuple[str, list[tuple[str, str]]]]:
+    """(section, rows) for the expandable per-message details. Content-free.
+    Values come from the report as they are (model ids, states, amounts)."""
+    t = t or _english()
     r = report.routing
     model = report.model_id or "-"
     if report.served_by == "cache" and model == "demo-seed":
-        model = "demo-seed (a LOGGED sample answer, shown locally, never sent)"
+        model = t("det_seed_model")
     sections: list[tuple[str, list[tuple[str, str]]]] = [
         (
-            "Served",
+            t("det_sec_served"),
             [
-                ("served by", report.served_by),
-                ("model", model),
-                ("provider-reported model", report.provider_model or "-"),
+                (t("det_served_by"), served_text(report.served_by, t)),
+                (t("det_model"), model),
+                (t("det_provider_model"), report.provider_model or "-"),
                 (
-                    "status",
+                    t("det_status"),
                     report.status + (f" ({report.failure})" if report.failure else ""),
                 ),
             ],
@@ -367,14 +409,14 @@ def detail_sections(report: TurnReport) -> list[tuple[str, list[tuple[str, str]]
     if r:
         sections.append(
             (
-                "Routing",
+                t("det_sec_routing"),
                 [
-                    ("decision", r.get("decision", "-")),
-                    ("reason code", r.get("reason_code", "-")),
-                    ("target", r.get("target", "-")),
-                    ("anchor before", r.get("anchor_before", "-")),
-                    ("escalation chain", r.get("chain", "-")),
-                    ("policy", r.get("policy", "-")),
+                    (t("det_decision"), r.get("decision", "-")),
+                    (t("det_reason_code"), r.get("reason_code", "-")),
+                    (t("det_target"), r.get("target", "-")),
+                    (t("det_anchor_before"), r.get("anchor_before", "-")),
+                    (t("det_chain"), r.get("chain", "-")),
+                    (t("det_policy"), r.get("policy", "-")),
                 ],
             )
         )
@@ -382,94 +424,98 @@ def detail_sections(report: TurnReport) -> list[tuple[str, list[tuple[str, str]]
         f = report.features
         sections.append(
             (
-                "Features",
+                t("det_sec_features"),
                 [
-                    ("language", f.get("language", "-")),
-                    ("code", f.get("code", "-")),
-                    ("coding intent", f.get("coding_intent", "-")),
-                    ("length bucket", f.get("length_bucket", "-")),
-                    ("greeting", f.get("greeting", "-")),
-                    ("earlier user turns", f.get("turn_depth", "-")),
+                    (t("det_language"), f.get("language", "-")),
+                    (t("det_code"), f.get("code", "-")),
+                    (t("det_coding_intent"), f.get("coding_intent", "-")),
+                    (t("det_length_bucket"), f.get("length_bucket", "-")),
+                    (t("det_greeting"), f.get("greeting", "-")),
+                    (t("det_turn_depth"), f.get("turn_depth", "-")),
                 ],
             )
         )
     if report.cache:
-        sections.append(("Cache lookups", [("lookup", c) for c in report.cache]))
+        sections.append(
+            (t("det_sec_cache"), [(t("det_lookup"), c) for c in report.cache])
+        )
     tokens = report.tokens or {}
     sections.append(
         (
-            "Tokens",
+            t("det_sec_tokens"),
             [
-                ("input", tokens.get("input", "-")),
-                ("cached input (provider)", tokens.get("cached_input", "-")),
-                ("output", tokens.get("output", "-")),
-                ("reasoning (hidden)", tokens.get("reasoning", "-")),
-                ("template overhead", tokens.get("template_overhead", "-")),
+                (t("det_input"), tokens.get("input", "-")),
+                (t("det_cached_input"), tokens.get("cached_input", "-")),
+                (t("det_output"), tokens.get("output", "-")),
+                (t("det_reasoning"), tokens.get("reasoning", "-")),
+                (t("det_template_overhead"), tokens.get("template_overhead", "-")),
             ]
             if tokens
-            else [("tokens", "none: no model call")],
+            else [(t("det_tokens"), t("det_no_call"))],
         )
     )
     sections.append(
         (
-            "Cost",
+            t("det_sec_cost"),
             [
-                ("cost", report.cost),
-                ("cost caveats", ", ".join(report.cost_caveats) or "-"),
-                ("premium estimate (gpt-5.5, never called)", report.premium_estimate),
-                ("premium caveats", ", ".join(report.premium_caveats) or "-"),
+                (t("det_cost"), report.cost),
+                (t("det_cost_caveats"), ", ".join(report.cost_caveats) or "-"),
+                (t("det_premium"), report.premium_estimate),
+                (t("det_premium_caveats"), ", ".join(report.premium_caveats) or "-"),
             ],
         )
     )
     c = report.compression
     sections.append(
         (
-            "Compression",
+            t("det_sec_compression"),
             [
-                ("compressor", c["compressor"]),
-                ("what it shortened", c["components"]),
-                ("token method", c["token_method"]),
-                ("time", f"{c['time_ms']} ms"),
+                (t("det_compressor"), c["compressor"]),
+                (t("det_shortened"), c["components"]),
+                (t("det_token_method"), c["token_method"]),
+                (t("det_time"), f"{c['time_ms']} ms"),
             ]
             if c
-            else [("compression", "off")],
+            else [(t("det_compression"), t("det_off"))],
         )
     )
     overhead = f"{report.overhead_ms:.2f} ms" if report.overhead_ms is not None else "-"
     sections.append(
         (
-            "Overhead",
-            [("Metis-Auto time", overhead), ("helper calls", report.overhead_cost)],
+            t("det_sec_overhead"),
+            [
+                (t("det_overhead_time"), overhead),
+                (t("det_helper_calls"), report.overhead_cost),
+            ],
         )
     )
     return sections
 
 
-def friendly_failure(report: TurnReport) -> str | None:
+def friendly_failure(report: TurnReport, *, t: Text | None = None) -> str | None:
     """A plain-language note for a refused or failed call, or None."""
+    t = t or _english()
     if report.live_stopped:
-        return (
-            "Live calls were stopped for this run: a call failed without reporting "
-            "its cost, so its estimate was charged to be safe. Switch to fake mode "
-            "and back to start a new run; if it repeats, check the key and network."
-        )
+        return t("fail_stopped")
     if report.failure == "budget_exhausted":
         b = report.budget
         where = (
-            f" (this run: {b['run_spent']} of {b['run_cap']} {b['currency']}; "
-            f"lifetime: {b['lifetime_spent']} of {b['lifetime_cap']})"
+            t(
+                "fail_budget_where",
+                rs=b["run_spent"],
+                rc=b["run_cap"],
+                c=b["currency"],
+                ls=b["lifetime_spent"],
+                lc=b["lifetime_cap"],
+            )
             if b
             else ""
         )
-        return (
-            "The budget guard stopped this call before it was made: it could go "
-            f"over the per-run or lifetime cap{where}. Nothing was charged. Start a "
-            "new run (switch to fake and back), or ask the project owner."
-        )
+        return t("fail_budget", where=where)
     if report.failure == "no_eligible_model":
-        return "No model could take this message (disabled or unknown limits)."
+        return t("fail_no_model")
     if report.failure:
-        return f"No answer: {report.failure}."
+        return t("fail_other", failure=report.failure)
     return None
 
 
@@ -486,11 +532,15 @@ __all__ = [
     "cost_view",
     "detail_sections",
     "friendly_failure",
+    "header_budget",
     "live_banner",
     "live_check",
     "load_presets",
     "money",
     "routing_kind",
+    "routing_kind_text",
+    "served_text",
+    "term_text",
     "text_direction",
     "waterfall_rows",
 ]

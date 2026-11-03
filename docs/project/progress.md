@@ -37,6 +37,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 ## Entries, newest first
 
 <!-- progress-index:start -->
+- 2026-11-03: [Sprint Day 3, Pipeline C: UI Stage 2b, visual polish of the design system](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-2b-polish.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: demo UI design system, UI spec Stage 2](progress/2026-11-03-sprint-day-3-pipeline-c-ui-design-system.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: small classifier, strict content rules](progress/2026-11-03-sprint-day-3-pipeline-c-small-classifier-strict.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: small classifier routing, threshold rule and logistic mode](progress/2026-11-03-sprint-day-3-pipeline-c-small-classifier-routing.md)
@@ -47,6 +48,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-03: [Sprint Day 3, Pipeline A: R-A3 per-bot reassignment on R-0, accounted per ADR-0046](progress/2026-11-03-sprint-day-3-pipeline-a-per-bot-reassignment-r-a3.md)
 - 2026-11-03: [Pipeline B: R-B3 on the routing base and per-baseline incumbent, logged-price re-run, one report-split run, overhead](progress/2026-11-03-pipeline-b-routing-base-logged-prices-rerun-overhead.md)
 - 2026-11-03: [Pipeline B, Day 3 decision records: kNN router and Redis cache store](progress/2026-11-03-pipeline-b-day-3-decision-records.md)
+- 2026-11-03: [Paid benchmark P-1 to P-3: engineering for a golden-v2 pilot, real judge, labels hand-off, shared spend total](progress/2026-11-03-paid-benchmark-p1-p3-engineering.md)
 - 2026-11-03: [Jev tasks J-1 to J-4: the note, the configuration, and the remapping](progress/2026-11-03-jev-tasks-j1-to-j4.md)
 - 2026-11-03: [Decision router: first decision-quality check on SYNTHETIC requests](progress/2026-11-03-decision-router-synthetic-decision-quality.md)
 - 2026-11-03: [Decision router: second sync with main, and R-0's routing base](progress/2026-11-03-decision-router-sync-with-main-routing-base.md)
@@ -55,6 +57,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-03: [Decision router R7: chat and UI toggles, environment switch, quickstart](progress/2026-11-03-decision-router-r7-chat-ui-quickstart.md)
 - 2026-11-03: [Decision router: the owner's native run and its follow-up](progress/2026-11-03-decision-router-r6-follow-up-owner-run.md)
 - 2026-11-03: [Decision router R5 finished, R6: Jev via Metis, the LLM backup, the live check](progress/2026-11-03-decision-router-r5-finish-and-r6-hosted-backends.md)
+- 2026-11-03: [Decision router: the Jev synthetic result recorded in ADR-0047 and the register](progress/2026-11-03-decision-router-jev-result-in-adr-and-register.md)
 - 2026-11-03: [Decision router: final results and decisions](progress/2026-11-03-decision-router-final-results.md)
 - 2026-11-02: [Replay pricing for the logged models](progress/2026-11-02-sprint-pipeline-b-replay-pricing-logged-models.md)
 - 2026-11-02: [Sprint Day 3, Pipeline B: kNN router, Redis cache store, B-only combined dry run](progress/2026-11-02-sprint-day-3-pipeline-b-knn-router-redis-store-combined-replay.md)
