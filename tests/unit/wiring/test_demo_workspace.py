@@ -113,12 +113,11 @@ def test_the_chat_tab_returns_to_the_current_workspace_or_the_entry(workspace):
     assert workspace.chat_target() == Screen.CHAT
 
 
-def test_the_brand_link_is_a_query_parameter_consumed_once(workspace):
+def test_the_brand_link_is_a_query_parameter_the_router_follows(workspace):
     workspace.choose_journey(Journey.DIRECT)
-    assert workspace.consume_query({"screen": "entry"}) is True
-    assert workspace.screen == Screen.ENTRY
-    assert workspace.consume_query({}) is False
-    assert workspace.consume_query({"screen": "nonsense"}) is False
+    workspace.sync_url({"screen": "chat", "journey": "direct"})
+    assert workspace.sync_url({"screen": "entry"}) == {"screen": "entry"}
+    assert workspace.screen == Screen.ENTRY and workspace.journey == Journey.NONE
 
 
 # --- one ChatSession per (journey, bot); bots keep their conversations (UI-SB04) -----
