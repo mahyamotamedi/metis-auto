@@ -493,3 +493,63 @@ def test_every_number_carries_its_evidence_label(tmp_path):
 
 def test_tenant_cap_from_sprint_config():
     assert tenant_cap(REPO / "config" / "evaluation" / "sprint.toml") == CAP
+
+
+# --- chart rows for the Stage 2 cards (UI-G03, UI-G04, UI-G08) -----------------------
+
+
+def test_block_bars_stack_before_and_after_by_block(tmp_path):
+    _write(tmp_path, _result())
+    step = _board(tmp_path, baseline="as_logged").overview[0]
+    rows = {(r["stage"], r["block"]): r["value"] for r in step.blocks}
+    strings = load_strings()
+    before, after = strings.text("row_before", "en"), strings.text("row_after", "en")
+    fees, tokens = (
+        strings.text("block_fees", "en"),
+        strings.text("block_token_cost", "en"),
+    )
+    assert rows == {
+        (before, fees): 2.0,
+        (before, tokens): 6.0,
+        (after, fees): 1.5,
+        (after, tokens): 4.5,
+    }
+    # each stage adds up to its stored total: nothing invented
+    assert sum(v for (s, _), v in rows.items() if s == before) == 8.0
+    assert sum(v for (s, _), v in rows.items() if s == after) == 6.0
+
+
+def test_breakdown_is_the_after_cost_plus_each_blocks_saving(tmp_path):
+    _write(tmp_path, _result())
+    step = _board(tmp_path, baseline="as_logged").overview[0]
+    values = {r["part"]: r["value"] for r in step.breakdown}
+    strings = load_strings()
+    assert values[strings.text("part_remaining", "en")] == 6.0
+    assert sum(values.values()) == 8.0  # = the baseline cost
+    assert all(r["text"] for r in step.breakdown)
+
+
+def test_repriced_block_charts_leave_out_fees_not_priced(tmp_path):
+    _write(tmp_path, _result(baseline="todays_models"))
+    step = _board(tmp_path, baseline="todays_models").overview[0]
+    fees = load_strings().text("block_fees", "en")
+    assert step.blocks and all(r["block"] != fees for r in step.blocks)
+    assert sum(r["value"] for r in step.breakdown) == 6.0
+
+
+def test_no_block_charts_when_a_value_is_unknown_or_negative(tmp_path):
+    _write(
+        tmp_path,
+        _result(
+            name="routing.synth_neg",
+            step="routing",
+            saving={"fees": "0", "token_cost": "-1", "total": "-1"},
+        ),
+    )
+    step = next(
+        s
+        for s in _board(tmp_path, baseline="as_logged").overview
+        if s.step == "routing"
+    )
+    assert step.blocks  # before / after are both known
+    assert step.breakdown == ()  # a negative saving is no slice of a donut

@@ -1,12 +1,144 @@
-# Chart colours of the demo UI (spec UI-V03, UI-T05), read through
-# metis_auto.wiring.ui_config.chart_theme; no page names a colour (tested).
-# STAGE 1 PLACEHOLDER: Stage 2 replaces this file with the full token table
-# (dark and light, from the screenshots in docs/design/metis-screens/).
-# Values: data-viz palette slots 1 and 2, the same as the chat's cost panel
-# (scripts/demo_ui.py KIND_COLOURS), so the two pages agree.
+# Design tokens of the demo UI (spec §2.2 UI-V03, UI-T05; Stage 2, 2026-11-03).
+# The ONLY place that names a colour: metis_auto.wiring.ui_config.load_theme reads
+# it, metis_auto.wiring.ui_style turns it into CSS variables and an Altair config
+# per mode. Page files and the CSS generator hold no colour (tested).
+#
+# Source of every value, written next to it:
+#   sampled <image> (x, y)  pixel read with Pillow from docs/design/metis-screens/
+#                           <image>.png; coordinates in the 2000-px-wide view of
+#                           the 2940-px image (multiply by 1.47 for the file);
+#                           the most common colour of a 7x7 patch, or for text
+#                           and thin lines the most saturated / extreme pixel
+#   estimated               not visible in the screenshots: chosen to sit with
+#                           the sampled values (restrained, readable)
+# Where the sampled value differs from docs/design/metis-screens-notes.md, the
+# image wins and the note's value is given as "notes: ...".
+# Sizes: the screenshots are 2x Retina, so CSS px = image px / 2.
 
-[chart]
-total = "#2a78d6"   # baseline and after-cost bars
-saving = "#1baf7a"  # saving bars
-grid_opacity = 0.25    # subtle grid lines (UI-G05)
-domain_opacity = 0.4   # subtle axis lines (UI-G05)
+[meta]
+modes = ["dark", "light"]
+default_mode = "dark"
+checked = "2026-11-03"
+
+[dark]
+bg = "#111113"             # sampled 4-dark-dashboard-top (1000, 175), page under the filter row
+header = "#18191B"         # sampled 4-dark-dashboard-top (1000, 40); notes: #18181B
+surface = "#080911"        # sampled 4-dark-dashboard-top (1700, 435), KPI card fill; notes: #0A0A0F
+control = "#06070E"        # sampled 4-dark-dashboard-top (1450, 230), filter control fill; notes: #0B0B10
+elevated = "#2F3032"       # sampled 4-dark-dashboard-top (1830, 135), active tab pill; notes: #27272A
+border = "#212936"         # sampled 4-dark-dashboard-top, KPI and chart card edges (x 1600 / 690); notes: #23252F
+header_border = "#2F3135"  # sampled 4-dark-dashboard-top, header bottom hairline (x 1000, y 155)
+text = "#FFFFFF"           # sampled 4-dark-dashboard-top, KPI value "$0.001921" (lightest pixel); notes: #F5F6FA
+text_muted = "#989BA9"     # sampled 4-dark-dashboard-top, KPI label "مجموع هزینه" and axis ticks; notes: #9CA3AF
+nav_text = "#DFE4ED"       # sampled 4-dark-dashboard-top, tab label "ورکفلوها"
+accent = "#4560F6"         # sampled 4-dark-dashboard-top (355, 46), theme toggle track (= 2-light-login button); notes: #4361EE
+accent_text = "#70A3F3"    # sampled 4-dark-dashboard-top, credit amount "20.00$" (most saturated pixel)
+on_accent = "#FFFFFF"      # sampled 4-dark-dashboard-top (318, 46), toggle knob
+success = "#5CB58D"        # estimated: the sampled green chart series (4-dark (1306, 959)), reused
+warning = "#E0A43A"        # estimated
+danger = "#E5484D"         # estimated (the red end of the brand gradient family)
+info = "#4560F6"           # estimated: = accent
+shadow = "#000000"         # estimated: shadow base colour (used at very low alpha)
+
+[light]
+bg = "#FFFFFF"             # sampled 3-light-dashboard-top (1000, 175)
+header = "#F9F9FB"         # sampled 3-light-dashboard-top (1000, 40); notes: #F4F4F6
+surface = "#FCFCFC"        # sampled 3-light-dashboard-top (1700, 435), KPI card fill; notes: #FCFCFD
+control = "#FFFFFF"        # sampled 3-light-dashboard-top (1450, 230), filter control fill
+elevated = "#E3E3E7"       # sampled 3-light-dashboard-top (1830, 135), active tab pill; notes: #EBEBEF
+border = "#E5E7EB"         # sampled 3-light-dashboard-top, KPI, filter and chart card edges; notes: #E4E4E7
+header_border = "#E0E1E6"  # sampled 3-light-dashboard-top, header bottom hairline (x 1000, y 155)
+text = "#03050C"           # sampled 3-light-dashboard-top, KPI value (darkest pixel); notes: #18181B
+text_muted = "#565866"     # sampled 3-light-dashboard-top, KPI label and axis ticks; notes: #6B7280
+nav_text = "#161616"       # sampled 3-light-dashboard-top, tab label "ورکفلوها"
+accent = "#4560F6"         # sampled 2-light-login (800, 740), primary button (= dark toggle track); notes: #4361EE
+accent_text = "#4E80EE"    # sampled 3-light-dashboard-top, credit amount "20.00$" (most saturated pixel)
+on_accent = "#FFFFFF"      # sampled 2-light-login, button label
+success = "#2F8F6B"        # estimated (darker than the teal series for text contrast on white)
+warning = "#B7791F"        # estimated
+danger = "#D13F44"         # estimated
+info = "#4560F6"           # estimated: = accent
+shadow = "#0A0C18"         # estimated: shadow base colour (used at very low alpha; 2-light-login card)
+
+[dark.toggle]
+track = "#4560F6"          # sampled 4-dark-dashboard-top (355, 46): blue track in dark mode
+knob = "#FFFFFF"           # sampled 4-dark-dashboard-top (318, 46)
+icon = "#4560F6"           # estimated: the moon glyph on the knob
+
+[light.toggle]
+track = "#E0E1E6"          # sampled 3-light-dashboard-top (318, 38): gray track in light mode
+knob = "#FFFFFF"           # estimated: white knob (the sampled centre is the sun glyph)
+icon = "#979AA0"           # sampled 3-light-dashboard-top (349, 46): the sun glyph
+
+# Charts (UI-G01..G06). The series colours CHANGE with the theme, as in the images.
+[dark.chart]
+trend = "#5CB58D"          # sampled 4-dark-dashboard-top, cost-trend line and legend swatch (1306, 959); notes: #4FC3A1
+trend_fill = "#152324"     # sampled 4-dark-dashboard-top (830, 860), area under the trend line (≈ trend at 15% on surface)
+series_a = "#DB9145"       # sampled 4-dark-dashboard-top, input-tokens line and swatch (287, 959); notes: #F59E42
+series_b = "#A45BD4"       # sampled 4-dark-dashboard-top, output-tokens line and swatch (367, 959); notes: #A855F7
+cat_1 = "#3760D1"          # sampled 5-dark-dashboard-bottom (900, 500), stacked bar and donut; notes: #3B5BDB
+cat_2 = "#5CB58D"          # sampled 5-dark-dashboard-bottom (900, 330), stacked bar; notes: #5FB38E
+grid = "#151923"           # sampled 4-dark-dashboard-top, dashed grid lines (row y 742, column x 1036)
+axis = "#989BA9"           # sampled 4-dark-dashboard-top, y-axis domain line (x 812) = text_muted
+tooltip_bg = "#18191B"     # estimated: = header (an elevated surface, UI-G06)
+
+[light.chart]
+trend = "#4F9B90"          # sampled 3-light-dashboard-top, cost-trend line and swatch (1306, 959); notes: #4E9F8F
+trend_fill = "#E2EDEC"     # sampled 3-light-dashboard-top (830, 860), area under the trend line
+series_a = "#2E4652"       # sampled 3-light-dashboard-top, input-tokens line and swatch; notes: #2C3E50
+series_b = "#E3C576"       # sampled 3-light-dashboard-top, output-tokens line and swatch; notes: #E5C35A
+cat_1 = "#D87558"          # sampled 6-light-dashboard-bottom (900, 550), stacked bar and donut; notes: #D9775A
+cat_2 = "#4F9B90"          # sampled 6-light-dashboard-bottom (900, 380), stacked bar; notes: #4F9D8F
+grid = "#F1F1F3"           # sampled 3-light-dashboard-top, dashed grid lines (row y 742, column x 1036)
+axis = "#565866"           # sampled 3-light-dashboard-top, y-axis domain line (x 812) = text_muted
+tooltip_bg = "#FFFFFF"     # estimated
+
+# Brand gradient (UI-V03): only the wordmark accent, the ONE main CTA per screen
+# and the landing hero (Stage 3). Right to left in RTL, as in the landing page.
+[brand]
+gradient = ["#4063F6", "#654BF6", "#8C3AF6", "#B23FBE", "#E14777"]  # sampled 1-dark-landing headline, right → left at x 1600, 1300, 1000, 700, 400 (y 330-380); notes: #3D63FF, #8B3DFF, #D63384, #E5484D
+cta = ["#5953F6", "#963BE8", "#CD4393"]  # sampled 1-dark-landing CTA "شروع اتصال", right (950, 742) → left (785, 742)
+
+# Entry screen (Stage 3, UI-S01); dark only, as in image 1.
+[landing]
+bg = "#07070C"             # sampled 1-dark-landing (1000, 180); notes: #0A0A10
+hero = "#0C0E1F"           # sampled 1-dark-landing, hero card fill inside its edge (x 130, y 500)
+hero_border = "#242635"    # sampled 1-dark-landing, hero card edge (x 125, y 500)
+glow_navy = "#111838"      # sampled 1-dark-landing (200, 800), lower-left glow
+glow_wine = "#200D16"      # sampled 1-dark-landing (1700, 170), upper-right glow
+
+# Sizes in CSS px (UI-V10), measured on 4-dark-dashboard-top (image px / 2).
+[size]
+space = [4, 8, 12, 16, 24, 32]  # spec §2.5 scale
+radius_card = 8            # measured: KPI card corner, the border meets the edge 7 px down
+radius_control = 8         # measured: filter controls, active tab pill
+radius_pill = 999          # fully rounded (toggle, chips)
+header_row1 = 60           # measured 64 (row 1); owner: at most 56-64
+header_row2 = 50           # measured 50 (row 2, holds the 36-px tab pill)
+tab_height = 36            # measured 36.5 (active tab pill)
+control_height = 40        # measured 39.5 (filter row)
+button_height = 40         # spec §2.5
+card_padding = 20          # measured ~24 (label 27 px below the card top); spec 16-20
+card_gap = 16              # measured 16.5 between KPI cards
+kpi_min_height = 128       # measured 129
+page_gutter = 28           # measured: cards start 30 px from the page edge
+toggle_width = 48          # measured ~49 x 24
+toggle_height = 24
+focus_ring = 2             # UI-K02: visible keyboard focus
+
+[font]
+family = "Vazirmatn"       # UI-V08: bundled locally, assets/fonts/vazirmatn/ (OFL), never a CDN
+fallback = "system-ui, -apple-system, \"Segoe UI\", Roboto, Tahoma, sans-serif"
+mono = "ui-monospace, SFMono-Regular, Menlo, monospace"
+files = [
+  { weight = 400, file = "Vazirmatn-Regular.woff2" },
+  { weight = 500, file = "Vazirmatn-Medium.woff2" },
+  { weight = 700, file = "Vazirmatn-Bold.woff2" },
+  { weight = 800, file = "Vazirmatn-ExtraBold.woff2" },  # the heavy wordmark only
+]
+size_base = 15             # estimated: body text in the screenshots (~15 px)
+size_small = 13            # measured: KPI labels and tab labels (~13-14 px)
+size_tick = 11             # measured: axis ticks (~11 px)
+size_value = 26            # measured: KPI values (~26 px)
+size_card_title = 20       # measured: chart card titles (~21 px)
+size_wordmark = 24         # measured: "متیس" (~22-24 px)

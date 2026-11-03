@@ -1,5 +1,6 @@
-"""The demo UI's strings table and chart colours (spec UI-V06, UI-T05; Stage 1
-uses only the Results page's keys). Config files only, no Streamlit."""
+"""The demo UI's strings table and chart colours (spec UI-V06, UI-T05). Stage 2
+replaced the Stage 1 ``chart_theme`` placeholder with ``load_theme``; the full
+token tests are in ``test_ui_theme.py``. Config files only, no Streamlit."""
 
 from __future__ import annotations
 
@@ -11,9 +12,10 @@ from metis_auto.wiring.ui_config import (
     LANGUAGES,
     STRINGS_PATH,
     THEME_PATH,
-    chart_theme,
+    THEMES,
     direction,
     load_strings,
+    load_theme,
 )
 
 
@@ -52,8 +54,8 @@ def test_direction_per_language():
 
 
 def test_chart_colours_live_only_in_the_theme_file():
-    theme = chart_theme()
-    assert set(theme.colours) == {"total", "saving"}
-    assert all(re.fullmatch(r"#[0-9a-fA-F]{6}", c) for c in theme.colours.values())
-    assert 0 < theme.grid_opacity < 1 and 0 < theme.domain_opacity <= 1
+    for mode in THEMES:
+        kinds = load_theme(mode).kinds
+        assert set(kinds) == {"total", "saving", "extra cost"}
+        assert all(re.fullmatch(r"#[0-9A-F]{6}", c) for c in kinds.values())
     assert THEME_PATH.name == "theme.toml"

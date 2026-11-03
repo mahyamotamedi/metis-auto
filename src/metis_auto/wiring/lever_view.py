@@ -282,6 +282,12 @@ class StepView:
     waterfall: Waterfall | None = None
     chart: tuple[dict[str, object], ...] = ()
     """Waterfall bars; empty when a value is unknown (UI-G08)."""
+    blocks: tuple[dict[str, object], ...] = ()
+    """Stacked bars (UI-G03): the cost before and after the step by priced
+    block; empty when a value is unknown."""
+    breakdown: tuple[dict[str, object], ...] = ()
+    """Donut (UI-G04): the cost left after the step and each block's saving,
+    adding up to the baseline cost; empty when a value is unknown or negative."""
     unit: str = ""
     unit_note: str | None = None
     evidence: str = ""
@@ -790,7 +796,57 @@ def _step_view(
         Card("interval", t("interval"), None, interval_text),
     )
     return replace(
-        base, cards=cards, interval=ci, waterfall=wf, chart=_waterfall_chart(wf, t)
+        base,
+        cards=cards,
+        interval=ci,
+        waterfall=wf,
+        chart=_waterfall_chart(wf, t),
+        blocks=_block_bars(wf, t),
+        breakdown=_breakdown(wf, t),
+    )
+
+
+def _block_bars(wf: Waterfall, t: _Text) -> tuple[dict[str, object], ...]:
+    """Before and after by priced block (fees not priced and ``other``, which is
+    part of token cost, are left out); none if a value is unknown."""
+    priced = [r for r in wf.rows if r.priced and r.part_of is None]
+    if not priced or any(r.baseline is None or r.after is None for r in priced):
+        return ()
+    bars = []
+    for stage, field in (("row_before", "baseline"), ("row_after", "after")):
+        for order, row in enumerate(priced):
+            value = getattr(row, field)
+            bars.append(
+                {
+                    "stage": t(stage),
+                    "block": t(f"block_{row.block}"),
+                    "order": order,
+                    "value": float(value),
+                    "text": t.amount(value),
+                }
+            )
+    return tuple(bars)
+
+
+def _breakdown(wf: Waterfall, t: _Text) -> tuple[dict[str, object], ...]:
+    """The after-cost and each priced block's saving: slices of the baseline
+    cost. None when a value is unknown, or a saving or the after-cost is negative
+    (an extra cost is no slice of the baseline)."""
+    priced = [r for r in wf.rows if r.priced and r.part_of is None]
+    if wf.after_total is None or wf.after_total < 0 or not priced:
+        return ()
+    if any(r.saving is None or r.saving < 0 for r in priced):
+        return ()
+    parts = [("part_remaining", None, wf.after_total)]
+    parts += [("part_saved", r.block, r.saving) for r in priced if r.saving]
+    return tuple(
+        {
+            "part": t(key, block=t(f"block_{block}")) if block else t(key),
+            "order": order,
+            "value": float(value),
+            "text": t.amount(value),
+        }
+        for order, (key, block, value) in enumerate(parts)
     )
 
 
@@ -980,7 +1036,7 @@ def _routing(result: LeverResult, cap: Decimal, t: _Text) -> RoutingTable:
                     n_requests=_count(s, "n_requests"),
                     share=share,
                     flagged=flagged,
-                    flag_text=t("flag_over_cap", cap=f"{float(cap):.0%}")
+                    flag_text=t("flag_over_cap", cap=f"\u2066{float(cap):.0%}\u2069")
                     if flagged
                     else t("flag_ok"),
                     saving_share=s.get("saving_share"),
