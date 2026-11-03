@@ -17,8 +17,10 @@ results use ``split_by_session == "tune"`` rows inside the tune period. The
 report period is not read. ``--out-root`` and ``--sample-sessions`` are for a
 smoke run into a scratch folder. No network, no model call, no key.
 
-L-1 (overhead) is not run here: ``scripts/measure_lever_overhead.py``
-(Pipeline A) exists on no branch, so overhead stays "not measured".
+Eligibility is the shared routing base (R-0, ADR-0045):
+``analysis.routing_base.eligible_models`` is injected into the router with
+``sprint.toml [routing]`` as its rules. L-1 (overhead) is not run here:
+``scripts/measure_pipeline_b_overhead.py`` fills it into the written files.
 """
 
 from __future__ import annotations
@@ -44,6 +46,7 @@ from metis_auto.analysis.baselines_full import (
 )
 from metis_auto.analysis.levers import combine, summarise_slices
 from metis_auto.analysis.replay_scope import scope, split_by_session
+from metis_auto.analysis.routing_base import candidate_list, eligible_models
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPERIMENTS = ROOT / "experiments"
@@ -88,14 +91,19 @@ D2 = load("scripts/run_pipeline_b_day2.py")
 RB1 = "caching/exp-cache-002-retrieval-result-cache/run.py"
 RB2 = "context/exp-ctx-002-cross-turn-chunk-policy/run.py"
 RB3 = "routing/exp-route-011-knn-router/run.py"
-ELIG = "routing/exp-route-011-knn-router/eligibility_interim.py"
 I1 = "pipelines/b-only-dry-run/run.py"
+ELIGIBILITY = "shared routing base (R-0, ADR-0045): analysis.routing_base"
+Q_B21 = (
+    "repriced-saving definition differs from ADR-0046 point 6 (Q-B21, open): "
+    "saving = baseline cost minus routed cost"
+)
 
 
 def settings(path: Path) -> dict[str, Any]:
     st = D2.sprint_settings(path)
     routing = tomllib.loads(path.read_text(encoding="utf-8"))["routing"]
-    st["candidates"] = [*routing["candidates"], *routing.get("candidates_jev", [])]
+    st["routing"] = routing
+    st["candidates"] = list(candidate_list(routing))
     st["retiring"] = [r["model_id"] for r in routing.get("retiring", [])]
     return st
 
@@ -139,20 +147,31 @@ def _plain(obj: Any) -> Any:
 
 
 def _factory(st: dict[str, Any], separate: frozenset[str]):
-    run, elig = load(RB3), load(ELIG)
-    rules = {"candidates": st["candidates"], "retiring": st["retiring"]}
+    """Router factory: shared eligibility, ``sprint.toml [routing]`` as rules."""
+    run = load(RB3)
 
     def factory(train: pd.DataFrame, k: int) -> Any:
         return run.version.KnnRouter(
             k=k,
             train=train,
             candidates=st["candidates"],
-            eligible_models=elig.interim_eligible_models,
-            rules=rules,
+            eligible_models=eligible_models,
+            rules=st["routing"],
             cached_separately=separate,
         )
 
     return factory
+
+
+def rb3_assumptions(k: int, role: str) -> tuple[str, ...]:
+    """The run-level assumptions of one R-B3 grid point."""
+    return (
+        f"eligibility: {ELIGIBILITY}",
+        Q_B21,
+        f"k={k} is the {role}; grid {list(GRID)} reported in full",
+        f"default chosen by session/family-grouped nested CV, {OUTER} outer "
+        f"x {INNER} inner folds, inside the tune split",
+    )
 
 
 def _default_k(chosen: dict[int, int]) -> int:
@@ -206,7 +225,6 @@ def cmd_rb3(st: dict[str, Any], out_root: Path, sample: float | None) -> dict[st
     router = factory(t, max(GRID))
     decided = router.apply_many(t, ctx, GRID)
     created = datetime.now(UTC)
-    label = load(ELIG).LABEL
     kw = {"premium_model": st["premium_model"], "cached_separately": separate}
     written: list[str] = []
     grid: dict[str, Any] = {}
@@ -220,12 +238,7 @@ def cmd_rb3(st: dict[str, Any], out_root: Path, sample: float | None) -> dict[st
             code_commit=D2.code_commit(),
             python_version=platform.python_version(),
             created_at=created,
-            extra_assumptions=(
-                label,
-                f"k={k} is the {role}; grid {list(GRID)} reported in full",
-                f"default chosen by session/family-grouped nested CV, {OUTER} outer "
-                f"x {INNER} inner folds, inside the tune split",
-            ),
+            extra_assumptions=rb3_assumptions(k, role),
             config_extra={"grid": list(GRID), "default_k": default_k},
             **kw,
         )
@@ -258,10 +271,12 @@ def cmd_rb3(st: dict[str, Any], out_root: Path, sample: float | None) -> dict[st
             "scope": "split_by_session tune rows inside the tune period, LLM rows "
             "(ADR-0036); report period not read",
             "evidence": "simulation; cost simulation; quality not proven",
-            "eligibility": label,
-            "units": "routed cost in price-file units; as_logged saving not computed",
-            "overhead": "not measured (script missing: "
-            "scripts/measure_lever_overhead.py is on no branch)",
+            "eligibility": ELIGIBILITY,
+            "saving_definition": Q_B21,
+            "units": "routed cost in price-file units; as_logged saving not "
+            "computed (depends on Q-B21)",
+            "overhead": "filled into the lever files by "
+            "scripts/measure_pipeline_b_overhead.py",
             "settings": D2._settings_record(st)
             | {"candidates": st["candidates"], "retiring": st["retiring"]},
             "criterion": run.CRITERION,
@@ -443,7 +458,7 @@ def cmd_i1(st: dict[str, Any], out_root: Path, sample: float | None) -> dict[str
                 "cache": "R-B1 retrieval_result_cache.ttl_1d (TTL chosen on Day 2)",
                 "context": {k: list(v) for k, v in RB2_SCENARIOS.items()},
                 "routing": f"R-B3 route.knn.k{k} (declared default), "
-                f"{load(ELIG).LABEL}",
+                f"eligibility: {ELIGIBILITY}",
             },
             "units": i1.unit_cells(),
             "routing_after_context": "combined.*: PostContextRouting (input lowered by "

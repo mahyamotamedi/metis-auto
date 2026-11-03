@@ -30,6 +30,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from metis_auto.analysis.baselines_full import model_row_costs, token_counts
 from metis_auto.analysis.replay_scope import bot_sufficiency
 
 NUMERIC = (
@@ -198,36 +199,13 @@ def _rows_by_code(*codes: np.ndarray) -> tuple[dict[int, np.ndarray], ...]:
     return tuple(out)
 
 
-def _price_rows(price_table: Mapping[str, Any]) -> tuple[dict[str, list], float]:
-    rows: dict[str, list] = {}
-    for p in price_table.get("prices", []):
-        rows.setdefault(str(p["price_ref"]), []).append(p)
-    return rows, float(price_table.get("per_tokens", 1_000_000))
-
-
-def _bound(value: object, default: float) -> float:
-    return default if value is None or pd.isna(value) else float(value)
-
-
 def effective_tokens(
     req: pd.DataFrame, cached_separately: frozenset[str]
 ) -> pd.DataFrame:
-    """Effective input, cached (capped at input) and output tokens: the rule of
-    ``baselines_full`` (cached tokens added back for the logged models that
-    report them outside the input count)."""
-    raw_in = req["a_bill_inputTokens"].astype(float)
-    cached = (
-        req["a_bill_cachedInputTokens"].astype(float).fillna(0).where(raw_in.notna())
-    )
-    eff_in = raw_in + cached.where(req["bot_provider_model"].isin(cached_separately), 0)
-    return pd.DataFrame(
-        {
-            "input": eff_in,
-            "cached": np.minimum(cached, eff_in),
-            "output": req["a_bill_outputTokens"].astype(float),
-        },
-        index=req.index,
-    )
+    """Effective input, cached (capped at input) and output tokens:
+    ``baselines_full.token_counts`` (cached tokens added back for the logged
+    models that report them outside the input count), as floats."""
+    return token_counts(req, cached_separately).astype(float)
 
 
 def candidate_costs(
@@ -236,26 +214,22 @@ def candidate_costs(
     ctx: Any,
     cached_separately: frozenset[str],
 ) -> pd.DataFrame:
-    """Per-row cost of each model in price-file units (NaN: unpriced model,
-    unknown tokens or a workflow row). Used to *order* models; reported
-    totals go through ``baselines_full.baseline_costs`` (tested equal)."""
-    prices, per_tokens = _price_rows(ctx.price_table)
-    refs = {str(m["model_id"]): str(m["price_ref"]) for m in ctx.catalogue["models"]}
-    tok = effective_tokens(req, cached_separately)
-    llm = req["llm_request"].astype(bool) if "llm_request" in req else True
+    """Per-row cost of each model in price-file units (NaN: unpriced model or one
+    the catalogue does not describe, unknown tokens or a workflow row):
+    ``baselines_full.model_row_costs``, before eligibility (the router applies
+    the injected ``eligible_models``). Used to *order* models; reported totals
+    go through ``baselines_full.baseline_costs`` (tested equal)."""
+    known = {str(m["model_id"]) for m in ctx.catalogue["models"]}
+    tokens = token_counts(req, cached_separately)
     out = pd.DataFrame(index=req.index)
     for model in models:
-        cost = pd.Series(np.nan, index=req.index)
-        for p in prices.get(refs.get(model, ""), []):
-            lo = _bound(p.get("min_input_tokens"), 0.0)
-            hi = _bound(p.get("max_input_tokens"), np.inf)
-            m = (tok["input"] >= lo) & (tok["input"] <= hi)
-            cost[m] = (
-                (tok["input"] - tok["cached"])[m] * float(p["input"])
-                + tok["cached"][m] * float(p["cached_input"])
-                + tok["output"][m] * float(p["output"])
-            ) / per_tokens
-        out[model] = cost.where(llm)
+        out[model] = (
+            model_row_costs(
+                req, ctx, model, cached_separately=cached_separately, tokens=tokens
+            )
+            if model in known
+            else np.nan
+        )
     return out
 
 
