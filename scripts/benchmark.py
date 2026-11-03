@@ -4,6 +4,8 @@ ADR-0053). Thin wrapper over metis_auto.wiring.benchmark.
     python scripts/benchmark.py tenant-check              # no database, no call
     python scripts/benchmark.py plan                      # no database, no call
     python scripts/benchmark.py plan --with-db --machine <label>   # pilot machine
+    python scripts/benchmark.py plan --estimate --with-db --machine <label>
+        # computed estimate; refuses while any owner value is unset
     python scripts/benchmark.py generate --run-id <id> --machine <label> \
         --approved-by <owner> --cap <usd> --dataset-text-approved    # PAID, gated
     python scripts/benchmark.py judge    --run-id <id> --machine <label> \
@@ -51,6 +53,17 @@ def main() -> int:
     ap.add_argument(
         "--with-db", action="store_true", help="count input sizes from the database"
     )
+    ap.add_argument(
+        "--estimate",
+        action="store_true",
+        help="plan: print the computed estimate; refuse while an owner value is unset",
+    )
+    ap.add_argument(
+        "--scope",
+        choices=["pilot", "main"],
+        default="pilot",
+        help="records: the 20-record pilot (default) or the 300-record main run",
+    )
     ap.add_argument("--machine", help="this machine's label (decision 7)")
     ap.add_argument("--run-id")
     ap.add_argument("--name", help="labels: benchmark:<name>")
@@ -66,14 +79,22 @@ def main() -> int:
                 "pilot": asdict(bench.tenant_check(bench.pilot_ids())),
             }
         elif args.action == "plan":
-            out = bench.plan(with_db=args.with_db, machine=args.machine)
+            out = bench.plan(
+                with_db=args.with_db,
+                machine=args.machine,
+                estimate=args.estimate,
+                scope=args.scope,
+            )
         elif args.action in ("generate", "judge"):
             if not args.run_id or not args.machine:
                 print("refused: --run-id and --machine are required", file=sys.stderr)
                 return 2
             step = bench.generate if args.action == "generate" else bench.judge
             result = step(
-                run_id=args.run_id, machine=args.machine, approval=_approval(args)
+                run_id=args.run_id,
+                machine=args.machine,
+                approval=_approval(args),
+                scope=args.scope,
             )
             out = {"done": args.action, "summary": str(type(result).__name__)}
         elif args.action == "spot-check":

@@ -4,8 +4,13 @@
 # (ADR-0053). Format of the label export:
 # docs/evaluation/benchmark_labels.md.
 #
-# Every value an owner must decide is LEFT UNSET (commented out). Code that
-# needs one refuses with "set by owner: <key>"; the plan command lists them.
+# Every value an owner must decide is LEFT UNSET (commented out) and marked
+# [OWNER-PLACEHOLDER Q-nn]; the questions are listed in
+# docs/guides/benchmark_pilot.md section 0. Code that needs one refuses with
+# "set by owner: <key>"; `scripts/benchmark.py plan --estimate --with-db`
+# prints the computed estimate once all are set. Do not fill a placeholder with
+# a guess: the refusal tests (tests/unit/evaluation/test_benchmark_estimate.py)
+# expect them unset in the committed file.
 version = "benchmark-p1p3-2026-11-03"
 
 [set]
@@ -52,25 +57,35 @@ metis_allows_samples = false
 # exports a content-free summary (scripts/spend_share.py export) into
 # summaries_dir; a paid run counts every other machine's newest summary.
 summaries_dir = "reports/spend/ledgers"
-# expected_machines = ["...", "...", "...", "..."]   # team: one label per machine
-# max_age_hours = ...                                # owner: how old a summary may be
+# [OWNER-PLACEHOLDER Q-64] one label per machine whose ledger summary counts
+# expected_machines = ["<label-1>", "<label-2>", "<label-3>", "<label-4>"]
+# [OWNER-PLACEHOLDER Q-64] how old a summary may be, in hours
+# max_age_hours = <number>
 
 [run]
 # Owner decisions (overview §5 item 4; plan "run cap and stop rules").
-# hard_cap_usd = "..."
-# max_output_tokens = ...
-# order_seed = "..."
+# [OWNER-PLACEHOLDER Q-62] this benchmark's share of the 92 USD ceiling (USD)
+# hard_cap_usd = "<usd>"
+# [OWNER-PLACEHOLDER Q-63] generation limit per answer (the golden answers used 8192)
+# max_output_tokens = <tokens>
+# [OWNER-PLACEHOLDER Q-63] seed of the call-order shuffle
+# order_seed = "<seed>"
 
 [judges]
 # Owner decisions: two models from different provider families (plan P-2).
-# models = ["...", "..."]
-# max_output_tokens = ...
-# instruction_language = "en"     # or "fa" (E5 instruction-language comparison)
+# [OWNER-PLACEHOLDER Q-63] two models from different provider families
+# models = ["<judge-a>", "<judge-b>"]
+# [OWNER-PLACEHOLDER Q-63] judge reply limit (strict JSON, short)
+# max_output_tokens = <tokens>
+# [OWNER-PLACEHOLDER Q-63] "en" or "fa" (E5 instruction-language comparison)
+# instruction_language = "<en|fa>"
 
 [labels]
 # Owner decisions (δ / thresholds, ADR-0006 vs the PDF rule).
-# acceptable_score = 0.5           # pairwise score vs gpt-5.5 at or above = acceptable
-# cheap_arms = ["..."]             # arms whose acceptability defines cheap_ok
+# [OWNER-PLACEHOLDER Q-63] pairwise score vs gpt-5.5 at or above = acceptable
+# acceptable_score = <0..1>
+# [OWNER-PLACEHOLDER Q-63] arms whose acceptability defines cheap_ok
+# cheap_arms = ["<arm>"]
 
 [spot_check]
 # Final plan P-2: "a 60-item human spot-check by the team".

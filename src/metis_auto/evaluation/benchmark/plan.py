@@ -145,17 +145,65 @@ def judge_estimate(
     return out
 
 
+ESTIMATE_REQUIRED = (
+    ("run", "hard_cap_usd"),
+    ("run", "max_output_tokens"),
+    ("run", "order_seed"),
+    ("judges", "models"),
+    ("judges", "max_output_tokens"),
+    ("judges", "instruction_language"),
+    ("labels", "acceptable_score"),
+    ("labels", "cheap_arms"),
+    ("spend_share", "expected_machines"),
+    ("spend_share", "max_age_hours"),
+)
+"""Owner values a computed estimate (and a paid run) needs, in a stable order."""
+
+
+def estimate_gaps(config: BenchmarkConfig) -> list[str]:
+    """Owner values still unset that a computed estimate needs (Gap 1)."""
+    return [
+        f"{section}.{name}"
+        for section, name in ESTIMATE_REQUIRED
+        if getattr(getattr(config, section), name) is None
+    ]
+
+
+def total_estimate(
+    generation: Mapping[str, object],
+    judging: Mapping[str, object],
+    *,
+    hard_cap: Decimal,
+) -> dict[str, object]:
+    """Generation plus judging, bounds only; an unknown part keeps the sum
+    unknown (never a guess). ``*_fits_hard_cap`` is None when unknown."""
+    out: dict[str, object] = {}
+    for key in ("lower_bound_usd", "ceiling_usd"):
+        parts = [generation.get(key), judging.get(key)]
+        total = (
+            None
+            if any(p is None for p in parts)
+            else sum((Decimal(str(p)) for p in parts), Decimal(0))
+        )
+        out[key] = _s(total)
+        out[key.replace("_usd", "") + "_fits_hard_cap"] = (
+            None if total is None else total <= hard_cap
+        )
+    out["hard_cap_usd"] = _s(hard_cap)
+    return out
+
+
 def gates(
     *, amendment_committed: bool, samples_allowed: bool | None
 ) -> tuple[Gate, ...]:
     """The three paid-branch gates of the final plan."""
     return (
         Gate(
-            "ADR-0018 amendment 2 committed",
+            "ADR-0018 amendment 3 committed (ceiling and lifetime cap 92 USD)",
             "met" if amendment_committed else "missing",
-            "committed 2026-11-01 (ceiling and lifetime cap 20 USD), approved for "
-            "the golden answers; whether the benchmark may spend from the "
-            "remaining credit is an owner decision",
+            "committed 2026-11-03 (ceiling and cap 92 USD, an upper bound), "
+            "approved for this benchmark; the benchmark's share of it is still "
+            "an owner decision (run.hard_cap_usd)",
         ),
         Gate(
             "Metis allows sending samples to model APIs (O-1, licence)",
