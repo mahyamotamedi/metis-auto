@@ -16,6 +16,7 @@ from typing import Any
 from pydantic import Field, model_validator
 
 from metis_auto.contracts import ContractModel
+from metis_auto.evaluation.judging.calibration import GateConfig
 
 
 class OwnerValueUnset(Exception):
@@ -104,6 +105,10 @@ class BenchmarkConfig(ContractModel):
     run: RunLimits = RunLimits()
     judges: JudgeConfig = JudgeConfig()
     labels: LabelConfig = LabelConfig()
+    gate: GateConfig = GateConfig()
+    """The Persian gate for the judges (E5 ``GateConfig``), from the spot-check
+    agreement. Unset: the label file says ``not_configured``; not an owner
+    value the plan insists on."""
     spot_check: SpotCheckConfig
 
     def unset_owner_values(self) -> list[str]:

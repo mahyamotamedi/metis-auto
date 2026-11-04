@@ -95,6 +95,13 @@ acceptable_score = 0.5
 # Owner decision 2026-11-04 (Q-63): arms whose acceptability defines cheap_ok.
 cheap_arms = ["gpt-5-nano", "gpt-4o-mini", "deepseek-v4-flash"]
 
+[gate]
+# Persian gate for the judges (E5 GateConfig), checked on the spot-check by
+# `benchmark.py agreement`. Owner decisions; all unset = labels say not_configured.
+# agreement_statistic = "cohen_kappa"   # or "accuracy"
+# min_agreement = ...
+# min_items = ...
+
 [spot_check]
 # Final plan P-2: "a 60-item human spot-check by the team".
 size = 60

@@ -557,3 +557,207 @@ def test_spot_check_sheet_is_id_only_blinded_and_deterministic():
     assert sheet[0]["spot_id"] == "s01"
     flat = json.dumps(sheet)
     assert "syn-cheap" not in flat and "syn-ref" not in flat and "c1" not in flat
+
+
+# --- review findings 1 and 2: swap-inconsistency and the gate on labels ---------------
+# E5 already defines it: ``PairOutcome.swap_consistent`` is True when both
+# orderings map to the same verdict (judging/pairwise.py, ``swap_consistent=
+# mapped_a == mapped_b``); these tests use that definition, no new rule.
+
+
+def _one_pair(replies):
+    clock = FakeClock(NOW)
+    answers = {
+        ("c1", "syn-cheap"): "[SYNTHETIC] candidate",
+        ("c1", "syn-ref"): "[SYNTHETIC] reference",
+    }
+    judge = _judge(Scripted(replies, clock), clock)
+    return judge_all(judge, [_item("c1")], Content(answers), vision_candidates=None)
+
+
+def test_swap_inconsistent_pair_is_not_a_tie():
+    # order 1 (candidate shown first): "first" = the arm wins;
+    # order 2 (reference shown first): "first" = the reference wins
+    run = _one_pair(['{"choice": "first"}', '{"choice": "first"}'])
+    (o,) = run.outcomes
+    assert o.state == "inconsistent" and o.reason == "swap_inconsistent"
+    assert o.score is None and o.preference is None  # never 0.5
+    assert o.swap_consistent is False
+    assert o.cost_usd == Decimal("0.0002")  # the two calls were paid
+    assert run.cost_usd_total == Decimal("0.0002")
+    assert run.judged == () and run.excluded_by_reason == {"swap_inconsistent": 1}
+
+
+def test_genuine_tie_stays_tie():
+    run = _one_pair(['{"choice": "tie"}', '{"choice": "tie"}'])
+    (o,) = run.outcomes
+    assert o.state == "judged" and o.score == 0.5 and o.preference == "tie"
+    assert o.swap_consistent is True
+
+
+def test_a_win_in_one_order_and_a_tie_in_the_other_is_inconsistent_by_the_e5_rule():
+    run = _one_pair(['{"choice": "first"}', '{"choice": "tie"}'])
+    (o,) = run.outcomes
+    assert o.state == "inconsistent" and o.score is None
+
+
+def test_consistent_win_is_unchanged():
+    run = _one_pair(['{"choice": "first"}', '{"choice": "second"}'])
+    (o,) = run.outcomes
+    assert (o.state, o.score, o.preference) == ("judged", 1.0, "candidate")
+
+
+def _one_row(j1, j2, inconsistent):
+    return lb.make_labels(
+        [j1, j2],
+        records={"r1": "m1"},
+        arms=("syn-cheap",),
+        tiers={"syn-cheap": 0},
+        acceptable_score=0.5,
+        cheap_arms=("syn-cheap",),
+        name="x",
+        inconsistent=inconsistent,
+    )
+
+
+def test_inconsistent_gives_na_label():
+    rows = _one_row({("r1", "syn-cheap"): 1.0}, {}, [set(), {("r1", "syn-cheap")}])
+    (row,) = rows
+    assert row.arm_acceptable == {"syn-cheap": None} and row.cheap_ok is None
+    assert row.state == "not_labelled:inconsistent" and row.inconsistent_arms == 1
+    assert lb.summary(rows)["states"] == {"not_labelled:inconsistent": 1}
+    frame = lb.to_frame(rows, ("syn-cheap",))
+    assert frame["acceptable:syn-cheap"].isna().all()
+
+
+def test_one_judge_scoring_and_the_other_inconsistent_is_never_guessed():
+    # judge 1 says "not acceptable"; judge 2's pair was inconsistent: unknown, not False
+    (row,) = _one_row({("r1", "syn-cheap"): 0.0}, {}, [set(), {("r1", "syn-cheap")}])
+    assert row.arm_acceptable["syn-cheap"] is None and row.cheap_ok is None
+
+
+def test_an_inconsistent_arm_does_not_block_the_records_other_labels():
+    rows = lb.make_labels(
+        [
+            {("r1", "syn-cheap"): 1.0, ("r1", "syn-mid"): 1.0},
+            {("r1", "syn-cheap"): 1.0},
+        ],
+        records={"r1": "m1"},
+        arms=ARMS,
+        tiers=TIERS,
+        acceptable_score=0.5,
+        cheap_arms=("syn-cheap",),
+        name="x",
+        inconsistent=[set(), {("r1", "syn-mid")}],
+    )
+    (row,) = rows
+    assert row.state == "labelled" and row.cheap_ok is True
+    assert row.arm_acceptable == {"syn-cheap": True, "syn-mid": None}
+    assert row.inconsistent_arms == 1
+
+
+def test_without_inconsistency_input_labels_are_exactly_as_before():
+    assert lb.make_labels(
+        [J1, J2],
+        records=RECORDS,
+        arms=ARMS,
+        tiers=TIERS,
+        acceptable_score=0.5,
+        cheap_arms=("syn-cheap",),
+        name="x",
+        inconsistent=None,
+    ) == lb.make_labels(
+        [J1, J2],
+        records=RECORDS,
+        arms=ARMS,
+        tiers=TIERS,
+        acceptable_score=0.5,
+        cheap_arms=("syn-cheap",),
+        name="x",
+    )
+
+
+def test_inconsistency_rate_per_judge_and_per_arm():
+    rows = [
+        ("j1", "syn-cheap", "judged"),
+        ("j1", "syn-cheap", "inconsistent"),
+        ("j1", "syn-mid", "judged"),
+        ("j2", "syn-cheap", "judged"),
+        ("j2", "syn-mid", "inconsistent"),
+        ("j2", "syn-mid", "not_evaluated"),  # not a judged pair: not counted
+    ]
+    out = lb.inconsistency_summary(rows)
+    assert out["per_judge"]["j1"] == {
+        "pairs": 3,
+        "inconsistent": 1,
+        "rate": pytest.approx(1 / 3),
+    }
+    assert out["per_judge"]["j2"] == {"pairs": 2, "inconsistent": 1, "rate": 0.5}
+    assert out["per_arm"]["syn-cheap"]["pairs"] == 3
+    assert out["per_arm"]["syn-cheap"]["inconsistent"] == 1
+    assert out["per_arm"]["syn-mid"] == {"pairs": 2, "inconsistent": 1, "rate": 0.5}
+    assert lb.inconsistency_summary([]) == {"per_judge": {}, "per_arm": {}}
+    summary = lb.summary(list(_labels().values()), inconsistency=out)
+    assert summary["inconsistency"] == out
+
+
+LANGS = {
+    "r1": "persian",
+    "r2": "persian",
+    "r3": "english",
+    "r4": "english",
+    "r5": "mixed",
+    "r6": "mixed",
+}
+
+
+def test_judge_gate_is_not_configured_by_default():
+    rows = list(_labels().values())
+    assert {r.judge_gate for r in rows} == {"not_configured"}
+    frame = lb.to_frame(rows, ARMS)
+    assert set(frame["judge_gate"]) == {"not_configured"}
+    assert lb.summary(rows)["judge_gate"] == {"not_configured": 6}
+
+
+def test_a_failed_gate_marks_the_rows_unvalidated_and_changes_no_value():
+    gate = {"persian": "validated", "english": "unvalidated"}  # mixed: no result
+    plain = _labels()
+    gated = _labels(languages=LANGS, gate=gate)
+    assert set(plain) == set(gated)  # nothing dropped
+    for rid, row in plain.items():
+        other = gated[rid]
+        assert (
+            row.state,
+            row.cheap_ok,
+            row.min_adequate_tier,
+            row.arm_acceptable,
+            row.arms_judged,
+        ) == (
+            other.state,
+            other.cheap_ok,
+            other.min_adequate_tier,
+            other.arm_acceptable,
+            other.arms_judged,
+        )
+    assert {r: gated[r].judge_gate for r in LANGS} == {
+        "r1": "validated",
+        "r2": "validated",
+        "r3": "unvalidated",
+        "r4": "unvalidated",
+        "r5": "not_configured",
+        "r6": "not_configured",
+    }
+    frame = lb.to_frame(list(gated.values()), ARMS)
+    assert frame.set_index("record_id")["judge_gate"]["r3"] == "unvalidated"
+    assert lb.summary(list(gated.values()))["judge_gate"] == {
+        "not_configured": 2,
+        "unvalidated": 2,
+        "validated": 2,
+    }
+    req = pd.DataFrame({"user_message_id": ["syn-m-1", "syn-m-2"]})
+    assert lb.labels_for_requests(frame, req).tolist() == [True, False]  # unchanged
+
+
+def test_judge_gate_values_are_checked():
+    with pytest.raises(ValueError, match="judge_gate"):
+        _labels(languages=LANGS, gate={"persian": "maybe"})

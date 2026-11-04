@@ -49,3 +49,7 @@ For the **full dataset** the data owner must still supply (framework §7): token
 ## 4. Not done in E6
 
 `BaselineSpec` is still not wired to `config/reference/baselines.toml`, and `EvaluationResult` was not changed (the report is its own structure; mapping it into `EvaluationResult` metrics is open). No new EXP-ID was created, so the experiment plans are unchanged. No dashboard.
+
+## 5. The pipelines' lever results (2026-11-03)
+
+`scripts/evaluate_levers.py reports/levers/*.json` applies the framework's rules to the pipelines' `LeverResult` files (ADR-0053 amendment 4): saving with interval and provenance, the Persian slice, the quality side and the plan's decision rule per step, each stating when its evidence is not in the file. It does not replay levers per request. Together with `benchmark.py framework-report` (the benchmark pilot's model comparison, ADR-0053 amendment 3) it is the framework's connection to the sprint's work.
