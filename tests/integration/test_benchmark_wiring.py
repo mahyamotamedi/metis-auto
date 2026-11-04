@@ -56,6 +56,32 @@ cheap_arms = ["gpt-5-nano"]
 """
 
 
+def _without_owner_values(text: str) -> str:
+    """The committed config (owner values set 2026-11-04) with every owner value
+    removed and the Metis gate closed: the shape of the unset file."""
+    drop = {"run", "judges", "labels"}
+    keep, section = [], ""
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            section = stripped.strip("[]")
+        name = stripped.split("=")[0].strip()
+        is_value = "=" in stripped and not stripped.startswith("#")
+        if is_value and (
+            section in drop
+            or (
+                section == "spend_share"
+                and name in ("expected_machines", "max_age_hours")
+            )
+            or (section == "gates" and name == "metis_answer_ref")
+        ):
+            continue
+        if is_value and section == "gates" and name == "metis_allows_samples":
+            line = "metis_allows_samples = false"
+        keep.append(line)
+    return "\n".join(keep) + "\n"
+
+
 def _config(owner: bool) -> str:
     text = (ROOT / "config/evaluation/benchmark.toml").read_text(encoding="utf-8")
     text = text.replace(
@@ -63,7 +89,7 @@ def _config(owner: bool) -> str:
         'shareable_ids = "syn/shareable.parquet"',
     )
     if not owner:
-        return text
+        return _without_owner_values(text)
     head, _, _ = text.partition("[gates]")
     tail = text.split("[spot_check]", 1)[1]
     return head + OWNER_VALUES + "\n[spot_check]" + tail
