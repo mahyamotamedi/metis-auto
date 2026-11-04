@@ -47,8 +47,10 @@ from metis_auto.analysis.baselines_full import (
     baseline_costs,
     best_single_cheap_model,
     cached_reported_separately,
+    repriced_row_costs,
 )
 from metis_auto.analysis.cache_guard import CacheGuard
+from metis_auto.analysis.lever_enrich import enrich
 from metis_auto.analysis.lever_result import LeverResult, Manifest, build_manifest
 from metis_auto.analysis.levers import (
     ReplayContext,
@@ -298,9 +300,18 @@ def repriced_results(
         premium_model=premium_model,
         cached_separately=cached_separately,
     )
-    same_cheap = best_single_cheap_model(
-        before[hits], ctx, cached_separately=cached_separately
-    ) == best_single_cheap_model(before, ctx, cached_separately=cached_separately)
+    cheap = best_single_cheap_model(before, ctx, cached_separately=cached_separately)
+    same_cheap = (
+        best_single_cheap_model(before[hits], ctx, cached_separately=cached_separately)
+        == cheap
+    )
+    row_costs = repriced_row_costs(
+        before,
+        ctx,
+        premium_model=premium_model,
+        cached_separately=cached_separately,
+        cheap_model=cheap,
+    )
     for key in BASELINE_KEYS:
         if key == AS_LOGGED:
             continue
@@ -332,7 +343,29 @@ def repriced_results(
             ),
             manifest=manifests[key],
         )
+        results[key] = _enrich_repriced(
+            results[key], before, hits, row_costs[key], cached_separately
+        )
     return results, missing
+
+
+def _enrich_repriced(
+    result: LeverResult,
+    before: pd.DataFrame,
+    hits: pd.Series,
+    row_cost: pd.Series,
+    cached_separately: frozenset[str],
+) -> LeverResult:
+    """Slices and the session-clustered interval of a repriced result from the
+    per-row repriced cost (price-file units): a hit row's cost goes to zero, fees
+    are not priced (zero on both sides so the slice sums work, and dropped)."""
+    b = before[["llm_request"]].copy()
+    b["block_fees"] = (row_cost * 0.0).where(row_cost.notna())
+    b["block_token_cost"] = row_cost
+    a = b.copy()
+    a["block_token_cost"] = row_cost.where(~hits, 0.0)
+    a["served_from_cache"] = hits
+    return enrich(result, b, a, before, cached_separately=cached_separately)
 
 
 def diagnostics(
@@ -679,6 +712,7 @@ def main(argv: list[str] | None = None) -> int:
             cached_separately=cached_sep,
             correctness_state=state,
         )
+        result = enrich(result, before, after, before, cached_separately=cached_sep)
         (out_dir / f"{cache.lever_id}.json").write_text(
             result.to_json(), encoding="utf-8"
         )

@@ -59,7 +59,10 @@ price_table = "config/reference/prices-metis-2026-10-18-logged.toml"
 [routing]
 # Candidates for R-A3, R-B3, R-C3: the enabled test models of the catalogue
 # (catalogue-metis-test.toml, cat-metis-test-2026-10-18-s75-g55).
-candidates = ["gpt-5-nano", "gpt-4.1-nano", "gpt-4o-mini", "deepseek-v4-flash", "mimo-v2.5"]
+# gpt-4.1-nano and mimo-v2.5 removed 2026-11-03 (owner decision, Kimia; Pipeline C,
+# owner of this file, to confirm): not callable through Metis (gpt-4.1-nano HTTP 404,
+# mimo-v2.5 HTTP 400 "Unsupported model"; ADR-0053 point 2, TODO-17, Q-42).
+candidates = ["gpt-5-nano", "gpt-4o-mini", "deepseek-v4-flash"]
 # J-3 (Parham) fills this after J-1/J-2; JEV is not in the catalogue yet.
 candidates_jev = []
 # R-0 (analysis/routing_base): exclude a candidate when this request's input

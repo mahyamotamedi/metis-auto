@@ -11,7 +11,9 @@
     "retrieval settings are a configuration snapshot, not a history",
     "timestamps are naive (Q-06)",
     "report split (split_by_session report) scored once; tune-period rows may warm the cache (the history looks back into the tune period, as R-A1's window; owner decision 2026-11-02); TTL frozen on the tune split",
-    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 6.2549 ms, p95 7.4846 ms, max 35.0866 ms",
+    "Missing slices (language, over 8,000 tokens, tenant ranks, traffic-weighted) and the session-clustered interval were added from the same frames (sprint final Stage 1, analysis.lever_enrich).",
+    "Added slices count LLM requests with a known cost; the traffic-weighted share weights each bot's saving share by its LLM requests.",
+    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 11.1398 ms, p95 16.3971 ms, max 56.8639 ms",
     "Overhead caveat: one-row frame: the replay holds only this request's lookups, so this times keying, eligibility and the guard path, not a hit in a warm store; building the lookups frame is not timed.",
     "Overhead sample: tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, route.per_bot) used report-period rows, so the two samples differ"
   ],
@@ -27,9 +29,9 @@
   "evidence_class": "simulation",
   "lever_id": "rb1.retrieval-cache.ttl-1d.user.report.as_logged",
   "manifest": {
-    "code_commit": "9f05b25e27c0505563aaa3ad25a6e4e79429e194",
+    "code_commit": "589c0d0c238a79f6efe443d010cfa8338bfdb288",
     "config_hash": "89a6d2f6eba8aa0044178cbc866622fb3890586dc4f100401f30b3da9573178c",
-    "created_at": "2026-11-03T10:56:02.021568Z",
+    "created_at": "2026-11-03T15:00:50.131688Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
     "price_version": "prices-metis-2026-10-18-logged",
     "python_version": "3.13.5",
@@ -37,8 +39,8 @@
   },
   "n_eligible": 20750,
   "n_requests": 73063,
-  "overhead_ms_p50": 6.2549,
-  "overhead_ms_p95": 7.4846,
+  "overhead_ms_p50": 11.1398,
+  "overhead_ms_p95": 16.3971,
   "saving": {
     "fees": "2.014000000",
     "token_cost": "0.000000000"
@@ -57,6 +59,114 @@
       "saving:total": "2.014000000",
       "saving_share": "0.013747668"
     },
+    "lang:arabic_script_other": {
+      "baseline:fees": "1.596000000",
+      "baseline:token_cost": "1.525306443",
+      "baseline:total": "3.121306443",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "457",
+      "n_requests": "457",
+      "saving:fees": "0.076000000",
+      "saving:token_cost": "0.000000000",
+      "saving_share": "0.024348779"
+    },
+    "lang:en": {
+      "baseline:fees": "0.402700000",
+      "baseline:token_cost": "0.898399407",
+      "baseline:total": "1.301099407",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "422",
+      "n_requests": "422",
+      "saving:fees": "0.020000000",
+      "saving:token_cost": "0.000000000",
+      "saving_share": "0.015371616"
+    },
+    "lang:fa": {
+      "baseline:fees": "60.428000000",
+      "baseline:token_cost": "69.727492095",
+      "baseline:total": "130.155492095",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "16738",
+      "n_requests": "16740",
+      "saving:fees": "1.594000000",
+      "saving:token_cost": "0.000000000",
+      "saving_share": "0.012246890"
+    },
+    "lang:fa_en_mixed": {
+      "baseline:fees": "1.147100000",
+      "baseline:token_cost": "2.820045266",
+      "baseline:total": "3.967145266",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "833",
+      "n_requests": "834",
+      "saving:fees": "0.046000000",
+      "saving:token_cost": "0.000000000",
+      "saving_share": "0.011595240"
+    },
+    "lang:finglish": {
+      "baseline:fees": "0.012000000",
+      "baseline:token_cost": "0.051258878",
+      "baseline:total": "0.063258878",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "8",
+      "n_requests": "8",
+      "saving:fees": "0.002000000",
+      "saving:token_cost": "0.000000000",
+      "saving_share": "0.031616116"
+    },
+    "lang:other": {
+      "baseline:fees": "0.000000000",
+      "baseline:token_cost": "0.000165600",
+      "baseline:total": "0.000165600",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "2",
+      "n_requests": "2",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "lang:short_uncertain": {
+      "baseline:fees": "3.482000000",
+      "baseline:token_cost": "4.141289157",
+      "baseline:total": "7.623289157",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "2170",
+      "n_requests": "2171",
+      "saving:fees": "0.272000000",
+      "saving:token_cost": "0.000000000",
+      "saving_share": "0.035680137"
+    },
+    "lang:structured": {
+      "baseline:fees": "0.012000000",
+      "baseline:token_cost": "0.071865679",
+      "baseline:total": "0.083865679",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "24",
+      "n_requests": "24",
+      "saving:fees": "0.000000000",
+      "saving:token_cost": "0.000000000",
+      "saving_share": "0.000000000"
+    },
+    "lang:unknown": {
+      "baseline:fees": "0.060000000",
+      "baseline:token_cost": "0.121952879",
+      "baseline:total": "0.181952879",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "90",
+      "n_requests": "92",
+      "saving:fees": "0.004000000",
+      "saving:token_cost": "0.000000000",
+      "saving_share": "0.021983714"
+    },
     "llm_only": {
       "baseline:fees": "67.139800000",
       "baseline:token_cost": "79.357775405",
@@ -69,6 +179,18 @@
       "saving:token_cost": "0.000000000",
       "saving:total": "2.014000000",
       "saving_share": "0.013747668"
+    },
+    "over_8k": {
+      "baseline:fees": "44.542000000",
+      "baseline:token_cost": "64.475826321",
+      "baseline:total": "109.017826321",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "10759",
+      "n_requests": "10759",
+      "saving:fees": "1.366000000",
+      "saving:token_cost": "0.000000000",
+      "saving_share": "0.012530061"
     },
     "retrieval": {
       "agreement_mean": "0.984690789",

@@ -183,3 +183,17 @@ pattern = 'route\.small_classifier\.strict_unknown_blocked'
 owner = "C"
 en = "Small classifier, strict, unknown blocked"
 fa = "طبقه‌بند کوچک، سخت‌گیرانه، نامعلوم مسدود"
+
+# --- Parham ("D"): the decision router (rules-only), sprint final Stage 2 ------
+
+[[name]]  # exp-route-013, router.mode off; the tune results carry ".tune"
+pattern = 'route\.decision_router\.rules_only\.tune'
+owner = "D"
+en = "Decision router, rules only (tune)"
+fa = "مسیریاب تصمیم‌گیر، فقط قواعد (تنظیم)"
+
+[[name]]
+pattern = 'route\.decision_router\.rules_only'
+owner = "D"
+en = "Decision router, rules only"
+fa = "مسیریاب تصمیم‌گیر، فقط قواعد"

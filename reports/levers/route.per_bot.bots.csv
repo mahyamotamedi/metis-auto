@@ -4,8 +4,8 @@ bot-02,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,1559,
 bot-03,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,1406,1406,0,0.0106944143,0.0106944143,0.0619744031,not proven
 bot-04,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,926,926,0,0.0117360848,0.0117360848,0.044792392,not proven
 bot-05,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,1323,1323,0,0.0046848689,0.0046848689,0.0255462592,not proven
-bot-06,gemini-2.5-flash,gpt-4.1-nano,chosen,True,True,False,True,401,401,400,0.0120476696,0.00334606339,0.0199121177,not proven
-bot-07,gemini-2.5-flash,gpt-4.1-nano,chosen,True,True,False,True,220,220,220,0.0189514935,0.004892527,0.0171844703,not proven
+bot-06,gemini-2.5-flash,gpt-4o-mini,chosen,True,True,False,True,401,401,398,0.0120476696,0.00527324611,0.0199121177,not proven
+bot-07,gemini-2.5-flash,gpt-4o-mini,chosen,True,True,False,True,220,220,188,0.0189514935,0.0179700483,0.0171844703,not proven
 bot-08,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,898,898,0,0.00443633332,0.00443633332,0.016419901,not proven
 bot-09,gemini-2.5-flash,none,no_eligible_candidate,False,False,False,False,204,204,0,0.0189243385,0.0189243385,0.0159118583,not proven
-bot-10,gemini-2.5-flash,gpt-4.1-nano,chosen,True,True,False,True,988,988,988,0.00340459441,0.000629488138,0.0138641215,not proven
+bot-10,gemini-2.5-flash,gpt-4o-mini,chosen,True,True,False,True,988,988,988,0.00340459441,0.000944232206,0.0138641215,not proven

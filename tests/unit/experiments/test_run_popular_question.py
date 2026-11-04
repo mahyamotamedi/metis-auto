@@ -321,6 +321,12 @@ def test_repriced_results_use_price_units_and_token_cost_only(rp, cache):
     )  # 240 / (240 + 9,020)
     assert "baseline:fees" not in r.slices["all"]  # no recorded amounts mixed in
     assert any("price-file units" in a for a in r.assumptions)
+    # sprint final Stage 1: interval and the missing slices, price-file units only
+    assert r.ci_low is not None and r.ci_low <= 0.025917927 <= r.ci_high
+    assert {"over_8k", "traffic_weighted"} <= set(r.slices)
+    assert any(k.startswith("lang:") for k in r.slices)
+    for name, s in r.slices.items():
+        assert not any("fees" in k for k in s), name  # repriced: no fee keys
 
 
 SPRINT_SYN = {

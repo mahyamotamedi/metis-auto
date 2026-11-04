@@ -341,3 +341,43 @@ def test_candidate_costs_match_baselines_full(v):
 def test_unpriced_model_costs_are_unknown(v):
     costs = v.candidate_costs(frame(1), ["unlisted"], ctx(), frozenset())
     assert pd.isna(costs.loc[0, "unlisted"])
+
+
+# --- Gap 3 (sprint close): cached, resumable neighbour search ---
+
+
+def test_cached_neighbour_search_changes_no_decision_and_is_reused(v, tmp_path):
+    from metis_auto.analysis.resumable import NeighbourCache
+
+    v.BLOCK_QUERIES = 2  # several blocks on a small synthetic frame
+    models = ["cheap", "mid", "dear"] * 4
+    train = frame(
+        12,
+        bot_provider_model=models,
+        u_n_chars=[50.0 + 10 * i for i in range(12)],
+    )
+    query = frame(
+        5,
+        session_id=[f"x{i}" for i in range(5)],
+        u_h_norm=[f"z{i}" for i in range(5)],
+        u_n_chars=[55.0 + 20 * i for i in range(5)],
+    )
+    plain = router(v, train, k=3).apply_many(query, ctx(), (1, 3))
+    cache = NeighbourCache(tmp_path, resume=False)
+    first = router(v, train, k=3, neighbours=cache).apply_many(query, ctx(), (1, 3))
+    stored = sorted(p.name for p in tmp_path.iterdir())
+    assert len(stored) == 3  # 5 queries in blocks of 2
+    # a second router of the same run (e.g. the other candidate list) reads them
+    second = router(
+        v, train, k=3, candidates=("cheap", "mid", "dear"), neighbours=cache
+    ).apply_many(query, ctx(), (1, 3))
+    assert sorted(p.name for p in tmp_path.iterdir()) == stored
+    for k in (1, 3):
+        assert plain[k]["route_reason"].tolist() == first[k]["route_reason"].tolist()
+        assert plain[k]["routed_model"].tolist() == first[k]["routed_model"].tolist()
+    assert len(second[3]) == 5
+    # a resumed run (new cache object, resume=True) reads the stored blocks
+    resumed = router(
+        v, train, k=3, neighbours=NeighbourCache(tmp_path, resume=True)
+    ).apply_many(query, ctx(), (1, 3))
+    assert resumed[3]["routed_model"].tolist() == plain[3]["routed_model"].tolist()

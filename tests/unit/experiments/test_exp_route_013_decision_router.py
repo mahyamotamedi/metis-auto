@@ -111,3 +111,23 @@ def test_the_input_frame_is_not_changed(load_experiment):
         tiers=pd.Series([0] * 5), tier_of=TIER_OF, rules=RULES
     ).apply(before, ctx())
     pd.testing.assert_frame_equal(before, frame())
+
+
+def test_target_and_its_cost_are_kept_even_when_the_row_does_not_move(load_experiment):
+    """The per-baseline accounting needs the tier's cheapest eligible candidate
+    and its list-price cost, whether or not it beats the incumbent."""
+    v = load_experiment(VERSION)
+    tiers = pd.Series([0, 0, 1, NAN, 0])
+    out = v.DecisionRouterRouting(tiers=tiers, tier_of=TIER_OF, rules=RULES).apply(
+        frame(), ctx()
+    )
+    assert list(out["route_target"][:3]) == ["syn-cheap", "syn-mid", "syn-strong"]
+    assert out["route_target"][3:].isna().all()
+    assert out["route_target_cost"][:3].notna().all()
+    assert out["route_target_cost"][3:].isna().all()
+    # row 2 does not move (syn-strong is dearer), yet its target is recorded
+    assert out["route_reason"][2] == "no_cheaper_candidate"
+    assert out["route_target_cost"][2] >= out["route_cost_incumbent"][2]
+    # moved rows: the routed model is the target
+    moved = out["route_reason"] == "moved"
+    assert (out.loc[moved, "routed_model"] == out.loc[moved, "route_target"]).all()

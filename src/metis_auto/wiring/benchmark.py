@@ -314,6 +314,16 @@ class Benchmark:
             cap=self.config.set.tenant_cap,
         )
 
+    def record_ids(self, scope: str = "pilot") -> tuple[str, ...]:
+        """``pilot``: the seeded pilot (20). ``main``: every golden-v2 record
+        (the 300-request run, after the pilot; the pilot's recorded answers
+        replay at no cost). Anything else is refused."""
+        if scope == "pilot":
+            return self.pilot_ids()
+        if scope == "main":
+            return tuple(sorted(self.shareable()["record_id"]))
+        raise BenchmarkRefused([f"scope must be 'pilot' or 'main', not {scope!r}"])
+
     # ------------------------------------------------------ requests (DB)
     def store(self) -> GoldenStore:
         if self._store is None:
@@ -407,12 +417,34 @@ class Benchmark:
                 out.append(summary)
         return out
 
+    def summary_status(self) -> dict[str, Any]:
+        """Which machines' ledger summaries exist in the summaries folder and
+        which expected ones are missing (labels only; reads file names)."""
+        folder = self.root / self.config.spend_share.summaries_dir
+        present = (
+            sorted(p.stem for p in folder.glob("*.json")) if folder.exists() else []
+        )
+        expected = self.config.spend_share.expected_machines
+        return {
+            "folder": self.config.spend_share.summaries_dir,
+            "folder_exists": folder.exists(),
+            "present": present,
+            "missing": (
+                sorted(set(expected) - set(present))
+                if expected is not None
+                else "set by owner: spend_share.expected_machines"
+            ),
+            "note": "a paid run refuses until every expected machine has exported "
+            "its summary (scripts/spend_share.py export --machine <label>)",
+        }
+
     def budget(
         self, machine: str | None, loaded: LoadedSettings | None = None
     ) -> dict[str, Any]:
         loaded = loaded or self.loaded()
         b = loaded.settings.budget
         out: dict[str, Any] = {
+            "ledger_summaries": self.summary_status(),
             "currency": b.currency,
             "lifetime_ceiling": _s(b.lifetime_ceiling),
             "local_lifetime_cap": _s(b.lifetime_cap),
@@ -470,12 +502,29 @@ class Benchmark:
         )
 
     # -------------------------------------------------------------- plan
-    def plan(self, *, with_db: bool, machine: str | None = None) -> dict[str, Any]:
-        """Everything a pilot would do and cost, with no call (content-free)."""
+    def plan(
+        self,
+        *,
+        with_db: bool,
+        machine: str | None = None,
+        estimate: bool = False,
+        scope: str = "pilot",
+    ) -> dict[str, Any]:
+        """Everything a pilot would do and cost, with no call (content-free).
+
+        ``estimate=True`` is the strict mode: it refuses, listing every reason,
+        while an owner value is unset or input sizes are not counted from the
+        database, and otherwise adds the computed ``estimate`` (Gap 1)."""
+        if estimate:
+            reasons = [f"set by owner: {k}" for k in pl.estimate_gaps(self.config)]
+            if not with_db:
+                reasons.append("input sizes need the golden-v2 database: add --with-db")
+            if reasons:
+                raise BenchmarkRefused(reasons)
         loaded = self.loaded()
         arms = self.arms(loaded)
         callable_ = list(callable_arms(arms))
-        records = list(self.pilot_ids())
+        records = list(self.record_ids(scope))
         catalogue = self.catalogue(loaded)
         prices = loaded.reference.prices
         judges = self.config.judges.models
@@ -532,6 +581,12 @@ class Benchmark:
             },
         )
         result["with_db"] = with_db
+        if estimate:
+            result["estimate"] = pl.total_estimate(
+                generation,
+                judging,
+                hard_cap=self.config.run.hard_cap_usd,  # type: ignore[arg-type]
+            )
         if with_db:
             result["records_missing_in_db"] = len(missing)
             result["reference_answers_found"] = len(refs)
@@ -636,6 +691,7 @@ class Benchmark:
         machine: str,
         approval: LiveApproval | None,
         http_client_factory: Callable[[], Any] | None = None,
+        scope: str = "pilot",
     ) -> RunResult:
         """The pilot's answers from the callable arms through E4 ``execute``.
         Refuses (every reason, no call) until the gates and owner values are
@@ -649,7 +705,7 @@ class Benchmark:
         if not permission.allowed:
             raise BenchmarkRefused(list(permission.reasons))
         arms = list(callable_arms(self.arms(loaded)))
-        records = list(self.pilot_ids())
+        records = list(self.record_ids(scope))
         parts = self.requests(records)
         records = [r for r in records if r in parts]
         config = RunConfig(
@@ -690,9 +746,13 @@ class Benchmark:
         machine: str,
         approval: LiveApproval | None,
         http_client_factory: Callable[[], Any] | None = None,
+        scope: str = "pilot",
+        only_judge: str | None = None,
     ) -> list[JudgeRun]:
         """Both judges on every (record, callable arm) pair against gpt-5.5,
-        both orders; results written content-free under ``runs/benchmark/``."""
+        both orders; results written content-free under ``runs/benchmark/``.
+        ``only_judge`` runs one of the configured judges (so the two can run as
+        two processes); the two-family check still covers the configured pair."""
         reasons = self.refusals(approval=approval, step="judge")
         if reasons:
             raise BenchmarkRefused(reasons)
@@ -704,7 +764,7 @@ class Benchmark:
         judges = require(self.config.judges.models, "judges.models")
         require_two_families(judges, catalogue)
         arms = list(callable_arms(self.arms(loaded)))
-        records = list(self.pilot_ids())
+        records = list(self.record_ids(scope))
         parts = self.requests(records)
         records = [r for r in records if r in parts]
         try:
@@ -742,7 +802,11 @@ class Benchmark:
         prices = loaded.reference.prices
         out = []
         folder = self.root / RUNS_DIR / run_id / "judging"
+        if only_judge is not None and only_judge not in judges:
+            raise BenchmarkRefused([f"--judge {only_judge}: not in judges.models"])
         for model in judges:
+            if only_judge is not None and model != only_judge:
+                continue
             entry = catalogue[model]
             judge = LlmPairwiseJudge(
                 client,

@@ -1,0 +1,50 @@
+# I-1: the pipelines of the sprint's final combined run (plan I-1).
+# One version per step. Every version is a frozen LeverResult version whose
+# settings were fixed on the tune split; the run applies them once to the report
+# split. Nothing here is tuned. Traces: docs/experiments/sprint_decisions.md,
+# ADR-0061.
+version = "sprint-final-2026-11-04"
+status = "provisional: cost only, pending quality"
+note = "Winners are provisional. Quality is not measured: every saving is an offline replay on logged requests (simulation / hypothetical reconstruction)."
+
+[population]
+# The one population of the run: the report split (split_by_session == "report").
+split = "report"
+expected_requests = 73063
+
+[pipeline_a]
+cache = "cache.popular_question.first_turn"
+context = "context.reranker_cut.observed_relevancy"
+routing = "route.per_bot"
+
+[pipeline_b]
+cache = "retrieval_result_cache.ttl_1d"
+context = "cross_turn_chunks.ptr8.k1"
+routing = "route.knn.k5"
+
+[pipeline_c]
+cache = "cache.session_memo_gate"
+context = "ctx.within_message_dedup"
+routing = "route.small_classifier.rules"
+
+[parham]
+# Routing only: the rules-only decision router alone (router.mode = "off").
+routing = "route.decision_router.rules_only"
+
+[winners]
+# Provisional winners per step (docs/experiments/sprint_decisions.md).
+cache = "retrieval_result_cache.ttl_1d"
+context = "ctx.within_message_dedup"
+routing = "route.decision_router.rules_only"
+
+[runners_up]
+# Named for the swap if a winner fails the quality run; not run combined.
+cache = "cache.popular_question.first_turn"
+context = "cross_turn_chunks.ptr8.k1"
+routing = "route.per_bot"
+
+[not_run]
+# Skipped on purpose (stated in the summary).
+"context.reranker_cut.lexical_overlap" = "a 2,000-request heuristic sample, excluded from the combined run"
+"ctx.history_budget.*" = "saves at most 0.08%, not a winner or runner-up"
+"route.knn.k15 / k50, *.with_reasoning_models, strict_unknown_blocked" = "not winners or runners-up"

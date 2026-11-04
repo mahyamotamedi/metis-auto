@@ -3,6 +3,11 @@
     python scripts/run_pipeline_b_day3.py rb3              # tune split; freezes k
     python scripts/run_pipeline_b_day3.py rb3-report --k K # once, report split
     python scripts/run_pipeline_b_day3.py i1               # after rb3 (frozen k)
+    python scripts/run_pipeline_b_day3.py rb3 --resume --max-minutes 10
+        # cheap, resumable re-run (sprint close): the neighbour search is stored
+        # in blocks under runs/knn_cache/, reused by the second candidate list
+        # and by a later run with --resume; progress and an estimated time left
+        # are printed; a search whose estimate is over the budget stops early
 
 Reads the local, git-ignored derived tables and the read-only raw export, loads
 candidate code from ``experiments/`` by file path, and writes content-free
@@ -59,6 +64,7 @@ from metis_auto.analysis.baselines_full import (
 )
 from metis_auto.analysis.levers import combine, summarise_slices, with_blocks
 from metis_auto.analysis.replay_scope import scope, split_by_session
+from metis_auto.analysis.resumable import NeighbourCache, Progress, TooSlow
 from metis_auto.analysis.routing_base import eligible_models
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -188,6 +194,17 @@ def _plain(obj: Any) -> Any:
     return D2._plain(D2._clean(obj))
 
 
+RUNTIME: dict[str, Any] = {"neighbours": None, "max_eta_s": None}
+"""Set by ``main``: the neighbour cache and the per-search time budget."""
+
+
+def _progress(label: str):
+    def make(total: int) -> Progress:
+        return Progress(label, total=total, max_eta_s=RUNTIME["max_eta_s"])
+
+    return make
+
+
 def _factory(st: dict[str, Any], separate: frozenset[str], candidates=None):
     """Router factory: shared eligibility, ``sprint.toml [routing]`` as rules;
     ``candidates`` default to the primary set."""
@@ -202,6 +219,8 @@ def _factory(st: dict[str, Any], separate: frozenset[str], candidates=None):
             eligible_models=eligible_models,
             rules=st["routing"],
             cached_separately=separate,
+            neighbours=RUNTIME["neighbours"],
+            progress=_progress("neighbour search") if RUNTIME["neighbours"] else None,
         )
 
     return factory
@@ -676,6 +695,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("task", choices=["rb3", "rb3-report", "i1"])
     parser.add_argument("--k", type=int, help="rb3-report: the frozen k")
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="read neighbour blocks stored by an earlier run (same data only)",
+    )
+    parser.add_argument("--cache-dir", type=Path, default=ROOT / "runs" / "knn_cache")
+    parser.add_argument(
+        "--max-minutes",
+        type=float,
+        default=None,
+        help="stop a neighbour search whose estimated time left is over this",
+    )
     parser.add_argument("--sprint-config", type=Path, default=SPRINT_CONFIG)
     parser.add_argument("--out-root", type=Path, default=ROOT, help="smoke runs only")
     parser.add_argument(
@@ -683,6 +714,9 @@ def main() -> None:
     )
     args = parser.parse_args()
     st = settings(args.sprint_config)
+    RUNTIME["neighbours"] = NeighbourCache(args.cache_dir, resume=args.resume)
+    if args.max_minutes is not None:
+        RUNTIME["max_eta_s"] = args.max_minutes * 60
     if args.task == "rb3":
         payload = cmd_rb3(st, args.out_root, args.sample_sessions)
     elif args.task == "rb3-report":
@@ -695,4 +729,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except TooSlow as exc:
+        print(f"stopped: {exc}; finished blocks are kept: re-run with --resume")
+        sys.exit(3)

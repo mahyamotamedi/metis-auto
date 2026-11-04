@@ -1,7 +1,7 @@
 """Show the sampling plan's per-slice sample sizes BEFORE any run (Stage E4,
 offline).
 
-    python scripts/sampling_plan.py [--config path.toml] [--min-n N]
+    python scripts/sampling_plan.py [--config path.toml] [--min-n N] [--strict]
 
 Builds one sampling unit per sample replay case (strata from the E3 case inputs
 plus the attachment flag), then prints, aggregates only: the population per
@@ -12,6 +12,12 @@ sample and weighted shares, quota outcomes, and any budget overrun. With no
 config nothing is chosen: every allocation value is unset, and the plan says so.
 No case ID, no text, no hash is printed. Reads data/sample_data/raw/data.json
 read-only. No network, no model call, no key. This script runs no sampling run.
+
+``--strict`` (Gap 1, ADR-0053) refuses, listing every ``set by owner: <key>``,
+while an allocation value (``dimensions``, ``total``, ``seed``) or a ``[run]``
+value (``models``, ``hard_cap_usd``, ``max_output_tokens``, ``order_seed``) is
+unset; once all are set it adds the call estimate (calls and the output-token
+ceiling). It refuses before the sample is read.
 """
 
 from __future__ import annotations
@@ -37,6 +43,8 @@ from metis_auto.evaluation.sampling import (
     plan_sample,
     slice_counts,
 )
+from metis_auto.evaluation.sampling.config import parse_run_config
+from metis_auto.evaluation.sampling.readiness import call_estimate, unset_values
 from metis_auto.settings import load_settings, repo_root
 from metis_auto.wiring.tokenizers import build_tokenizers
 
@@ -55,7 +63,25 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--config", type=Path, default=None)
     parser.add_argument("--min-n", type=int, default=None)
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="refuse while an owner value is unset; else add the call estimate",
+    )
     args = parser.parse_args()
+
+    file_raw = {}
+    if args.config is not None:
+        file_raw = tomllib.loads(args.config.read_text(encoding="utf-8"))
+    config = parse_allocation_config(file_raw.get("allocation", {}))
+    run = parse_run_config(file_raw.get("run", {}))
+    if args.strict:
+        gaps = unset_values(config, run)
+        if gaps:
+            print(
+                json.dumps({"refused": [f"set by owner: {g}" for g in gaps]}, indent=2)
+            )
+            return 1
 
     loaded = load_settings(environ={}, dotenv=None, runtime=None)
     tokens = build_tokenizers(loaded)
@@ -105,12 +131,6 @@ def main() -> int:
                 case.case_id, case.session_ref, strata, {"logged_answer_chars": logged}
             )
         )
-    raw = {}
-    if args.config is not None:
-        raw = tomllib.loads(args.config.read_text(encoding="utf-8")).get(
-            "allocation", {}
-        )
-    config = parse_allocation_config(raw)
     plan = plan_sample(units, config)
     out: dict = {
         "kind": "PLAN ONLY: no run was made; sample-derived, provisional (ADR-0008)",
@@ -135,6 +155,8 @@ def main() -> int:
         out["requested_total"] = plan.requested_total
         out["achieved_total"] = plan.achieved_total
         out["over_budget_by"] = plan.over_budget_by
+        if args.strict:
+            out["estimate"] = call_estimate(achieved_total=plan.achieved_total, run=run)
         out["quotas"] = [vars(q) for q in plan.quotas]
         out["language"] = [
             vars(r) for r in slice_counts(plan, units, "language", min_n=args.min_n)

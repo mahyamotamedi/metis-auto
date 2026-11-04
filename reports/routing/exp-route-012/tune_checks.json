@@ -23,38 +23,38 @@
   "split": "tune (split_by_session tune rows inside the tune period)",
   "token_grid": {
     "1000": {
-      "moved_share": 0.22024,
-      "saving_share": 0.078958,
+      "moved_share": 0.021664,
+      "saving_share": 0.068502,
       "simple_share_llm": 0.533519
     },
     "16000": {
-      "moved_share": 0.38753,
-      "saving_share": 0.2717,
+      "moved_share": 0.043945,
+      "saving_share": 0.241427,
       "simple_share_llm": 0.770655
     },
     "2000": {
-      "moved_share": 0.358088,
-      "saving_share": 0.133657,
+      "moved_share": 0.036445,
+      "saving_share": 0.111309,
       "simple_share_llm": 0.72746
     },
     "32000": {
-      "moved_share": 0.38827,
-      "saving_share": 0.277122,
+      "moved_share": 0.044246,
+      "saving_share": 0.245938,
       "simple_share_llm": 0.777391
     },
     "4000": {
-      "moved_share": 0.370284,
-      "saving_share": 0.167888,
+      "moved_share": 0.040491,
+      "saving_share": 0.143336,
       "simple_share_llm": 0.747954
     },
     "500": {
-      "moved_share": 0.137744,
-      "saving_share": 0.057949,
+      "moved_share": 0.016577,
+      "saving_share": 0.052778,
       "simple_share_llm": 0.241144
     },
     "8000": {
-      "moved_share": 0.385953,
-      "saving_share": 0.239669,
+      "moved_share": 0.043443,
+      "saving_share": 0.21042,
       "simple_share_llm": 0.766609
     }
   },
@@ -63,14 +63,14 @@
     "primary": {
       "baselines": {
         "as_logged": {
-          "baseline": 322.29412,
-          "n_moved": 134199,
-          "n_saving_unknown": 25816,
-          "saving": 57.715083,
-          "saving_share": 0.179076,
-          "saving_share_top5_bots": 0.725026,
-          "saving_share_top_bot": 0.364795,
-          "saving_share_top_tenant": 0.805421
+          "baseline": 327.778988,
+          "n_moved": 13786,
+          "n_saving_unknown": 0,
+          "saving": 54.498242,
+          "saving_share": 0.166265,
+          "saving_share_top5_bots": 0.764488,
+          "saving_share_top_bot": 0.386105,
+          "saving_share_top_tenant": 0.830396
         },
         "best_single_cheap": {
           "baseline": 49.808602,
@@ -83,41 +83,40 @@
           "baseline": 4466.994047,
           "n_moved": 160374,
           "n_saving_unknown": 0,
-          "saving": 1685.138903,
-          "saving_share": 0.377242,
-          "saving_share_top5_bots": 0.688861,
-          "saving_share_top_bot": 0.45624,
-          "saving_share_top_tenant": 0.554878
+          "saving": 1669.692666,
+          "saving_share": 0.373784,
+          "saving_share_top5_bots": 0.689271,
+          "saving_share_top_bot": 0.456753,
+          "saving_share_top_tenant": 0.555531
         },
         "todays_models": {
           "baseline": 225.436153,
-          "n_moved": 81122,
+          "n_moved": 9199,
           "n_saving_unknown": 0,
-          "saving": 61.251049,
-          "saving_share": 0.2717,
-          "saving_share_top5_bots": 0.747798,
-          "saving_share_top_bot": 0.377945,
-          "saving_share_top_tenant": 0.764136
+          "saving": 54.426446,
+          "saving_share": 0.241427,
+          "saving_share_top5_bots": 0.824408,
+          "saving_share_top_bot": 0.424101,
+          "saving_share_top_tenant": 0.840397
         }
       },
       "candidates": [
-        "gpt-4.1-nano",
         "gpt-4o-mini"
       ],
-      "moved_share_all": 0.35154,
-      "moved_share_llm": 0.38753,
+      "moved_share_all": 0.039864,
+      "moved_share_llm": 0.043945,
       "moved_to": {
-        "gpt-4.1-nano": 81122
+        "gpt-4o-mini": 9199
       },
       "reasons_llm": {
         "attachments": 2676,
         "attachments_unknown": 1262,
         "functions": 2277,
         "incumbent_unpriced": 88,
-        "moved": 81122,
-        "no_cheaper_candidate": 80110,
-        "no_eligible_candidate": 11,
-        "not_simple": 41279,
+        "moved": 9199,
+        "no_cheaper_candidate": 152033,
+        "no_eligible_candidate": 33,
+        "not_simple": 41257,
         "unknown_tokens": 506
       },
       "simple_share_all": 0.699084,
@@ -128,65 +127,63 @@
       "baselines": {
         "as_logged": {
           "baseline": 327.778988,
-          "n_moved": 57531,
+          "n_moved": 57850,
           "n_saving_unknown": 0,
-          "saving": 57.214203,
-          "saving_share": 0.174551,
-          "saving_share_top5_bots": 0.720127,
-          "saving_share_top_bot": 0.367485,
-          "saving_share_top_tenant": 0.787526
+          "saving": 58.18427,
+          "saving_share": 0.177511,
+          "saving_share_top5_bots": 0.713577,
+          "saving_share_top_bot": 0.361471,
+          "saving_share_top_tenant": 0.779653
         },
         "best_single_cheap": {
           "baseline": 49.808602,
-          "n_moved": 22462,
+          "n_moved": 52,
           "n_saving_unknown": 0,
-          "saving": 0.609656,
-          "saving_share": 0.01224,
-          "saving_share_top5_bots": 0.61716,
-          "saving_share_top_bot": 0.256679,
-          "saving_share_top_tenant": 0.493902
+          "saving": 0.000219,
+          "saving_share": 4e-06,
+          "saving_share_top5_bots": 0.986075,
+          "saving_share_top_bot": 0.580734,
+          "saving_share_top_tenant": 0.984566
         },
         "premium_gpt_5_5": {
           "baseline": 4466.994047,
           "n_moved": 160376,
           "n_saving_unknown": 0,
-          "saving": 1697.347372,
-          "saving_share": 0.379975,
-          "saving_share_top5_bots": 0.689293,
-          "saving_share_top_bot": 0.457281,
-          "saving_share_top_tenant": 0.555584
+          "saving": 1696.737934,
+          "saving_share": 0.379839,
+          "saving_share_top5_bots": 0.68935,
+          "saving_share_top_bot": 0.457353,
+          "saving_share_top_tenant": 0.555606
         },
         "todays_models": {
           "baseline": 225.436153,
-          "n_moved": 160360,
+          "n_moved": 160310,
           "n_saving_unknown": 0,
-          "saving": 69.088705,
-          "saving_share": 0.306467,
-          "saving_share_top5_bots": 0.682023,
-          "saving_share_top_bot": 0.335456,
-          "saving_share_top_tenant": 0.731558
+          "saving": 68.480581,
+          "saving_share": 0.303769,
+          "saving_share_top5_bots": 0.684078,
+          "saving_share_top_bot": 0.338418,
+          "saving_share_top_tenant": 0.733673
         }
       },
       "candidates": [
         "gpt-5-nano",
-        "gpt-4.1-nano",
         "gpt-4o-mini",
-        "deepseek-v4-flash",
-        "mimo-v2.5"
+        "deepseek-v4-flash"
       ],
-      "moved_share_all": 0.694915,
-      "moved_share_llm": 0.766059,
+      "moved_share_all": 0.694698,
+      "moved_share_llm": 0.765821,
       "moved_to": {
-        "gpt-5-nano": 137911,
-        "mimo-v2.5": 22449
+        "deepseek-v4-flash": 3,
+        "gpt-5-nano": 160307
       },
       "reasons_llm": {
         "attachments": 2676,
         "attachments_unknown": 1262,
         "functions": 2277,
         "incumbent_unpriced": 88,
-        "moved": 160360,
-        "no_cheaper_candidate": 874,
+        "moved": 160310,
+        "no_cheaper_candidate": 924,
         "not_simple": 41288,
         "unknown_tokens": 506
       },

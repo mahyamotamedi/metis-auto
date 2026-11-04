@@ -34,8 +34,11 @@ Display rules (ADR-0050):
 - An ``other`` block (F-2) is shown as part of ``token_cost`` (owner decision
   2026-11-02) and is not added to the totals a second time.
 - The overview shows each step's chosen version; steps are never added up
-  (they can overlap, Review Focus 1). No combined result exists until
-  ``final.json`` has an agreed format (I-2).
+  (they can overlap, Review Focus 1). The combined numbers come only from
+  ``final.json`` in the agreed format ``final-v1`` (I-2, ``load_final``,
+  ``final_view``): a step with no figure in the baseline's units is 'not
+  computed', never 0, and the provisional label, the units caveat and F-2's
+  unexplained 'other' share are always shown.
 - Ranks come from ``compare.compare`` only (one step, one group, one baseline);
   the group label leaves out the data revision hash.
 
@@ -50,6 +53,7 @@ wiring.ui_format.
 
 from __future__ import annotations
 
+import json
 import math
 import re
 import tomllib
@@ -57,6 +61,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -72,6 +77,8 @@ LEVERS_DIR = Path("reports") / "levers"
 SPRINT_TOML = Path("config") / "evaluation" / "sprint.toml"
 LEVER_NAMES_PATH = Path("config") / "demo" / "lever_names.toml"
 FINAL_JSON = "final.json"
+FINAL_FORMAT = "final-v1"
+"""The agreed format of ``final.json`` (I-2, ``analysis.final_numbers``)."""
 STEPS = ("cache", "context", "routing")
 RESULT_SLICE = "result"
 """The slice option that shows the result's own totals (with its interval)."""
@@ -321,6 +328,16 @@ def has_final(folder: Path) -> bool:
     return (folder / FINAL_JSON).is_file()
 
 
+def load_final(folder: Path) -> dict[str, Any] | None:
+    """``final.json`` when it is in the agreed format (``final-v1``), else None
+    (absent, unreadable or another shape: the page keeps the per-step view)."""
+    try:
+        doc = json.loads((folder / FINAL_JSON).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return doc if isinstance(doc, dict) and doc.get("format") == FINAL_FORMAT else None
+
+
 def version_key(result: LeverResult) -> str:
     """The result's name without its baseline suffix: the same across the four
     baselines, so a chosen version survives a baseline switch."""
@@ -458,6 +475,38 @@ class RoutingTable:
 
 
 @dataclass(frozen=True)
+class FinalRow:
+    """One pipeline's combined figure in one baseline's units (I-2)."""
+
+    pipeline: str
+    versions: Mapping[str, str]
+    steps: Mapping[str, str]
+    """Per step: the combined figure, or the 'not computed' text (never 0)."""
+    combined: str
+    share: str
+    rule_holds: bool | None
+
+
+@dataclass(frozen=True)
+class FinalWaterfallRow:
+    kind: str
+    label: str
+    amount: str
+
+
+@dataclass(frozen=True)
+class FinalView:
+    """The combined numbers of ``final.json`` for one baseline (I-2)."""
+
+    status: str
+    units_caveat: str
+    rows: tuple[FinalRow, ...]
+    waterfall: tuple[FinalWaterfallRow, ...]
+    waterfall_pipeline: str | None
+    other_text: str
+
+
+@dataclass(frozen=True)
 class Dashboard:
     lang: str
     direction: str
@@ -469,6 +518,7 @@ class Dashboard:
     slice_name: str = RESULT_SLICE
     slices: tuple[Option, ...] = ()
     combined_note: str | None = None
+    final: FinalView | None = None
     overview: tuple[StepView, ...] = ()
     comparison: Mapping[str, tuple[ComparisonRow, ...]] = ()  # type: ignore[assignment]
     comparison_chart: Mapping[str, tuple[dict[str, object], ...]] = ()  # type: ignore[assignment]
@@ -503,6 +553,7 @@ def dashboard(
     slice_name: str = RESULT_SLICE,
     choices: Mapping[str, str] | None = None,
     final_present: bool = False,
+    final: Mapping[str, Any] | None = None,
     lever_names: Sequence[LeverName] | None = None,
 ) -> Dashboard:
     """The Results page for one baseline, slice and language; nothing invented.
@@ -512,6 +563,7 @@ def dashboard(
     t = _Text(strings, lang)
     labels = {k: strings.text(k, lang) for k in strings.keys()}
     skipped = t("skipped_files", n=view.skipped) if view.skipped else None
+    final_valid = isinstance(final, Mapping) and final.get("format") == FINAL_FORMAT
     if view.empty:
         return Dashboard(
             lang=lang,
@@ -566,7 +618,14 @@ def dashboard(
         baselines=tuple(Option(k, t(f"baseline_{k}")) for k in keys),
         slice_name=slice_name,
         slices=slices,
-        combined_note=t("combined_unformatted" if final_present else "combined_absent"),
+        combined_note=t(
+            "combined_shown"
+            if final_valid
+            else "combined_unformatted"
+            if final_present
+            else "combined_absent"
+        ),
+        final=final_view(final, baseline, t) if final_valid else None,
         overview=overview,
         comparison=rows,
         comparison_chart={step: _comparison_chart(r, t) for step, r in rows.items()},
@@ -581,6 +640,70 @@ def dashboard(
         routing_cards=_routing_cards(routing, t),
         bot_chart=_bot_chart(routing, t),
         tenant_chart=_tenant_chart(routing, t),
+    )
+
+
+def _decimal(value: object) -> Decimal | None:
+    return None if value is None else Decimal(str(value))
+
+
+def final_view(final: Mapping[str, Any], baseline: str, t: Any) -> FinalView:
+    """The combined rows of ``final.json`` for ``baseline`` (nothing invented):
+    a step with no figure in the baseline's units shows the 'not computed' text,
+    never 0; the provisional label, the units caveat and, in recorded units,
+    F-2's unexplained 'other' share are always part of the view."""
+    entry = (final.get("baselines") or {}).get(baseline) or {}
+    not_computed = t("final_not_computed")
+    rows, waterfall, wf_name = [], (), None
+    for name, p in (entry.get("pipelines") or {}).items():
+        steps = {}
+        for step in STEPS:
+            cell = (p.get("steps") or {}).get(step)
+            if cell is None:
+                continue
+            value = _decimal(cell.get("combined"))
+            steps[step] = not_computed if value is None else t.amount(value)
+        combined = _decimal(p.get("combined_total"))
+        rule = p.get("sum_rule")
+        rows.append(
+            FinalRow(
+                pipeline=name,
+                versions=dict(p.get("versions") or {}),
+                steps=steps,
+                combined=not_computed if combined is None else t.amount(combined),
+                share=t.share(p.get("share_of_total")),
+                rule_holds=None if not rule else bool(rule.get("holds")),
+            )
+        )
+        if wf_name is None and p.get("waterfall"):
+            wf_name = name
+            waterfall = tuple(
+                FinalWaterfallRow(
+                    kind=str(r["kind"]),
+                    label=(
+                        t("final_wf_baseline")
+                        if r["kind"] == "baseline"
+                        else t("final_wf_after")
+                        if r["kind"] == "after"
+                        else t(f"step_{r['step']}")
+                    ),
+                    amount=t.amount(_decimal(r["amount"])),
+                )
+                for r in p["waterfall"]
+            )
+    other = entry.get("other_block") or {}
+    other_text = (
+        t("final_other", share=t.share(other["share"]))
+        if other.get("share") is not None
+        else t("final_other_repriced")
+    )
+    return FinalView(
+        status=t("final_status"),
+        units_caveat=t("final_units"),
+        rows=tuple(rows),
+        waterfall=waterfall,
+        waterfall_pipeline=wf_name,
+        other_text=other_text,
     )
 
 

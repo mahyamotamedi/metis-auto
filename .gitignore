@@ -28,6 +28,9 @@ data/tokenizers/
 # Context-compressor model files fetched by scripts/fetch_compressor_assets.py (Demo milestone).
 data/compressors/
 
+# Reranker weights fetched by scripts/fetch_reranker_assets.py (cut-first (a), R-A2).
+data/rerankers/
+
 # Decision-router model files fetched by scripts/fetch_router_assets.py (ADR-0047, R5).
 data/routers/
 

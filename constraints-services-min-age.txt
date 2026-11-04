@@ -1,0 +1,20 @@
+# Upper pins used when compiling requirements-services.lock on 2026-11-03 (sprint
+# T-0, draft ADR services-extra-and-adapters), so that every package the `services`
+# extra newly locks is at least two weeks old (released before 2026-10-20; the same
+# rule as constraints-min-age.txt, whose pins still apply). Checked on PyPI
+# 2026-11-03. Only shapes resolution; the lock holds the actual pins. Drop these at
+# the next deliberate lock upgrade.
+cachetools<=7.2.4            # 7.2.8 released 2026-10-31
+databricks-sdk<=0.154.0      # 0.156.0 released 2026-10-22
+fastapi<=0.150.0             # 0.162.0 released 2026-10-23
+google-auth<=2.62.0          # 2.62.1 released 2026-11-03
+importlib-metadata<=9.0.1    # 9.1.0 released 2026-10-22
+mlflow-skinny<=3.17.1        # 3.17.2 released 2026-10-21
+opentelemetry-api<=1.45.1    # 1.45.2 released 2026-10-29
+opentelemetry-proto<=1.45.1
+opentelemetry-sdk<=1.45.1
+opentelemetry-semantic-conventions<=0.66b1
+pyasn1<=0.6.4                # 0.6.5 released 2026-10-27
+pycparser<=3.11              # 3.12 released 2026-10-22
+sqlparse<=0.6.0              # 0.6.1 released 2026-11-01
+zipp<=4.1.1                  # 4.1.2 released 2026-10-21

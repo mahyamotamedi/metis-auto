@@ -1,0 +1,65 @@
+{
+  "chars_per_token": 3.438777708915031,
+  "created_at": "2026-11-03T17:33:07.456289+00:00",
+  "evidence": "hypothetical reconstruction",
+  "model": {
+    "cached_tokens": "logged",
+    "median_ratio": 1.1462592363050104,
+    "model": "gemini-2.5-flash",
+    "n": 43646,
+    "n_left_out": 154,
+    "p90_ratio": 53.49209769423381
+  },
+  "others": [
+    {
+      "cached_tokens": "logged",
+      "median_ratio": 1.1462592363050104,
+      "model": "gemini-2.5-flash-lite",
+      "n": 90921,
+      "n_left_out": 437,
+      "p90_ratio": 1.3413671914207568
+    },
+    {
+      "cached_tokens": "logged",
+      "median_ratio": 1.171731663778455,
+      "model": "gpt-4o-mini",
+      "n": 65289,
+      "n_left_out": 5,
+      "p90_ratio": 1.4425523224053816
+    },
+    {
+      "cached_tokens": "logged",
+      "median_ratio": 1.5840039052876325,
+      "model": "deepseek-v4-flash",
+      "n": 26965,
+      "n_left_out": 0,
+      "p90_ratio": 3.560235641238741
+    },
+    {
+      "cached_tokens": "logged",
+      "median_ratio": 1.1746541847923575,
+      "model": "gpt-5.4-nano",
+      "n": 2927,
+      "n_left_out": 0,
+      "p90_ratio": 1.3031818778259876
+    },
+    {
+      "cached_tokens": "logged",
+      "median_ratio": 1.2281348960410825,
+      "model": "gpt-4.1-mini",
+      "n": 2733,
+      "n_left_out": 5,
+      "p90_ratio": 1.4479064037536975
+    }
+  ],
+  "others_median_of_medians": 1.1746541847923575,
+  "others_median_p90": 1.4425523224053816,
+  "slope_source": "claims ledger tok.chars_per_token_slope.all (instruction characters per input token, turn-0 OLS): assumed for answer characters, so a signal, not a measure",
+  "task": "F-1: free Gemini thinking check (offline)",
+  "verdict": {
+    "heavy_tail_looks_likely": true,
+    "hidden_thinking_looks_likely": false,
+    "rule": "hidden thinking looks likely when the model's median ratio is at least 1.5x the median of the other high-volume models' medians (placeholder threshold, not tuned)",
+    "tail_rule": "heavy tail looks likely when the model's p90 ratio is at least 1.5x the median of the other high-volume models' p90 (placeholder threshold, not tuned)"
+  }
+}

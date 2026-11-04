@@ -41,3 +41,16 @@ COPY --chown=metis . .
 RUN pip install --no-deps -e .
 USER metis
 CMD ["python", "-m", "pytest", "-q"]
+
+# The demo UI with its service adapters (sprint T-4, draft ADR
+# services-extra-and-adapters): Streamlit (ui lock), redis (services lock) and the
+# PostgreSQL driver (db lock), installed from their hash-pinned locks. The locks
+# share their common pins; `pip check` must be clean on this image.
+FROM base AS demo
+COPY requirements-ui.lock requirements-services.lock requirements-db.lock ./
+RUN pip install --require-hashes -r requirements-ui.lock -r requirements-services.lock -r requirements-db.lock \
+    && pip check
+COPY --chown=metis . .
+RUN pip install --no-deps -e .
+USER metis
+CMD ["python", "scripts/demo_ui.py", "--server.address=0.0.0.0", "--server.headless=true"]

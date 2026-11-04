@@ -13,7 +13,10 @@ SHARED = {"torch", "transformers"}
 """Shared with the decision router's THX-01 adapter
 (ADR-0047, R5), which
 ``tests/architecture/test_router_imports.py`` holds to its own rule."""
-SHARED_ALLOWED = {SRC / "adapters" / "routers" / "thx01_local.py"}
+SHARED_ALLOWED = {
+    SRC / "adapters" / "routers" / "thx01_local.py",
+    SRC / "adapters" / "rerankers" / "bge_local.py",
+}
 
 
 def _roots(tree: ast.AST) -> set[str]:

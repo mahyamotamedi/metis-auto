@@ -74,6 +74,7 @@ REQ_COLUMNS = [
     "a_timestamp",
     "u_h_norm",
     "user_id",
+    "u_lang",
     "bot_id",
     "bot_user_id",
     "bot_provider_name",

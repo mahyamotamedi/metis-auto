@@ -46,6 +46,7 @@ from metis_auto.analysis.baselines_full import (
     cached_reported_separately,
 )
 from metis_auto.analysis.cache_guard import CacheGuard
+from metis_auto.analysis.lever_enrich import enrich
 from metis_auto.analysis.lever_result import build_manifest
 from metis_auto.analysis.levers import ReplayContext, combine
 from metis_auto.analysis.replay_scope import (
@@ -73,6 +74,7 @@ REQ_COLUMNS = [
     "ai_message_id",
     "bot_id",
     "user_id",
+    "u_lang",
     "u_h_norm",
     "u_att_n",
     "a_rag_n_queries",
@@ -212,6 +214,7 @@ def write_levers(
                 key, tokens_per_char, overlap_threshold, review_state
             ),
         )
+        result = enrich(result, before, after, out, cached_separately=sep)
         path = out_dir / f"{result.lever_id}.json"
         path.write_text(result.to_json())
         paths.append(path)

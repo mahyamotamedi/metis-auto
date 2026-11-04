@@ -1,0 +1,7 @@
+# Sprint final: the pipelines' combined run (plan I-1)
+
+- **What:** one engine (`run.py`) and one config (`../sprint-final.toml`) that run the frozen versions of pipelines A, B, C, Parham's routing-only run and the provisional winners **alone and combined** on the **report split** (73,063 requests), against all four baselines. Runner: `scripts/run_sprint_final.py`; output `reports/pipelines/sprint-final/summary.json` (not a `LeverResult`: a combined pipeline has no single step); numbers for the page: `reports/levers/final.json` (`scripts/build_final_numbers.py`).
+- **Traces:** FR-EVAL-06, FR-EVAL-02, FR-ACCT-02, QA-REPRO, QA-PRIV, QA-COST; Review Focus 1 (savings counted twice) and 3; H-1, H-3, H-5, X1, X7. ADR-0031, ADR-0036, ADR-0037, ADR-0046 point 6, ADR-0061.
+- **Evidence class:** *simulation* / *hypothetical reconstruction*. **Provisional: cost only, pending quality.** No quality is measured.
+- **Rules:** recorded and price-file units are never added; a step without a figure in a baseline's units is "not computed", never 0; each step's combined part is its marginal effect in the order cache, context, routing; routing is priced on the post-context tokens (`PostContextRouting`, a stated assumption; `levers.combine` is not changed); the sum rule (combined ≤ the compatible standalone sum) must hold; rows served from an answer cache get no context or routing saving; the run needs exactly the expected population.
+- **Tests:** `tests/unit/experiments/test_sprint_final_engine.py`, `test_run_sprint_final.py`, `tests/unit/analysis/test_final_numbers.py`.

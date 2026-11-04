@@ -24,6 +24,7 @@ SHARED_HEAVY = {"torch", "transformers", "safetensors", "huggingface_hub"}
 SHARED_ALLOWED = {
     ROUTERS / "thx01_local.py",
     SRC / "adapters" / "compressors" / "llmlingua2.py",
+    SRC / "adapters" / "rerankers" / "bge_local.py",
 }
 NEVER = {"typesafe", "typesafe_sdk"}
 

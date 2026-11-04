@@ -21,6 +21,22 @@ slice = { en = "Slice", fa = "برش داده" }
 overview = { en = "Savings overview", fa = "خلاصه صرفه‌جویی" }
 combined_absent = { en = "No combined result (final.json) yet: each step is shown on its own. Savings of different steps are never added up here; they can overlap.", fa = "هنوز نتیجه ترکیبی وجود ندارد؛ هر مرحله جدا نشان داده می‌شود. صرفه‌جویی مرحله‌های مختلف این‌جا جمع زده نمی‌شود، چون ممکن است هم‌پوشانی داشته باشند." }
 combined_unformatted = { en = "final.json is present, but its format is not agreed yet (I-2): each step is shown on its own.", fa = "فایل نتیجه نهایی هست، ولی قالب آن هنوز توافق نشده؛ هر مرحله جدا نشان داده می‌شود." }
+combined_shown = { en = "Combined numbers (final.json) are shown below the steps. Each pipeline's figure is the sum of its steps' marginal effects; steps are not added across pipelines.", fa = "اعداد ترکیبی (final.json) زیر مرحله‌ها نشان داده می‌شود. عدد هر خط لوله مجموع اثر حاشیه‌ای مرحله‌های آن است؛ بین خط‌های لوله جمع زده نمی‌شود." }
+final_title = { en = "Combined pipelines", fa = "خط‌های لوله ترکیبی" }
+final_status = { en = "Provisional: cost only, pending quality. Savings are an offline replay on logged requests; quality is not measured.", fa = "موقت: فقط هزینه، در انتظار کیفیت. صرفه‌جویی بازپخش آفلاین روی درخواست‌های ثبت‌شده است؛ کیفیت اندازه‌گیری نشده است." }
+final_units = { en = "Recorded cost and price-file cost are never added. A step with no figure in a baseline's units is not computed, never zero.", fa = "هزینه ثبت‌شده و هزینه بر پایه فهرست قیمت هرگز با هم جمع نمی‌شوند. مرحله‌ای که در واحد این خط مبنا عددی ندارد محاسبه‌نشده است، نه صفر." }
+final_other = { en = "Unexplained 'other' cost (F-2): {share} of the recorded cost in the report period. It is part of token cost and is shown so that no share hides it.", fa = "هزینه «سایر» توضیح‌داده‌نشده (F-2): {share} از هزینه ثبت‌شده در دوره گزارش. بخشی از هزینه توکن است و نشان داده می‌شود تا هیچ درصدی آن را پنهان نکند." }
+final_other_repriced = { en = "The unexplained 'other' block is recorded cost; it is not computed in price-file units.", fa = "بلوک «سایر» هزینه ثبت‌شده است؛ در واحد فهرست قیمت محاسبه نمی‌شود." }
+final_not_computed = { en = "not computed in these units", fa = "در این واحد محاسبه نشده" }
+final_pipeline = { en = "Pipeline", fa = "خط لوله" }
+final_combined = { en = "Combined saving", fa = "صرفه‌جویی ترکیبی" }
+final_share = { en = "Share of baseline", fa = "سهم از خط مبنا" }
+final_rule = { en = "Sum rule", fa = "قاعده جمع" }
+final_rule_ok = { en = "holds", fa = "برقرار" }
+final_rule_broken = { en = "violated", fa = "نقض شده" }
+final_wf_baseline = { en = "Baseline cost", fa = "هزینه خط مبنا" }
+final_wf_after = { en = "Cost after", fa = "هزینه پس از اعمال" }
+final_waterfall = { en = "Waterfall", fa = "آبشار هزینه" }
 baseline_cost = { en = "Baseline cost", fa = "هزینه مبنا" }
 saving = { en = "Saving", fa = "صرفه‌جویی" }
 saving_share = { en = "Saving %", fa = "درصد صرفه‌جویی" }

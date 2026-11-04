@@ -13,9 +13,7 @@
     "Per baseline, the incumbent is that baseline's model for the request (logged model for todays_models and as_logged, the premium model, the best single cheap model) and 'cheaper' is tested in that baseline's units.",
     "So each saving is the router's own effect and is >= 0 row by row; follows ADR-0046 point 6, provisional; owner to confirm (Q-B21).",
     "lower bound on candidate cost, hidden reasoning not counted (ADR-0046 point 4): includes the candidates the catalogue marks hidden_reasoning_billed_as_output.",
-    "The working tree had uncommitted changes when this ran.",
-    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 22.021 ms, p95 51.4958 ms, max 191.4905 ms; 2026-11-03, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
-    "Overhead caveat: the per-bot choice is fitted on the tune split before timing (batch work); apply times the repricing and the eligibility check of the bot's choice (R-0 candidate_costs)."
+    "The working tree had uncommitted changes when this ran."
   ],
   "baseline": "as_logged",
   "baseline_cost": {
@@ -29,18 +27,18 @@
   "evidence_class": "simulation",
   "lever_id": "route.per_bot.with_reasoning_models",
   "manifest": {
-    "code_commit": "d69242396e02871e3240af97a26adb9bc2c2182d",
-    "config_hash": "891f0cd52448314f2b75fd5187710dbf4ce690591defd01b4629c576f91e5ed3",
-    "created_at": "2026-11-03T07:31:44.573074Z",
+    "code_commit": "589c0d0c238a79f6efe443d010cfa8338bfdb288",
+    "config_hash": "7869ab69b973ef6e1e7839c04604d4faa9dd281d1cde361ea70590785e9f8908",
+    "created_at": "2026-11-03T14:33:06.487324Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
     "price_version": "full-eda-implied-unit-rates",
-    "python_version": "3.13.9",
+    "python_version": "3.13.5",
     "seed": 20261102
   },
   "n_eligible": 3016,
   "n_requests": 73063,
-  "overhead_ms_p50": 22.021,
-  "overhead_ms_p95": 51.4958,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
   "saving": {
     "fees": "0",
     "token_cost": "5.642744171",

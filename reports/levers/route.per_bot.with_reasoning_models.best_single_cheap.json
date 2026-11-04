@@ -12,44 +12,42 @@
     "Per baseline, the incumbent is that baseline's model for the request (logged model for todays_models and as_logged, the premium model, the best single cheap model) and 'cheaper' is tested in that baseline's units.",
     "So each saving is the router's own effect and is >= 0 row by row; follows ADR-0046 point 6, provisional; owner to confirm (Q-B21).",
     "lower bound on candidate cost, hidden reasoning not counted (ADR-0046 point 4): includes the candidates the catalogue marks hidden_reasoning_billed_as_output.",
-    "The working tree had uncommitted changes when this ran.",
-    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 22.021 ms, p95 51.4958 ms, max 191.4905 ms; 2026-11-03, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
-    "Overhead caveat: the per-bot choice is fitted on the tune split before timing (batch work); apply times the repricing and the eligibility check of the bot's choice (R-0 candidate_costs)."
+    "The working tree had uncommitted changes when this ran."
   ],
   "baseline": "best_single_cheap",
   "baseline_cost": {
     "token_cost": "39.751390761",
     "total": "39.751390761"
   },
-  "ci_high": 5.183905144687534e-05,
-  "ci_low": 3.880792712978581e-06,
+  "ci_high": 0.0,
+  "ci_low": 0.0,
   "correctness_state": "unmeasured",
   "evidence_class": "simulation",
   "lever_id": "route.per_bot.with_reasoning_models",
   "manifest": {
-    "code_commit": "d69242396e02871e3240af97a26adb9bc2c2182d",
-    "config_hash": "8a17e968b06ea5a56cd99283d954a43553eafc0d109163c3adbf20c65373b9b8",
-    "created_at": "2026-11-03T07:31:44.573074Z",
+    "code_commit": "589c0d0c238a79f6efe443d010cfa8338bfdb288",
+    "config_hash": "59dbf9d0f2f7f02efeb944c326a16a94b88d61ba4f00f937219365b2a889e53f",
+    "created_at": "2026-11-03T14:33:06.487324Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
     "price_version": "prices-metis-2026-10-18-logged",
-    "python_version": "3.13.9",
+    "python_version": "3.13.5",
     "seed": 20261102
   },
-  "n_eligible": 144,
+  "n_eligible": 0,
   "n_requests": 73063,
-  "overhead_ms_p50": 22.021,
-  "overhead_ms_p95": 51.4958,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
   "saving": {
-    "token_cost": "0.000887290",
-    "total": "0.000887290"
+    "token_cost": "0.000000000",
+    "total": "0.000000000"
   },
   "slices": {
     "all": {
       "baseline:total": "39.751390761",
       "n_cost_known": "20744",
       "n_requests": "73063",
-      "saving:total": "0.000887290",
-      "saving_share": "0.000022321"
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
     },
     "bot_rank:1": {
       "baseline:total": "23.177531190",
@@ -125,16 +123,16 @@
       "baseline:total": "0.720316152",
       "n_cost_known": "4351",
       "n_requests": "4356",
-      "saving:total": "0.000887290",
-      "saving_share": "0.001231806",
-      "saving_share_of_all": "0.000022321"
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000",
+      "saving_share_of_all": "0.000000000"
     },
     "lang:arabic_script_other": {
       "baseline:total": "0.705112595",
       "n_cost_known": "457",
       "n_requests": "457",
-      "saving:total": "0.000002194",
-      "saving_share": "0.000003111"
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
     },
     "lang:en": {
       "baseline:total": "0.290187937",
@@ -147,8 +145,8 @@
       "baseline:total": "35.455446219",
       "n_cost_known": "16738",
       "n_requests": "16740",
-      "saving:total": "0.000783997",
-      "saving_share": "0.000022112"
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
     },
     "lang:fa_en_mixed": {
       "baseline:total": "0.986231758",
@@ -175,8 +173,8 @@
       "baseline:total": "2.184213669",
       "n_cost_known": "2170",
       "n_requests": "2171",
-      "saving:total": "0.000101099",
-      "saving_share": "0.000046286"
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
     },
     "lang:structured": {
       "baseline:total": "0.033390588",
@@ -196,8 +194,8 @@
       "baseline:total": "39.751390761",
       "n_cost_known": "20744",
       "n_requests": "20750",
-      "saving:total": "0.000887290",
-      "saving_share": "0.000022321"
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
     },
     "over_8k": {
       "baseline:total": "37.290683634",
@@ -212,12 +210,12 @@
       "bots:incumbent_unpriced": "2",
       "bots:insufficient_bot": "299",
       "bots:no_eligible_candidate": "130",
-      "bots:reassigned_in_baseline": "12",
-      "n_candidates_in_baseline": "144",
+      "bots:reassigned_in_baseline": "0",
+      "n_candidates_in_baseline": "0",
       "n_llm_requests": "20750",
       "n_saving_unknown": "0",
       "n_simulated_switch": "3714",
-      "n_switched_in_baseline": "75",
+      "n_switched_in_baseline": "0",
       "no_eligible:attachment": "379",
       "no_eligible:attachment_and_functions": "42",
       "no_eligible:context_or_output_limit": "1",
@@ -233,16 +231,15 @@
       "reason:simulated_switch": "3714",
       "reason:unknown_tokens": "6",
       "reason:unseen_bot": "1254",
-      "saving_by_target:mimo-v2.5": "0.000887290",
-      "switched_share_all": "0.001026511",
-      "switched_share_llm": "0.003614458"
+      "switched_share_all": "0.000000000",
+      "switched_share_llm": "0.000000000"
     },
     "tenant_capped_0.35": {
       "baseline:total": "6.188882238",
       "n_cost_known": "6095",
       "n_requests": "6095",
-      "saving:total": "0.000887290",
-      "saving_share": "0.000143368"
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
     },
     "tenant_rank:1": {
       "baseline:total": "38.987058726",
@@ -256,8 +253,8 @@
       "baseline:total": "0.166117996",
       "n_cost_known": "1377",
       "n_requests": "1377",
-      "saving:total": "0.000887290",
-      "saving_share": "0.005341321",
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000",
       "share": "0.066361446"
     },
     "tenant_rank:3": {
@@ -286,11 +283,11 @@
     },
     "traffic_weighted": {
       "baseline:total": "39.751390761",
-      "bot_mean_saving_share": "0.004441120",
+      "bot_mean_saving_share": "0.000000000",
       "n_cost_known": "20744",
       "n_requests": "20750",
-      "saving:total": "0.000887290",
-      "saving_share": "0.000022321"
+      "saving:total": "0.000000000",
+      "saving_share": "0.000000000"
     }
   },
   "step": "routing",

@@ -217,7 +217,9 @@ def test_reasoning_billed_candidates_excluded_from_primary(v):
     )
     candidates = sprint["routing"]["candidates"]
     hidden = v.reasoning_billed(real) & set(candidates)
-    assert hidden == {"deepseek-v4-flash", "gpt-5-nano", "mimo-v2.5"}
+    # gpt-4.1-nano and mimo-v2.5 left the candidates on 2026-11-03 (not callable).
+    assert hidden == {"deepseek-v4-flash", "gpt-5-nano"}
+    assert not {"gpt-4.1-nano", "mimo-v2.5"} & set(candidates)
     assert set(v.primary_candidates(candidates, real)) == set(candidates) - hidden
 
 

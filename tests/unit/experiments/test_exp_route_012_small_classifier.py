@@ -595,6 +595,59 @@ def test_write_levers_on_synthetic(v, script, tmp_path):
         assert leaked not in text
 
 
+def test_write_levers_resumes_skipping_finished_versions(v, script, tmp_path):
+    """Gap 3 (sprint close): a ledger marks each finished version; a resumed run
+    writes only the missing one and a changed key resumes nothing."""
+    from metis_auto.analysis.resumable import ResumeLedger
+
+    req = frame({}, {"session_id": "syn-s2", "u_n_chars": 900.0})
+    args = dict(
+        ctx=CTX,
+        rules=RULES,
+        rates=RATES,
+        max_u_chars=200,
+        max_input_tokens=10_000,
+        premium_model="syn-premium",
+        code_commit="unknown",
+        python_version="3.13.0",
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        cached_separately=SEP,
+        min_n=1,
+        tenant_cap=0.35,
+    )
+    ledger_path = tmp_path / "ledger" / "l.json"
+    out = tmp_path / "out"
+    first = script.write_levers(
+        req,
+        out_dir=out,
+        ledger=ResumeLedger(ledger_path, key="k", resume=False),
+        **args,
+    )
+    assert len(first) == 8
+    # pretend the run stopped after the first version: forget the second
+    import json
+
+    data = json.loads(ledger_path.read_text())
+    data["done"] = [d for d in data["done"] if d == "primary"]
+    ledger_path.write_text(json.dumps(data))
+    for path in out.glob("*with_reasoning_models*"):
+        path.unlink()
+    again = script.write_levers(
+        req, out_dir=out, ledger=ResumeLedger(ledger_path, key="k", resume=True), **args
+    )
+    assert sorted(p.name for p in again) == sorted(
+        f"route.small_classifier.rules.with_reasoning_models.{b}.json"
+        for b in ("as_logged", "best_single_cheap", "premium_gpt_5_5", "todays_models")
+    )
+    other = script.write_levers(
+        req,
+        out_dir=out,
+        ledger=ResumeLedger(ledger_path, key="changed", resume=True),
+        **args,
+    )
+    assert len(other) == 8
+
+
 # --- strict content rules (Amendment 1, 2026-11-03) ---------------------------
 # Every message text below is SYNTHETIC, written for these tests.
 

@@ -126,6 +126,27 @@ docker build --target runtime -t metis-auto:runtime . && docker run --rm metis-a
 - The base image is pinned by digest in the `Dockerfile` (multi-arch, checked 2026-10-18). To update it, pull `python:3.13-slim`, replace the digest, and rerun the commands above.
 - **Verified 2026-10-18** (Docker 29.8.2, Compose v5.5.1, Apple Silicon, linux/arm64): `dev` image smoke test 16/16 and full suite 392/392; `runtime` image runs the walking skeleton with the same config hash as a native run; neither image contains `.env`, `config/local.toml`, or the spend ledger (see the [Stage 6 progress entry](../project/progress/2026-10-18-stage-6-configuration-environment-containers.md)).
 
+### 6.1 The services profile: demo, Redis, Postgres and MLflow (optional)
+
+Draft ADR services-extra-and-adapters (sprint T-0, T-2, T-4). One command starts the demo UI together with the services it can use through configuration only:
+
+```bash
+export METIS_DB_PASSWORD='choose-one-here'           # Postgres refuses to start without it
+export METIS_REDIS_PASSWORD='optional-redis-password' # optional
+docker compose --profile services up -d              # demo, redis, postgres, mlflow
+docker compose --profile services ps                  # every service reports "healthy"
+docker compose --profile services down                # stop (add -v to delete the data volumes)
+```
+
+- **Ports** (all bound to `127.0.0.1`, never to the network): demo 8501, MLflow 5000, Postgres 5432, Redis 6379. Every service has a health check.
+- **The demo** runs in fake mode and uses Redis for the answer cache (`[cache] store = "redis"`) and Postgres for events (`[events] sink = "postgres"`) through `METIS__*` environment overrides in `compose.yaml`: the same code, nothing else changes. Switch back by not using the profile: the defaults (`memory`, `jsonl`) are unchanged.
+- **Passwords** come only from the environment (`METIS_DB_PASSWORD`, `METIS_REDIS_PASSWORD`), never from `config/`.
+- **The existing `db` profile still works**: `docker compose --profile db up -d postgres`.
+- **MLflow** shows the lever runs: `python scripts/log_levers.py --tracking-uri http://127.0.0.1:5000`, then open <http://127.0.0.1:5000>. Without Docker, log into a local folder instead: `python scripts/log_levers.py` writes the file store `runs/mlruns` (git-ignored, one run per lever result, logging twice adds none). `mlflow-skinny` only logs; to browse a local store install the full `mlflow` in a separate venv (it is not in the lock) and run `MLFLOW_ALLOW_FILE_STORE=true mlflow ui --backend-store-uri runs/mlruns`.
+- **Libraries:** the services use their own hash-pinned lock (`requirements-services.lock` = the dev lock plus the `services` extra: `redis`, `mlflow-skinny`); install it with `pip install --require-hashes -r requirements-services.lock`. The default test run never needs Redis, Postgres or MLflow; real-server tests skip themselves when no server answers and can be selected with `pytest -m services`.
+- **Validate without starting anything:** `docker compose --profile db --profile services config -q` (CI runs this).
+- **Not verified in this repository:** the `redis` and `mlflow` image tags were not pulled while the file was written; check them on the first `up`.
+
 ## 7. Where things go
 
 - New config data: `config/` (rules: [repository_structure.md §5](../architecture/repository_structure.md#5-configuration-files-config)).

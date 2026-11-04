@@ -247,6 +247,8 @@ def lever_results_json(
     ``repriced_savings``) is given. ``ctx`` goes into the manifest. ``split``
     ``"report"`` marks the one report-split run (its ``lever_id`` carries it);
     ``None`` is the tune-period run, whose IDs keep their Day 2 pattern."""
+    from metis_auto.analysis.baselines_full import cached_reported_separately
+    from metis_auto.analysis.lever_enrich import enrich
     from metis_auto.analysis.lever_result import LeverResult, build_manifest
     from metis_auto.analysis.levers import BLOCKS, summarise_slices
 
@@ -345,5 +347,14 @@ def lever_results_json(
             ),
             manifest=manifest,
         )
+        if key == "as_logged":
+            # sprint final Stage 1: missing lang, over_8k and tenant slices and the
+            # session-clustered interval, from the same frames (recorded units)
+            separate = (
+                cached_reported_separately(req)
+                if "a_billing_state" in req
+                else frozenset()  # frames without billing columns (tests)
+            )
+            result = enrich(result, req, after, req, cached_separately=separate)
         out[key] = result.to_json()
     return out

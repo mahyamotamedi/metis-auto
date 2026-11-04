@@ -23,11 +23,15 @@ CHECKS = [
     ".venv/bin/python -m pytest -q",
 ]
 COMMANDS = SETUP + CHECKS
+# T-4 (draft ADR services-extra-and-adapters): the Linux job validates compose.yaml
+# without pulling images or starting anything. macOS runners have no Docker.
+COMPOSE_CHECK = "docker compose --profile db --profile services config -q"
+LINUX_CHECKS = CHECKS[:-1] + [COMPOSE_CHECK] + CHECKS[-1:]
 ADR_CHECK = (
     ".venv/bin/python scripts/adr_finalize.py --check\n"
     ".venv/bin/python scripts/progress_index.py --check"
 )
-LINUX_COMMANDS = SETUP + [ADR_CHECK] + CHECKS
+LINUX_COMMANDS = SETUP + [ADR_CHECK] + LINUX_CHECKS
 MAIN_PUSH_ONLY = "github.event_name == 'push' && github.ref == 'refs/heads/main'"
 
 
@@ -94,3 +98,13 @@ def test_actions_are_pinned_to_a_commit():
         uses = [s["uses"] for s in job["steps"] if "uses" in s]
         assert uses
         assert all(re.fullmatch(r"[\w.-]+/[\w.-]+@[0-9a-f]{40}", u) for u in uses)
+
+
+def test_the_compose_file_is_validated_without_pulling_or_starting_anything():
+    job = _jobs()["test"]
+    runs = _runs(job)
+    assert COMPOSE_CHECK in runs
+    assert runs.index(COMPOSE_CHECK) < runs.index(".venv/bin/python -m pytest -q")
+    for forbidden in ("compose up", "compose pull", "compose build", "docker pull"):
+        assert forbidden not in WORKFLOW.read_text(encoding="utf-8")
+    assert COMPOSE_CHECK not in _runs(_jobs()["test-macos"])

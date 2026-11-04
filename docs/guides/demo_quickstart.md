@@ -230,6 +230,10 @@ Optional: *More (fake mode)* → **Cut off the next answer**, then ask anything 
 - **gpt-5-nano in live mode:** with the long presets, routing may pick `gpt-5-nano` (the English preset does). In the live smoke test (generation limit lowered to 512) it spent the whole limit on hidden reasoning, gave no visible answer, and was **escalated** to `gpt-4o-mini` (badge *+ escalated*, an *extra cost* bar). At the UI's normal limit (4,096) it may answer, but bill many hidden reasoning tokens (Details → Tokens → reasoning). Either way it is the system working, not a bug; the placeholder that under-ranks gpt-5-nano on long prompts is Q-44.
 - Cost of a live demo: with a preset, each message sends about 1,300–2,500 input tokens to a cheap model, roughly 0.0002–0.0006 USD with a short answer (an estimate from the price table, not a measurement); the whole demo script is well under 0.01 USD. The demo seed and the other toggles cost nothing extra.
 
+### 7.5.1 The demo with Redis and Postgres (optional, Docker)
+
+`docker compose --profile services up -d` starts the demo at <http://127.0.0.1:8501> together with Redis (the answer cache), Postgres (the event table) and MLflow (the lever runs at <http://127.0.0.1:5000>). The demo stays in fake mode, and a second user's greeting is a cache hit read from Redis. Everything is bound to this computer only, and `METIS_DB_PASSWORD` must be set in your environment first. Details, ports and the stop command: [local development guide §6.1](local_development.md#61-the-services-profile-demo-redis-postgres-and-mlflow-optional). A Redis hit demonstrates the answer-cache adapter only; it is not evidence of retrieval-cache savings or of cross-user safety (ADR-0049 point 6).
+
 ### 7.6 The terminal demo (Demo A)
 
 ```sh

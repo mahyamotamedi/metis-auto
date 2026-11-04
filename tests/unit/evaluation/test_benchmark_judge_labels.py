@@ -244,6 +244,36 @@ def test_judge_all_uses_both_orders_and_never_crashes():
     ]
 
 
+def test_judge_all_keeps_finished_pairs_when_interrupted():
+    clock = FakeClock(NOW)
+    answers = {
+        (c, m): f"[SYNTHETIC] {c}/{m}"
+        for c in ("c1", "c2", "c3")
+        for m in ("syn-cheap", "syn-ref")
+    }
+    replies = [
+        '{"choice": "first"}',
+        '{"choice": "second"}',  # c1 judged in both orders
+        KeyboardInterrupt(),  # c2 interrupted: abandoned, not scored
+    ]
+
+    class Interrupting(Scripted):
+        def invoke(self, invocation):
+            if isinstance(self.replies[0], KeyboardInterrupt):
+                raise self.replies[0]
+            return super().invoke(invocation)
+
+    judge = _judge(Interrupting(replies, clock), clock)
+    run = judge_all(
+        judge,
+        [_item("c1"), _item("c2"), _item("c3")],
+        Content(answers),
+        vision_candidates=None,
+    )
+    assert [o.item.case_id for o in run.outcomes] == ["c1"]
+    assert run.outcomes[0].state == "judged"
+
+
 def test_two_judges_from_different_families():
     class E:
         def __init__(self, provider):

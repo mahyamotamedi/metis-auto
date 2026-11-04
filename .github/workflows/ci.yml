@@ -70,6 +70,10 @@ jobs:
         run: .venv/bin/ruff check .
       - name: Format check
         run: .venv/bin/ruff format --check .
+      # compose.yaml is validated, never started: no image is pulled and no
+      # service runs (T-4). Postgres, Redis, MLflow and the demo stay opt-in.
+      - name: Validate compose.yaml
+        run: docker compose --profile db --profile services config -q
       - name: Tests (offline; opt-in tests skipped)
         run: .venv/bin/python -m pytest -q
 

@@ -37,6 +37,11 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 ## Entries, newest first
 
 <!-- progress-index:start -->
+- 2026-11-04: [Sprint close: paid-benchmark readiness, cut-first items, resumable re-runs, open items](progress/2026-11-04-sprint-close-readiness-gaps.md)
+- 2026-11-04: [Benchmark pilot, partial main run and ADR renumbering on merge](progress/2026-11-04-benchmark-pilot-and-adr-renumbering.md)
+- 2026-11-04: [Benchmark owner values, open Metis gate and reranker pins](progress/2026-11-04-benchmark-owner-values-and-reranker-pins.md)
+- 2026-11-03: [Sprint final: comparable candidates, rules-only decision router, decisions, combined run, final numbers (2026-11-03 to 2026-11-04)](progress/2026-11-03-sprint-final-stages-1-to-6.md)
+- 2026-11-03: [Sprint final, Stage 0: verify the done/left tables, lever-result gaps, plan for Stages 1–6](progress/2026-11-03-sprint-final-stage-0-verify-and-plan.md)
 - 2026-11-03: [Pipeline C, UI Stage 5: browser Back, back-tracking, saved history, create chatbot](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-5-navigation-history-create.md)
 - 2026-11-03: [Pipeline C, UI Stage 4: real bots from the local database](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-4-real-bots.md)
 - 2026-11-03: [Pipeline C, UI Stage 3: application shell and both journeys](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-3-journeys.md)
@@ -49,6 +54,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-03: [Sprint Day 3, Pipeline C: CI on pinned Ubuntu, macOS on main only, ADR-numbering check](progress/2026-11-03-sprint-day-3-pipeline-c-ci-pin-ubuntu-macos-main-adr-check.md)
 - 2026-11-03: [Sprint Day 3, Pipeline A: R-A1 and R-A2 today's-models results repriced with the replay prices](progress/2026-11-03-sprint-day-3-pipeline-a-reprice-todays-models.md)
 - 2026-11-03: [Sprint Day 3, Pipeline A: R-A3 per-bot reassignment on R-0, accounted per ADR-0046](progress/2026-11-03-sprint-day-3-pipeline-a-per-bot-reassignment-r-a3.md)
+- 2026-11-03: [Services extra, MLflow run tracker and Compose services](progress/2026-11-03-services-extra-mlflow-tracker-compose.md)
 - 2026-11-03: [Pipeline B: R-B3 on the routing base and per-baseline incumbent, logged-price re-run, one report-split run, overhead](progress/2026-11-03-pipeline-b-routing-base-logged-prices-rerun-overhead.md)
 - 2026-11-03: [Pipeline B, Day 3 decision records: kNN router and Redis cache store](progress/2026-11-03-pipeline-b-day-3-decision-records.md)
 - 2026-11-03: [Paid benchmark P-1 to P-3: engineering for a golden-v2 pilot, real judge, labels hand-off, shared spend total](progress/2026-11-03-paid-benchmark-p1-p3-engineering.md)
