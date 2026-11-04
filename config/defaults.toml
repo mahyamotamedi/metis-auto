@@ -192,7 +192,7 @@ policy = "fixed_model"
 # The DEMO's non-fixed routing modes set it from config/evaluation/sprint.toml
 # [routing] candidates (the sprint's primary set; retired models are out), in
 # wiring.chat. A model outside it is excluded as `not_a_candidate`.
-# ADR-XXXX (demo-sprint-winners).
+# ADR-0066.
 
 [pipeline.routing.fixed_model]
 model_id = "gpt-4o-mini"
@@ -395,7 +395,7 @@ strategy = "pass_through"
 max_output_tokens_cap = 4096
 
 [pipeline.context.dedup]
-# DEMO selection (sprint winner S-6, ADR-XXXX (demo-sprint-winners)): within
+# DEMO selection (sprint winner S-6, ADR-0066): within
 # ONE message's retrieved context, remove exact duplicate chunks (first copy
 # kept, order stable); instructions, history and the current message are never
 # touched. It acts only when `strategy` is "within_message_dedup" (or

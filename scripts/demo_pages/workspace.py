@@ -650,7 +650,7 @@ def _advanced(chat: ChatWorkspace, banner) -> None:
         )
         if chat.routing_method == RoutingMode.DECISION_ROUTER:
             # Rules only: the local, hosted and hybrid backends are not offered
-            # in the demo (ADR-XXXX (demo-sprint-winners)).
+            # in the demo (ADR-0066).
             st.caption(S("router_rules_only"))
         if chat.routing_method == RoutingMode.STICKY_V1:
             s.sticky_inner = session.sticky_inner

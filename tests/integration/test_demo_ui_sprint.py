@@ -1,5 +1,5 @@
 """The sprint winners in the Demo B page under Streamlit's offline test runner
-(ADR-XXXX (demo-sprint-winners)): the decision router is a routing choice that
+(ADR-0066): the decision router is a routing choice that
 offers no backend, the dedup toggle reaches the backend, and the cost panel
 shows the dedup next to the other savings with the provisional label. Fake
 mode only; no browser, no network, no key, no spend. Reuses the helpers of

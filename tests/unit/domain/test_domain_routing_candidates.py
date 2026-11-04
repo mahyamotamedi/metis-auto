@@ -1,4 +1,4 @@
-"""The routing candidate set (demo selection, ADR-XXXX (demo-sprint-winners)):
+"""The routing candidate set (demo selection, ADR-0066):
 ``RoutingConfig.candidates`` restricts every policy to the sprint's primary
 models. Empty = every enabled model (the serving default). Pure, offline;
 features are SYNTHETIC."""

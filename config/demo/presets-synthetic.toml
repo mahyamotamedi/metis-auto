@@ -161,7 +161,7 @@ suggested = [
     "My sync shows SYNC-409, what does it mean?",
 ]
 
-# --- Sprint-winner presets (ADR-XXXX (demo-sprint-winners)) -------------------
+# --- Sprint-winner presets (ADR-0066) -------------------
 #
 # Engineered so each effect can be seen: the retrieval context holds EXACT
 # duplicate chunks (the same document pasted several times, as a retriever that

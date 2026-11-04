@@ -7,6 +7,6 @@ from metis_auto.contracts import ContractModel
 
 
 class DedupConfig(ContractModel):
-    """DEMO selection (ADR-XXXX (demo-sprint-winners)); off by default."""
+    """DEMO selection (ADR-0066); off by default."""
 
     enabled: bool = False

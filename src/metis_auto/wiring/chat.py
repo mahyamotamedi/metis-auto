@@ -123,7 +123,7 @@ DEMO_ROUTER_MODES = ("off",)
 rules, then the safe tier; no router model is called and nothing is spent).
 The local, hosted and hybrid backends stay in ``ROUTER_MODES`` for
 diagnostics and tests, and are unreachable from the terminal chat and the UI
-(ADR-XXXX (demo-sprint-winners))."""
+(ADR-0066)."""
 
 STICKY_INNERS = ("rule_based", "decision_router")
 SPRINT_PATH = Path("config") / "evaluation" / "sprint.toml"
@@ -290,7 +290,7 @@ class ChatSession:
         if self.compression != CompressionMode.OFF:
             overrides["pipeline.context.compression.enabled"] = True
         if self.dedup:
-            # Demo selection (ADR-XXXX (demo-sprint-winners)); keeps a real
+            # Demo selection (ADR-0066); keeps a real
             # bot's dataset_positions layout when that one is in force.
             overrides["pipeline.context.dedup.enabled"] = True
             overrides["pipeline.context.strategy"] = (

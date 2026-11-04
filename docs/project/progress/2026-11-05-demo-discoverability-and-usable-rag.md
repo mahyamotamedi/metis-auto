@@ -11,7 +11,7 @@
   A read-only database count found 179 usable-RAG bots among 592 eligible bots,
   including six with observed RAG despite missing corpus configuration.
 - Updated quickstart, UI explanation and module reference; recorded
-  ADR-XXXX (demo-discoverability-and-usable-rag) as a draft.
+  ADR-0065 as a draft.
 - Validation: 261 targeted UI, wiring and architecture tests passed; five
   PostgreSQL integration tests passed against synthetic throwaway data. Ruff
   lint, formatting and diff whitespace checks passed. Visually verified Advanced

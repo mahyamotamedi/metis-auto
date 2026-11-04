@@ -1,4 +1,4 @@
-# ADR-XXXX (demo-sprint-winners): The sprint winners in the live demo: rules-only decision router, within-message dedup, bot-level exact cache
+# ADR-0066: The sprint winners in the live demo: rules-only decision router, within-message dedup, bot-level exact cache
 
 - Status: **provisional** (demo selection, 2026-11-04). Every item is a labelled DEMO selection in the sense of [ADR-0023](0023-demo-backend-components.md); the **serving defaults do not change** (`fixed_model` routing, `session` cache scope, `pass_through` context, no compression). Results shown by the demo are **provisional: cost only, pending quality**; the demo's live savings are a mechanism demo, and the sprint's replay figures stay on the Results page.
 - Date: 2026-11-04

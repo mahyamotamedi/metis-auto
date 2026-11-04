@@ -546,7 +546,7 @@ create_err_many = { en = "Too many passages (10 at most).", fa = "تعداد ب�
 create_err_write = { en = "The chatbot could not be saved on this computer (runs/demo/). Check that the folder is writable.", fa = "چت‌بات روی این رایانه ذخیره نشد (runs/demo/). قابل‌نوشتن بودن پوشه را بررسی کنید." }
 create_err_unavailable = { en = "Saving chatbots is not available in this run.", fa = "ذخیره چت‌بات در این اجرا در دسترس نیست." }
 
-# Sprint winners in the live demo (ADR-XXXX (demo-sprint-winners)). All Persian
+# Sprint winners in the live demo (ADR-0066). All Persian
 # below is [PLACEHOLDER: Persian review].
 [sprint_demo]
 dedup_toggle = { en = "Remove duplicate chunks (DEMO)", fa = "حذف تکه‌های تکراری (نمایشی)" }

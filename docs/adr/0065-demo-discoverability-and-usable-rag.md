@@ -1,8 +1,8 @@
-# ADR-XXXX (demo-discoverability-and-usable-rag): Put mode controls first and list bots with usable stored RAG
+# ADR-0065: Put mode controls first and list bots with usable stored RAG
 
 - Status: **draft**, implementing the owner's demo corrections of 2026-11-05.
 - Date: 2026-11-05
-- Relates to: ADR-0054, ADR-0056, ADR-XXXX (demo-sprint-winners); UI-A01, UI-A33, UI-R03, FR-FIN-02.
+- Relates to: ADR-0054, ADR-0056, ADR-0066; UI-A01, UI-A33, UI-R03, FR-FIN-02.
 
 ## Context
 

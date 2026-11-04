@@ -1,5 +1,5 @@
 """Within-message dedup and the bot-level cache in the live demo, offline
-(ADR-XXXX (demo-sprint-winners)): the real configuration and pipeline with the
+(ADR-0066): the real configuration and pipeline with the
 fake model client and the fake compressor. No network, no key, no spend;
 config/local.toml and .env are not read. All text is SYNTHETIC."""
 

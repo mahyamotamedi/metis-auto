@@ -1,4 +1,4 @@
-"""Sprint winners in the live demo, offline (ADR-XXXX (demo-sprint-winners)):
+"""Sprint winners in the live demo, offline (ADR-0066):
 the rules-only decision router as a demo routing choice, within-message
 dedup, and the bot-level cache, on the real configuration and pipeline with
 the fake model client. No network, no key, no spend; config/local.toml and

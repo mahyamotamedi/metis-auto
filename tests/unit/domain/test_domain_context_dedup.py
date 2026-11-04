@@ -1,4 +1,4 @@
-"""Within-message chunk dedup (sprint winner S-6, ADR-XXXX (demo-sprint-winners);
+"""Within-message chunk dedup (sprint winner S-6, ADR-0066;
 semantics of exp-ctx-001, re-implemented in the domain). Pure. All text is
 SYNTHETIC; Persian and mixed-script chunks are engineered."""
 

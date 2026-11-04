@@ -1,5 +1,5 @@
-"""Within-message chunk dedup (sprint winner S-6; DEMO selection, ADR-XXXX
-(demo-sprint-winners)). Re-implemented here from the semantics of
+"""Within-message chunk dedup (sprint winner S-6; DEMO selection, ADR-0066).
+Re-implemented here from the semantics of
 ``experiments/context/exp-ctx-001-within-message-dedup`` (read as reference
 only; ``metis_auto`` never imports ``experiments/``).
 

@@ -38,8 +38,7 @@ class RoutingConfig(ContractModel):
     requested_model_mode: RequestedModelMode = RequestedModelMode.IGNORE
     candidates: tuple[Name, ...] = ()
     """Models routing may choose; empty = every enabled model (the serving
-    default). The demo sets the sprint's primary set (config/demo, ADR-XXXX
-    (demo-sprint-winners))."""
+    default). The demo sets the sprint's primary set (config/demo, ADR-0066)."""
     chain: tuple[Name, ...] = ()
     """Escalation targets after the routed target (ADR-0013); configuration."""
     fixed_model: FixedModelConfig | None = None

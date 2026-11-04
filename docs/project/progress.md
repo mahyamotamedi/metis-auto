@@ -39,6 +39,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 <!-- progress-index:start -->
 - 2026-11-05: [Demo warning cleanup, Persian knowledge and push-readiness review](progress/2026-11-05-demo-warning-cleanup-and-persian-rag.md)
 - 2026-11-05: [Demo settings discoverability and usable RAG](progress/2026-11-05-demo-discoverability-and-usable-rag.md)
+- 2026-11-05: [Fix branch CI ADR finalization gate](progress/2026-11-05-ci-adr-finalization.md)
 - 2026-11-04: [Sprint close: paid-benchmark readiness, cut-first items, resumable re-runs, open items](progress/2026-11-04-sprint-close-readiness-gaps.md)
 - 2026-11-04: [Model list probe, DeepSeek V4.1 judge and self-preference split](progress/2026-11-04-model-list-and-deepseek-v41-judge.md)
 - 2026-11-04: [Sprint winners in the live demo: rules-only decision router, within-message dedup, bot-level cache](progress/2026-11-04-demo-sprint-winners.md)
