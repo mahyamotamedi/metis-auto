@@ -10,7 +10,7 @@
     "no corpus-version evidence: every hit is ttl_only",
     "retrieval settings are a configuration snapshot, not a history",
     "timestamps are naive (Q-06)",
-    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 6.2549 ms, p95 7.4846 ms, max 35.0866 ms",
+    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 11.1398 ms, p95 16.3971 ms, max 56.8639 ms",
     "Overhead caveat: one-row frame: the replay holds only this request's lookups, so this times keying, eligibility and the guard path, not a hit in a warm store; building the lookups frame is not timed.",
     "Overhead sample: tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, route.per_bot) used report-period rows, so the two samples differ"
   ],
@@ -36,8 +36,8 @@
   },
   "n_eligible": 209331,
   "n_requests": 230762,
-  "overhead_ms_p50": 6.2549,
-  "overhead_ms_p95": 7.4846,
+  "overhead_ms_p50": 11.1398,
+  "overhead_ms_p95": 16.3971,
   "saving": {
     "fees": "3.580000000",
     "token_cost": "0.000000000"

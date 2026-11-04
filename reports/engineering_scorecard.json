@@ -1,0 +1,31 @@
+{
+  "adrs": {
+    "drafts": 4,
+    "numbered": 56
+  },
+  "ci": {
+    "jobs": [
+      "test",
+      "test-macos"
+    ],
+    "last_run": "not queried (offline)",
+    "workflow_present": true
+  },
+  "contract_models": {
+    "all_fields_classified": 107,
+    "total": 107
+  },
+  "levers": {
+    "results": 172,
+    "with_manifest": 172
+  },
+  "locked_dependencies": {
+    "hashes": 943,
+    "pinned": 48
+  },
+  "module_reference_rows": 219,
+  "tests": {
+    "architecture_test_functions": 87,
+    "test_functions": 1821
+  }
+}

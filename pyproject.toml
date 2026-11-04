@@ -82,6 +82,17 @@ db = [
     "psycopg[binary]>=3.2,<4",
     "pyarrow>=20,<26",
 ]
+# Services track (sprint T-0, draft ADR services-extra-and-adapters): the Redis
+# cache store (adapters/stores/redis_store.py) and the MLflow run tracker
+# (adapters/tracking/mlflow_tracker.py), each imported only in its adapter
+# (tests/architecture/test_service_imports.py). Never in the runtime lock or the
+# dev lock: its own lock, requirements-services.lock (= the dev lock + this
+# extra). psycopg is already in the `db` extra. Real-server tests are opt-in
+# (`pytest -m services`).
+services = [
+    "redis>=5,<8",
+    "mlflow-skinny>=3,<4",
+]
 # Needed only by the frozen sample-EDA tests (tests/test_sample_eda_helpers.py).
 eda = [
     "numpy>=2",
@@ -99,6 +110,7 @@ filterwarnings = ["error"]
 markers = [
     "network: needs network or API keys; skipped unless --run-network is given (ADR-0003)",
     "postgres: needs a local PostgreSQL server; skipped unless --run-postgres is given (ADR-0027)",
+    "services: needs a running Redis or MLflow server (docker compose --profile services); such tests skip themselves when none answers; select with -m services",
 ]
 
 [tool.ruff]

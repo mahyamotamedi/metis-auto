@@ -13,7 +13,9 @@
     "Guard: no approval step, empty blocklist, no disabled bot, key version pq-v1; every served key would still need approval before serving.",
     "Tenant slices: the 10 largest tenants by LLM requests (opaque ranks); traffic_weighted slice not computed.",
     "The working tree had uncommitted changes when this ran.",
-    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 44.316 ms, p95 63.1321 ms, max 180.5348 ms; 2026-11-02, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
+    "Missing slices (language, over 8,000 tokens, tenant ranks, traffic-weighted) and the session-clustered interval were added from the same frames (sprint final Stage 1, analysis.lever_enrich).",
+    "Added slices count LLM requests with a known cost; the traffic-weighted share weights each bot's saving share by its LLM requests.",
+    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 27.5053 ms, p95 32.0053 ms, max 68.003 ms; 2026-11-03, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, CPython 3.13.5.",
     "Overhead caveat: on a one-row frame the nightly window is empty, so this times eligibility, keying and the guard path, not the nightly build (batch work) or a lookup in a built set."
   ],
   "baseline": "as_logged",
@@ -28,18 +30,18 @@
   "evidence_class": "simulation",
   "lever_id": "cache.popular_question.all_turns",
   "manifest": {
-    "code_commit": "91b330d7b008b83f10d6b4186f5712a11006058f",
-    "config_hash": "2294defe86a1925d5b0feea7390b7cd70c6b9cb8845615226cc2eedbf72432e4",
-    "created_at": "2026-11-02T13:30:08.357412Z",
+    "code_commit": "589c0d0c238a79f6efe443d010cfa8338bfdb288",
+    "config_hash": "ffc1b201f0b667237a5b53d8a73cfab1acb46e283452fd575094bf459fb67b6a",
+    "created_at": "2026-11-03T15:04:36.762118Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
-    "python_version": "3.13.9",
+    "price_version": "prices-metis-2026-10-18-logged",
+    "python_version": "3.13.5",
     "seed": 20261102
   },
   "n_eligible": 7634,
   "n_requests": 77774,
-  "overhead_ms_p50": 44.316,
-  "overhead_ms_p95": 63.1321,
+  "overhead_ms_p50": 27.5053,
+  "overhead_ms_p95": 32.0053,
   "saving": {
     "fees": "0.000000000",
     "token_cost": "0.587758082",
@@ -341,6 +343,11 @@
       "saving:total": "0.000000000",
       "saving_share": "0.000000000",
       "share": "0.004510545"
+    },
+    "traffic_weighted": {
+      "bot_mean_saving_share": "0.008528071",
+      "n_requests": "24609",
+      "saving_share": "0.007299210"
     }
   },
   "step": "cache",

@@ -372,7 +372,11 @@ def lever_results_json(
       ``token_cost`` and ``total`` only; ``saving`` is empty, the way a missing
       value is represented (``compare`` shows "saving unknown"), never 0.
     """
-    from metis_auto.analysis.baselines_full import BASELINE_KEYS
+    from metis_auto.analysis.baselines_full import (
+        BASELINE_KEYS,
+        cached_reported_separately,
+    )
+    from metis_auto.analysis.lever_enrich import enrich
     from metis_auto.analysis.lever_result import LeverResult, build_manifest
     from metis_auto.analysis.levers import BLOCKS, summarise_slices
 
@@ -492,5 +496,14 @@ def lever_results_json(
                 )
             },
         )
+        if key == "as_logged":
+            # sprint final Stage 1: the missing lang and over_8k slices, from the
+            # same frames (recorded units; the repriced results keep their own)
+            separate = (
+                cached_reported_separately(req)
+                if "a_billing_state" in req
+                else frozenset()  # frames without billing columns (tests)
+            )
+            result = enrich(result, req, after, req, cached_separately=separate)
         out[key] = result.to_json()
     return out

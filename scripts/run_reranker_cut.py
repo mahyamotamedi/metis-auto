@@ -58,6 +58,7 @@ from metis_auto.analysis.baselines_full import (
     best_single_cheap_model,
     cached_reported_separately,
 )
+from metis_auto.analysis.lever_enrich import enrich
 from metis_auto.analysis.lever_result import LeverResult, Manifest, build_manifest
 from metis_auto.analysis.levers import (
     ReplayContext,
@@ -385,7 +386,7 @@ def headline_result(
         sessions,
         seed=manifest.seed,
     )
-    return LeverResult(
+    result = LeverResult(
         lever_id=version.lever_id,
         step="context",
         version=version.version,
@@ -405,6 +406,11 @@ def headline_result(
         + baseline_assumptions(baseline, pricing)
         + extra,
         manifest=manifest,
+    )
+    # sprint final Stage 1: the missing lang, over_8k, tenant_rank and
+    # traffic_weighted slices, from the same per-baseline frames
+    return enrich(
+        result, before, after, req, cached_separately=pricing.cached_separately
     )
 
 

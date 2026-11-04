@@ -314,11 +314,58 @@ def test_target_check_against_100_ms(mo):
         ("context.reranker_cut.lexical_overlap", "scorer", "lexical_overlap"),
         ("route.per_bot", "set", None),
         ("route.per_bot.with_reasoning_models", "set", ".with_reasoning_models"),
+        ("ctx.within_message_dedup", None, None),
+        ("ctx.history_budget.b2000", "variant", "b2000"),
+        ("ctx.history_budget.half_over_8k", "variant", "half_over_8k"),
+        ("cache.session_memo_gate", None, None),
+        ("route.decision_router.rules_only", None, None),
+        ("route.small_classifier.rules", "mode", "rules"),
+        (
+            "route.small_classifier.rules.with_reasoning_models",
+            "set",
+            ".with_reasoning_models",
+        ),
+        (
+            "route.small_classifier.strict_unknown_blocked",
+            "mode",
+            "strict_unknown_blocked",
+        ),
     ],
 )
 def test_known_lever_ids_find_their_version(mo, lever_id, group, value):
     _, m = mo.target_for(lever_id)
-    assert m[group] == value
+    if group is not None:
+        assert m[group] == value
+
+
+def test_per_baseline_lever_ids_are_found_by_their_version_id(mo, tmp_path):
+    """Pipeline C writes the baseline into ``lever_id`` (``<id>.<baseline>``);
+    those files are one version's results, found by the version id."""
+    for base in ("as_logged", "todays_models"):
+        rid = f"ctx.synthetic_c.{base}"
+        (tmp_path / f"{rid}.json").write_text(result(rid, base).to_json(), "utf-8")
+    other = "ctx.synthetic_c.longer.as_logged"
+    (tmp_path / f"{other}.json").write_text(result(other).to_json(), "utf-8")
+    assert mo.result_files("ctx.synthetic_c", tmp_path) == []
+    found = mo.result_files("ctx.synthetic_c", tmp_path, per_baseline=True)
+    assert [p.name for p in found] == [
+        "ctx.synthetic_c.as_logged.json",
+        "ctx.synthetic_c.todays_models.json",
+    ]
+
+
+def test_c_targets_match_results_per_baseline(mo):
+    for lever_id in (
+        "ctx.within_message_dedup",
+        "ctx.history_budget.b4000",
+        "cache.session_memo_gate",
+        "route.small_classifier.strict",
+        "route.decision_router.rules_only",
+    ):
+        target, _ = mo.target_for(lever_id)
+        assert target.per_baseline, lever_id
+    target, _ = mo.target_for("route.per_bot")
+    assert not target.per_baseline
 
 
 def test_unknown_lever_id_stops_the_run(mo):

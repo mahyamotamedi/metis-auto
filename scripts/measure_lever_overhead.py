@@ -39,6 +39,7 @@ from typing import Any
 
 import pandas as pd
 
+from metis_auto.analysis.baselines_full import BASELINE_KEYS
 from metis_auto.analysis.cache_guard import CacheGuard
 from metis_auto.analysis.lever_result import LeverResult
 from metis_auto.analysis.levers import ReplayContext, StepVersion, with_blocks
@@ -142,15 +143,24 @@ def with_overhead(
     return LeverResult.model_validate(data)
 
 
-def result_files(lever_id: str, folder: Path) -> list[Path]:
-    """Every result in ``folder`` whose ``lever_id`` field matches (all baselines)."""
+def result_files(
+    lever_id: str, folder: Path, *, per_baseline: bool = False
+) -> list[Path]:
+    """Every result in ``folder`` whose ``lever_id`` field matches (all baselines).
+
+    With ``per_baseline`` (Pipeline C's results, whose ``lever_id`` is
+    ``<version id>.<baseline>``) a result matches when its ``lever_id`` is the
+    version id plus one of the four baseline keys."""
+    wanted = {lever_id}
+    if per_baseline:
+        wanted = {f"{lever_id}.{key}" for key in BASELINE_KEYS}
     found = []
     for path in sorted(folder.glob("*.json")):
         try:
             result = LeverResult.from_json(path.read_text(encoding="utf-8"))
         except ValueError:
             continue  # not a LeverResult (e.g. a curve file)
-        if result.lever_id == lever_id:
+        if result.lever_id in wanted:
             found.append(path)
     return found
 
@@ -169,12 +179,13 @@ def measure(
     batch_size: int = 1,
     clock: Callable[[], int] = time.perf_counter_ns,
     write: bool = True,
+    per_baseline: bool = False,
 ) -> dict[str, float]:
     """Time ``version`` and write p50 and p95 into its result files.
 
     Files are found first (none is an error) and written only after every row
     was timed, so a failing version leaves them untouched."""
-    paths = result_files(lever_id, folder)
+    paths = result_files(lever_id, folder, per_baseline=per_baseline)
     if not paths:
         raise FileNotFoundError(f"no LeverResult with lever_id {lever_id} in {folder}")
     rows = sample_rows(req, n, seed=seed)
@@ -254,6 +265,13 @@ class Target:
     build: Callable[[Loader, re.Match, dict, pd.DataFrame, pd.DataFrame], StepVersion]
     caveat: str | None = None
     guard_key_version: str | None = None
+    per_baseline: bool = False
+    """Results carry the baseline in ``lever_id`` (Pipeline C)."""
+    version_name: Callable[[re.Match], str] | None = None
+    """The built version's ``name`` when it differs from the lever id."""
+    prepare: Callable[[pd.DataFrame], pd.DataFrame] | None = None
+    """Columns the version reads from its rows, added to the frame before the
+    sample is drawn (not timed)."""
 
 
 def _popular_question(load: Loader, m: re.Match, sprint: dict, req, rows):
@@ -352,6 +370,183 @@ def _per_bot_reassignment(load: Loader, m: re.Match, sprint: dict, req, rows):
     )
 
 
+# --- Pipeline C versions (sprint final Stage 1): built as their own runners do ----
+
+C_TABLES = ROOT / "reports" / "full_eda" / "tables"
+C_CHUNKS = ROOT / "data" / "derived" / "full_eda" / "chunks"
+C_LEDGER_ROW = "recon.t0rag.coef_rag"
+
+
+def _script(name: str) -> Any:
+    """``scripts/<name>.py`` by path (its loaders and frozen settings)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        f"{name}_for_overhead", ROOT / "scripts" / f"{name}.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _coef() -> float:
+    ledger = pd.read_csv(C_TABLES / "claims_ledger.csv").set_index("claim_id")
+    return float(ledger.loc[C_LEDGER_ROW, "value"])
+
+
+def _implied(column: str) -> dict[str, float]:
+    rates = pd.read_csv(C_TABLES / "implied_unit_rates.csv").set_index("model")
+    return rates[column].dropna().astype(float).to_dict()
+
+
+def _chunks_of(ids: pd.Series, columns: list[str]) -> pd.DataFrame:
+    wanted = set(ids)
+    parts = [
+        pd.read_parquet(f, columns=columns) for f in sorted(C_CHUNKS.glob("*.parquet"))
+    ]
+    chunks = pd.concat(parts)
+    return chunks[chunks["message_id"].isin(wanted)].reset_index(drop=True)
+
+
+def _within_message_dedup(load: Loader, m: re.Match, sprint: dict, req, rows):
+    from metis_auto.analysis.baselines_full import cached_reported_separately
+
+    return load("WithinMessageDedup")(
+        _chunks_of(rows["ai_message_id"], ["message_id", "h_exact", "n_chars"]),
+        tokens_per_char=_coef(),
+        input_rate_per_m=_implied("implied_input_per_M"),
+        cached_separately=cached_reported_separately(req),
+    )
+
+
+def _history_budget(load: Loader, m: re.Match, sprint: dict, req, rows):
+    """The frozen variant with the bot's turn-0 base fitted on the tune split
+    (not timed); every turn of the scoped table is the session history."""
+    from metis_auto.analysis.baselines_full import cached_reported_separately
+    from metis_auto.analysis.replay_scope import split_by_session
+
+    hb = _script("history_budget_levers")
+    ctx = make_context(sprint, None)
+    sep = cached_reported_separately(req)
+    turns = req.assign(split=split_by_session(req, seed=ctx.seed))
+    coef = _coef()
+    t0 = hb._version().turn0_base(
+        turns[turns["split"] == "tune"],
+        tokens_per_char=coef,
+        min_n=ctx.min_n,
+        cached_separately=sep,
+    )
+    return hb.make_version(
+        hb.VARIANTS[m["variant"]],
+        turns=turns,
+        turn0_base=t0,
+        tokens_per_char=coef,
+        input_rate_per_m=_implied("implied_input_per_M"),
+        cached_rate_per_m=_implied("implied_cached_per_M"),
+        cached_separately=sep,
+    )
+
+
+def _session_memo_prepare(req: pd.DataFrame) -> pd.DataFrame:
+    """Recorded per-call fee blocks (ADR-0037 item 2), as the runner does."""
+    sm = _script("session_memo_levers")
+    return sm._version().fee_blocks(req, _per_call(sm, req))
+
+
+def _per_call(sm: Any, req: pd.DataFrame) -> pd.DataFrame:
+    bt = pd.read_parquet(sm.BILLING, columns=["message_id", "costBreakdown.per_call"])
+    per_call = bt[bt["costBreakdown.per_call"].notna()].rename(
+        columns={"costBreakdown.per_call": "amount"}
+    )
+    return per_call[per_call["message_id"].isin(set(req["ai_message_id"]))]
+
+
+def _session_memo(load: Loader, m: re.Match, sprint: dict, req, rows):
+    """The chosen threshold (``reports/caching/exp-cache-004/summary.json``) with
+    the sampled rows' lookups (query fingerprints, chunks, per-call items)."""
+    import json
+
+    from metis_auto.analysis.baselines_full import cached_reported_separately
+
+    sm = _script("session_memo_levers")
+    v = sm._version()
+    threshold = json.loads(sm.SUMMARY.read_text(encoding="utf-8"))["chosen_threshold"]
+    ids = rows["ai_message_id"]
+    query_fps = pd.read_parquet(sm.QUERY_FPS)
+    lookups = v.build_lookups(
+        rows,
+        query_fps[query_fps["message_id"].isin(set(ids))],
+        _chunks_of(ids, ["message_id", "chunk_id", "h_exact", "n_chars"]),
+        _per_call(sm, rows),
+    )
+    return v.SessionMemo(
+        threshold,
+        frozenset(sprint["phatic"]["words"]),
+        lookups=lookups,
+        tokens_per_char=_coef(),
+        input_rate_per_m=_implied("implied_input_per_M"),
+        cached_separately=cached_reported_separately(req),
+    )
+
+
+def _small_classifier_prepare(req: pd.DataFrame) -> pd.DataFrame:
+    """The strict modes read the intent columns of the whole table (ADR-0046
+    Amendment 1); the rules mode ignores them."""
+    sc = _script("small_classifier_levers")
+    if not sc.FLAGS.exists():
+        raise SystemExit(f"{sc.FLAGS} missing: run scripts/derive_turn_intent_flags.py")
+    return sc._version().intent_columns(req, pd.read_parquet(sc.FLAGS))
+
+
+def _small_classifier(load: Loader, m: re.Match, sprint: dict, req, rows):
+    from metis_auto.analysis.baselines_full import cached_reported_separately
+
+    sc = _script("small_classifier_levers")
+    strict = m["mode"] != "rules"
+    versions = sc.make_versions(
+        sprint["routing"],
+        make_context(sprint, None).catalogue,
+        max_u_chars=sc.MAX_U_CHARS,
+        max_input_tokens=sc.MAX_INPUT_TOKENS,
+        cached_separately=cached_reported_separately(req),
+        strict=strict,
+    )
+    key = m["mode"] if strict else ("with_reasoning_models" if m["set"] else "primary")
+    return versions[key]
+
+
+def _decision_router(load: Loader, m: re.Match, sprint: dict, req, rows):
+    """The rules-only decision router: tiers for the whole frame (flags joined
+    before timing); ``apply`` times the R-0 candidate costs and the choice."""
+    from metis_auto.analysis.baselines_full import cached_reported_separately
+    from metis_auto.settings import load_settings
+    from metis_auto.wiring.from_settings import pipeline_config
+
+    dr = _script("decision_router_levers")
+    loaded = load_settings(environ={}, dotenv=None, runtime=None)  # no .env
+    dr.rules_only.require_offline(loaded.settings)
+    if not dr.FLAGS.exists():
+        raise SystemExit(f"{dr.FLAGS} missing: run decision_router_levers.py derive")
+    tiers = dr.rules_only.rules_only_tiers(
+        req, pd.read_parquet(dr.FLAGS), pipeline_config(loaded)
+    )
+    c12, v13 = dr._classifier(), dr._router()
+    catalogue = make_context(sprint, None).catalogue
+    primary = c12.candidate_sets(sprint["routing"], catalogue)["primary"]
+    return v13.DecisionRouterRouting(
+        tiers=tiers,
+        tier_of={
+            str(e["model_id"]): int(e["tier"])
+            for e in catalogue.get("models", [])
+            if e.get("tier") is not None
+        },
+        rules={**sprint["routing"], "candidates": list(primary), "candidates_jev": []},
+        cached_separately=cached_reported_separately(req),
+        name=dr.VERSION_ID,
+    )
+
+
 TARGETS = (
     Target(
         pattern=r"^cache\.popular_question\.(?P<variant>first_turn|all_turns)"
@@ -387,6 +582,68 @@ TARGETS = (
             "work); apply times the repricing and the eligibility check of the "
             "bot's choice (R-0 candidate_costs)."
         ),
+    ),
+    Target(
+        pattern=r"^ctx\.within_message_dedup$",
+        experiment=ROOT
+        / "experiments"
+        / "context"
+        / "exp-ctx-001-within-message-dedup",
+        build=_within_message_dedup,
+        caveat=(
+            "chunk rows of the sampled requests are loaded before timing, so "
+            "reading data is not timed; the dedup and the token conversion are."
+        ),
+        per_baseline=True,
+        version_name=lambda m: "exp-ctx-001-within-message-dedup",
+    ),
+    Target(
+        pattern=r"^ctx\.history_budget\.(?P<variant>b2000|b4000|b8000|half_over_8k)$",
+        experiment=ROOT / "experiments" / "context" / "exp-ctx-004-history-budget",
+        build=_history_budget,
+        caveat=(
+            "the bots' turn-0 bases are fitted on the tune split before timing "
+            "(batch work); apply times the history measure and the budget cut."
+        ),
+        per_baseline=True,
+    ),
+    Target(
+        pattern=r"^cache\.session_memo_gate$",
+        experiment=ROOT / "experiments" / "caching" / "exp-cache-004-session-memo-gate",
+        build=_session_memo,
+        caveat=(
+            "a one-row frame holds no earlier turn of its session, so this times "
+            "the gate and the memo's decision path, not a reuse; lookups of the "
+            "sampled rows are built before timing."
+        ),
+        guard_key_version="session-memo-v1",
+        per_baseline=True,
+        version_name=lambda m: "exp-cache-004-session-memo-gate.t0.8",
+        prepare=_session_memo_prepare,
+    ),
+    Target(
+        pattern=r"^route\.small_classifier\.(?P<mode>rules|strict|strict_unknown_blocked)"
+        r"(?P<set>\.with_reasoning_models)?$",
+        experiment=ROOT / "experiments" / "routing" / "exp-route-012-small-classifier",
+        build=_small_classifier,
+        caveat=(
+            "thresholds are frozen (MAX_INPUT_TOKENS) and the intent columns are "
+            "joined before timing; apply times the rule, R-0 eligibility and the "
+            "candidate costs."
+        ),
+        per_baseline=True,
+        prepare=_small_classifier_prepare,
+    ),
+    Target(
+        pattern=r"^route\.decision_router\.rules_only$",
+        experiment=ROOT / "experiments" / "routing" / "exp-route-013-decision-router",
+        build=_decision_router,
+        caveat=(
+            "tiers (gate, rules, safe tier) and the flags are computed for the "
+            "whole frame before timing; apply times the R-0 candidate costs and "
+            "the choice. No decision backend exists in this mode."
+        ),
+        per_baseline=True,
     ),
 )
 
@@ -461,10 +718,12 @@ def main(argv: list[str] | None = None) -> int:
         ctx = make_context(sprint, target.guard_key_version)
         if req is None:
             req = with_blocks(scope(pd.read_parquet(REQUESTS), ctx))
-        rows = sample_rows(req, args.n, seed=seed)  # the rows measure() times
-        version = load_version(target, m, sprint, req, rows)
-        if version.name != lever_id:
-            raise SystemExit(f"built {version.name}, expected {lever_id}")
+        frame = target.prepare(req) if target.prepare else req
+        rows = sample_rows(frame, args.n, seed=seed)  # the rows measure() times
+        version = load_version(target, m, sprint, frame, rows)
+        expected = target.version_name(m) if target.version_name else lever_id
+        if version.name != expected:
+            raise SystemExit(f"built {version.name}, expected {expected}")
 
         def note(s: dict[str, float]) -> str:
             return (
@@ -476,7 +735,7 @@ def main(argv: list[str] | None = None) -> int:
         summary = measure(
             lever_id,
             version,
-            req,
+            frame,
             ctx,
             folder=args.folder,
             n=args.n,
@@ -484,6 +743,7 @@ def main(argv: list[str] | None = None) -> int:
             note=note,
             caveat=target.caveat,
             write=not args.dry_run,
+            per_baseline=target.per_baseline,
         )
         print(
             f"{lever_id:42s} n={summary['n']:<5} p50={summary['p50_ms']:.4f} ms  "

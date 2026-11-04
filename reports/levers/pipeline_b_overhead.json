@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-11-03T12:12:32.554116+00:00",
+  "created_at": "2026-11-03T15:04:56.647878+00:00",
   "evidence": "offline per-request estimate; not a load test (Q-14)",
   "machine": "Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5",
   "method": "apply on one-row frames, 1 untimed warm-up, time.perf_counter_ns; p50 median, p95 nearest rank; data and fitting built before timing",
@@ -23,10 +23,10 @@
   "versions": [
     {
       "family": "rb1",
-      "max_ms": 35.0866,
+      "max_ms": 56.8639,
       "n": 987,
-      "p50_ms": 6.2549,
-      "p95_ms": 7.4846,
+      "p50_ms": 11.1398,
+      "p95_ms": 16.3971,
       "reason": null,
       "result_files": 8,
       "step": "cache",
@@ -114,10 +114,10 @@
     },
     {
       "family": "rb2",
-      "max_ms": 41.7925,
+      "max_ms": 23.2888,
       "n": 987,
-      "p50_ms": 7.6643,
-      "p95_ms": 9.7862,
+      "p50_ms": 12.7035,
+      "p95_ms": 17.8578,
       "reason": null,
       "result_files": 8,
       "step": "context",

@@ -36,6 +36,7 @@ from metis_auto.wiring.lever_view import (
     StepView,
     dashboard,
     has_final,
+    load_final,
     load_view,
     tenant_cap,
 )
@@ -91,6 +92,46 @@ def _folded(d: Dashboard, key: str) -> None:
         return
     with st.expander(d.summaries.get(key, d.labels["show_table"]), expanded=False):
         st.table(pd.DataFrame(list(rows)).set_index(list(rows[0])[0]))
+
+
+def _final(d: Dashboard) -> None:
+    """The combined numbers of final.json: rows per pipeline, the winners'
+    waterfall, the provisional label, the units caveat and F-2's 'other' block.
+    No logic: the view model decided what to show (ADR-0024)."""
+    final = d.final
+    if final is None:
+        return
+    st.subheader(d.labels["final_title"])
+    st.caption(final.status)
+    st.caption(final.units_caveat)
+    st.caption(final.other_text)
+    rows = []
+    for r in final.rows:
+        row = {d.labels["final_pipeline"]: r.pipeline}
+        row |= {d.labels[f"step_{s}"]: text for s, text in r.steps.items()}
+        row[d.labels["final_combined"]] = r.combined
+        row[d.labels["final_share"]] = r.share
+        row[d.labels["final_rule"]] = (
+            d.labels["unknown"]
+            if r.rule_holds is None
+            else d.labels["final_rule_ok" if r.rule_holds else "final_rule_broken"]
+        )
+        rows.append(row)
+    if rows:
+        st.table(pd.DataFrame(rows).set_index(d.labels["final_pipeline"]))
+    if final.waterfall:
+        with st.expander(
+            f"{d.labels['final_waterfall']}: {final.waterfall_pipeline}",
+            expanded=False,
+        ):
+            st.table(
+                pd.DataFrame(
+                    [
+                        {"": w.label, d.labels["saving"]: w.amount}
+                        for w in final.waterfall
+                    ]
+                ).set_index("")
+            )
 
 
 def _no_chart(d: Dashboard) -> None:
@@ -440,6 +481,7 @@ def page() -> None:
         slice_name=slice_name,
         choices={k: v for k, v in choices.items() if v},
         final_present=has_final(folder),
+        final=load_final(folder),
     )
     with st.container(key=f"{d.direction}-results"):
         st.title(d.labels["title"])
@@ -488,6 +530,7 @@ def page() -> None:
                     _cache(d)
         with tabs[-1]:
             _per_bot(d)
+        _final(d)
 
 
 page()

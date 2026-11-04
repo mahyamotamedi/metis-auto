@@ -1,0 +1,779 @@
+{
+  "baselines": [
+    "premium_gpt_5_5",
+    "as_logged",
+    "todays_models",
+    "best_single_cheap"
+  ],
+  "best_single_cheap": "gpt-5-nano",
+  "code_commit": "589c0d0c238a79f6efe443d010cfa8338bfdb288",
+  "created_at": "2026-11-03T17:26:29.160534+00:00",
+  "not_run": {
+    "context.reranker_cut.lexical_overlap": "a 2,000-request heuristic sample, excluded from the combined run",
+    "ctx.history_budget.*": "saves at most 0.08%, not a winner or runner-up",
+    "route.knn.k15 / k50, *.with_reasoning_models, strict_unknown_blocked": "not winners or runners-up"
+  },
+  "note": "Winners are provisional. Quality is not measured: every saving is an offline replay on logged requests (simulation / hypothetical reconstruction).",
+  "pipelines": {
+    "parham": {
+      "baselines": {
+        "as_logged": {
+          "combined_total": "30.764404824",
+          "standalone_sum": "30.764404824",
+          "steps": {
+            "routing": {
+              "alone": "30.764404824",
+              "combined": "30.764404824"
+            }
+          },
+          "sum_rule": {
+            "combined": "30.764404824",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "30.764404824"
+          }
+        },
+        "best_single_cheap": {
+          "combined_total": "0.000000000",
+          "standalone_sum": "0.000000000",
+          "steps": {
+            "routing": {
+              "alone": "0.000000000",
+              "combined": "0.000000000"
+            }
+          },
+          "sum_rule": {
+            "combined": "0E-9",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "0E-9"
+          }
+        },
+        "premium_gpt_5_5": {
+          "combined_total": "1061.784895078",
+          "standalone_sum": "1061.784895078",
+          "steps": {
+            "routing": {
+              "alone": "1061.784895078",
+              "combined": "1061.784895078"
+            }
+          },
+          "sum_rule": {
+            "combined": "1061.784895078",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "1061.784895078"
+          }
+        },
+        "todays_models": {
+          "combined_total": "43.254394537",
+          "standalone_sum": "43.254394537",
+          "steps": {
+            "routing": {
+              "alone": "43.254394537",
+              "combined": "43.254394537"
+            }
+          },
+          "sum_rule": {
+            "combined": "43.254394537",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "43.254394537"
+          }
+        }
+      },
+      "checks": {
+        "served_rows_untouched": true
+      },
+      "n_scored": 73063,
+      "overlaps": {
+        "routing": 12407
+      },
+      "pipeline": "parham",
+      "units": {
+        "as_logged": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {}
+        },
+        "best_single_cheap": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {}
+        },
+        "premium_gpt_5_5": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {}
+        },
+        "todays_models": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {}
+        }
+      },
+      "versions": {
+        "routing": "route.decision_router.rules_only"
+      }
+    },
+    "pipeline_a": {
+      "baselines": {
+        "as_logged": {
+          "combined_total": "7.910184745",
+          "standalone_sum": "8.231177415",
+          "steps": {
+            "cache": {
+              "alone": "0.494405061",
+              "combined": "0.494405061"
+            },
+            "context": {
+              "alone": "2.797362911",
+              "combined": "2.797362911"
+            },
+            "routing": {
+              "alone": "4.939409443",
+              "combined": "4.618416773"
+            }
+          },
+          "sum_rule": {
+            "combined": "7.910184745",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "8.231177415"
+          }
+        },
+        "best_single_cheap": {
+          "combined_total": "1.034449137",
+          "standalone_sum": "1.034449137",
+          "steps": {
+            "cache": {
+              "alone": "0.090459353",
+              "combined": "0.090459353"
+            },
+            "context": {
+              "alone": "0.943989784",
+              "combined": "0.943989784"
+            },
+            "routing": {
+              "alone": "0.000000000",
+              "combined": "0.000000000"
+            }
+          },
+          "sum_rule": {
+            "combined": "1.034449137",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "1.034449137"
+          }
+        },
+        "premium_gpt_5_5": {
+          "combined_total": "311.371472807",
+          "standalone_sum": "323.759514157",
+          "steps": {
+            "cache": {
+              "alone": "8.036432250",
+              "combined": "8.036432250"
+            },
+            "context": {
+              "alone": "94.497351632",
+              "combined": "94.497351632"
+            },
+            "routing": {
+              "alone": "221.225730275",
+              "combined": "208.837688925"
+            }
+          },
+          "sum_rule": {
+            "combined": "311.371472807",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "323.759514157"
+          }
+        },
+        "todays_models": {
+          "combined_total": "14.761212690",
+          "standalone_sum": "15.218600461",
+          "steps": {
+            "cache": {
+              "alone": "0.543152855",
+              "combined": "0.543152855"
+            },
+            "context": {
+              "alone": "5.605994851",
+              "combined": "5.605994851"
+            },
+            "routing": {
+              "alone": "9.069452755",
+              "combined": "8.612064984"
+            }
+          },
+          "sum_rule": {
+            "combined": "14.761212690",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "15.218600461"
+          }
+        }
+      },
+      "checks": {
+        "served_rows_untouched": true
+      },
+      "n_scored": 73063,
+      "overlaps": {
+        "all_three": 0,
+        "cache": 762,
+        "cache&context": 0,
+        "cache&routing": 0,
+        "context": 8706,
+        "context&routing": 0,
+        "routing": 0
+      },
+      "pipeline": "pipeline_a",
+      "units": {
+        "as_logged": {
+          "combined_steps": [
+            "cache",
+            "context",
+            "routing"
+          ],
+          "not_computed": {}
+        },
+        "best_single_cheap": {
+          "combined_steps": [
+            "cache",
+            "context",
+            "routing"
+          ],
+          "not_computed": {}
+        },
+        "premium_gpt_5_5": {
+          "combined_steps": [
+            "cache",
+            "context",
+            "routing"
+          ],
+          "not_computed": {}
+        },
+        "todays_models": {
+          "combined_steps": [
+            "cache",
+            "context",
+            "routing"
+          ],
+          "not_computed": {}
+        }
+      },
+      "versions": {
+        "cache": "cache.popular_question.first_turn",
+        "context": "context.reranker_cut.observed_relevancy",
+        "routing": "route.per_bot"
+      }
+    },
+    "pipeline_b": {
+      "baselines": {
+        "as_logged": {
+          "combined_total": "11.474996822",
+          "standalone_sum": "11.552764569",
+          "steps": {
+            "cache": {
+              "alone": "2.014000000",
+              "combined": "2.014000000"
+            },
+            "context": {
+              "alone": "6.005353797",
+              "combined": "6.005353797"
+            },
+            "routing": {
+              "alone": "3.533410772",
+              "combined": "3.455643025"
+            }
+          },
+          "sum_rule": {
+            "combined": "11.474996822",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "11.552764569"
+          }
+        },
+        "best_single_cheap": {
+          "combined_total": "1.390832250",
+          "standalone_sum": "1.390832250",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "1.390832250",
+              "combined": "1.390832250"
+            },
+            "routing": {
+              "alone": "0.000000000",
+              "combined": "0.000000000"
+            }
+          },
+          "sum_rule": {
+            "combined": "1.390832250",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "1.390832250"
+          }
+        },
+        "premium_gpt_5_5": {
+          "combined_total": "260.904766613",
+          "standalone_sum": "263.921445073",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "139.292428775",
+              "combined": "139.292428775"
+            },
+            "routing": {
+              "alone": "124.629016298",
+              "combined": "121.612337838"
+            }
+          },
+          "sum_rule": {
+            "combined": "260.904766613",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "263.921445073"
+          }
+        },
+        "todays_models": {
+          "combined_total": "13.634043543",
+          "standalone_sum": "13.711468831",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "8.262038594",
+              "combined": "8.262038594"
+            },
+            "routing": {
+              "alone": "5.449430237",
+              "combined": "5.372004949"
+            }
+          },
+          "sum_rule": {
+            "combined": "13.634043543",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "13.711468831"
+          }
+        }
+      },
+      "checks": {
+        "retrieval_rows_not_served": true,
+        "served_rows_untouched": true
+      },
+      "n_scored": 73063,
+      "overlaps": {
+        "all_three": 68,
+        "cache": 904,
+        "cache&context": 851,
+        "cache&routing": 72,
+        "context": 9125,
+        "context&routing": 534,
+        "routing": 2897
+      },
+      "pipeline": "pipeline_b",
+      "units": {
+        "as_logged": {
+          "combined_steps": [
+            "cache",
+            "context",
+            "routing"
+          ],
+          "not_computed": {}
+        },
+        "best_single_cheap": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {
+            "cache": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+          }
+        },
+        "premium_gpt_5_5": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {
+            "cache": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+          }
+        },
+        "todays_models": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {
+            "cache": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+          }
+        }
+      },
+      "versions": {
+        "cache": "retrieval_result_cache.ttl_1d",
+        "context": "cross_turn_chunks.ptr8.k1",
+        "routing": "route.knn.k5"
+      }
+    },
+    "pipeline_c": {
+      "baselines": {
+        "as_logged": {
+          "combined_total": "15.534100082",
+          "standalone_sum": "15.534269463",
+          "steps": {
+            "cache": {
+              "alone": "1.974484839",
+              "combined": "1.974484839"
+            },
+            "context": {
+              "alone": "8.947677082",
+              "combined": "8.947507701"
+            },
+            "routing": {
+              "alone": "4.612107542",
+              "combined": "4.612107542"
+            }
+          },
+          "sum_rule": {
+            "combined": "15.534100082",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "15.534269463"
+          }
+        },
+        "best_single_cheap": {
+          "combined_total": "3.032454188",
+          "standalone_sum": "3.032454188",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "3.032454188",
+              "combined": "3.032454188"
+            },
+            "routing": {
+              "alone": "0.000000000",
+              "combined": "0.000000000"
+            }
+          },
+          "sum_rule": {
+            "combined": "3.032454188",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "3.032454188"
+          }
+        },
+        "premium_gpt_5_5": {
+          "combined_total": "378.535774112",
+          "standalone_sum": "378.535774112",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "305.557843867",
+              "combined": "305.557843867"
+            },
+            "routing": {
+              "alone": "72.977930245",
+              "combined": "72.977930245"
+            }
+          },
+          "sum_rule": {
+            "combined": "378.535774112",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "378.535774112"
+          }
+        },
+        "todays_models": {
+          "combined_total": "21.950641873",
+          "standalone_sum": "21.950641873",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "18.075256703",
+              "combined": "18.075256703"
+            },
+            "routing": {
+              "alone": "3.875385170",
+              "combined": "3.875385170"
+            }
+          },
+          "sum_rule": {
+            "combined": "21.950641873",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "21.950641873"
+          }
+        }
+      },
+      "checks": {
+        "served_rows_untouched": true
+      },
+      "n_scored": 73063,
+      "overlaps": {
+        "all_three": 0,
+        "cache": 256,
+        "cache&context": 255,
+        "cache&routing": 0,
+        "context": 14519,
+        "context&routing": 0,
+        "routing": 2653
+      },
+      "pipeline": "pipeline_c",
+      "units": {
+        "as_logged": {
+          "combined_steps": [
+            "cache",
+            "context",
+            "routing"
+          ],
+          "not_computed": {}
+        },
+        "best_single_cheap": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {
+            "cache": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+          }
+        },
+        "premium_gpt_5_5": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {
+            "cache": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+          }
+        },
+        "todays_models": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {
+            "cache": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+          }
+        }
+      },
+      "versions": {
+        "cache": "cache.session_memo_gate",
+        "context": "ctx.within_message_dedup",
+        "routing": "route.small_classifier.rules"
+      }
+    },
+    "winners": {
+      "baselines": {
+        "as_logged": {
+          "combined_total": "39.657332029",
+          "standalone_sum": "41.726081906",
+          "steps": {
+            "cache": {
+              "alone": "2.014000000",
+              "combined": "2.014000000"
+            },
+            "context": {
+              "alone": "8.947677082",
+              "combined": "8.947677082"
+            },
+            "routing": {
+              "alone": "30.764404824",
+              "combined": "28.695654947"
+            }
+          },
+          "sum_rule": {
+            "combined": "39.657332029",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "41.726081906"
+          }
+        },
+        "best_single_cheap": {
+          "combined_total": "3.032454188",
+          "standalone_sum": "3.032454188",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "3.032454188",
+              "combined": "3.032454188"
+            },
+            "routing": {
+              "alone": "0.000000000",
+              "combined": "0.000000000"
+            }
+          },
+          "sum_rule": {
+            "combined": "3.032454188",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "3.032454188"
+          }
+        },
+        "premium_gpt_5_5": {
+          "combined_total": "1178.464287724",
+          "standalone_sum": "1367.342738945",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "305.557843867",
+              "combined": "305.557843867"
+            },
+            "routing": {
+              "alone": "1061.784895078",
+              "combined": "872.906443857"
+            }
+          },
+          "sum_rule": {
+            "combined": "1178.464287724",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "1367.342738945"
+          }
+        },
+        "todays_models": {
+          "combined_total": "55.606816488",
+          "standalone_sum": "61.329651240",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "18.075256703",
+              "combined": "18.075256703"
+            },
+            "routing": {
+              "alone": "43.254394537",
+              "combined": "37.531559785"
+            }
+          },
+          "sum_rule": {
+            "combined": "55.606816488",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "61.329651240"
+          }
+        }
+      },
+      "checks": {
+        "retrieval_rows_not_served": true,
+        "served_rows_untouched": true
+      },
+      "n_scored": 73063,
+      "overlaps": {
+        "all_three": 705,
+        "cache": 904,
+        "cache&context": 887,
+        "cache&routing": 721,
+        "context": 14519,
+        "context&routing": 10003,
+        "routing": 12408
+      },
+      "pipeline": "winners",
+      "units": {
+        "as_logged": {
+          "combined_steps": [
+            "cache",
+            "context",
+            "routing"
+          ],
+          "not_computed": {}
+        },
+        "best_single_cheap": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {
+            "cache": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+          }
+        },
+        "premium_gpt_5_5": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {
+            "cache": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+          }
+        },
+        "todays_models": {
+          "combined_steps": [
+            "context",
+            "routing"
+          ],
+          "not_computed": {
+            "cache": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+          }
+        }
+      },
+      "versions": {
+        "cache": "retrieval_result_cache.ttl_1d",
+        "context": "ctx.within_message_dedup",
+        "routing": "route.decision_router.rules_only"
+      }
+    }
+  },
+  "population": {
+    "history_rows": 349078,
+    "llm_requests": 20750,
+    "sample": null,
+    "scored_requests": 73063,
+    "split": "report",
+    "timestamps": "naive (Q-06)"
+  },
+  "python": "3.13.5",
+  "routing_after_context": "PostContextRouting: routing prices the input lowered by the context version's net saved tokens (stated assumption; the shared combine is not changed)",
+  "runners_up": {
+    "cache": "cache.popular_question.first_turn",
+    "context": "cross_turn_chunks.ptr8.k1",
+    "routing": "route.per_bot"
+  },
+  "skipped": {},
+  "status": "provisional: cost only, pending quality",
+  "task": "I-1: the pipelines' combined run on the report split",
+  "units": "recorded (as_logged) and price-file units are never added; a step without a figure in a baseline's units is 'not computed', never 0"
+}

@@ -1,0 +1,3954 @@
+{
+  "baselines": {
+    "as_logged": {
+      "fees": "65.502000000",
+      "other_block": {
+        "amount": "0.692235000000000040950",
+        "note": "F-2 'other': cache writes and items logged without a costBreakdown (mostly March 2026). It is part of token cost (ADR-0050 point 3, owner 2026-11-02), shown so that no share hides it. Report period = all AI messages minus the tune period (naive timestamps, Q-06).",
+        "share": 0.00434285406138093
+      },
+      "pipelines": {
+        "parham": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "30.764404824",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "routing": 12407
+          },
+          "share_of_total": 0.2099994128841398,
+          "standalone_sum": "30.764404824",
+          "steps": {
+            "routing": {
+              "alone": "30.764404824",
+              "combined": "30.764404824"
+            }
+          },
+          "sum_rule": {
+            "combined": "30.764404824",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "30.764404824"
+          },
+          "versions": {
+            "routing": "route.decision_router.rules_only"
+          },
+          "waterfall": [
+            {
+              "amount": "146.497575405",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "30.764404824",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.decision_router.rules_only"
+            },
+            {
+              "amount": "115.733170581",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_a": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "7.910184745",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 0,
+            "cache": 762,
+            "cache&context": 0,
+            "cache&routing": 0,
+            "context": 8706,
+            "context&routing": 0,
+            "routing": 0
+          },
+          "share_of_total": 0.053995328749516104,
+          "standalone_sum": "8.231177415",
+          "steps": {
+            "cache": {
+              "alone": "0.494405061",
+              "combined": "0.494405061"
+            },
+            "context": {
+              "alone": "2.797362911",
+              "combined": "2.797362911"
+            },
+            "routing": {
+              "alone": "4.939409443",
+              "combined": "4.618416773"
+            }
+          },
+          "sum_rule": {
+            "combined": "7.910184745",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "8.231177415"
+          },
+          "versions": {
+            "cache": "cache.popular_question.first_turn",
+            "context": "context.reranker_cut.observed_relevancy",
+            "routing": "route.per_bot"
+          },
+          "waterfall": [
+            {
+              "amount": "146.497575405",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "0.494405061",
+              "blocks": "fees+token_cost",
+              "kind": "step",
+              "step": "cache",
+              "version": "cache.popular_question.first_turn"
+            },
+            {
+              "amount": "2.797362911",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "context.reranker_cut.observed_relevancy"
+            },
+            {
+              "amount": "4.618416773",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.per_bot"
+            },
+            {
+              "amount": "138.587390660",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_b": {
+          "checks": {
+            "retrieval_rows_not_served": true,
+            "served_rows_untouched": true
+          },
+          "combined_total": "11.474996822",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 68,
+            "cache": 904,
+            "cache&context": 851,
+            "cache&routing": 72,
+            "context": 9125,
+            "context&routing": 534,
+            "routing": 2897
+          },
+          "share_of_total": 0.07832891971267639,
+          "standalone_sum": "11.552764569",
+          "steps": {
+            "cache": {
+              "alone": "2.014000000",
+              "combined": "2.014000000"
+            },
+            "context": {
+              "alone": "6.005353797",
+              "combined": "6.005353797"
+            },
+            "routing": {
+              "alone": "3.533410772",
+              "combined": "3.455643025"
+            }
+          },
+          "sum_rule": {
+            "combined": "11.474996822",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "11.552764569"
+          },
+          "versions": {
+            "cache": "retrieval_result_cache.ttl_1d",
+            "context": "cross_turn_chunks.ptr8.k1",
+            "routing": "route.knn.k5"
+          },
+          "waterfall": [
+            {
+              "amount": "146.497575405",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "2.014000000",
+              "blocks": "fees",
+              "kind": "step",
+              "step": "cache",
+              "version": "retrieval_result_cache.ttl_1d"
+            },
+            {
+              "amount": "6.005353797",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "cross_turn_chunks.ptr8.k1"
+            },
+            {
+              "amount": "3.455643025",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.knn.k5"
+            },
+            {
+              "amount": "135.022578583",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_c": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "15.534100082",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 0,
+            "cache": 256,
+            "cache&context": 255,
+            "cache&routing": 0,
+            "context": 14519,
+            "context&routing": 0,
+            "routing": 2653
+          },
+          "share_of_total": 0.1060365677660889,
+          "standalone_sum": "15.534269463",
+          "steps": {
+            "cache": {
+              "alone": "1.974484839",
+              "combined": "1.974484839"
+            },
+            "context": {
+              "alone": "8.947677082",
+              "combined": "8.947507701"
+            },
+            "routing": {
+              "alone": "4.612107542",
+              "combined": "4.612107542"
+            }
+          },
+          "sum_rule": {
+            "combined": "15.534100082",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "15.534269463"
+          },
+          "versions": {
+            "cache": "cache.session_memo_gate",
+            "context": "ctx.within_message_dedup",
+            "routing": "route.small_classifier.rules"
+          },
+          "waterfall": [
+            {
+              "amount": "146.497575405",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "1.974484839",
+              "blocks": "fees",
+              "kind": "step",
+              "step": "cache",
+              "version": "cache.session_memo_gate"
+            },
+            {
+              "amount": "8.947507701",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "ctx.within_message_dedup"
+            },
+            {
+              "amount": "4.612107542",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.small_classifier.rules"
+            },
+            {
+              "amount": "130.963475323",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "winners": {
+          "checks": {
+            "retrieval_rows_not_served": true,
+            "served_rows_untouched": true
+          },
+          "combined_total": "39.657332029",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 705,
+            "cache": 904,
+            "cache&context": 887,
+            "cache&routing": 721,
+            "context": 14519,
+            "context&routing": 10003,
+            "routing": 12408
+          },
+          "share_of_total": 0.2707029923148236,
+          "standalone_sum": "41.726081906",
+          "steps": {
+            "cache": {
+              "alone": "2.014000000",
+              "combined": "2.014000000"
+            },
+            "context": {
+              "alone": "8.947677082",
+              "combined": "8.947677082"
+            },
+            "routing": {
+              "alone": "30.764404824",
+              "combined": "28.695654947"
+            }
+          },
+          "sum_rule": {
+            "combined": "39.657332029",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "41.726081906"
+          },
+          "versions": {
+            "cache": "retrieval_result_cache.ttl_1d",
+            "context": "ctx.within_message_dedup",
+            "routing": "route.decision_router.rules_only"
+          },
+          "waterfall": [
+            {
+              "amount": "146.497575405",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "2.014000000",
+              "blocks": "fees",
+              "kind": "step",
+              "step": "cache",
+              "version": "retrieval_result_cache.ttl_1d"
+            },
+            {
+              "amount": "8.947677082",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "ctx.within_message_dedup"
+            },
+            {
+              "amount": "28.695654947",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.decision_router.rules_only"
+            },
+            {
+              "amount": "106.840243376",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        }
+      },
+      "token_cost": "80.995575405",
+      "total": "146.497575405",
+      "unit": "recorded"
+    },
+    "best_single_cheap": {
+      "other_block": {
+        "amount": null,
+        "note": "not computed in price-file units: those baselines price tokens only, and F-2's other block is recorded cost",
+        "share": null
+      },
+      "pipelines": {
+        "parham": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "0.000000000",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "routing": 12407
+          },
+          "share_of_total": 0.0,
+          "standalone_sum": "0.000000000",
+          "steps": {
+            "routing": {
+              "alone": "0.000000000",
+              "combined": "0.000000000"
+            }
+          },
+          "sum_rule": {
+            "combined": "0E-9",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "0E-9"
+          },
+          "versions": {
+            "routing": "route.decision_router.rules_only"
+          },
+          "waterfall": [
+            {
+              "amount": "39.751390761",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "0.000000000",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.decision_router.rules_only"
+            },
+            {
+              "amount": "39.751390761",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_a": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "1.034449137",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 0,
+            "cache": 762,
+            "cache&context": 0,
+            "cache&routing": 0,
+            "context": 8706,
+            "context&routing": 0,
+            "routing": 0
+          },
+          "share_of_total": 0.026022967176657773,
+          "standalone_sum": "1.034449137",
+          "steps": {
+            "cache": {
+              "alone": "0.090459353",
+              "combined": "0.090459353"
+            },
+            "context": {
+              "alone": "0.943989784",
+              "combined": "0.943989784"
+            },
+            "routing": {
+              "alone": "0.000000000",
+              "combined": "0.000000000"
+            }
+          },
+          "sum_rule": {
+            "combined": "1.034449137",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "1.034449137"
+          },
+          "versions": {
+            "cache": "cache.popular_question.first_turn",
+            "context": "context.reranker_cut.observed_relevancy",
+            "routing": "route.per_bot"
+          },
+          "waterfall": [
+            {
+              "amount": "39.751390761",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "0.090459353",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "cache",
+              "version": "cache.popular_question.first_turn"
+            },
+            {
+              "amount": "0.943989784",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "context.reranker_cut.observed_relevancy"
+            },
+            {
+              "amount": "0.000000000",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.per_bot"
+            },
+            {
+              "amount": "38.716941624",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_b": {
+          "checks": {
+            "retrieval_rows_not_served": true,
+            "served_rows_untouched": true
+          },
+          "combined_total": "1.390832250",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 68,
+            "cache": 904,
+            "cache&context": 851,
+            "cache&routing": 72,
+            "context": 9125,
+            "context&routing": 534,
+            "routing": 2897
+          },
+          "share_of_total": 0.03498826640713518,
+          "standalone_sum": "1.390832250",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "1.390832250",
+              "combined": "1.390832250"
+            },
+            "routing": {
+              "alone": "0.000000000",
+              "combined": "0.000000000"
+            }
+          },
+          "sum_rule": {
+            "combined": "1.390832250",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "1.390832250"
+          },
+          "versions": {
+            "cache": "retrieval_result_cache.ttl_1d",
+            "context": "cross_turn_chunks.ptr8.k1",
+            "routing": "route.knn.k5"
+          },
+          "waterfall": [
+            {
+              "amount": "39.751390761",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "1.390832250",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "cross_turn_chunks.ptr8.k1"
+            },
+            {
+              "amount": "0.000000000",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.knn.k5"
+            },
+            {
+              "amount": "38.360558511",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_c": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "3.032454188",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 0,
+            "cache": 256,
+            "cache&context": 255,
+            "cache&routing": 0,
+            "context": 14519,
+            "context&routing": 0,
+            "routing": 2653
+          },
+          "share_of_total": 0.07628548661937971,
+          "standalone_sum": "3.032454188",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "3.032454188",
+              "combined": "3.032454188"
+            },
+            "routing": {
+              "alone": "0.000000000",
+              "combined": "0.000000000"
+            }
+          },
+          "sum_rule": {
+            "combined": "3.032454188",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "3.032454188"
+          },
+          "versions": {
+            "cache": "cache.session_memo_gate",
+            "context": "ctx.within_message_dedup",
+            "routing": "route.small_classifier.rules"
+          },
+          "waterfall": [
+            {
+              "amount": "39.751390761",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "3.032454188",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "ctx.within_message_dedup"
+            },
+            {
+              "amount": "0.000000000",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.small_classifier.rules"
+            },
+            {
+              "amount": "36.718936573",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "winners": {
+          "checks": {
+            "retrieval_rows_not_served": true,
+            "served_rows_untouched": true
+          },
+          "combined_total": "3.032454188",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 705,
+            "cache": 904,
+            "cache&context": 887,
+            "cache&routing": 721,
+            "context": 14519,
+            "context&routing": 10003,
+            "routing": 12408
+          },
+          "share_of_total": 0.07628548661937971,
+          "standalone_sum": "3.032454188",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "3.032454188",
+              "combined": "3.032454188"
+            },
+            "routing": {
+              "alone": "0.000000000",
+              "combined": "0.000000000"
+            }
+          },
+          "sum_rule": {
+            "combined": "3.032454188",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "3.032454188"
+          },
+          "versions": {
+            "cache": "retrieval_result_cache.ttl_1d",
+            "context": "ctx.within_message_dedup",
+            "routing": "route.decision_router.rules_only"
+          },
+          "waterfall": [
+            {
+              "amount": "39.751390761",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "3.032454188",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "ctx.within_message_dedup"
+            },
+            {
+              "amount": "0.000000000",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.decision_router.rules_only"
+            },
+            {
+              "amount": "36.718936573",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        }
+      },
+      "total": "39.751390761",
+      "unit": "price-file"
+    },
+    "premium_gpt_5_5": {
+      "other_block": {
+        "amount": null,
+        "note": "not computed in price-file units: those baselines price tokens only, and F-2's other block is recorded cost",
+        "share": null
+      },
+      "pipelines": {
+        "parham": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "1061.784895078",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "routing": 12407
+          },
+          "share_of_total": 0.28405976752490547,
+          "standalone_sum": "1061.784895078",
+          "steps": {
+            "routing": {
+              "alone": "1061.784895078",
+              "combined": "1061.784895078"
+            }
+          },
+          "sum_rule": {
+            "combined": "1061.784895078",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "1061.784895078"
+          },
+          "versions": {
+            "routing": "route.decision_router.rules_only"
+          },
+          "waterfall": [
+            {
+              "amount": "3737.892572150",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "1061.784895078",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.decision_router.rules_only"
+            },
+            {
+              "amount": "2676.107677072",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_a": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "311.371472807",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 0,
+            "cache": 762,
+            "cache&context": 0,
+            "cache&routing": 0,
+            "context": 8706,
+            "context&routing": 0,
+            "routing": 0
+          },
+          "share_of_total": 0.08330134341659319,
+          "standalone_sum": "323.759514157",
+          "steps": {
+            "cache": {
+              "alone": "8.036432250",
+              "combined": "8.036432250"
+            },
+            "context": {
+              "alone": "94.497351632",
+              "combined": "94.497351632"
+            },
+            "routing": {
+              "alone": "221.225730275",
+              "combined": "208.837688925"
+            }
+          },
+          "sum_rule": {
+            "combined": "311.371472807",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "323.759514157"
+          },
+          "versions": {
+            "cache": "cache.popular_question.first_turn",
+            "context": "context.reranker_cut.observed_relevancy",
+            "routing": "route.per_bot"
+          },
+          "waterfall": [
+            {
+              "amount": "3737.892572150",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "8.036432250",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "cache",
+              "version": "cache.popular_question.first_turn"
+            },
+            {
+              "amount": "94.497351632",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "context.reranker_cut.observed_relevancy"
+            },
+            {
+              "amount": "208.837688925",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.per_bot"
+            },
+            {
+              "amount": "3426.521099343",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_b": {
+          "checks": {
+            "retrieval_rows_not_served": true,
+            "served_rows_untouched": true
+          },
+          "combined_total": "260.904766613",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 68,
+            "cache": 904,
+            "cache&context": 851,
+            "cache&routing": 72,
+            "context": 9125,
+            "context&routing": 534,
+            "routing": 2897
+          },
+          "share_of_total": 0.06979996390397332,
+          "standalone_sum": "263.921445073",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "139.292428775",
+              "combined": "139.292428775"
+            },
+            "routing": {
+              "alone": "124.629016298",
+              "combined": "121.612337838"
+            }
+          },
+          "sum_rule": {
+            "combined": "260.904766613",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "263.921445073"
+          },
+          "versions": {
+            "cache": "retrieval_result_cache.ttl_1d",
+            "context": "cross_turn_chunks.ptr8.k1",
+            "routing": "route.knn.k5"
+          },
+          "waterfall": [
+            {
+              "amount": "3737.892572150",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "139.292428775",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "cross_turn_chunks.ptr8.k1"
+            },
+            {
+              "amount": "121.612337838",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.knn.k5"
+            },
+            {
+              "amount": "3476.987805537",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_c": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "378.535774112",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 0,
+            "cache": 256,
+            "cache&context": 255,
+            "cache&routing": 0,
+            "context": 14519,
+            "context&routing": 0,
+            "routing": 2653
+          },
+          "share_of_total": 0.10126983769741404,
+          "standalone_sum": "378.535774112",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "305.557843867",
+              "combined": "305.557843867"
+            },
+            "routing": {
+              "alone": "72.977930245",
+              "combined": "72.977930245"
+            }
+          },
+          "sum_rule": {
+            "combined": "378.535774112",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "378.535774112"
+          },
+          "versions": {
+            "cache": "cache.session_memo_gate",
+            "context": "ctx.within_message_dedup",
+            "routing": "route.small_classifier.rules"
+          },
+          "waterfall": [
+            {
+              "amount": "3737.892572150",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "305.557843867",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "ctx.within_message_dedup"
+            },
+            {
+              "amount": "72.977930245",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.small_classifier.rules"
+            },
+            {
+              "amount": "3359.356798038",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "winners": {
+          "checks": {
+            "retrieval_rows_not_served": true,
+            "served_rows_untouched": true
+          },
+          "combined_total": "1178.464287724",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 705,
+            "cache": 904,
+            "cache&context": 887,
+            "cache&routing": 721,
+            "context": 14519,
+            "context&routing": 10003,
+            "routing": 12408
+          },
+          "share_of_total": 0.31527505538934164,
+          "standalone_sum": "1367.342738945",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "305.557843867",
+              "combined": "305.557843867"
+            },
+            "routing": {
+              "alone": "1061.784895078",
+              "combined": "872.906443857"
+            }
+          },
+          "sum_rule": {
+            "combined": "1178.464287724",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "1367.342738945"
+          },
+          "versions": {
+            "cache": "retrieval_result_cache.ttl_1d",
+            "context": "ctx.within_message_dedup",
+            "routing": "route.decision_router.rules_only"
+          },
+          "waterfall": [
+            {
+              "amount": "3737.892572150",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "305.557843867",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "ctx.within_message_dedup"
+            },
+            {
+              "amount": "872.906443857",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.decision_router.rules_only"
+            },
+            {
+              "amount": "2559.428284426",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        }
+      },
+      "total": "3737.892572150",
+      "unit": "price-file"
+    },
+    "todays_models": {
+      "other_block": {
+        "amount": null,
+        "note": "not computed in price-file units: those baselines price tokens only, and F-2's other block is recorded cost",
+        "share": null
+      },
+      "pipelines": {
+        "parham": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "43.254394537",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "routing": 12407
+          },
+          "share_of_total": 0.17827903106740434,
+          "standalone_sum": "43.254394537",
+          "steps": {
+            "routing": {
+              "alone": "43.254394537",
+              "combined": "43.254394537"
+            }
+          },
+          "sum_rule": {
+            "combined": "43.254394537",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "43.254394537"
+          },
+          "versions": {
+            "routing": "route.decision_router.rules_only"
+          },
+          "waterfall": [
+            {
+              "amount": "242.621884795",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "43.254394537",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.decision_router.rules_only"
+            },
+            {
+              "amount": "199.367490258",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_a": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "14.761212690",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 0,
+            "cache": 762,
+            "cache&context": 0,
+            "cache&routing": 0,
+            "context": 8706,
+            "context&routing": 0,
+            "routing": 0
+          },
+          "share_of_total": 0.0608404007019906,
+          "standalone_sum": "15.218600461",
+          "steps": {
+            "cache": {
+              "alone": "0.543152855",
+              "combined": "0.543152855"
+            },
+            "context": {
+              "alone": "5.605994851",
+              "combined": "5.605994851"
+            },
+            "routing": {
+              "alone": "9.069452755",
+              "combined": "8.612064984"
+            }
+          },
+          "sum_rule": {
+            "combined": "14.761212690",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "15.218600461"
+          },
+          "versions": {
+            "cache": "cache.popular_question.first_turn",
+            "context": "context.reranker_cut.observed_relevancy",
+            "routing": "route.per_bot"
+          },
+          "waterfall": [
+            {
+              "amount": "242.621884795",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "0.543152855",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "cache",
+              "version": "cache.popular_question.first_turn"
+            },
+            {
+              "amount": "5.605994851",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "context.reranker_cut.observed_relevancy"
+            },
+            {
+              "amount": "8.612064984",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.per_bot"
+            },
+            {
+              "amount": "227.860672105",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_b": {
+          "checks": {
+            "retrieval_rows_not_served": true,
+            "served_rows_untouched": true
+          },
+          "combined_total": "13.634043543",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 68,
+            "cache": 904,
+            "cache&context": 851,
+            "cache&routing": 72,
+            "context": 9125,
+            "context&routing": 534,
+            "routing": 2897
+          },
+          "share_of_total": 0.05619461556207057,
+          "standalone_sum": "13.711468831",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "8.262038594",
+              "combined": "8.262038594"
+            },
+            "routing": {
+              "alone": "5.449430237",
+              "combined": "5.372004949"
+            }
+          },
+          "sum_rule": {
+            "combined": "13.634043543",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "13.711468831"
+          },
+          "versions": {
+            "cache": "retrieval_result_cache.ttl_1d",
+            "context": "cross_turn_chunks.ptr8.k1",
+            "routing": "route.knn.k5"
+          },
+          "waterfall": [
+            {
+              "amount": "242.621884795",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "8.262038594",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "cross_turn_chunks.ptr8.k1"
+            },
+            {
+              "amount": "5.372004949",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.knn.k5"
+            },
+            {
+              "amount": "228.987841252",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "pipeline_c": {
+          "checks": {
+            "served_rows_untouched": true
+          },
+          "combined_total": "21.950641873",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 0,
+            "cache": 256,
+            "cache&context": 255,
+            "cache&routing": 0,
+            "context": 14519,
+            "context&routing": 0,
+            "routing": 2653
+          },
+          "share_of_total": 0.09047263766641205,
+          "standalone_sum": "21.950641873",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "18.075256703",
+              "combined": "18.075256703"
+            },
+            "routing": {
+              "alone": "3.875385170",
+              "combined": "3.875385170"
+            }
+          },
+          "sum_rule": {
+            "combined": "21.950641873",
+            "equal": true,
+            "holds": true,
+            "standalone_sum": "21.950641873"
+          },
+          "versions": {
+            "cache": "cache.session_memo_gate",
+            "context": "ctx.within_message_dedup",
+            "routing": "route.small_classifier.rules"
+          },
+          "waterfall": [
+            {
+              "amount": "242.621884795",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "18.075256703",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "ctx.within_message_dedup"
+            },
+            {
+              "amount": "3.875385170",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.small_classifier.rules"
+            },
+            {
+              "amount": "220.671242922",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        },
+        "winners": {
+          "checks": {
+            "retrieval_rows_not_served": true,
+            "served_rows_untouched": true
+          },
+          "combined_total": "55.606816488",
+          "interval": null,
+          "interval_note": "not computed: the steps overlap, so a combined interval needs a row-level bootstrap; each result's own interval is in 'versions'",
+          "overlaps": {
+            "all_three": 705,
+            "cache": 904,
+            "cache&context": 887,
+            "cache&routing": 721,
+            "context": 14519,
+            "context&routing": 10003,
+            "routing": 12408
+          },
+          "share_of_total": 0.2291912641556808,
+          "standalone_sum": "61.329651240",
+          "steps": {
+            "cache": {
+              "alone": null,
+              "combined": null,
+              "not_computed": "not computed in these units: a retrieval cache saves recorded per-call fees, and the repriced baselines have no fee block (ADR-0037 item 7)"
+            },
+            "context": {
+              "alone": "18.075256703",
+              "combined": "18.075256703"
+            },
+            "routing": {
+              "alone": "43.254394537",
+              "combined": "37.531559785"
+            }
+          },
+          "sum_rule": {
+            "combined": "55.606816488",
+            "equal": false,
+            "holds": true,
+            "standalone_sum": "61.329651240"
+          },
+          "versions": {
+            "cache": "retrieval_result_cache.ttl_1d",
+            "context": "ctx.within_message_dedup",
+            "routing": "route.decision_router.rules_only"
+          },
+          "waterfall": [
+            {
+              "amount": "242.621884795",
+              "kind": "baseline",
+              "label": "baseline cost"
+            },
+            {
+              "amount": "18.075256703",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "context",
+              "version": "ctx.within_message_dedup"
+            },
+            {
+              "amount": "37.531559785",
+              "blocks": "token_cost",
+              "kind": "step",
+              "step": "routing",
+              "version": "route.decision_router.rules_only"
+            },
+            {
+              "amount": "187.015068307",
+              "kind": "after",
+              "label": "cost after"
+            }
+          ]
+        }
+      },
+      "total": "242.621884795",
+      "unit": "price-file"
+    }
+  },
+  "cost_blocks": {
+    "note": "F-2 'other': cache writes and items logged without a costBreakdown (mostly March 2026). It is part of token cost (ADR-0050 point 3, owner 2026-11-02), shown so that no share hides it. Report period = all AI messages minus the tune period (naive timestamps, Q-06).",
+    "scopes": {
+      "all_ai_messages": {
+        "blocks": {
+          "breakdown_gap": "-0.0000000000000011570722",
+          "breakdown_other": "0",
+          "cache_write": "0.69223500000000004095",
+          "cached": "2.0338289821999999420730",
+          "fees": "190.7253",
+          "input": "182.2796640419999955373109",
+          "output": "72.3894721700000013600701",
+          "unbroken_fixed": "10.5247",
+          "unbroken_usage": "48.098772729999999294681",
+          "unresolved": "0.000000000000000000000"
+        },
+        "other_share": 0.11705261611246157,
+        "other_total": "59.315707729999999335631",
+        "shares": {
+          "breakdown_gap": -2.2833467427802594e-18,
+          "breakdown_other": 0.0,
+          "cache_write": 0.001366044860889833,
+          "cached": 0.004013523773087332,
+          "fees": 0.3763740866998514,
+          "input": 0.3597076113015079,
+          "output": 0.14285216211309176,
+          "unbroken_fixed": 0.020769265274664273,
+          "unbroken_usage": 0.09491730597690745,
+          "unresolved": 0.0
+        },
+        "total": "506.7439729241999950180128"
+      },
+      "report_derived": {
+        "blocks": {
+          "breakdown_gap": "-0.0000000000000005393183",
+          "breakdown_other": "0",
+          "cache_write": "0.69223500000000004095",
+          "cached": "0.2862257729999999928502",
+          "fees": "73.9418",
+          "input": "71.4106243619999980107220",
+          "output": "13.0654450700000007372626",
+          "unbroken_fixed": "0.0000",
+          "unbroken_usage": "0.000000000000000000000",
+          "unresolved": "0.000000000000000000000"
+        },
+        "other_share": 0.00434285406138093,
+        "other_total": "0.692235000000000040950",
+        "shares": {
+          "breakdown_gap": -3.3835051240287745e-18,
+          "breakdown_other": 0.0,
+          "cache_write": 0.00434285406138093,
+          "cached": 0.0017956860903377409,
+          "fees": 0.4638864640415703,
+          "input": 0.44800670297841,
+          "output": 0.08196829282830101,
+          "unbroken_fixed": 0.0,
+          "unbroken_usage": 0.0,
+          "unresolved": 0.0
+        },
+        "total": "159.3963302049999982424665"
+      },
+      "tune": {
+        "blocks": {
+          "breakdown_gap": "-0.0000000000000006177539",
+          "breakdown_other": "0",
+          "cache_write": "0",
+          "cached": "1.7476032091999999492228",
+          "fees": "116.7835",
+          "input": "110.8690396799999975265889",
+          "output": "59.3240271000000006228075",
+          "unbroken_fixed": "10.5247",
+          "unbroken_usage": "48.098772729999999294681",
+          "unresolved": "0.000000000000000000000"
+        },
+        "other_share": 0.1687746382012787,
+        "other_total": "58.623472729999999294681",
+        "shares": {
+          "breakdown_gap": -1.778488822218378e-18,
+          "breakdown_other": 0.0,
+          "cache_write": 0.0,
+          "cached": 0.005031279888698665,
+          "fees": 0.3362150354203186,
+          "input": 0.3191875402178211,
+          "output": 0.17079150627188294,
+          "unbroken_fixed": 0.030300191236674934,
+          "unbroken_usage": 0.13847444696460376,
+          "unresolved": 0.0
+        },
+        "total": "347.3476427191999967755463"
+      }
+    }
+  },
+  "format": "final-v1",
+  "not_run": {
+    "context.reranker_cut.lexical_overlap": "a 2,000-request heuristic sample, excluded from the combined run",
+    "ctx.history_budget.*": "saves at most 0.08%, not a winner or runner-up",
+    "route.knn.k15 / k50, *.with_reasoning_models, strict_unknown_blocked": "not winners or runners-up"
+  },
+  "note": "Winners are provisional. Quality is not measured: every saving is an offline replay on logged requests (simulation / hypothetical reconstruction).",
+  "population": {
+    "history_rows": 349078,
+    "llm_requests": 20750,
+    "sample": null,
+    "scored_requests": 73063,
+    "split": "report",
+    "timestamps": "naive (Q-06)"
+  },
+  "skipped": {},
+  "status": "provisional: cost only, pending quality",
+  "units_caveat": "Recorded cost (as_logged, with a fee block) and price-file cost (the other three baselines, token cost only; fees are not on the price list) are never added. A step with no figure in a baseline's units is 'not computed', never 0. Savings of different steps can overlap; each pipeline's combined figure is the sum of the steps' marginal effects in the order cache, context, routing, with routing priced on the post-context tokens. Every figure is an offline replay on logged requests: quality is not measured.",
+  "versions": [
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.002728846775681209,
+        0.0035596118145577284
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.popular_question.first_turn",
+      "n_requests": 77774,
+      "overhead_ms_p50": 27.6013,
+      "overhead_ms_p95": 36.7828,
+      "role": "runner_up",
+      "share": 0.003101778,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "pq-v1"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.0005309826709606506,
+        0.0008519541026307059
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.popular_question.first_turn.ttl24h",
+      "n_requests": 77774,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "runner_up",
+      "share": 0.000673478,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "pq-v2"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": [
+        0.000365876,
+        0.00058064
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.popular_question.first_turn.ttl24h",
+      "n_requests": 77774,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "runner_up",
+      "share": 0.000464509,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "pq-v2"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": [
+        0.000364514,
+        0.000547712
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.popular_question.first_turn.ttl24h",
+      "n_requests": 77774,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "runner_up",
+      "share": 0.000449563,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "pq-v2"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": [
+        0.000363061,
+        0.000601182
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.popular_question.first_turn.ttl24h",
+      "n_requests": 77774,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "runner_up",
+      "share": 0.000469656,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "pq-v2"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": [
+        0.001896117,
+        0.002451451
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.popular_question.first_turn",
+      "n_requests": 77774,
+      "overhead_ms_p50": 27.6013,
+      "overhead_ms_p95": 36.7828,
+      "role": "runner_up",
+      "share": 0.00216163,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "pq-v1"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": [
+        0.001807702,
+        0.002298383
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.popular_question.first_turn",
+      "n_requests": 77774,
+      "overhead_ms_p50": 27.6013,
+      "overhead_ms_p95": 36.7828,
+      "role": "runner_up",
+      "share": 0.002041622,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "pq-v1"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": [
+        0.001874826,
+        0.002468831
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.popular_question.first_turn",
+      "n_requests": 77774,
+      "overhead_ms_p50": 27.6013,
+      "overhead_ms_p95": 36.7828,
+      "role": "runner_up",
+      "share": 0.002160299,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "pq-v1"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.011719954988217112,
+        0.015438080000999594
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.session_memo_gate.as_logged",
+      "n_requests": 73063,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": 0.013477935,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "session_memo",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "cache.session_memo_gate"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": null,
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.session_memo_gate.best_single_cheap",
+      "n_requests": 73063,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": null,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "session_memo",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "cache.session_memo_gate"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": null,
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.session_memo_gate.premium_gpt_5_5",
+      "n_requests": 73063,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": null,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "session_memo",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "cache.session_memo_gate"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": null,
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "cache.session_memo_gate.todays_models",
+      "n_requests": 73063,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": null,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "session_memo",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "cache.session_memo_gate"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.018329495368942933,
+        0.0198136047303755
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "context.reranker_cut.observed_relevancy",
+      "n_requests": 77774,
+      "overhead_ms_p50": 38.1795,
+      "overhead_ms_p95": 52.8225,
+      "role": "other",
+      "share": 0.019072171,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "context",
+      "version": "rc-v1"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": [
+        0.02265466942371067,
+        0.02648241362195644
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "context.reranker_cut.observed_relevancy",
+      "n_requests": 77774,
+      "overhead_ms_p50": 38.1795,
+      "overhead_ms_p95": 52.8225,
+      "role": "other",
+      "share": 0.024499892,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "context",
+      "version": "rc-v1"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": [
+        0.024110044969015264,
+        0.028145378286559827
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "context.reranker_cut.observed_relevancy",
+      "n_requests": 77774,
+      "overhead_ms_p50": 38.1795,
+      "overhead_ms_p95": 52.8225,
+      "role": "other",
+      "share": 0.026071435,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "context",
+      "version": "rc-v1"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": [
+        0.02238271632541727,
+        0.026302053115409483
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "context.reranker_cut.observed_relevancy",
+      "n_requests": 77774,
+      "overhead_ms_p50": 38.1795,
+      "overhead_ms_p95": 52.8225,
+      "role": "other",
+      "share": 0.024196418,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "context",
+      "version": "rc-v1"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.059686021,
+        0.062489311
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "ctx.within_message_dedup.as_logged",
+      "n_requests": 73063,
+      "overhead_ms_p50": 20.9656,
+      "overhead_ms_p95": 25.0961,
+      "role": "winner",
+      "share": 0.061077305,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "context",
+      "version": "ctx.within_message_dedup"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": [
+        0.071690971,
+        0.08133587
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "ctx.within_message_dedup.best_single_cheap",
+      "n_requests": 73063,
+      "overhead_ms_p50": 20.9656,
+      "overhead_ms_p95": 25.0961,
+      "role": "winner",
+      "share": 0.076285487,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "context",
+      "version": "ctx.within_message_dedup"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": [
+        0.076734776,
+        0.086978891
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "ctx.within_message_dedup.premium_gpt_5_5",
+      "n_requests": 73063,
+      "overhead_ms_p50": 20.9656,
+      "overhead_ms_p95": 25.0961,
+      "role": "winner",
+      "share": 0.081746021,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "context",
+      "version": "ctx.within_message_dedup"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": [
+        0.070307897,
+        0.078802418
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "ctx.within_message_dedup.todays_models",
+      "n_requests": 73063,
+      "overhead_ms_p50": 20.9656,
+      "overhead_ms_p95": 25.0961,
+      "role": "winner",
+      "share": 0.074499696,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "context",
+      "version": "ctx.within_message_dedup"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.012571623619930144,
+        0.014920512447432185
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "rb1.retrieval-cache.ttl-1d.user.report.as_logged",
+      "n_requests": 73063,
+      "overhead_ms_p50": 11.1398,
+      "overhead_ms_p95": 16.3971,
+      "role": "winner",
+      "share": 0.013747668,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "retrieval",
+        "split",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:rest",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "cache",
+      "version": "retrieval_result_cache.ttl_1d"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": null,
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "rb1.retrieval-cache.ttl-1d.user.report.best_single_cheap",
+      "n_requests": 73063,
+      "overhead_ms_p50": 11.1398,
+      "overhead_ms_p95": 16.3971,
+      "role": "winner",
+      "share": null,
+      "slices": [
+        "all",
+        "llm_only",
+        "retrieval",
+        "split",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:rest",
+        "traffic_weighted"
+      ],
+      "slices_missing": [
+        "over_8k",
+        "lang:"
+      ],
+      "step": "cache",
+      "version": "retrieval_result_cache.ttl_1d"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": null,
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "rb1.retrieval-cache.ttl-1d.user.report.premium_gpt_5_5",
+      "n_requests": 73063,
+      "overhead_ms_p50": 11.1398,
+      "overhead_ms_p95": 16.3971,
+      "role": "winner",
+      "share": null,
+      "slices": [
+        "all",
+        "llm_only",
+        "retrieval",
+        "split",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:rest",
+        "traffic_weighted"
+      ],
+      "slices_missing": [
+        "over_8k",
+        "lang:"
+      ],
+      "step": "cache",
+      "version": "retrieval_result_cache.ttl_1d"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": null,
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "rb1.retrieval-cache.ttl-1d.user.report.todays_models",
+      "n_requests": 73063,
+      "overhead_ms_p50": 11.1398,
+      "overhead_ms_p95": 16.3971,
+      "role": "winner",
+      "share": null,
+      "slices": [
+        "all",
+        "llm_only",
+        "retrieval",
+        "split",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:rest",
+        "traffic_weighted"
+      ],
+      "slices_missing": [
+        "over_8k",
+        "lang:"
+      ],
+      "step": "cache",
+      "version": "retrieval_result_cache.ttl_1d"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.039229525,
+        0.042800067
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "rb2.cross-turn.k-1.ptr-8.pointer.report.as_logged",
+      "n_requests": 73063,
+      "overhead_ms_p50": 12.7035,
+      "overhead_ms_p95": 17.8578,
+      "role": "runner_up",
+      "share": 0.040992855,
+      "slices": [
+        "all",
+        "context_tokens",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "context",
+      "version": "cross_turn_chunks.ptr8.k1"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": null,
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "rb2.cross-turn.k-1.ptr-8.pointer.report.best_single_cheap",
+      "n_requests": 73063,
+      "overhead_ms_p50": 12.7035,
+      "overhead_ms_p95": 17.8578,
+      "role": "runner_up",
+      "share": 0.034988266,
+      "slices": [
+        "all",
+        "context_tokens",
+        "llm_only",
+        "traffic_weighted"
+      ],
+      "slices_missing": [
+        "over_8k",
+        "lang:",
+        "tenant_rank:"
+      ],
+      "step": "context",
+      "version": "cross_turn_chunks.ptr8.k1"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": null,
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "rb2.cross-turn.k-1.ptr-8.pointer.report.premium_gpt_5_5",
+      "n_requests": 73063,
+      "overhead_ms_p50": 12.7035,
+      "overhead_ms_p95": 17.8578,
+      "role": "runner_up",
+      "share": 0.037264963,
+      "slices": [
+        "all",
+        "context_tokens",
+        "llm_only",
+        "traffic_weighted"
+      ],
+      "slices_missing": [
+        "over_8k",
+        "lang:",
+        "tenant_rank:"
+      ],
+      "step": "context",
+      "version": "cross_turn_chunks.ptr8.k1"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": null,
+      "correctness_state": "unmeasured",
+      "evidence_class": "hypothetical reconstruction",
+      "lever_id": "rb2.cross-turn.k-1.ptr-8.pointer.report.todays_models",
+      "n_requests": 73063,
+      "overhead_ms_p50": 12.7035,
+      "overhead_ms_p95": 17.8578,
+      "role": "runner_up",
+      "share": 0.034053147,
+      "slices": [
+        "all",
+        "context_tokens",
+        "llm_only",
+        "traffic_weighted"
+      ],
+      "slices_missing": [
+        "over_8k",
+        "lang:",
+        "tenant_rank:"
+      ],
+      "step": "context",
+      "version": "cross_turn_chunks.ptr8.k1"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.021768789705169916,
+        0.02859424353759793
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "rb3.knn-router.k-5.report.as_logged",
+      "n_requests": 73063,
+      "overhead_ms_p50": 374.6107,
+      "overhead_ms_p95": 421.5663,
+      "role": "other",
+      "share": 0.024609282,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:missing",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.knn.k5"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "rb3.knn-router.k-5.report.best_single_cheap",
+      "n_requests": 73063,
+      "overhead_ms_p50": 374.6107,
+      "overhead_ms_p95": 421.5663,
+      "role": "other",
+      "share": 0.0,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:missing",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.knn.k5"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": [
+        0.02861569551863819,
+        0.03881837980434573
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "rb3.knn-router.k-5.report.premium_gpt_5_5",
+      "n_requests": 73063,
+      "overhead_ms_p50": 374.6107,
+      "overhead_ms_p95": 421.5663,
+      "role": "other",
+      "share": 0.033376742,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:missing",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.knn.k5"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": [
+        0.019015163188798916,
+        0.027414015615454198
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "rb3.knn-router.k-5.report.todays_models",
+      "n_requests": 73063,
+      "overhead_ms_p50": 374.6107,
+      "overhead_ms_p95": 421.5663,
+      "role": "other",
+      "share": 0.022521827,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:missing",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.knn.k5"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.208665127,
+        0.232701979
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.decision_router.rules_only.as_logged",
+      "n_requests": 73062,
+      "overhead_ms_p50": 21.1833,
+      "overhead_ms_p95": 25.5205,
+      "role": "winner",
+      "share": 0.219351103,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.decision_router.rules_only"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.decision_router.rules_only.best_single_cheap",
+      "n_requests": 73062,
+      "overhead_ms_p50": 21.1833,
+      "overhead_ms_p95": 25.5205,
+      "role": "winner",
+      "share": 0.0,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.decision_router.rules_only"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": [
+        0.257059182,
+        0.308913259
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.decision_router.rules_only.premium_gpt_5_5",
+      "n_requests": 73062,
+      "overhead_ms_p50": 21.1833,
+      "overhead_ms_p95": 25.5205,
+      "role": "winner",
+      "share": 0.284059768,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.decision_router.rules_only"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": [
+        0.163763705,
+        0.193789702
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.decision_router.rules_only.todays_models",
+      "n_requests": 73062,
+      "overhead_ms_p50": 21.1833,
+      "overhead_ms_p95": 25.5205,
+      "role": "winner",
+      "share": 0.178279031,
+      "slices": [
+        "all",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.decision_router.rules_only"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.0351439893182896,
+        0.04314527670517431
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.per_bot",
+      "n_requests": 73063,
+      "overhead_ms_p50": 22.5471,
+      "overhead_ms_p95": 36.1106,
+      "role": "runner_up",
+      "share": 0.039354982,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "eda_simple_rule",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.per_bot.v2"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.per_bot",
+      "n_requests": 73063,
+      "overhead_ms_p50": 22.5471,
+      "overhead_ms_p95": 36.1106,
+      "role": "runner_up",
+      "share": 0.0,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "eda_simple_rule",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.per_bot.v2"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": [
+        0.048297267659932405,
+        0.07107349133200665
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.per_bot",
+      "n_requests": 73063,
+      "overhead_ms_p50": 22.5471,
+      "overhead_ms_p95": 36.1106,
+      "role": "runner_up",
+      "share": 0.059184614,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "eda_simple_rule",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.per_bot.v2"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": [
+        0.03032776351945211,
+        0.04484106569915161
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.per_bot",
+      "n_requests": 73063,
+      "overhead_ms_p50": 22.5471,
+      "overhead_ms_p95": 36.1106,
+      "role": "runner_up",
+      "share": 0.037381017,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "eda_simple_rule",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.per_bot.v2"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.0343754409047075,
+        0.04225380416900481
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.per_bot.with_reasoning_models",
+      "n_requests": 73063,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "runner_up",
+      "share": 0.038517663,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "eda_simple_rule",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.per_bot.v2"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.per_bot.with_reasoning_models",
+      "n_requests": 73063,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "runner_up",
+      "share": 0.0,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "eda_simple_rule",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.per_bot.v2"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": [
+        0.06514951370407594,
+        0.09967096364692812
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.per_bot.with_reasoning_models",
+      "n_requests": 73063,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "runner_up",
+      "share": 0.082280572,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "eda_simple_rule",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.per_bot.v2"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": [
+        0.056895490599798766,
+        0.08509946791925065
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.per_bot.with_reasoning_models",
+      "n_requests": 73063,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "runner_up",
+      "share": 0.071199452,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:2",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "eda_simple_rule",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_capped_0.35",
+        "tenant_rank:1",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.per_bot.v2"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.024171305,
+        0.044766875
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.small_classifier.rules.as_logged",
+      "n_requests": 73062,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": 0.031482484,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:11",
+        "bot_rank:12",
+        "bot_rank:13",
+        "bot_rank:14",
+        "bot_rank:15",
+        "bot_rank:16",
+        "bot_rank:17",
+        "bot_rank:18",
+        "bot_rank:19",
+        "bot_rank:2",
+        "bot_rank:20",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.small_classifier.rules"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.small_classifier.rules.best_single_cheap",
+      "n_requests": 73062,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": 0.0,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:11",
+        "bot_rank:12",
+        "bot_rank:13",
+        "bot_rank:14",
+        "bot_rank:15",
+        "bot_rank:16",
+        "bot_rank:17",
+        "bot_rank:18",
+        "bot_rank:19",
+        "bot_rank:2",
+        "bot_rank:20",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.small_classifier.rules"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": [
+        0.017343785,
+        0.021570292
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.small_classifier.rules.premium_gpt_5_5",
+      "n_requests": 73062,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": 0.019523817,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:11",
+        "bot_rank:12",
+        "bot_rank:13",
+        "bot_rank:14",
+        "bot_rank:15",
+        "bot_rank:16",
+        "bot_rank:17",
+        "bot_rank:18",
+        "bot_rank:19",
+        "bot_rank:2",
+        "bot_rank:20",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.small_classifier.rules"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": [
+        0.013607792,
+        0.019155257
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.small_classifier.rules.todays_models",
+      "n_requests": 73062,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": 0.015972941,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:11",
+        "bot_rank:12",
+        "bot_rank:13",
+        "bot_rank:14",
+        "bot_rank:15",
+        "bot_rank:16",
+        "bot_rank:17",
+        "bot_rank:18",
+        "bot_rank:19",
+        "bot_rank:2",
+        "bot_rank:20",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.small_classifier.rules"
+    },
+    {
+      "baseline": "as_logged",
+      "ci": [
+        0.02412988,
+        0.044655499
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.small_classifier.rules.with_reasoning_models.as_logged",
+      "n_requests": 73062,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": 0.031445357,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:11",
+        "bot_rank:12",
+        "bot_rank:13",
+        "bot_rank:14",
+        "bot_rank:15",
+        "bot_rank:16",
+        "bot_rank:17",
+        "bot_rank:18",
+        "bot_rank:19",
+        "bot_rank:2",
+        "bot_rank:20",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.small_classifier.rules.with_reasoning_models"
+    },
+    {
+      "baseline": "best_single_cheap",
+      "ci": [
+        0.0,
+        0.0
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.small_classifier.rules.with_reasoning_models.best_single_cheap",
+      "n_requests": 73062,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": 0.0,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:11",
+        "bot_rank:12",
+        "bot_rank:13",
+        "bot_rank:14",
+        "bot_rank:15",
+        "bot_rank:16",
+        "bot_rank:17",
+        "bot_rank:18",
+        "bot_rank:19",
+        "bot_rank:2",
+        "bot_rank:20",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.small_classifier.rules.with_reasoning_models"
+    },
+    {
+      "baseline": "premium_gpt_5_5",
+      "ci": [
+        0.017582418,
+        0.021885966
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.small_classifier.rules.with_reasoning_models.premium_gpt_5_5",
+      "n_requests": 73062,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": 0.019804941,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:11",
+        "bot_rank:12",
+        "bot_rank:13",
+        "bot_rank:14",
+        "bot_rank:15",
+        "bot_rank:16",
+        "bot_rank:17",
+        "bot_rank:18",
+        "bot_rank:19",
+        "bot_rank:2",
+        "bot_rank:20",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.small_classifier.rules.with_reasoning_models"
+    },
+    {
+      "baseline": "todays_models",
+      "ci": [
+        0.016821947,
+        0.022986102
+      ],
+      "correctness_state": "unmeasured",
+      "evidence_class": "simulation",
+      "lever_id": "route.small_classifier.rules.with_reasoning_models.todays_models",
+      "n_requests": 73062,
+      "overhead_ms_p50": null,
+      "overhead_ms_p95": null,
+      "role": "other",
+      "share": 0.019457565,
+      "slices": [
+        "all",
+        "bot_rank:1",
+        "bot_rank:10",
+        "bot_rank:11",
+        "bot_rank:12",
+        "bot_rank:13",
+        "bot_rank:14",
+        "bot_rank:15",
+        "bot_rank:16",
+        "bot_rank:17",
+        "bot_rank:18",
+        "bot_rank:19",
+        "bot_rank:2",
+        "bot_rank:20",
+        "bot_rank:3",
+        "bot_rank:4",
+        "bot_rank:5",
+        "bot_rank:6",
+        "bot_rank:7",
+        "bot_rank:8",
+        "bot_rank:9",
+        "lang:arabic_script_other",
+        "lang:en",
+        "lang:fa",
+        "lang:fa_en_mixed",
+        "lang:finglish",
+        "lang:other",
+        "lang:short_uncertain",
+        "lang:structured",
+        "lang:unknown",
+        "llm_only",
+        "over_8k",
+        "routing",
+        "tenant_rank:1",
+        "tenant_rank:10",
+        "tenant_rank:2",
+        "tenant_rank:3",
+        "tenant_rank:4",
+        "tenant_rank:5",
+        "tenant_rank:6",
+        "tenant_rank:7",
+        "tenant_rank:8",
+        "tenant_rank:9",
+        "traffic_weighted"
+      ],
+      "slices_missing": [],
+      "step": "routing",
+      "version": "route.small_classifier.rules.with_reasoning_models"
+    }
+  ],
+  "winners": {
+    "note": "Keep every candidate's result: a winner that fails the quality run is swapped for its runner-up without re-running anything.",
+    "runners_up": {
+      "cache": "cache.popular_question.first_turn",
+      "context": "cross_turn_chunks.ptr8.k1",
+      "routing": "route.per_bot"
+    },
+    "status": "provisional: cost only, pending quality",
+    "versions": {
+      "cache": "retrieval_result_cache.ttl_1d",
+      "context": "ctx.within_message_dedup",
+      "routing": "route.decision_router.rules_only"
+    }
+  }
+}

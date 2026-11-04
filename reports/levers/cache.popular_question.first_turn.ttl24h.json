@@ -14,8 +14,8 @@
     "Guard: no approval step, empty blocklist, no disabled bot, key version pq-v1; every served key would still need approval before serving.",
     "Tenant slices: the 10 largest tenants by LLM requests (opaque ranks); traffic_weighted slice not computed.",
     "The working tree had uncommitted changes when this ran.",
-    "Overhead: offline per-request estimate on a local machine; not a load test (Q-14). apply on one-row frames, 1000 seeded report-period LLM rows, 1 warm-up; p50 41.0456 ms, p95 52.0927 ms, max 189.7006 ms; 2026-11-02, AMD Ryzen 7 5800H with Radeon Graphics, CPython 3.13.9.",
-    "Overhead caveat: on a one-row frame the nightly window is empty, so this times eligibility, keying and the guard path, not the nightly build (batch work) or a lookup in a built set."
+    "Missing slices (language, over 8,000 tokens, tenant ranks, traffic-weighted) and the session-clustered interval were added from the same frames (sprint final Stage 1, analysis.lever_enrich).",
+    "Added slices count LLM requests with a known cost; the traffic-weighted share weights each bot's saving share by its LLM requests."
   ],
   "baseline": "as_logged",
   "baseline_cost": {
@@ -29,18 +29,18 @@
   "evidence_class": "simulation",
   "lever_id": "cache.popular_question.first_turn.ttl24h",
   "manifest": {
-    "code_commit": "345304819ab0a7ccf706aab4605b8a76c4876bc1",
-    "config_hash": "8ebb90482ec4695fa6d9356a4c9dcb0dea7da4a9680a52b9e22454ab880431d7",
-    "created_at": "2026-11-02T12:58:03.577990Z",
+    "code_commit": "589c0d0c238a79f6efe443d010cfa8338bfdb288",
+    "config_hash": "be4df92a74cf75106f6b85f89b2235b3f23253dc754e3b6d4a645cc104c5c222",
+    "created_at": "2026-11-03T15:04:53.734360Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
-    "python_version": "3.13.9",
+    "price_version": "prices-metis-2026-10-18-logged",
+    "python_version": "3.13.5",
     "seed": 20261102
   },
   "n_eligible": 2707,
   "n_requests": 77774,
-  "overhead_ms_p50": 41.0456,
-  "overhead_ms_p95": 52.0927,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
   "saving": {
     "fees": "0.000000000",
     "token_cost": "0.107348420",
@@ -342,6 +342,11 @@
       "saving:total": "0.000000000",
       "saving_share": "0.000000000",
       "share": "0.004510545"
+    },
+    "traffic_weighted": {
+      "bot_mean_saving_share": "0.000114111",
+      "n_requests": "24609",
+      "saving_share": "0.000849081"
     }
   },
   "step": "cache",

@@ -7,7 +7,7 @@
     "fees and output unchanged; within-message copies left to S-6",
     "rows: period tune (a_timestamp); no fitted parameter, so no split",
     "timestamps are naive (Q-06)",
-    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 7.6643 ms, p95 9.7862 ms, max 41.7925 ms",
+    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 12.7035 ms, p95 17.8578 ms, max 23.2888 ms",
     "Overhead caveat: one-row frame: only this request's chunks are scanned, so no earlier turn is in the session state and nothing is dropped; this times the decision pass, not a session-state lookup; building the chunks frame is not timed.",
     "Overhead sample: tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, route.per_bot) used report-period rows, so the two samples differ"
   ],
@@ -32,8 +32,8 @@
   },
   "n_eligible": 220908,
   "n_requests": 220908,
-  "overhead_ms_p50": 7.6643,
-  "overhead_ms_p95": 9.7862,
+  "overhead_ms_p50": 12.7035,
+  "overhead_ms_p95": 17.8578,
   "saving": {
     "token_cost": "9.298162383",
     "total": "9.298162383"

@@ -4,6 +4,8 @@
 #   docker compose run --rm app python -m pytest tests/integration -q   # smoke test
 #   docker compose run --rm app python scripts/run_walking_skeleton.py
 #   docker compose --profile db up -d postgres          # needs METIS_DB_PASSWORD (ADR-0027)
+#   docker compose --profile services up -d             # demo + redis + postgres + mlflow
+#                                                       # (draft ADR services-extra-and-adapters)
 #
 # Needs Docker Compose v2.24+ (for `required: false` on env_file).
 
@@ -31,7 +33,7 @@ services:
   # to this computer only: the data licence forbids sharing the contents.
   postgres:
     image: postgres:17
-    profiles: ["db"]
+    profiles: ["db", "services"]
     environment:
       POSTGRES_DB: metis
       POSTGRES_USER: metis
@@ -58,5 +60,105 @@ services:
       timeout: 3s
       retries: 20
 
+  # Redis for the answer-cache store (ADR-0049). Loopback only. Entries are not
+  # persisted (a cache can be rebuilt). A password, if any, comes only from
+  # METIS_REDIS_PASSWORD in the environment, never from config/. Tag, not digest:
+  # pin by digest at the next deliberate image update (as postgres above).
+  redis:
+    image: redis:7-alpine
+    profiles: ["services"]
+    environment:
+      METIS_REDIS_PASSWORD: ${METIS_REDIS_PASSWORD:-}
+      REDISCLI_AUTH: ${METIS_REDIS_PASSWORD:-}
+    command:
+      - sh
+      - -c
+      - |
+        if [ -n "$$METIS_REDIS_PASSWORD" ]; then
+          exec redis-server --save "" --appendonly no --requirepass "$$METIS_REDIS_PASSWORD"
+        fi
+        exec redis-server --save "" --appendonly no
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # MLflow tracking UI for the lever runs (scripts/log_levers.py --tracking-uri
+  # http://127.0.0.1:5000). Loopback only. The image tag is NOT verified here
+  # (no image was pulled while writing this file): check it on the first pull.
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.1.1
+    profiles: ["services"]
+    command:
+      - mlflow
+      - server
+      - --host=0.0.0.0
+      - --port=5000
+      - --backend-store-uri=sqlite:////mlflow/mlflow.db
+      - --default-artifact-root=/mlflow/artifacts
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  # The demo UI (scripts/demo_ui.py, fake mode) using Redis for the answer cache
+  # and Postgres for events through configuration only (METIS__* overrides):
+  # the same code, nothing else changes. Loopback only on the host side.
+  demo:
+    build:
+      context: .
+      target: demo
+    profiles: ["services"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      METIS__CACHE__STORE: redis
+      METIS__CACHE__REDIS_HOST: redis
+      METIS__EVENTS__SINK: postgres
+      METIS__DATABASE__ENABLED: "true"
+      METIS__DATABASE__HOST: postgres
+      # Secrets from the host environment only; never from config/.
+      METIS_DB_PASSWORD: ${METIS_DB_PASSWORD:-}
+      METIS_REDIS_PASSWORD: ${METIS_REDIS_PASSWORD:-}
+    command:
+      - python
+      - scripts/demo_ui.py
+      - --server.address=0.0.0.0
+      - --server.port=8501
+      - --server.headless=true
+    ports:
+      - "127.0.0.1:8501:8501"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./runs:/app/runs
+      - ./data/spend:/app/data/spend
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
 volumes:
   pgdata: {}
+  mlflow-data: {}

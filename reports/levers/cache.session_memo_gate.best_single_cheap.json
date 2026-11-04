@@ -7,7 +7,9 @@
     "Repriced: saving not computed. The fee part is not priced in price-file units (ADR-0036, ADR-0037 item 7), so the total is unknown; the known token part is session_memo.token_saving_lower_bound.",
     "Agreement = Jaccard over (chunk_id, h_exact) with the turn's logged chunks (slice session_memo); the gate has no agreement, n_skipped_cited is a proxy risk indicator.",
     "Combined with a context version, a skipped turn's dropped chunks must not be counted again (Review Focus 1); not enforced by combine.",
-    "Measured potential, conditional on Metis-Auto being able to intercept retrieval. Timestamps naive (Q-06)."
+    "Measured potential, conditional on Metis-Auto being able to intercept retrieval. Timestamps naive (Q-06).",
+    "Missing slices (language, over 8,000 tokens, tenant ranks, traffic-weighted) and the session-clustered interval were added from the same frames (sprint final Stage 1, analysis.lever_enrich).",
+    "Added slices count LLM requests with a known cost; the traffic-weighted share weights each bot's saving share by its LLM requests."
   ],
   "baseline": "best_single_cheap",
   "baseline_cost": {
@@ -20,12 +22,12 @@
   "evidence_class": "simulation",
   "lever_id": "cache.session_memo_gate.best_single_cheap",
   "manifest": {
-    "code_commit": "4c4ef646bf6b83c66d9300f3f42e366f4ad2d7f7",
+    "code_commit": "unknown",
     "config_hash": "f6958181b0e3d9b002cfa083fe202e8fee6661d4cdf41ba114bb6bc87c6d2d4e",
-    "created_at": "2026-11-02T23:08:48Z",
+    "created_at": "2026-11-03T14:23:02Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
     "price_version": "prices-metis-2026-10-18-logged",
-    "python_version": "3.13.16",
+    "python_version": "3.13.5",
     "seed": 20261102
   },
   "n_eligible": 14882,
@@ -44,6 +46,78 @@
       "n_saving_unknown": "0",
       "saved_input_tokens": "2321713.524953122"
     },
+    "lang:arabic_script_other": {
+      "baseline:token_cost": "0.705686889",
+      "baseline:total": "0.705686889",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "457",
+      "n_requests": "457"
+    },
+    "lang:en": {
+      "baseline:token_cost": "0.293103993",
+      "baseline:total": "0.293103993",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "422",
+      "n_requests": "422"
+    },
+    "lang:fa": {
+      "baseline:token_cost": "35.460615064",
+      "baseline:total": "35.460615064",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "16738",
+      "n_requests": "16740"
+    },
+    "lang:fa_en_mixed": {
+      "baseline:token_cost": "1.002813906",
+      "baseline:total": "1.002813906",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "833",
+      "n_requests": "834"
+    },
+    "lang:finglish": {
+      "baseline:token_cost": "0.049041872",
+      "baseline:total": "0.049041872",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "8",
+      "n_requests": "8"
+    },
+    "lang:other": {
+      "baseline:token_cost": "0.000095480",
+      "baseline:total": "0.000095480",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "2",
+      "n_requests": "2"
+    },
+    "lang:short_uncertain": {
+      "baseline:token_cost": "2.184493630",
+      "baseline:total": "2.184493630",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "2170",
+      "n_requests": "2171"
+    },
+    "lang:structured": {
+      "baseline:token_cost": "0.033390588",
+      "baseline:total": "0.033390588",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "24",
+      "n_requests": "24"
+    },
+    "lang:unknown": {
+      "baseline:token_cost": "0.047670645",
+      "baseline:total": "0.047670645",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "90",
+      "n_requests": "92"
+    },
     "llm_only": {
       "baseline:token_cost": "39.776912065",
       "baseline:total": "39.776912065",
@@ -53,6 +127,14 @@
       "n_requests": "20750",
       "n_saving_unknown": "0",
       "saved_input_tokens": "2321713.524953122"
+    },
+    "over_8k": {
+      "baseline:token_cost": "37.334244525",
+      "baseline:total": "37.334244525",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "10759",
+      "n_requests": "10759"
     },
     "session_memo": {
       "n_evaluable": "0",
@@ -65,6 +147,99 @@
       "n_skipped_cited": "0",
       "n_skipped_phatic": "256",
       "token_saving_lower_bound": "0.127694244"
+    },
+    "tenant_rank:1": {
+      "baseline:token_cost": "38.987058726",
+      "baseline:total": "38.987058726",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "16782",
+      "n_requests": "16782",
+      "share": "0.808771084"
+    },
+    "tenant_rank:10": {
+      "baseline:token_cost": "0.004878198",
+      "baseline:total": "0.004878198",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "78",
+      "n_requests": "78",
+      "share": "0.003759036"
+    },
+    "tenant_rank:2": {
+      "baseline:token_cost": "0.166117996",
+      "baseline:total": "0.166117996",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "1377",
+      "n_requests": "1377",
+      "share": "0.066361446"
+    },
+    "tenant_rank:3": {
+      "baseline:token_cost": "0.079466459",
+      "baseline:total": "0.079466459",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "648",
+      "n_requests": "648",
+      "share": "0.031228916"
+    },
+    "tenant_rank:4": {
+      "baseline:token_cost": "0.091624060",
+      "baseline:total": "0.091624060",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "640",
+      "n_requests": "640",
+      "share": "0.030843373"
+    },
+    "tenant_rank:5": {
+      "baseline:token_cost": "0.040573412",
+      "baseline:total": "0.040573412",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "221",
+      "n_requests": "221",
+      "share": "0.010650602"
+    },
+    "tenant_rank:6": {
+      "baseline:token_cost": "0.036159508",
+      "baseline:total": "0.036159508",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "189",
+      "n_requests": "189",
+      "share": "0.009108434"
+    },
+    "tenant_rank:7": {
+      "baseline:token_cost": "0.072899332",
+      "baseline:total": "0.072899332",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "116",
+      "n_requests": "116",
+      "share": "0.005590361"
+    },
+    "tenant_rank:8": {
+      "baseline:token_cost": "0.062971326",
+      "baseline:total": "0.062971326",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "111",
+      "n_requests": "111",
+      "share": "0.005349398"
+    },
+    "tenant_rank:9": {
+      "baseline:token_cost": "0.021437955",
+      "baseline:total": "0.021437955",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "103",
+      "n_requests": "103",
+      "share": "0.004963855"
+    },
+    "traffic_weighted": {
+      "n_requests": "20750"
     }
   },
   "step": "cache",

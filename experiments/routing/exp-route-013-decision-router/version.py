@@ -22,7 +22,10 @@ module never runs a model. A **cost simulation; quality not proven**.
 
 Layer: candidate code in ``experiments/``, loaded by file path; pure over
 injected frames. Output columns follow R-B3: ``routed_model``,
-``route_reason``, ``route_cost_incumbent``, ``route_cost_routed``.
+``route_reason``, ``route_cost_incumbent``, ``route_cost_routed``; plus
+``route_target`` and ``route_target_cost`` (the tier's cheapest eligible
+candidate and its list-price cost, kept whether or not the row moves, so each
+baseline can make its own strict-cheaper test; sprint final Stage 2).
 """
 
 from __future__ import annotations
@@ -90,6 +93,8 @@ class DecisionRouterRouting:
         routed = incumbent.to_numpy(dtype=object).copy()
         routed_cost = inc_cost.to_numpy(dtype=float).copy()
         reason = np.full(len(req), "", dtype=object)
+        target = np.full(len(req), None, dtype=object)
+        target_cost = np.full(len(req), np.nan)
         for i, (_, tier) in enumerate(tiers.items()):
             if pd.isna(tier):
                 reason[i] = "no_decision"
@@ -106,6 +111,7 @@ class DecisionRouterRouting:
                 reason[i] = "no_eligible_in_tier"
                 continue
             best_cost, best = min(options)
+            target[i], target_cost[i] = best, best_cost
             if best_cost < routed_cost[i]:
                 routed[i], routed_cost[i], reason[i] = best, best_cost, "moved"
             else:
@@ -115,4 +121,6 @@ class DecisionRouterRouting:
         out["route_reason"] = reason
         out["route_cost_incumbent"] = inc_cost.to_numpy(dtype=float)
         out["route_cost_routed"] = routed_cost
+        out["route_target"] = target
+        out["route_target_cost"] = target_cost
         return out

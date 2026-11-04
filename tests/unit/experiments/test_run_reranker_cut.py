@@ -204,7 +204,11 @@ def test_lever_result_counts_only_the_cut_not_dedup(rr):
     assert float(llm["saved_input_tokens"]) == pytest.approx(4 * 750)
     assert float(llm["dedup_tokens_s6_not_counted"]) == pytest.approx(4 * 50)
     assert "baseline:fees" not in llm and float(llm["saving:fees"]) == 0  # ADR-0038
-    assert set(r.slices) == {"all", "llm_only"}
+    assert {"all", "llm_only"} <= set(r.slices)
+    # sprint final Stage 1: over_8k is added; families whose columns the synthetic
+    # frame lacks are stated, never silently missing
+    assert "over_8k" in r.slices
+    assert any("not computed" in a and "lever_enrich" in a for a in r.assumptions)
     assert r.ci_low is not None and r.ci_low <= r.ci_high
     assert "[SYNTHETIC] note" in r.assumptions
 

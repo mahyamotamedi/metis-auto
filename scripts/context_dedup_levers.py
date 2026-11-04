@@ -33,6 +33,7 @@ from metis_auto.analysis.baselines_full import (
     best_single_cheap_model,
     cached_reported_separately,
 )
+from metis_auto.analysis.lever_enrich import enrich
 from metis_auto.analysis.lever_result import build_manifest
 from metis_auto.analysis.levers import ReplayContext, combine, with_blocks
 from metis_auto.analysis.replay_scope import (
@@ -52,6 +53,8 @@ REQ_COLUMNS = [
     "ai_message_id",
     "session_id",
     "bot_id",
+    "user_id",
+    "u_lang",
     "u_h_norm",
     "a_timestamp",
     "a_order",
@@ -196,6 +199,7 @@ def main() -> int:
             manifest=manifest,
             assumptions=_assumptions(coef, key),
         )
+        result = enrich(result, before, after, out, cached_separately=sep)
         path = args.levers_dir / f"{result.lever_id}.json"
         path.write_text(result.to_json())
         for name in ("all", "llm_only"):
