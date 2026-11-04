@@ -1,4 +1,4 @@
-# ADR-0058: The decision router enters the full-data comparison in its rules-only mode, with R-C3's per-baseline accounting
+# ADR-0064: The decision router enters the full-data comparison in its rules-only mode, with R-C3's per-baseline accounting
 
 - Status: **provisional** (sprint task J-3 remapped, 2026-11-03). Cost simulation; quality not proven.
 - Date: 2026-11-03

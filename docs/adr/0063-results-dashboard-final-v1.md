@@ -1,4 +1,4 @@
-# ADR-0057: The Results page reads `final.json` in the agreed format `final-v1`, and still adds nothing across steps itself
+# ADR-0063: The Results page reads `final.json` in the agreed format `final-v1`, and still adds nothing across steps itself
 
 - Status: **provisional** (sprint task I-2, 2026-11-04). Amends [ADR-0050](0050-results-dashboard-display-rules.md) point 5, which only detected `final.json`; the owner allowed the change to `wiring/lever_view.py` (Pipeline C's file) at the Stage 0 questions.
 - Date: 2026-11-04

@@ -38,3 +38,15 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if marker in item.keywords:
                 item.add_marker(skip)
+
+
+@pytest.fixture(autouse=True)
+def _demo_files_in_tmp(tmp_path_factory, monkeypatch):
+    """The demo UI saves conversations and made chatbots under runs/demo/
+    (UI-R11). No test writes there: the default folder is a temporary one, and
+    on CI the real one does not exist (tests that restart a demo pass their own
+    ``_test_demo_dir``)."""
+    from metis_auto.wiring import demo_store
+
+    root = tmp_path_factory.mktemp("demo")
+    monkeypatch.setattr(demo_store, "default_root", lambda: root)

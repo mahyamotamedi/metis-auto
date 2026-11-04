@@ -20,6 +20,7 @@ ALLOWED = {
     REPO / "tests" / "integration" / "test_demo_ui_app.py",
     REPO / "tests" / "integration" / "test_demo_ui_journeys.py",
     REPO / "tests" / "integration" / "test_demo_ui_bots.py",
+    REPO / "tests" / "integration" / "test_demo_ui_navigation.py",
 }
 
 

@@ -38,9 +38,11 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 
 <!-- progress-index:start -->
 - 2026-11-04: [Sprint close: paid-benchmark readiness, cut-first items, resumable re-runs, open items](progress/2026-11-04-sprint-close-readiness-gaps.md)
+- 2026-11-04: [Benchmark pilot, partial main run and ADR renumbering on merge](progress/2026-11-04-benchmark-pilot-and-adr-renumbering.md)
 - 2026-11-04: [Benchmark owner values, open Metis gate and reranker pins](progress/2026-11-04-benchmark-owner-values-and-reranker-pins.md)
 - 2026-11-03: [Sprint final: comparable candidates, rules-only decision router, decisions, combined run, final numbers (2026-11-03 to 2026-11-04)](progress/2026-11-03-sprint-final-stages-1-to-6.md)
 - 2026-11-03: [Sprint final, Stage 0: verify the done/left tables, lever-result gaps, plan for Stages 1–6](progress/2026-11-03-sprint-final-stage-0-verify-and-plan.md)
+- 2026-11-03: [Pipeline C, UI Stage 5: browser Back, back-tracking, saved history, create chatbot](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-5-navigation-history-create.md)
 - 2026-11-03: [Pipeline C, UI Stage 4: real bots from the local database](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-4-real-bots.md)
 - 2026-11-03: [Pipeline C, UI Stage 3: application shell and both journeys](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-3-journeys.md)
 - 2026-11-03: [Sprint Day 3, Pipeline C: UI Stage 2b, visual polish of the design system](progress/2026-11-03-sprint-day-3-pipeline-c-ui-stage-2b-polish.md)

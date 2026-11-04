@@ -300,7 +300,7 @@ def test_details_card_holds_derived_facts_only():
     for secret in (RAW_ID, "INSTR-MARKER", "CHUNK-MARKER"):
         assert secret not in text
     assert details.create_enabled is False
-    assert details.create_reason == EN("bots_create_next_stage")
+    assert details.create_reason == EN("bots_create_unavailable")
 
 
 def test_a_synthetic_bot_also_has_details():
@@ -577,7 +577,7 @@ def test_strings_exist_in_both_languages():
         "bots_db_down",
         "bots_none",
         "bots_create",
-        "bots_create_next_stage",
+        "bots_create_unavailable",
         "bots_continue",
         "bots_search",
         "bots_more",

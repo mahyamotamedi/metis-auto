@@ -147,9 +147,7 @@ def test_selected_state_and_details_card(tmp_path):
     text = dump(at)
     for needed in ("gpt-4o-mini", "bot-001", str(len(INSTRUCTION))):
         assert needed in text
-    create = at.button(key="mx-create-bot")
-    assert create.disabled
-    assert EN.text("bots_create_next_stage", "en") in dump(at)
+    assert not at.button(key="mx-create-bot").disabled  # Stage 5: S03 exists
     assert not at.button(key="mx-cta-continue").disabled
 
 
