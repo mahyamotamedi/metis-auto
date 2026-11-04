@@ -53,6 +53,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 - 2026-11-03: [Pipeline B, Day 3 decision records: kNN router and Redis cache store](progress/2026-11-03-pipeline-b-day-3-decision-records.md)
 - 2026-11-03: [Paid benchmark P-1 to P-3: engineering for a golden-v2 pilot, real judge, labels hand-off, shared spend total](progress/2026-11-03-paid-benchmark-p1-p3-engineering.md)
 - 2026-11-03: [Jev tasks J-1 to J-4: the note, the configuration, and the remapping](progress/2026-11-03-jev-tasks-j1-to-j4.md)
+- 2026-11-03: [The evaluation framework applies its rules to the pipelines' lever results](progress/2026-11-03-framework-evaluates-lever-results.md)
 - 2026-11-03: [Decision router: first decision-quality check on SYNTHETIC requests](progress/2026-11-03-decision-router-synthetic-decision-quality.md)
 - 2026-11-03: [Decision router: second sync with main, and R-0's routing base](progress/2026-11-03-decision-router-sync-with-main-routing-base.md)
 - 2026-11-03: [Decision router R9: closing audit](progress/2026-11-03-decision-router-r9-closing-audit.md)

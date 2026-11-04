@@ -39,6 +39,7 @@ from typing import Any, Protocol
 import pandas as pd
 
 from metis_auto.adapters.providers import ReplayModelClient
+from metis_auto.adapters.providers.recording import read_records
 from metis_auto.adapters.providers.replay_first import ReplayFirstClient
 from metis_auto.adapters.system import FileSpendLedger, SystemClock
 from metis_auto.adapters.system.shared_spend import (
@@ -68,6 +69,7 @@ from metis_auto.domain.accounting.cost import cost_of, pre_call_estimate
 from metis_auto.domain.accounting.overhead import template_overhead, with_overhead
 from metis_auto.domain.accounting.tokens import sum_counts
 from metis_auto.evaluation.benchmark import agreement as ag
+from metis_auto.evaluation.benchmark import framework_report as fr
 from metis_auto.evaluation.benchmark import labels as lb
 from metis_auto.evaluation.benchmark import plan as pl
 from metis_auto.evaluation.benchmark import spot_check as sc
@@ -822,6 +824,63 @@ class Benchmark:
             json.dumps(summary, indent=2) + "\n", encoding="utf-8"
         )
         return summary
+
+    # ------------------------------------------------- framework report
+    def framework_report(self, *, run_id: str) -> dict[str, Any]:
+        """The pilot through the evaluation framework: the answering run is
+        rebuilt from the recordings and given to E4's ``comparison_table``,
+        quality per judge from the judging files. Content-free; no call. The
+        minimum n and the bootstrap are owner decisions and stay unset."""
+        run = self.root / RUNS_DIR / run_id
+        files = sorted((run / "judging").glob("*.scores.jsonl"))
+        if not files:
+            raise BenchmarkRefused([f"no judging results in {run / 'judging'}"])
+        loaded = self.loaded()
+        recorded = (
+            loaded.path(loaded.settings.paths.recorded_dir) / f"live-{run_id}.jsonl"
+        )
+        if not recorded.exists():
+            raise BenchmarkRefused([f"no recording {recorded.name}"])
+        arms = list(callable_arms(self.arms(loaded)))
+        records = list(self.pilot_ids())
+        answers = fr.recorded_run(
+            read_records(recorded),
+            case_ids=records,
+            arms=arms,
+            catalogue=self.catalogue(loaded),
+            prices=loaded.reference.prices,
+        )
+        rows = {f.name.removesuffix(".scores.jsonl"): read_rows(f) for f in files}
+        scores = {judge: read_scores(f) for judge, f in zip(rows, files, strict=True)}
+        languages = {r["case_id"]: r["language"] for rs in rows.values() for r in rs}
+        gate_file = run / AGREEMENT_FILE
+        by_group = ag.gate_by_language(
+            json.loads(gate_file.read_text(encoding="utf-8"))
+            if gate_file.exists()
+            else None,
+            self.config.gate,
+            sorted(set(languages.values())),
+        )
+        gate: dict[str, str] = {}
+        for group, state in by_group.items():
+            code = fr.FRAMEWORK_LANGUAGE.get(group, group)
+            gate[code] = state if gate.get(code) in (None, state) else "unvalidated"
+        report = fr.framework_report(
+            answers,
+            scores,
+            languages,
+            min_n=None,
+            bootstrap=None,
+            gate=gate,
+            run_id=run_id,
+        )
+        (run / "framework_report.json").write_text(
+            json.dumps(report, indent=2) + "\n", encoding="utf-8"
+        )
+        (run / "framework_report.md").write_text(
+            fr.to_markdown(report), encoding="utf-8"
+        )
+        return report
 
     # -------------------------------------------------------- agreement
     def agreement(self, *, run_id: str) -> dict[str, Any]:
