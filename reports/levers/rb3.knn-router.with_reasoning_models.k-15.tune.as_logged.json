@@ -14,110 +14,107 @@
     "eligibility: shared routing base (R-0, ADR-0045): analysis.routing_base",
     "rows: split_by_session tune inside the tune period, LLM; fitted on the same rows, own session and duplicate family never a neighbour",
     "k=15 is the grid point; grid [5, 15, 50]; default chosen by session/family-grouped nested CV, 5 outer x 3 inner folds, inside the tune split",
-    "timestamps are naive (Q-06)",
-    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 394.9423 ms, p95 516.4677 ms, max 890.6836 ms",
-    "Overhead caveat: router fitted on the tune split before timing (fit not timed); apply prices the candidates, checks bot sufficiency and searches the k nearest training profiles.",
-    "Overhead sample: tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, route.per_bot) used report-period rows, so the two samples differ"
+    "timestamps are naive (Q-06)"
   ],
   "baseline": "as_logged",
   "baseline_cost": {
     "fees": "101.060000000",
-    "token_cost": "226.588587198",
-    "total": "327.648587198"
+    "token_cost": "226.718988324",
+    "total": "327.778988324"
   },
-  "ci_high": 0.24907898569836956,
-  "ci_low": 0.16654003243832197,
+  "ci_high": 0.24154216300126927,
+  "ci_low": 0.17015377492094064,
   "correctness_state": "unmeasured",
   "evidence_class": "simulation",
   "lever_id": "rb3.knn-router.with_reasoning_models.k-15.tune.as_logged",
   "manifest": {
-    "code_commit": "9f05b25e27c0505563aaa3ad25a6e4e79429e194",
+    "code_commit": "34d6653b241707be198b2b041f6a2c32d8af404d",
     "config_hash": "36ee733c6999815fe8b49c31a275277867aa33962404e10db3a810c8c399fda0",
-    "created_at": "2026-11-03T10:36:12.138284Z",
+    "created_at": "2026-11-04T04:32:32.858591Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
     "price_version": "full-eda-implied-unit-rates",
     "python_version": "3.13.5",
     "seed": 20261102
   },
-  "n_eligible": 180913,
+  "n_eligible": 180880,
   "n_requests": 230762,
-  "overhead_ms_p50": 394.9423,
-  "overhead_ms_p95": 516.4677,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
   "saving": {
     "fees": "0",
-    "token_cost": "66.290222650",
-    "total": "66.290222650"
+    "token_cost": "66.253683731",
+    "total": "66.253683731"
   },
   "slices": {
     "all": {
-      "baseline:total": "327.648587198",
-      "n_cost_known": "207972",
+      "baseline:total": "327.778988324",
+      "n_cost_known": "208825",
       "n_requests": "230762",
-      "saving:total": "66.290222650",
-      "saving_share": "0.202321100"
+      "saving:total": "66.253683731",
+      "saving_share": "0.202129136"
     },
     "bot_rank:1": {
       "baseline:total": "31.586813400",
       "n_cost_known": "80111",
       "n_requests": "80526",
-      "saving:total": "1.278948233",
-      "saving_share": "0.040489942"
+      "saving:total": "1.270680568",
+      "saving_share": "0.040228198"
     },
     "bot_rank:10": {
       "baseline:total": "4.672584200",
       "n_cost_known": "1495",
       "n_requests": "1495",
-      "saving:total": "3.817236084",
-      "saving_share": "0.816943242"
+      "saving:total": "3.816365549",
+      "saving_share": "0.816756935"
     },
     "bot_rank:2": {
       "baseline:total": "28.234605000",
       "n_cost_known": "113",
       "n_requests": "118",
-      "saving:total": "15.746833616",
-      "saving_share": "0.557713969"
+      "saving:total": "15.746837835",
+      "saving_share": "0.557714118"
     },
     "bot_rank:3": {
       "baseline:total": "14.315641250",
       "n_cost_known": "1726",
       "n_requests": "1769",
-      "saving:total": "10.602821600",
-      "saving_share": "0.740645942"
+      "saving:total": "10.604674431",
+      "saving_share": "0.740775369"
     },
     "bot_rank:4": {
       "baseline:total": "13.978444900",
       "n_cost_known": "1208",
       "n_requests": "1214",
-      "saving:total": "8.889657374",
-      "saving_share": "0.635954674"
+      "saving:total": "8.885514722",
+      "saving_share": "0.635658314"
     },
     "bot_rank:5": {
       "baseline:total": "31.009875700",
       "n_cost_known": "2928",
       "n_requests": "2928",
-      "saving:total": "0.173501995",
-      "saving_share": "0.005595056"
+      "saving:total": "0.173379700",
+      "saving_share": "0.005591112"
     },
     "bot_rank:6": {
       "baseline:total": "23.684425150",
       "n_cost_known": "2375",
       "n_requests": "2375",
-      "saving:total": "0.243391077",
-      "saving_share": "0.010276419"
+      "saving:total": "0.242222731",
+      "saving_share": "0.010227089"
     },
     "bot_rank:7": {
       "baseline:total": "6.244168200",
       "n_cost_known": "32295",
       "n_requests": "32295",
-      "saving:total": "0.746405460",
-      "saving_share": "0.119536412"
+      "saving:total": "0.730293423",
+      "saving_share": "0.116956078"
     },
     "bot_rank:8": {
       "baseline:total": "17.406786450",
       "n_cost_known": "2001",
       "n_requests": "2001",
-      "saving:total": "0.667844344",
-      "saving_share": "0.038366895"
+      "saving:total": "0.667280590",
+      "saving_share": "0.038334508"
     },
     "bot_rank:9": {
       "baseline:total": "12.786830900",
@@ -127,32 +124,32 @@
       "saving_share": "0.000000000"
     },
     "lang:arabic_script_other": {
-      "baseline:total": "6.976415566",
-      "n_cost_known": "5515",
+      "baseline:total": "6.978140954",
+      "n_cost_known": "5534",
       "n_requests": "5544",
-      "saving:total": "1.674961362",
-      "saving_share": "0.240089104"
+      "saving:total": "1.674164955",
+      "saving_share": "0.239915612"
     },
     "lang:en": {
-      "baseline:total": "7.264706088",
-      "n_cost_known": "4548",
+      "baseline:total": "7.265057418",
+      "n_cost_known": "4551",
       "n_requests": "4555",
-      "saving:total": "3.135818731",
-      "saving_share": "0.431651149"
+      "saving:total": "3.137462405",
+      "saving_share": "0.431856519"
     },
     "lang:fa": {
-      "baseline:total": "275.415988576",
-      "n_cost_known": "167132",
+      "baseline:total": "275.523829103",
+      "n_cost_known": "167719",
       "n_requests": "168163",
-      "saving:total": "52.621951978",
-      "saving_share": "0.191063534"
+      "saving:total": "52.587991430",
+      "saving_share": "0.190865493"
     },
     "lang:fa_en_mixed": {
-      "baseline:total": "14.846994682",
-      "n_cost_known": "10843",
+      "baseline:total": "14.848248544",
+      "n_cost_known": "10858",
       "n_requests": "10873",
-      "saving:total": "5.022009382",
-      "saving_share": "0.338250905"
+      "saving:total": "5.024049821",
+      "saving_share": "0.338359760"
     },
     "lang:finglish": {
       "baseline:total": "0.040057630",
@@ -176,11 +173,11 @@
       "saving_share": "0.613607229"
     },
     "lang:short_uncertain": {
-      "baseline:total": "13.232128636",
-      "n_cost_known": "18027",
+      "baseline:total": "13.251358654",
+      "n_cost_known": "18256",
       "n_requests": "18272",
-      "saving:total": "3.532487455",
-      "saving_share": "0.266962902"
+      "saving:total": "3.527021380",
+      "saving_share": "0.266163001"
     },
     "lang:structured": {
       "baseline:total": "6.953102227",
@@ -190,97 +187,93 @@
       "saving_share": "0.033886581"
     },
     "llm_only": {
-      "baseline:total": "327.648587198",
-      "n_cost_known": "207972",
+      "baseline:total": "327.778988324",
+      "n_cost_known": "208825",
       "n_requests": "209331",
-      "saving:total": "66.290222650",
-      "saving_share": "0.202321100"
+      "saving:total": "66.253683731",
+      "saving_share": "0.202129136"
     },
     "over_8k": {
-      "baseline:total": "158.454500413",
-      "n_cost_known": "15935",
+      "baseline:total": "158.483167813",
+      "n_cost_known": "15936",
       "n_requests": "15936",
-      "saving:total": "12.226422932",
-      "saving_share": "0.077160465"
+      "saving:total": "12.227532892",
+      "saving_share": "0.077153511"
     },
     "routing": {
-      "moved_share": "0.106577621",
-      "moved_to:deepseek-v4-flash": "6716",
-      "moved_to:gpt-4.1-nano": "6314",
-      "moved_to:gpt-4o-mini": "9207",
-      "moved_to:mimo-v2.5": "73",
-      "n_candidates_in_baseline": "180913",
-      "n_moved": "22310",
+      "moved_share": "0.079835285",
+      "moved_to:deepseek-v4-flash": "7251",
+      "moved_to:gpt-4o-mini": "9461",
+      "n_candidates_in_baseline": "180880",
+      "n_moved": "16712",
       "n_requests_routed": "209331",
-      "n_saving_unknown": "853",
-      "n_switched_in_baseline": "61124",
+      "n_saving_unknown": "0",
+      "n_switched_in_baseline": "57218",
       "reason:incumbent_unpriced": "186",
       "reason:insufficient_bot": "2043",
-      "reason:moved": "22310",
-      "reason:no_cheaper_candidate": "158603",
-      "reason:no_eligible_candidate": "25683",
+      "reason:moved": "16712",
+      "reason:no_cheaper_candidate": "164168",
+      "reason:no_eligible_candidate": "25716",
       "reason:unknown_tokens": "506",
-      "saving_by_target:deepseek-v4-flash": "11.285453364",
-      "saving_by_target:gpt-4.1-nano": "1.263883312",
-      "saving_by_target:gpt-4o-mini": "53.504960032",
-      "saving_by_target:mimo-v2.5": "0.235925942",
+      "saving_by_target:deepseek-v4-flash": "12.015927780",
+      "saving_by_target:gpt-4o-mini": "54.237755951",
       "support_median": "0.200000000",
-      "switched_share_llm": "0.291996885"
+      "switched_share_llm": "0.273337442"
     },
     "tenant_capped_0.35": {
-      "baseline:total": "273.978045558",
-      "n_cost_known": "173992",
-      "n_requests": "173992",
-      "saving:total": "43.225558696",
-      "saving_share": "0.157770155"
+      "baseline:total": "274.407085884",
+      "n_cost_known": "175304",
+      "n_requests": "175304",
+      "saving:total": "43.245295553",
+      "saving_share": "0.157595404"
     },
     "tenant_rank:1": {
       "baseline:total": "109.371095780",
       "n_cost_known": "94877",
       "n_requests": "95369",
-      "saving:total": "44.707996281",
-      "saving_share": "0.408773415",
+      "saving:total": "44.685753271",
+      "saving_share": "0.408570043",
       "share": "0.455589473"
     },
     "tenant_rank:2": {
-      "baseline:total": "7.402836335",
-      "n_cost_known": "42633",
+      "baseline:total": "7.473907824",
+      "n_cost_known": "43424",
       "n_requests": "43424",
-      "saving:total": "1.324888496",
-      "saving_share": "0.178970389",
+      "saving:total": "1.322549058",
+      "saving_share": "0.176955495",
       "share": "0.207441803"
     },
     "tenant_rank:3": {
       "baseline:total": "6.293547150",
       "n_cost_known": "32636",
       "n_requests": "32636",
-      "saving:total": "0.755353162",
-      "saving_share": "0.120020259",
+      "saving:total": "0.739073935",
+      "saving_share": "0.117433606",
       "share": "0.155906196"
     },
     "tenant_rank:4": {
       "baseline:total": "182.962105900",
       "n_cost_known": "21125",
       "n_requests": "21125",
-      "saving:total": "10.914343343",
-      "saving_share": "0.059653573",
+      "saving:total": "10.908898598",
+      "saving_share": "0.059623814",
       "share": "0.100916730"
     },
     "tenant_rank:5": {
       "baseline:total": "2.730512850",
       "n_cost_known": "8110",
       "n_requests": "8110",
-      "saving:total": "0.058960780",
-      "saving_share": "0.021593299",
+      "saving:total": "0.058448393",
+      "saving_share": "0.021405646",
       "share": "0.038742470"
     },
     "traffic_weighted": {
-      "baseline:total": "327.648587198",
-      "bot_mean_saving_share": "0.050252206",
-      "n_cost_known": "207972",
+      "baseline:total": "327.778988324",
+      "bot_mean_saving_share": "0.049757649",
+      "n_cost_known": "208825",
       "n_requests": "209331",
-      "saving:total": "66.290222650",
-      "saving_share": "0.202321100"
+      "saving:total": "66.253683731",
+      "saving_share": "0.202129136"
     }
   },
   "step": "routing",

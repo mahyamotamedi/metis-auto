@@ -13,10 +13,7 @@
     "rows: split_by_session tune inside the tune period, LLM; fitted on the same rows, own session and duplicate family never a neighbour",
     "k=5 is the declared default; grid [5, 15, 50]; default chosen by session/family-grouped nested CV, 5 outer x 3 inner folds, inside the tune split",
     "timestamps are naive (Q-06)",
-    "Candidates the catalogue marks hidden_reasoning_billed_as_output are excluded (ADR-0046 point 4): deepseek-v4-flash, gpt-5-nano, mimo-v2.5.",
-    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 374.6107 ms, p95 421.5663 ms, max 551.1496 ms",
-    "Overhead caveat: router fitted on the tune split before timing (fit not timed); apply prices the candidates, checks bot sufficiency and searches the k nearest training profiles.",
-    "Overhead sample: tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, route.per_bot) used report-period rows, so the two samples differ"
+    "Candidates the catalogue marks hidden_reasoning_billed_as_output are excluded (ADR-0046 point 4): deepseek-v4-flash, gpt-5-nano."
   ],
   "baseline": "best_single_cheap",
   "baseline_cost": {
@@ -29,18 +26,18 @@
   "evidence_class": "simulation",
   "lever_id": "rb3.knn-router.k-5.tune.best_single_cheap",
   "manifest": {
-    "code_commit": "9f05b25e27c0505563aaa3ad25a6e4e79429e194",
+    "code_commit": "34d6653b241707be198b2b041f6a2c32d8af404d",
     "config_hash": "9295ac11da91d29b900970a66200acf3c412e071fdd6b9abba3698e593aa3fd2",
-    "created_at": "2026-11-03T10:36:12.138284Z",
+    "created_at": "2026-11-04T04:32:32.858591Z",
     "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
     "price_version": "prices-metis-2026-10-18-logged",
     "python_version": "3.13.5",
     "seed": 20261102
   },
-  "n_eligible": 135607,
+  "n_eligible": 135190,
   "n_requests": 230762,
-  "overhead_ms_p50": 374.6107,
-  "overhead_ms_p95": 421.5663,
+  "overhead_ms_p50": null,
+  "overhead_ms_p95": null,
   "saving": {
     "token_cost": "0.000000000",
     "total": "0.000000000"
@@ -201,21 +198,20 @@
       "saving_share": "0.000000000"
     },
     "routing": {
-      "moved_share": "0.045444774",
-      "moved_to:gpt-4.1-nano": "1198",
-      "moved_to:gpt-4o-mini": "8315",
-      "n_candidates_in_baseline": "135607",
-      "n_moved": "9513",
+      "moved_share": "0.040271150",
+      "moved_to:gpt-4o-mini": "8430",
+      "n_candidates_in_baseline": "135190",
+      "n_moved": "8430",
       "n_requests_routed": "209331",
       "n_saving_unknown": "0",
       "n_switched_in_baseline": "0",
       "reason:incumbent_unpriced": "186",
       "reason:insufficient_bot": "2043",
-      "reason:moved": "9513",
-      "reason:no_cheaper_candidate": "126094",
-      "reason:no_eligible_candidate": "70989",
+      "reason:moved": "8430",
+      "reason:no_cheaper_candidate": "126760",
+      "reason:no_eligible_candidate": "71406",
       "reason:unknown_tokens": "506",
-      "support_median": "0.200000000",
+      "support_median": "0.400000000",
       "switched_share_llm": "0.000000000"
     },
     "tenant_capped_0.35": {
