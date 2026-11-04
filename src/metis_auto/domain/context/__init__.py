@@ -3,6 +3,8 @@ one target, plus a content-free composition record. Traces: FR-CTX-01…05."""
 
 from . import compression
 from .compression import CompressionConfig
+from .dedup import DedupResult, WithinMessageDedupStrategy, deduplicate
+from .dedup_config import DedupConfig
 from .pass_through import DatasetPositionsStrategy, PassThroughStrategy
 from .policy import (
     ContextConfig,
@@ -13,6 +15,10 @@ from .policy import (
 )
 
 __all__ = [
+    "DedupConfig",
+    "DedupResult",
+    "WithinMessageDedupStrategy",
+    "deduplicate",
     "CompressionConfig",
     "ContextConfig",
     "ContextStrategy",

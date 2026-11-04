@@ -36,6 +36,10 @@ class RoutingConfig(ContractModel):
     """Name wiring resolves to a promoted ``RoutingPolicy``."""
     eligibility: EligibilityConfig = EligibilityConfig()
     requested_model_mode: RequestedModelMode = RequestedModelMode.IGNORE
+    candidates: tuple[Name, ...] = ()
+    """Models routing may choose; empty = every enabled model (the serving
+    default). The demo sets the sprint's primary set (config/demo, ADR-XXXX
+    (demo-sprint-winners))."""
     chain: tuple[Name, ...] = ()
     """Escalation targets after the routed target (ADR-0013); configuration."""
     fixed_model: FixedModelConfig | None = None
@@ -63,7 +67,11 @@ def route(
     model by effective cost; without it, the first model with a known price
     in catalogue order."""
     eligible, exclusions = filter_eligible(
-        features, catalogue, config.eligibility, min_context_window
+        features,
+        catalogue,
+        config.eligibility,
+        min_context_window,
+        candidates=config.candidates,
     )
     flags: list[RoutingFlag] = []
     if min_context_window is not None:

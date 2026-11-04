@@ -135,7 +135,7 @@ def test_loads_in_fake_mode_and_a_message_round_trips(tmp_path):
 
 
 def test_bots_are_listed_and_their_instructions_reach_the_request(tmp_path):
-    fa, en = load_presets()
+    fa, en, *_ = load_presets()
     at = chatbot(tmp_path, bot="en_faq")
     assert not at.exception
     chat = _chat(at)

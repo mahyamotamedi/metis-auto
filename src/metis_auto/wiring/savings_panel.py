@@ -86,6 +86,9 @@ class PanelView:
     premium_label: str = ""
     facts: Facts | None = None
     charts: Charts = field(default_factory=Charts)
+    dedup_rows: tuple[tuple[str, str], ...] = ()
+    """(label, value) rows of the within-message dedup (this message, then the
+    session); empty when it did not run for the last answer. Content-free."""
 
 
 def _tokens(text: str | None) -> tuple[int, str] | None:
@@ -165,6 +168,24 @@ def facts_for(ws: ChatWorkspace, report: TurnReport, t: Text) -> Facts:
     )
 
 
+def dedup_rows(report: TurnReport, t: Text) -> tuple[tuple[str, str], ...]:
+    d = report.dedup
+    if not d:
+        return ()
+    return (
+        (
+            t("dedup_row_chunks"),
+            _ltr(f"{d['items_removed']} / {d['items_total']}"),
+        ),
+        (t("dedup_row_tokens"), _ltr(d["tokens_removed"])),
+        (t("dedup_row_saving"), _ltr(d.get("saving", DASH))),
+        (
+            t("dedup_row_session"),
+            _ltr(f"{d['session_saving']} ({d['session_items_removed']})"),
+        ),
+    )
+
+
 def panel_view(ws: ChatWorkspace, t: Text) -> PanelView:
     live = ws.session.live
     estimate = not live
@@ -199,4 +220,5 @@ def panel_view(ws: ChatWorkspace, t: Text) -> PanelView:
         premium_label=premium,
         facts=facts_for(ws, last, t),
         charts=charts_for(answered, session, t, live=live),
+        dedup_rows=dedup_rows(last, t),
     )

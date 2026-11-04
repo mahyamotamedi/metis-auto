@@ -20,6 +20,8 @@ class ExclusionReason(StrEnum):
     BELOW_MIN_WINDOW = "below_min_window"
     DISABLED = "disabled"
     UNAVAILABLE = "unavailable"
+    NOT_A_CANDIDATE = "not_a_candidate"
+    """Outside the configured candidate set (``RoutingConfig.candidates``)."""
 
 
 class Exclusion(ContractModel):

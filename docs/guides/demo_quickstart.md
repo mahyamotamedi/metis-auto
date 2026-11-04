@@ -323,6 +323,27 @@ settings: routing sticky_v1, compression off, cache_scope session, seed off, dee
 
 In fake mode, costs are what the fake answer *would* cost; nothing is charged and the budget does not move.
 
+### 7.8 The sprint winners in the demo (rules-only router, duplicate-chunk dedup, bot-level cache)
+
+Everything here is a labelled **DEMO selection**: the serving defaults (`fixed_model` routing, `session` cache scope, `pass_through` context) do not change, and every figure is **provisional: cost only, pending quality**. The live savings are a **mechanism demo** on your own or SYNTHETIC messages; the sprint's replay figures are on the **Results** page. Do not quote the live numbers as results. **Start in fake mode** (free, no key, no spend); the steps below need nothing else.
+
+| Toggle (UI: Settings → Advanced; terminal: command) | What it shows | How to see it |
+|---|---|---|
+| Routing method **Decision router** (`/mode decision_router`) | The sprint's rules-only router: a gate (greeting → tier 0; code, coding intent, attachment or a long message → tier 1), then rules, then the **safe tier** (`gpt-4o-mini`). No router model is called; nothing extra is spent. Only the sprint's primary models (`gpt-5-nano`, `gpt-4o-mini`, `deepseek-v4-flash`) can be chosen; the retired `gpt-4.1-nano` and `mimo-v2.5` never are. The local, hosted and hybrid router backends are **not offered** in the demo. | Say `hi` (reason `decision.gate.greeting`, tier 0), then a plain question (reason `decision.fallback.safe_tier`, tier 1, with the **safe tier note**: most traffic lands there), then `write a python function ...` (coding intent, tier 1). |
+| Sticky routing **router for new anchors** (`/inner decision_router`) | Sticky v1 (a placeholder) using the decision router instead of the rules when it anchors or re-routes. | Same messages; the policy name ends in `+dr-<version>`. |
+| **Remove duplicate chunks** (`/dedup on`) | Within ONE message's retrieved context, exact duplicate chunks are removed (first copy kept, order unchanged); instructions, history and your message are never touched. It runs **before** compression. Off = the request is byte-identical to the serving default. | Pick the preset **Persian shop bot with duplicate chunks** or **English FAQ bot with duplicate chunks** (SYNTHETIC; the same document is repeated), turn the toggle on and ask anything: the panel shows chunks removed, tokens removed and the saving. |
+| **Bot-level cache** (`/botcache on`, plus **New user**) | An exact answer is reused by another user of the same bot. A hit never anchors a session. | Ask the same question as the **first message** of two different users (**New user** in between; the history is part of the key): the second is a cache hit. Then change only the duplicate chunks in the retrieval context: it is a **miss**, never a wrong hit (the cache key is made from the context as it was received, before dedup). |
+
+How to read the panel: the dedup saving is **part of the context line** of the decomposition (labelled *Context (dedup + compression)*) and is also shown on its own below the table, next to the routing and cache lines; the order is fixed and the sum is exact. The tokens are counted with the target model's tokenizer on the full and on the sent request, with their fidelity (an approximation is never labelled exact). The demo has no retrieval step: the retrieval-context box is pasted text, so no retrieval fee or retrieval-result cache applies.
+
+Terminal run with everything on (fake mode):
+
+```bash
+.venv/bin/python scripts/chat.py --fake --mode decision_router --retrieved docs.txt
+```
+
+then `/dedup on`, `/botcache on`, and ask. `docs.txt` holds blocks separated by `---`; repeat one block to see the dedup. The overhead of the dedup step is measured with `scripts/measure_overhead.py --requests 2000 --hit-ratio 0 --dup-chunks 8 --dedup` (compare without `--dedup`); the 2026-11-04 result for this demo is in the ADR.
+
 ## 8. Troubleshooting
 
 | You see | It means | Fix |

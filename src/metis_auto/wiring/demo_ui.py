@@ -414,6 +414,12 @@ def detail_sections(
                     (t("det_decision"), r.get("decision", "-")),
                     (t("det_reason_code"), r.get("reason_code", "-")),
                     (t("det_target"), r.get("target", "-")),
+                    (t("routing_tier"), r.get("tier", "-")),
+                    *(
+                        [(t("routing_safe_tier"), r["safe_tier_note"])]
+                        if "safe_tier_note" in r
+                        else []
+                    ),
                     (t("det_anchor_before"), r.get("anchor_before", "-")),
                     (t("det_chain"), r.get("chain", "-")),
                     (t("det_policy"), r.get("policy", "-")),
@@ -479,6 +485,21 @@ def detail_sections(
             else [(t("det_compression"), t("det_off"))],
         )
     )
+    d = report.dedup
+    if d:  # only when the demo's dedup ran for this answer
+        sections.append(
+            (
+                t("dedup_title"),
+                [
+                    (
+                        t("dedup_row_chunks"),
+                        f"{d['items_removed']} / {d['items_total']}",
+                    ),
+                    (t("dedup_row_tokens"), d["tokens_removed"]),
+                    (t("dedup_row_saving"), d.get("saving", "-")),
+                ],
+            )
+        )
     overhead = f"{report.overhead_ms:.2f} ms" if report.overhead_ms is not None else "-"
     sections.append(
         (

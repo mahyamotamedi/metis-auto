@@ -47,12 +47,17 @@ def filter_eligible(
     catalogue: ModelCatalogue,
     config: EligibilityConfig,
     min_context_window: int | None = None,
+    candidates: tuple[str, ...] = (),
 ) -> tuple[tuple[CatalogueEntry, ...], tuple[Exclusion, ...]]:
-    """(eligible entries in catalogue order, exclusions with reasons)."""
+    """(eligible entries in catalogue order, exclusions with reasons).
+    ``candidates`` non-empty: a model outside it is excluded (a disabled one
+    keeps the reason ``disabled``)."""
     eligible: list[CatalogueEntry] = []
     exclusions: list[Exclusion] = []
     for entry in catalogue.entries:
         reason = _exclusion(entry, features, config, min_context_window)
+        if reason is None and candidates and entry.model_id not in candidates:
+            reason = ExclusionReason.NOT_A_CANDIDATE
         if reason is None:
             eligible.append(entry)
         else:

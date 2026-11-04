@@ -27,6 +27,7 @@ from metis_auto.contracts import (
 )
 
 from .compression import CompressionConfig
+from .dedup_config import DedupConfig
 
 
 class OverflowRule(StrEnum):
@@ -40,6 +41,9 @@ class ContextConfig(ContractModel):
     compression: CompressionConfig = CompressionConfig()
     """EXPERIMENTAL compression of history and retrieved context (Demo
     milestone); off by default."""
+    dedup: DedupConfig = DedupConfig()
+    """Within-message chunk dedup (sprint winner; DEMO selection); off by
+    default. Acts when the context strategy is ``within_message_dedup``."""
     strategy: Name = "pass_through"
     """Name wiring resolves to a promoted ``ContextStrategy``."""
     overflow_rule: OverflowRule = OverflowRule.TRIM_THEN_REROUTE  # provisional

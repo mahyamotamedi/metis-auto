@@ -184,6 +184,7 @@ def plan(settings_loader: SettingsLoader) -> tuple[list[PlanRow], Decimal, Decim
     (rows, total, total if every call escalated once)."""
     session = ChatSession(
         live=False,
+        sprint_candidates_only=False,  # the owner-approved estimate (above) stays
         instructions=INSTRUCTIONS,
         settings_loader=_loader(settings_loader),
         client_factory=lambda _l, _r: _PlanningFake(),
@@ -243,6 +244,7 @@ def run(
 
     session = ChatSession(
         live=True,
+        sprint_candidates_only=False,
         instructions=INSTRUCTIONS,
         settings_loader=_loader(settings_loader),
         client_factory=factory,

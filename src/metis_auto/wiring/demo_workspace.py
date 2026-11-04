@@ -464,6 +464,13 @@ class ChatWorkspace:
             self._method = previous
         return error
 
+    def set_dedup(self, on: bool) -> str | None:
+        """DEMO: within-message chunk dedup (Advanced)."""
+        return self._apply(lambda: self.session.set_dedup(on))
+
+    def set_sticky_inner(self, inner: str) -> str | None:
+        return self._apply(lambda: self.session.set_sticky_inner(inner))
+
     def set_router_mode(self, mode: str) -> str | None:
         return self._apply(lambda: self.session.set_router_mode(mode))
 

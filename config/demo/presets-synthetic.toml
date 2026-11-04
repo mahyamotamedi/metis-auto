@@ -160,3 +160,83 @@ suggested = [
     "write a python function that lists all my notes with the API",
     "My sync shows SYNC-409, what does it mean?",
 ]
+
+# --- Sprint-winner presets (ADR-XXXX (demo-sprint-winners)) -------------------
+#
+# Engineered so each effect can be seen: the retrieval context holds EXACT
+# duplicate chunks (the same document pasted several times, as a retriever that
+# returns overlapping hits would), so the within-message dedup has something to
+# remove. Written for the demo; nothing is copied from the sample data. Persian
+# wording is [PLACEHOLDER: Persian review].
+#
+# `suggested` runs through the effects in order: a greeting (the gate, tier 0),
+# a plain question (no gate or rule matches: the safe tier, gpt-4o-mini), a
+# coding-intent message (gate, tier 1) and a longer message (rules). For the
+# bot-level exact cache: turn it on, ask the 2nd message as the FIRST message,
+# press "new user" and ask it again as the first message (the history is part
+# of the cache key, so a repeat later in the same conversation is not a hit).
+
+[presets.fa_shop_dupes]
+title = "Persian shop bot with duplicate chunks (dedup demo)"
+description = "[SYNTHETIC] Persian support bot whose retrieved context repeats the same chunks."
+instructions = '''
+[SYNTHETIC] تو دستیار پشتیبانی فروشگاه خیالی «نمونه‌کالا» هستی. کوتاه و مؤدبانه به فارسی پاسخ بده و فقط بر پایه‌ی اسناد زیر جواب بده؛ اگر پاسخ در اسناد نبود بگو نمی‌دانی. این متن نمایشی است و هیچ‌چیز آن واقعی نیست.
+'''
+documents = [
+'''
+[SYNTHETIC] سند «ارسال» (نسخه نمایشی): سفارش‌های تهران معمولاً دو تا سه روز کاری و سفارش‌های شهرستان چهار تا شش روز کاری طول می‌کشد. ارسال برای سفارش‌های بالای یک میلیون تومان رایگان است. این متن فقط برای نمایش ساخته شده است.
+''',
+'''
+[SYNTHETIC] سند «مرجوعی» (نسخه نمایشی): کالا تا هفت روز پس از تحویل و در بسته‌بندی اصلی قابل مرجوع است. بازگشت وجه پس از بررسی کالا ظرف پنج روز کاری انجام می‌شود. این متن فقط برای نمایش ساخته شده است.
+''',
+'''
+[SYNTHETIC] سند «ارسال» (نسخه نمایشی): سفارش‌های تهران معمولاً دو تا سه روز کاری و سفارش‌های شهرستان چهار تا شش روز کاری طول می‌کشد. ارسال برای سفارش‌های بالای یک میلیون تومان رایگان است. این متن فقط برای نمایش ساخته شده است.
+''',
+'''
+[SYNTHETIC] سند «پرداخت» (نسخه نمایشی): پرداخت فقط آنلاین است و پرداخت در محل وجود ندارد. کد تخفیف نمایشی در مرحله‌ی پرداخت وارد می‌شود. این متن فقط برای نمایش ساخته شده است.
+''',
+'''
+[SYNTHETIC] سند «مرجوعی» (نسخه نمایشی): کالا تا هفت روز پس از تحویل و در بسته‌بندی اصلی قابل مرجوع است. بازگشت وجه پس از بررسی کالا ظرف پنج روز کاری انجام می‌شود. این متن فقط برای نمایش ساخته شده است.
+''',
+'''
+[SYNTHETIC] سند «ارسال» (نسخه نمایشی): سفارش‌های تهران معمولاً دو تا سه روز کاری و سفارش‌های شهرستان چهار تا شش روز کاری طول می‌کشد. ارسال برای سفارش‌های بالای یک میلیون تومان رایگان است. این متن فقط برای نمایش ساخته شده است.
+''',
+]
+suggested = [
+    "سلام",
+    "سفارشم کی می‌رسه؟",
+    "یک تابع پایتون بنویس که بررسی کند شماره سفارش ۸ رقمی است",
+    "سفارشم کی می‌رسه؟",
+    "لطفاً توضیح بده که اگر کالا را بخواهم برگردانم چه مراحلی دارد و اگر هزینه‌ی ارسال رایگان نبود چه می‌شود، و همچنین برای شهرستان‌ها چه فرقی دارد، و آیا می‌شود دو کالا را با هم مرجوع کرد یا نه؟",
+]
+
+[presets.en_faq_dupes]
+title = "English FAQ bot with duplicate chunks (dedup demo)"
+description = "[SYNTHETIC] English FAQ bot whose retrieved context repeats the same chunks."
+instructions = '''
+[SYNTHETIC] You are the FAQ assistant for "DemoNotes", a fictional note-taking app. Answer briefly and only from the documents below; if the answer is not there, say you do not know. This text is a demo and nothing in it is real.
+'''
+documents = [
+'''
+[SYNTHETIC] DemoNotes export (demo document): notes can be exported as PDF, Markdown or plain text from the note menu. Export of a whole notebook is available on the Plus plan. This text exists only for the demo.
+''',
+'''
+[SYNTHETIC] DemoNotes sync (demo document): sync runs every 30 seconds when online. Error SYNC-409 means two devices changed the same note; keep the newer copy and sync again. This text exists only for the demo.
+''',
+'''
+[SYNTHETIC] DemoNotes export (demo document): notes can be exported as PDF, Markdown or plain text from the note menu. Export of a whole notebook is available on the Plus plan. This text exists only for the demo.
+''',
+'''
+[SYNTHETIC] DemoNotes export (demo document): notes can be exported as PDF, Markdown or plain text from the note menu. Export of a whole notebook is available on the Plus plan. This text exists only for the demo.
+''',
+'''
+[SYNTHETIC] DemoNotes sync (demo document): sync runs every 30 seconds when online. Error SYNC-409 means two devices changed the same note; keep the newer copy and sync again. This text exists only for the demo.
+''',
+]
+suggested = [
+    "hi",
+    "How do I export my notes to PDF?",
+    "write a python function that lists all my notes",
+    "How do I export my notes to PDF?",
+    "Please explain in detail how sync works, what SYNC-409 means, what happens if I edit the same note on two devices while offline, how long I should wait before syncing again, and whether exported files keep their formatting when the note was edited on a phone and a laptop at the same time.",
+]

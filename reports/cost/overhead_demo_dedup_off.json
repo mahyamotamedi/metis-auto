@@ -1,0 +1,98 @@
+{
+  "measured_at": "2026-11-04T19:32:07+00:00",
+  "script": "scripts/measure_overhead.py",
+  "requests": 2000,
+  "sizes_from_sample": null,
+  "hit_ratio_requested": 0.0,
+  "served": {
+    "miss": 2000
+  },
+  "instructions_chars": 0,
+  "tokenizer": {
+    "ref": "openai-o200k-base",
+    "loaded": "tiktoken-o200k_base@0.14.0",
+    "fidelity": "exact_local",
+    "fallback_reason": null
+  },
+  "config_hash": "cfg1:98a7161b1cca3058",
+  "compression": {
+    "mode": "off",
+    "compressor": null,
+    "rate": null,
+    "token_method": null
+  },
+  "dedup": {
+    "enabled": false,
+    "dup_chunks": 8
+  },
+  "sent_input_tokens_per_context": {
+    "n": 2000,
+    "sum": 952000,
+    "p50": 476
+  },
+  "hardware": {
+    "machine": "AMD64",
+    "system": "Windows 11",
+    "python": "CPython 3.13.9",
+    "cpu": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  },
+  "spans": {
+    "miss": {
+      "cache_lookup.exact": {
+        "n": 2000,
+        "p50_ms": 0.2685,
+        "p95_ms": 0.4827,
+        "max_ms": 7.9133
+      },
+      "cache_store": {
+        "n": 2000,
+        "p50_ms": 0.0395,
+        "p95_ms": 0.0746,
+        "max_ms": 0.3655
+      },
+      "context": {
+        "n": 2000,
+        "p50_ms": 0.4858,
+        "p95_ms": 0.9234,
+        "max_ms": 4.0704
+      },
+      "features": {
+        "n": 2000,
+        "p50_ms": 0.2476,
+        "p95_ms": 0.427,
+        "max_ms": 1.3864
+      },
+      "measure": {
+        "n": 2000,
+        "p50_ms": 0.2424,
+        "p95_ms": 0.4297,
+        "max_ms": 0.9085
+      },
+      "model_call": {
+        "n": 2000,
+        "p50_ms": 0.0083,
+        "p95_ms": 0.0149,
+        "max_ms": 0.0925
+      },
+      "overhead_total": {
+        "n": 2000,
+        "p50_ms": 1.3436,
+        "p95_ms": 2.238,
+        "max_ms": 9.6308
+      },
+      "request": {
+        "n": 2000,
+        "p50_ms": 2.0731,
+        "p95_ms": 3.33,
+        "max_ms": 12.0446
+      },
+      "route": {
+        "n": 2000,
+        "p50_ms": 0.0507,
+        "p95_ms": 0.0894,
+        "max_ms": 0.3747
+      }
+    }
+  },
+  "note": "Indicative only (A-22): synthetic requests, fake model, one machine."
+}

@@ -88,6 +88,7 @@ from metis_auto.contracts.events import (
     CacheStoreSkipped,
     ContextBuilt,
     ContextCompressed,
+    ContextDeduped,
     DecisionMeasured,
     EscalationTriggered,
     FailoverTriggered,
@@ -139,6 +140,10 @@ class _Run:
     sent: Request | None = None
     """The request after compression; None until computed (or not compressed)."""
     compressed: ContextCompressed | None = None
+    deduped: Request | None = None
+    """The request after the within-message dedup (before compression); None
+    unless the dedup removed something."""
+    dedup: ContextDeduped | None = None
     overhead: list[MeasurementRecord] = field(default_factory=list)
     """Measurements that cost time or money (the decision router)."""
 
@@ -157,6 +162,10 @@ class RequestTrace:
     sent_request: Request | None
     compression: ContextCompressed | None
     seed_hit: bool
+    dedup: ContextDeduped | None = None
+    deduped_request: Request | None = None
+    """The request after dedup, before compression; content, memory only.
+    None unless the dedup removed something."""
 
 
 class RequestPipeline:
@@ -248,6 +257,8 @@ class RequestPipeline:
             sent_request=run.sent,
             compression=run.compressed,
             seed_hit=entry is not None and entry.producing_model_id == SEED_PRODUCER,
+            dedup=run.dedup,
+            deduped_request=run.deduped,
         )
         return response, trace
 
@@ -498,28 +509,31 @@ class RequestPipeline:
         return plan
 
     def _sent_request(self, run: _Run, attempt_id: str) -> Request:
-        """The request after compression, computed once per request (the
-        compressor is target-independent). Without compression: the request."""
+        """The request after dedup and compression, computed once per request
+        (both are target-independent). Order: the within-message dedup first
+        (when the strategy offers it and it is on), then compression. Without
+        either: the request."""
         if run.sent is not None:
             return run.sent
+        base = self._dedup(run, attempt_id)
         config = self._config.context.compression
         if not config.enabled or self._compressor is None:
-            run.sent = run.request
+            run.sent = base
             return run.sent
         start = self._clock.monotonic_ms()
         results = {}
-        for t in compression.targets(run.request, config):
+        for t in compression.targets(base, config):
             out = self._compressor.compress(t.text, config.rate)
             results[(t.component, t.index)] = compression.Compressed(
                 out.text, out.tokens_before, out.tokens_after
             )
-        run.sent = compression.apply(run.request, results)
+        run.sent = compression.apply(base, results)
         duration = self._span(run, SpanName.CONTEXT_COMPRESS, start)
         run.compressed = ContextCompressed(
             compressor=self._compressor.ref,
             rate=config.rate,
             token_method=self._compressor.token_method,
-            components=compression.summary(run.request, config, results),
+            components=compression.summary(base, config, results),
         )
         self._emit(
             run,
@@ -529,6 +543,33 @@ class RequestPipeline:
             duration_ms=duration,
         )
         return run.sent
+
+    def _dedup(self, run: _Run, attempt_id: str) -> Request:
+        """The within-message dedup (a demo selection), when the context
+        strategy has a ``reduce`` hook and ``context.dedup.enabled``. Content
+        stays here; the event holds sizes only."""
+        reducer = getattr(self._context, "reduce", None)
+        if reducer is None or not self._config.context.dedup.enabled:
+            return run.request
+        start = self._clock.monotonic_ms()
+        result = reducer(run.request, self._config.context)
+        duration = self._span(run, SpanName.CONTEXT_DEDUP, start)
+        run.dedup = ContextDeduped(
+            strategy=self._context.ref,
+            items_total=result.items_total,
+            items_removed=result.items_removed,
+            chars_removed=result.chars_removed,
+        )
+        if result.items_removed:
+            run.deduped = result.request
+        self._emit(
+            run,
+            run.dedup,
+            attempt_id=attempt_id,
+            span=SpanName.CONTEXT_DEDUP,
+            duration_ms=duration,
+        )
+        return result.request
 
     # --- stage 6: attempt loop (ADR-0013) ---
 
