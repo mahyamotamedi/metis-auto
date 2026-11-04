@@ -396,14 +396,50 @@ def test_recorded_and_repriced_units_never_mixed(rr):
 
 
 def test_real_reranker_refuses_to_start_when_weights_are_missing(rr, capsys, tmp_path):
-    """The committed table has no pins, and an empty assets folder has no files:
+    """The committed table is pinned, and an empty assets folder has no files:
     the run stops with code 2 before it reads any data."""
     code = rr.main(
         ["--scorers", "bge_reranker_v2_m3", "--reranker-assets", str(tmp_path)]
     )
     out = capsys.readouterr().out
     assert code == 2 and "no data was read" in out
-    assert "revision is not pinned" in out and "no files are listed" in out
+    assert "model.safetensors: missing" in out
+    assert "scripts/fetch_reranker_assets.py" in out
+    assert "not pinned" not in out
+
+
+def test_run_refuses_when_a_file_differs_from_its_pin(rr, capsys, tmp_path):
+    from metis_auto.adapters.rerankers.assets import load_specs
+
+    spec = load_specs(ROOT / "config/reference/rerankers.toml")["bge-reranker-v2-m3"]
+    folder = tmp_path / spec.directory
+    folder.mkdir(parents=True)
+    for f in spec.files:
+        (folder / f.name).write_bytes(b"synthetic, not the real weights")
+    code = rr.main(
+        ["--scorers", "bge_reranker_v2_m3", "--reranker-assets", str(tmp_path)]
+    )
+    out = capsys.readouterr().out
+    assert code == 2 and "sha256 differs from the pin" in out
+
+
+def test_committed_reranker_table_is_fully_pinned():
+    from metis_auto.adapters.rerankers.assets import load_specs, unpinned_reasons
+
+    spec = load_specs(ROOT / "config/reference/rerankers.toml")["bge-reranker-v2-m3"]
+    assert unpinned_reasons(spec) == []
+    assert spec.revision == "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e"
+    assert {f.name for f in spec.files} >= {
+        "model.safetensors",
+        "tokenizer.json",
+        "config.json",
+        "tokenizer_config.json",
+        "special_tokens_map.json",
+        "sentencepiece.bpe.model",
+    }
+    assert all(len(f.sha256 or "") == 64 for f in spec.files)
+    text = (ROOT / "config/reference/rerankers.toml").read_text(encoding="utf-8")
+    assert "unpinned" not in text.split("version =")[1].splitlines()[0]
 
 
 def test_default_scorers_never_include_the_real_reranker(rr):
@@ -460,19 +496,38 @@ def test_no_gpu_refuses_even_with_ready_weights(tmp_path):
     assert check_ready(spec, tmp_path, device_probe=lambda: "cuda") == []
 
 
-def test_fetch_script_refuses_while_unpinned_and_downloads_nothing(capsys, tmp_path):
+def _fetch_module():
     spec = importlib.util.spec_from_file_location(
         "fetch_reranker_under_test", ROOT / "scripts" / "fetch_reranker_assets.py"
     )
     fetch = importlib.util.module_from_spec(spec)
     sys.modules["fetch_reranker_under_test"] = fetch
     spec.loader.exec_module(fetch)
-    assert (
-        fetch.main([], table=ROOT / "config/reference/rerankers.toml", root=tmp_path)
-        == 1
+    return fetch
+
+
+def test_fetch_script_refuses_an_unpinned_table_and_downloads_nothing(capsys, tmp_path):
+    table = tmp_path / "rerankers.toml"
+    table.write_text(
+        '[[rerankers]]\nref = "syn"\nmodel = "syn/model"\n', encoding="utf-8"
     )
+    fetch = _fetch_module()
+    assert fetch.main([], table=table, root=tmp_path / "assets") == 1
     assert "refused (nothing downloaded)" in capsys.readouterr().out
-    assert list(tmp_path.iterdir()) == []
+    assert not (tmp_path / "assets").exists()
+
+
+def test_fetch_check_on_the_pinned_table_reports_missing_without_network(
+    capsys, tmp_path
+):
+    """--check never downloads: on an empty folder every file is MISSING."""
+    fetch = _fetch_module()
+    code = fetch.main(
+        ["--check"], table=ROOT / "config/reference/rerankers.toml", root=tmp_path
+    )
+    out = capsys.readouterr().out
+    assert code == 1 and out.count("MISSING or wrong hash") == 6
+    assert "refused" not in out and list(tmp_path.iterdir()) == []
 
 
 def test_data_folder_for_rerankers_is_git_ignored():
