@@ -33,6 +33,7 @@ def _row(n, *, sessions=1, requests=1, instructions=INSTRUCTION, **extra):
         "memory_enabled": False,
         "summarizer_mode": "IGNORE",
         "corpus_ids_state": "null",
+        "has_rag": False,
         "rag_top_k": None,
         "sessions": sessions,
         "requests": requests,
@@ -53,11 +54,14 @@ class Source:
         return next(r["instructions"] for r in self._rows if r["bot_id"] == bot_id)
 
     def rag_texts(self, bot_id):
-        return [CHUNK] if bot_id.endswith("-1") else []
+        row = next(r for r in self._rows if r["bot_id"] == bot_id)
+        return [CHUNK] if row["has_rag"] else []
 
 
 ROWS = [
-    _row(1, sessions=40, requests=400, corpus_ids_state="ok", rag_top_k=4),
+    _row(
+        1, sessions=40, requests=400, corpus_ids_state="ok", has_rag=True, rag_top_k=4
+    ),
     _row(2, sessions=20, requests=200, memory_enabled=True),
     _row(3, sessions=10, requests=100, instructions="Reply in plain English please"),
 ]
@@ -134,7 +138,7 @@ def test_the_list_is_ranked_and_the_synthetic_samples_stay_at_the_top(tmp_path):
     synthetic = [n for n in names if not n.startswith("bot-")]
     real = [n for n in names if n.startswith("bot-")]
     assert names[: len(synthetic)] == synthetic and synthetic
-    assert real == ["bot-001", "bot-002", "bot-003"]
+    assert real == ["bot-001"]
     html = " ".join(h.value for h in at.sidebar.markdown) + dump(at)
     assert EN.text("ws_synthetic_samples", "en") in html
 
@@ -143,7 +147,7 @@ def test_selected_state_and_details_card(tmp_path):
     at = selection(tmp_path)
     at = at.button(key="mx-bot-bot-001").click().run()
     assert at.button(key="mx-bot-bot-001").proto.type == "primary"
-    assert at.button(key="mx-bot-bot-002").proto.type == "secondary"
+    assert "bot-002" not in labels(at)
     text = dump(at)
     for needed in ("gpt-4o-mini", "bot-001", str(len(INSTRUCTION))):
         assert needed in text
@@ -153,9 +157,9 @@ def test_selected_state_and_details_card(tmp_path):
 
 def test_search_and_filters(tmp_path):
     at = selection(tmp_path)
-    at.text_input(key="mx-bots-search").set_value("002").run()
+    at.text_input(key="mx-bots-search").set_value("001").run()
     at = at.run()
-    assert [n for n in labels(at) if n.startswith("bot-")] == ["bot-002"]
+    assert [n for n in labels(at) if n.startswith("bot-")] == ["bot-001"]
     at.text_input(key="mx-bots-search").set_value("").run()
     at = at.run()
     at.selectbox(key="mx-bots-rag").select("yes").run()
@@ -164,7 +168,7 @@ def test_search_and_filters(tmp_path):
 
 
 def test_the_list_pages_fifty_at_a_time(tmp_path):
-    many = [_row(n, sessions=1, requests=n) for n in range(1, 131)]
+    many = [_row(n, sessions=1, requests=n, has_rag=True) for n in range(1, 131)]
     at = selection(tmp_path, source=lambda: Source(many))
     assert len([n for n in labels(at) if n.startswith("bot-")]) == 50
     at = at.button(key="mx-bots-more").click().run()
@@ -202,12 +206,10 @@ def test_no_raw_id_or_content_in_a_conversation_with_a_real_bot(tmp_path, caplog
     assert EN.text("ws_knowledge_logged", "en") in page
 
 
-def test_a_bot_without_rag_says_instructions_only(tmp_path):
+def test_bots_without_usable_rag_are_not_offered(tmp_path):
     at = selection(tmp_path)
-    at = at.button(key="mx-bot-bot-003").click().run()
-    at = at.button(key="mx-cta-continue").click().run()
-    at = at.button(key="mx-cta-start").click().run()
-    assert EN.text("ws_knowledge_none", "en") in dump(at)
+    assert "bot-002" not in labels(at)
+    assert "bot-003" not in labels(at)
 
 
 # --- live with a real bot (UI-R06) ----
@@ -271,7 +273,7 @@ def test_database_down_shows_the_empty_state_and_the_samples_remain(tmp_path):
 
 def test_back_links(tmp_path):
     at = selection(tmp_path)
-    at = at.button(key="mx-bot-bot-002").click().run()
+    at = at.button(key="mx-bot-bot-001").click().run()
     at = at.button(key="mx-cta-continue").click().run()
     assert at.button(key="set_back")
     at = at.button(key="set_back").click().run()

@@ -41,7 +41,7 @@ from .dedup_config import DedupConfig
 from .pass_through import PassThroughStrategy
 from .policy import ContextConfig, ContextStrategy
 
-DEDUP_VERSION = "1.0.0"
+DEDUP_VERSION = "1.0.1"
 __all__ = ["DedupConfig", "DedupResult", "WithinMessageDedupStrategy", "deduplicate"]
 
 
@@ -89,9 +89,11 @@ class WithinMessageDedupStrategy:
 
     ``reduce`` is the hook the pipeline calls before compression and before
     the target's tokens are counted, so counts, parts and the cost all describe
-    the request actually sent. ``build`` also deduplicates (idempotent), so
-    the strategy is correct on its own; it marks the retrieved row
-    ``deduplicated`` with the items before and after."""
+    the request actually sent. ``build`` only lays out that prepared request:
+    compression may make distinct source chunks identical, so reducing again
+    would invalidate the counts and trace. It marks the retrieved row
+    ``deduplicated`` with the items before and after. Callers must run ``reduce``
+    before measuring the target input, as the pipeline does."""
 
     def __init__(self, inner: ContextStrategy | None = None) -> None:
         self._inner = inner or PassThroughStrategy()
@@ -118,14 +120,13 @@ class WithinMessageDedupStrategy:
         config: ContextConfig,
         rerouted: bool,
     ) -> ContextPlan:
-        result = self.reduce(request, config)
         plan = self._inner.build(
-            result.request, measurements, counts, target, config, rerouted
+            request, measurements, counts, target, config, rerouted
         )
         if not config.dedup.enabled:
             return plan
-        total = _original_items(measurements, result)
-        kept = _count(result.request)
+        total = _original_items(measurements)
+        kept = _count(request)
         if total is None or kept >= total:
             return plan
         rows = tuple(
@@ -153,10 +154,8 @@ def _count(request: Request) -> int:
     return len(value.items) if value is not None else 0
 
 
-def _original_items(
-    measurements: RequestMeasurements, result: DedupResult
-) -> int | None:
+def _original_items(measurements: RequestMeasurements) -> int | None:
     for m in measurements.components:
         if m.component == ComponentName.RETRIEVED:
             return m.items
-    return result.items_total or None
+    return None

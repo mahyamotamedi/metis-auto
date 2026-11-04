@@ -571,8 +571,18 @@ def _sidebar(chat: ChatWorkspace, banner) -> None:
     t = _s().ui_text
     direct = chat.journey == Journey.DIRECT
     with st.sidebar:
-        if not direct:
-            _bot_list()
+        _advanced(chat, banner)
+        st.html(side_title_html(S("set_header")))
+        key = "mx-settings-focus" if ws.settings_focus else "mx-settings"
+        with st.container(key=key):
+            for card in setting_cards(
+                chat, t, context_available=ws.context_available(t)
+            ):
+                _switch(card, show_label=True)
+                if card.disabled_reason:
+                    st.caption(card.disabled_reason)
+            if direct:
+                _model_selector(chat)
         st.button(
             S("ws_new_chat" if direct else "ws_new_conversation"),
             key="new_conversation",
@@ -589,18 +599,8 @@ def _sidebar(chat: ChatWorkspace, banner) -> None:
                 type="tertiary",
             )
         st.caption(ws.conversations_note(t))
-        st.html(side_title_html(S("set_header")))
-        key = "mx-settings-focus" if ws.settings_focus else "mx-settings"
-        with st.container(key=key):
-            for card in setting_cards(
-                chat, t, context_available=ws.context_available(t)
-            ):
-                _switch(card, show_label=True)
-                if card.disabled_reason:
-                    st.caption(card.disabled_reason)
-            if direct:
-                _model_selector(chat)
-        _advanced(chat, banner)
+        if not direct:
+            _bot_list()
 
 
 def _model_selector(chat: ChatWorkspace) -> None:
@@ -624,7 +624,7 @@ def _advanced(chat: ChatWorkspace, banner) -> None:
     s, ws = _s(), _ws()
     t = s.ui_text
     session = chat.session
-    with st.expander(S("set_advanced")):
+    with st.expander(S("set_advanced"), expanded=True):
         s.mode = LIVE if ws.live else FAKE
         choice = ws.live_choice(t)
         st.radio(
@@ -673,9 +673,7 @@ def _advanced(chat: ChatWorkspace, banner) -> None:
             on_change=_on_compression,
             horizontal=True,
         )
-        if session.compression == CompressionMode.LLMLINGUA2:
-            st.warning(S("llmlingua_warning"), icon=":material/warning:")
-        elif session.compression == CompressionMode.FAKE:
+        if session.compression == CompressionMode.FAKE:
             st.caption(S("compression_fake_note"))
         s.dedup = session.dedup
         st.toggle(
@@ -737,12 +735,10 @@ def _live_state(chat: ChatWorkspace):
 
 
 def _live_banner(banner) -> None:
-    """Live ON, blocked and stopped stay prominent above the chat; the calm
-    fake state is the header chip, with its reason under Advanced."""
-    if banner.state == "off":
+    """Mode stays in the header chip; only blocked/stopped errors need a banner."""
+    if banner.state in {"off", "on"}:
         return
-    show = {"on": st.warning, "blocked": st.error, "stopped": st.error}[banner.state]
-    show(f"**{banner.title}.** {banner.detail}")
+    st.error(f"**{banner.title}.** {banner.detail}")
 
 
 def _notice_once() -> None:

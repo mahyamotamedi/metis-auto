@@ -63,7 +63,9 @@ def make_loader(tmp_path, *, live_enabled=False, key=None, run_cap=None):
     return load
 
 
-def page(tmp_path, *, loader=None, client_factory=None, lang="en") -> AppTest:
+def page(
+    tmp_path, *, loader=None, client_factory=None, compressor_factory=None, lang="en"
+) -> AppTest:
     """The app on its entry screen, in English (``?lang=en``): the default is
     Persian since Stage 2 (UI-V06); the assertions below read the English
     strings."""
@@ -74,6 +76,8 @@ def page(tmp_path, *, loader=None, client_factory=None, lang="en") -> AppTest:
     at.session_state["_test_client_factory"] = client_factory or (
         lambda _l, _r: FakeModelClient()
     )
+    if compressor_factory is not None:
+        at.session_state["_test_compressor_factory"] = compressor_factory
     return at.run()
 
 
@@ -135,8 +139,9 @@ def test_loads_in_fake_mode_and_a_message_round_trips(tmp_path):
 
 
 def test_bots_are_listed_and_their_instructions_reach_the_request(tmp_path):
-    fa, en, *_ = load_presets()
-    at = chatbot(tmp_path, bot="en_faq")
+    presets = {p.key: p for p in load_presets()}
+    fa, en = presets["fa_shop_dupes"], presets["en_faq_dupes"]
+    at = chatbot(tmp_path, bot="en_faq_dupes")
     assert not at.exception
     chat = _chat(at)
     at = send(at, "How do I export my notes to PDF?")
@@ -168,7 +173,7 @@ def test_toggles_reach_the_backend(tmp_path):
     assert not chat.deepseek_thinking
     assert _chat(at) is chat  # toggles keep the run and the cache
 
-    at = chatbot(tmp_path, bot="fa_shop")
+    at = chatbot(tmp_path, bot="fa_shop_dupes")
     chat = _chat(at)
     at.toggle(key="sw_cache").set_value(True).run()
     at = send(at, "هزینه ارسال برای شهرستان چقدر است؟")
@@ -198,6 +203,57 @@ def test_a_failed_toggle_is_reported_and_reverted(tmp_path):
     assert "compression unavailable" in at.error[0].value
 
 
+def test_live_and_llmlingua_have_no_persistent_warning_banners(tmp_path):
+    from metis_auto.adapters.compressors import FakeCompressor
+
+    at = direct(
+        tmp_path,
+        loader=make_loader(tmp_path, live_enabled=True, key=SYNTHETIC_KEY),
+        compressor_factory=lambda _l, _n: FakeCompressor(),
+    )
+    at.radio(key="mode").set_value(LIVE).run()
+    assert _chat(at).live
+    assert not at.warning
+    at.radio(key="compression").set_value(CompressionMode.LLMLINGUA2.value).run()
+    assert _chat(at).compression == CompressionMode.LLMLINGUA2
+    assert not at.warning
+
+
+def test_persian_dedup_sample_preserves_original_shop_knowledge():
+    presets = {p.key: p for p in load_presets()}
+    original, demo = presets["fa_shop"], presets["fa_shop_dupes"]
+    assert demo.instructions == original.instructions
+    assert tuple(dict.fromkeys(demo.documents)) == original.documents
+
+
+@pytest.mark.parametrize("dedup", [False, True])
+def test_persian_knowledge_reaches_the_model_unchanged(tmp_path, dedup):
+    invocations = []
+
+    class Capture(FakeModelClient):
+        def invoke(self, invocation):
+            invocations.append(invocation)
+            return super().invoke(invocation)
+
+    at = chatbot(
+        tmp_path,
+        bot="fa_shop_dupes",
+        client_factory=lambda _l, _r: Capture(),
+    )
+    if dedup:
+        at.toggle(key="dedup").set_value(True).run()
+    at = send(at, "هزینه ارسال برای شهرستان چقدر است؟")
+    assert not at.exception
+    assert len(invocations) == 1
+    parts = invocations[0].parts
+    preset = next(p for p in load_presets() if p.key == "fa_shop")
+    knowledge = [p.text for p in parts if p.component.value == "retrieved"]
+    assert tuple(dict.fromkeys(knowledge)) == preset.documents
+    assert "۶۵ هزار تومان" in "\n".join(knowledge)
+    assert parts[0].text == preset.instructions
+    assert parts[-1].text == "هزینه ارسال برای شهرستان چقدر است؟"
+
+
 def test_live_switch_blocked_by_configuration_says_why(tmp_path):
     at = direct(tmp_path)
     at.radio(key="mode").set_value(LIVE).run()
@@ -212,7 +268,7 @@ def test_live_switch_blocked_by_configuration_says_why(tmp_path):
 
 def test_no_message_content_in_logs(tmp_path, caplog):
     caplog.set_level(logging.DEBUG)
-    at = chatbot(tmp_path, bot="en_faq")
+    at = chatbot(tmp_path, bot="en_faq_dupes")
     at = send(at, f"{MARKER} how do I sync?")
     at = send(at, f"{MARKER} write a python function to list notes")
     assert not at.exception
@@ -251,7 +307,7 @@ def test_live_budget_refusal_is_explained(tmp_path):
     at.radio(key="mode").set_value(LIVE).run()
     chat = _chat(at)
     assert chat.live
-    assert "Live calls ON" in at.warning[0].value
+    assert not at.warning  # the header chip indicates live mode without a banner
     at = send(at, f"{MARKER} hello")
     report = _messages(at)[-1]["report"]
     assert report.failure == "budget_exhausted"

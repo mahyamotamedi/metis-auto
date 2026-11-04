@@ -398,7 +398,8 @@ set_focus_note = { en = "The settings are in the sidebar.", fa = "تنظیمات
 [workspace]
 # Chat workspaces (UI-S05, UI-S06), the direct-chat banner (UI-B04) and the savings panel (UI-D*).
 ws_bots = { en = "Chatbots", fa = "چت‌بات‌ها" }
-ws_bots_note = { en = "SYNTHETIC bots written for the demo; the real bot list comes later.", fa = "چت‌بات‌های ساختگی که برای دمو نوشته شده‌اند؛ فهرست چت‌بات‌های واقعی بعداً می‌آید." }
+# Updated demo-list explanation; Persian wording [PLACEHOLDER: Persian review].
+ws_bots_note = { en = "One SYNTHETIC sample per language. The Metis list below shows only bots with usable stored RAG passages.", fa = "برای هر زبان یک نمونهٔ ساختگی نمایش داده می‌شود. فهرست متیس در پایین فقط ربات‌های دارای متن بازیابی‌شدهٔ قابل استفاده را نشان می‌دهد." }
 ws_lang_fa = { en = "Persian", fa = "فارسی" }
 ws_lang_en = { en = "English", fa = "انگلیسی" }
 ws_rag_yes = { en = "RAG", fa = "با بازیابی (RAG)" }

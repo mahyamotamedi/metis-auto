@@ -64,6 +64,7 @@ def row(
         "memory_enabled": memory,
         "summarizer_mode": summariser,
         "corpus_ids_state": corpus,
+        "has_rag": corpus == "ok",
         "rag_top_k": top_k,
         "sessions": sessions,
         "requests": requests,
@@ -199,7 +200,7 @@ def test_filters_for_language_rag_memory_and_instructions():
 
 
 def test_the_list_pages_by_fifty_with_more():
-    many = [row(n, sessions=1, requests=n) for n in range(1, 131)]
+    many = [row(n, sessions=1, requests=n, corpus="ok") for n in range(1, 131)]
     d, _ = directory(many)
     ws = workspace(d)
     view = ws.bot_list(EN)
@@ -259,7 +260,7 @@ def test_synthetic_samples_stay_at_the_top_of_the_list():
     assert view.synthetic and all(
         c.label.startswith("[SYNTHETIC]") for c in view.synthetic
     )
-    assert [c.label for c in view.real][:1] == ["bot-001"]
+    assert [c.label for c in view.real] == ["bot-003", "bot-004"]
     assert view.synthetic_title == EN("ws_synthetic_samples")
 
 
@@ -268,7 +269,7 @@ def test_a_card_line_reads_label_language_rag_and_chats():
     line = {c.label: c.facts for c in ws.bot_list(EN).real}["bot-003"]
     assert "RAG" in line and "English" in line
     assert "10" in line  # sessions, LTR-isolated
-    fa_line = {c.label: c.facts for c in ws.bot_list(FA).real}["bot-001"]
+    fa_line = ws.card_facts(ws.directory.card("bot-001"), FA)
     assert FA("ws_lang_fa") in fa_line
 
 

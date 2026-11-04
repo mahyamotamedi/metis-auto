@@ -201,6 +201,42 @@ def test_compression_alone_is_unchanged_by_the_dedup_code(loader):
     assert report.dedup == {}
 
 
+@pytest.mark.parametrize("layout", [None, "dataset_positions"])
+@pytest.mark.parametrize("repeated", [False, True])
+def test_compression_collisions_do_not_run_a_second_dedup(loader, layout, repeated):
+    """Distinct source chunks can compress to the same text. Keep both outputs
+    so the invocation still matches the measured sent request and trace."""
+    from metis_auto.adapters.compressors import FakeCompressor
+    from metis_auto.ports import CompressedText
+
+    class CollidingCompressor(FakeCompressor):
+        def compress(self, text, rate):
+            return CompressedText("[SYNTHETIC] مشترک", len(text.split()), 2)
+
+    first, second = D1 * 2, D2 * 2  # both exceed compression's min_chars
+    documents = [first, second, first] if repeated else [first, second]
+    chat = session(
+        loader,
+        retrieved=documents,
+        model_id=MODEL,
+        dedup=True,
+        compression=CompressionMode.LLMLINGUA2,
+        compressor_factory=lambda _l, _n: CollidingCompressor(),
+        context_layout=layout,
+    )
+    chat.ask(Q)
+    sent = chat.last_trace.sent_request
+    measured_texts = [item.text for item in sent.retrieved.value.items]
+    assert measured_texts == ["[SYNTHETIC] مشترک"] * 2
+    assert retrieved_texts(sent_parts()) == measured_texts
+    (deduped,) = payloads(chat, ContextDeduped)
+    assert deduped.items_removed == int(repeated)
+    (built,) = payloads(chat, ContextBuilt)
+    row = next(c for c in built.record.components if c.component.value == "retrieved")
+    assert row.items_total == len(documents)
+    assert row.items_kept == 2
+
+
 # --- bot-level exact cache with dedup ----------------------------------------
 
 

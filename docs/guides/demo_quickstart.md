@@ -208,7 +208,7 @@ Everything below works in **fake mode** (free) unless it says *live*. Fake answe
 | 5 | **یک تابع پایتون بنویس که بررسی کند شماره سفارش ۸ رقمی است** (or `write a python function to check an 8-digit order number`) | Badge **re-routed**: Details → Features shows *code no, coding intent yes*; Routing shows `coding_intent_appeared` and a **stronger model**. A very different message (code, a request for code, another language, a much longer message) re-routes. Try **Can I pay cash on delivery outside Tehran?** for a language switch. |
 | 6 | Settings: **Bot-level cache [DEMO]** on, **New user (same bot)**, ask **هزینه ارسال برای شهرستان چقدر است؟**; then **New user** again and ask **exactly the same** | The second user's answer is **served by cache**: cost 0, the *Cache* bar in the chart. Two different users of the same bot share an answer (a DEMO setting; the serving default shares only within one conversation). Turn the toggle on **before** the first user asks, or that first answer is stored for its own conversation only. A cache hit never anchors. |
 | 7 | *Live only:* load a preset, ask 2–3 questions in a row | If the provider served the long, shared start of the prompt from its cache, Details → Tokens shows **cached input** and the chart a **Provider cache** saving (the cached part is billed at a discount). It is **best effort**: the Stage 7.5 probe saw a hit (1,152 cached tokens on a repeated gpt-4o-mini request), but the UI's live smoke test of 2026-10-19 saw **none** on four consecutive gpt-4o-mini calls ([results](../references/metis_demo_ui_live_check.md)). So present it as “when it happens, it shows here”, not as a promise. Fake mode always shows 0 (the fake reports no provider usage; owner decision Q-43). |
-| 8 | Settings: Compression **Fake**, then ask anything | A *Compression* saving appears (the documents were shortened before sending; the instructions never are). **LLMLingua-2** is the real compressor: point out its warning: slow on a laptop CPU (Details → Compression time, and Overhead), quality unmeasured, and it drops the Persian half-space (ZWNJ). That is the trade-off: fewer tokens, more latency, unknown quality. |
+| 8 | Settings: Compression **Fake**, then ask anything | A *Compression* saving appears (the documents were shortened before sending; the instructions never are). **LLMLingua-2** is the real compressor: slow on a laptop CPU (Details → Compression time, and Overhead), quality unmeasured, and it drops the Persian half-space (ZWNJ). The persistent warning banner is removed; these limitations still apply. That is the trade-off: fewer tokens, more latency, unknown quality. |
 | 9 | Cost panel: **Session** tab | The whole run: **actually paid vs the premium estimate**, % saved, and the decomposition: routing, compression, cache, provider cache, extra cost, in that fixed order, adding up exactly to what was paid. Close with the caveat line: the premium figure is an **estimate**, never a call. |
 
 Optional: *More (fake mode)* → **Cut off the next answer**, then ask anything → *ESCALATED … the session now anchors on it*: a poor answer moves up to a stronger model, and the conversation stays there.
@@ -226,7 +226,7 @@ Optional: *More (fake mode)* → **Cut off the next answer**, then ask anything 
 ### 7.5 Fake vs live in the UI
 
 - **Fake** (default): no key, no network, no cost. Answers are `[SYNTHETIC] fake answer n from <model>`.
-- **Live**: needs your key in `.env` (§4) **and** `[live] enabled = true` in `config/local.toml` (§5). The Mode switch is the first key; `local.toml` is the second. If either is missing, the switch stays on Fake and the banner says **Live calls BLOCKED** with every reason. When live is on, the banner says so, every call goes through the spend guard and the ledger, and use **only your own or SYNTHETIC messages** (the presets are synthetic). If the guard refuses a call, the answer says *The budget guard stopped this call before it was made … Nothing was charged.*
+- **Live**: needs your key in `.env` (§4) **and** `[live] enabled = true` in `config/local.toml` (§5). The Mode switch is the first key; `local.toml` is the second. If either is missing, the switch stays on Fake and the banner says **Live calls BLOCKED** with every reason. When live is on, the header's mode chip indicates it without a persistent warning banner. Every call still goes through the spend guard and the ledger; use **only your own or SYNTHETIC messages** (the presets are synthetic), unless real-data use is explicitly approved. If the guard refuses a call, the answer says *The budget guard stopped this call before it was made … Nothing was charged.*
 - **gpt-5-nano in live mode:** with the long presets, routing may pick `gpt-5-nano` (the English preset does). In the live smoke test (generation limit lowered to 512) it spent the whole limit on hidden reasoning, gave no visible answer, and was **escalated** to `gpt-4o-mini` (badge *+ escalated*, an *extra cost* bar). At the UI's normal limit (4,096) it may answer, but bill many hidden reasoning tokens (Details → Tokens → reasoning). Either way it is the system working, not a bug; the placeholder that under-ranks gpt-5-nano on long prompts is Q-44.
 - Cost of a live demo: with a preset, each message sends about 1,300–2,500 input tokens to a cheap model, roughly 0.0002–0.0006 USD with a short answer (an estimate from the price table, not a measurement); the whole demo script is well under 0.01 USD. The demo seed and the other toggles cost nothing extra.
 
@@ -324,6 +324,29 @@ settings: routing sticky_v1, compression off, cache_scope session, seed off, dee
 In fake mode, costs are what the fake answer *would* cost; nothing is charged and the budget does not move.
 
 ### 7.8 The sprint winners in the demo (rules-only router, duplicate-chunk dedup, bot-level cache)
+
+**Finding the controls (2026-11-05):** once a chat workspace is open, Advanced
+is the **first, initially expanded section** of the sidebar. In Persian/RTL
+layout the sidebar is on the **right**; the savings panel is on the left. The
+Live/Fake mode control is inside Advanced. Enabling live calls in configuration
+only grants permission: explicitly select Live in this control to use the API.
+
+The bot list shows one Persian and one English synthetic dedup sample, rather
+than both original and dedup variants. The Metis list shows only bots with usable
+stored RAG passages. They receive the most recent logged turn's nonblank chunks,
+even if the corpus configuration snapshot is missing; this is fixed recorded
+context, **not a fresh retrieval for your typed question**. Bots with no usable
+stored passages are hidden, not deleted from the source dataset.
+
+The Persian dedup sample now repeats the original shop's **same full knowledge**,
+not shortened documents with different policies. For example: Tehran delivery is
+1–2 business days, other cities 2–5; shipping is 45,000/65,000 toman respectively,
+free above one million; cash on delivery is limited to Tehran orders below
+three million. Test answer quality with compression **Off** first: dedup removes
+only exact copies, whereas LLMLingua-2 and Fake compression are lossy. Fake model
+mode returns canned mechanism-test answers, not grounded customer support.
+After upgrading an already-running demo, restart the server and begin a **new
+conversation** so old wrong answers do not remain in the model's history.
 
 Everything here is a labelled **DEMO selection**: the serving defaults (`fixed_model` routing, `session` cache scope, `pass_through` context) do not change, and every figure is **provisional: cost only, pending quality**. The live savings are a **mechanism demo** on your own or SYNTHETIC messages; the sprint's replay figures are on the **Results** page. Do not quote the live numbers as results. **Start in fake mode** (free, no key, no spend); the steps below need nothing else.
 
