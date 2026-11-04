@@ -208,8 +208,11 @@ def gates(
         Gate(
             "Metis allows sending samples to model APIs (O-1, licence)",
             "met" if samples_allowed else "missing",
-            "no written answer recorded; until then no dataset text goes to any "
-            "provider",
+            "the project owner confirmed on 2026-11-04 that Metis answered in "
+            "writing (held by the owner; see gates.metis_answer_ref)"
+            if samples_allowed
+            else "no written answer recorded; until then no dataset text goes to "
+            "any provider",
         ),
         Gate(
             "owner approval in chat per run, after the printed estimate",

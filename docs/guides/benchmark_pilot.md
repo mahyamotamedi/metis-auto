@@ -4,22 +4,23 @@ Decisions: [ADR-0053](../adr/0053-paid-benchmark-p1-p3.md), ADR-0060. Config: `c
 
 **Nothing here has run. Every paid step refuses until its gates are open and the owner has set the values below.**
 
-## 0. Owner questions (nothing runs until each is answered)
+## 0. Owner decisions (answered 2026-11-04)
 
-Each is an `[OWNER-PLACEHOLDER]` in `config/evaluation/benchmark.toml`, left unset on purpose; the tests expect them unset in the committed file, so set them in your local copy or in a reviewed commit. Traces: FR-EVAL-04, QA-COST, ADR-0053.
+All answered by the project owner on 2026-11-04 and recorded in `config/evaluation/benchmark.toml` (each line says "Owner decision 2026-11-04 (Q-nn)"). Traces: FR-EVAL-04, QA-COST, ADR-0053, ADR-0062.
 
-| # | Key | Question for the owner |
+| # | Key | Answer |
 |---|---|---|
-| Q-62 | `run.hard_cap_usd` | How many USD of the 92 USD ceiling (ADR-0018 amendment 3; an upper bound) may this benchmark spend, pilot and main together? |
-| Q-63 | `run.max_output_tokens` | Generation limit per answer? (The golden answers used 8,192.) |
-| Q-63 | `run.order_seed` | Seed of the call-order shuffle. |
-| Q-63 | `judges.models` | Two judge models from different provider families (the code refuses same-family pairs)? |
-| Q-63 | `judges.max_output_tokens`, `judges.instruction_language` | Judge reply limit; instruction language `en` or `fa`? |
-| Q-63 | `labels.acceptable_score`, `labels.cheap_arms` | Score at or above which an answer is acceptable (ADR-0006 vs the PDF rule, final plan O-1); which arms define `cheap_ok`? |
-| Q-64 | `spend_share.expected_machines`, `max_age_hours` | Which machine labels count, and how old may a ledger summary be? |
-| O-1 | `gates.metis_allows_samples`, `metis_answer_ref` | Has Metis answered in writing that samples may go to model APIs? Where is the answer recorded? |
+| Q-62 | `run.hard_cap_usd` | **35 USD** for the benchmark (pilot and main together), under the 92 USD ceiling of ADR-0018 amendment 3. |
+| Q-63 | `run.max_output_tokens`, `run.order_seed` | **8192**; seed `p1-order-2026-11-04`. |
+| Q-63 | `judges.models` | **`gpt-4o-mini` and `deepseek-v4-flash`** (two families). Both are also answering arms, so self-preference is possible; the 60-item human spot-check is the control. |
+| Q-63 | `judges.max_output_tokens`, `judges.instruction_language` | **64**; **`en`**. |
+| Q-63 | `labels.acceptable_score`, `labels.cheap_arms` | **0.5** (fixed before any result existed; do not change it after seeing scores); **`gpt-5-nano`, `gpt-4o-mini`, `deepseek-v4-flash`**. |
+| Q-64 | `spend_share.expected_machines`, `max_age_hours` | **`kimia`, `mahya`, `saba`, `parham`**; **24** hours. |
+| O-1 | `gates.metis_allows_samples`, `metis_answer_ref` | **Open (true).** The owner confirmed on 2026-11-04 that Metis answered in writing that samples may be sent to model APIs; the written answer is held by the owner, and `metis_answer_ref` says so. |
 
-Once the values are set, `plan --estimate` prints the computed estimate and refuses before that (see sections 1 and 3).
+Still missing before a paid run: **the four ledger summaries** in `reports/spend/ledgers/` (none exists; none is faked). `plan` and `spend_share.py merge` list the missing ones, and a paid run refuses until every expected machine has exported its own (section 2). The owner's per-run approval in chat, after the printed estimate, is still required (gate 3).
+
+The strict estimate (`plan --estimate --with-db`) needs the golden-v2 database for exact input sizes. Without it, `plan --estimate` refuses with only that reason.
 
 ## 1. Anyone, any machine: no database, no call, no key
 

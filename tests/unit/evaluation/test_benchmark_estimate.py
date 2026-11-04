@@ -36,16 +36,105 @@ EXPECTED_GAPS = [
 ]
 
 
+CONFIG = ROOT / "config/evaluation/benchmark.toml"
+
+
 def committed():
-    raw = tomllib.loads(
-        (ROOT / "config/evaluation/benchmark.toml").read_text(encoding="utf-8")
-    )
+    raw = tomllib.loads(CONFIG.read_text(encoding="utf-8"))
     return parse_config(raw), raw
 
 
-def test_committed_config_leaves_every_owner_value_unset():
-    config, _ = committed()
-    assert estimate_gaps(config) == EXPECTED_GAPS
+def config_without(tmp_path: Path, *keys: str, samples_gate: bool | None = None):
+    """A temporary copy of the committed benchmark config with the given
+    ``section.key`` lines removed (and optionally the Metis gate set), so the
+    refusal tests never depend on the committed values. Returns its path."""
+    out, section = [], ""
+    for line in CONFIG.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            section = stripped.strip("[]")
+        name = stripped.split("=")[0].strip()
+        if f"{section}.{name}" in keys and "=" in stripped:
+            continue
+        if samples_gate is not None and name == "metis_allows_samples":
+            line = f"metis_allows_samples = {str(samples_gate).lower()}"
+        if samples_gate is False and name == "metis_answer_ref":
+            continue
+        out.append(line)
+    path = tmp_path / "benchmark.toml"
+    path.write_text("\n".join(out) + "\n", encoding="utf-8")
+    return path
+
+
+def bench_with(module, path: Path):
+    """Make the script's ``Benchmark()`` read ``path`` (an absolute path
+    replaces the repo root in the join)."""
+    original = module.Benchmark
+    return lambda: original(config_path=str(path))
+
+
+def test_committed_config_has_every_owner_value_set():
+    config, raw = committed()
+    assert estimate_gaps(config) == []
+    assert str(config.run.hard_cap_usd) == "35"
+    assert config.run.max_output_tokens == 8192
+    assert config.judges.models == ("gpt-4o-mini", "deepseek-v4-flash")
+    assert config.labels.acceptable_score == 0.5
+    assert config.spend_share.expected_machines == ("kimia", "mahya", "saba", "parham")
+    assert config.gates.metis_allows_samples is True
+    assert "Metis answered in writing" in (config.gates.metis_answer_ref or "")
+
+
+@pytest.mark.parametrize("key", EXPECTED_GAPS)
+def test_removing_any_one_owner_value_is_reported(tmp_path, key):
+    path = config_without(tmp_path, key)
+    raw = tomllib.loads(path.read_text(encoding="utf-8"))
+    assert estimate_gaps(parse_config(raw)) == [key]
+
+
+def test_the_three_unusable_models_stay_refused_as_arms():
+    from metis_auto.evaluation.benchmark.arms import callable_arms
+    from metis_auto.wiring.benchmark import Benchmark
+
+    bench = Benchmark()
+    for model in ("gpt-4.1-nano", "mimo-v2.5", "jev-latest"):
+        assert model in bench.config.arms.not_callable
+    callable_ = callable_arms(bench.arms(bench.loaded()))
+    assert not {"gpt-4.1-nano", "mimo-v2.5", "jev-latest"} & set(callable_)
+    assert "gpt-4o-mini" in callable_
+
+
+def test_missing_ledger_summaries_are_reported_never_faked(tmp_path):
+    from metis_auto.wiring.benchmark import Benchmark
+
+    bench = Benchmark()
+    bench.root = tmp_path
+    status = bench.summary_status()
+    assert status["folder_exists"] is False and status["present"] == []
+    assert status["missing"] == ["kimia", "mahya", "parham", "saba"]
+    folder = tmp_path / bench.config.spend_share.summaries_dir
+    folder.mkdir(parents=True)
+    (folder / "kimia.json").write_text("{}", encoding="utf-8")
+    again = bench.summary_status()
+    assert again["present"] == ["kimia"]
+    assert again["missing"] == ["mahya", "parham", "saba"]
+
+
+def test_spend_share_merge_warns_about_missing_summaries(monkeypatch, capsys, tmp_path):
+    share = _script("spend_share.py")
+    original = share.Benchmark
+
+    def factory():
+        bench = original()
+        bench.root = tmp_path
+        return bench
+
+    monkeypatch.setattr(share, "Benchmark", factory)
+    monkeypatch.setattr(sys, "argv", ["spend_share.py", "merge"])
+    assert share.main() == 0
+    captured = capsys.readouterr()
+    assert "ledger summaries missing" in captured.err
+    assert json.loads(captured.out)["summary_status"]["folder_exists"] is False
 
 
 def test_gaps_empty_once_every_value_is_set():
@@ -100,14 +189,27 @@ def _script(name: str):
     return module
 
 
-def test_benchmark_plan_estimate_refuses_while_values_unset(monkeypatch, capsys):
+def test_benchmark_plan_estimate_refuses_while_values_unset(
+    monkeypatch, capsys, tmp_path
+):
     bench = _script("benchmark.py")
+    path = config_without(tmp_path, "run.max_output_tokens", "judges.models")
+    monkeypatch.setattr(bench, "Benchmark", bench_with(bench, path))
     monkeypatch.setattr(sys, "argv", ["benchmark.py", "plan", "--estimate"])
     assert bench.main() == 1
     refused = json.loads(capsys.readouterr().out)["refused"]
     assert "set by owner: run.max_output_tokens" in refused
     assert "set by owner: judges.models" in refused
     assert any("--with-db" in r for r in refused)
+
+
+def test_committed_config_needs_only_the_database_for_the_estimate(monkeypatch, capsys):
+    bench = _script("benchmark.py")
+    monkeypatch.setattr(sys, "argv", ["benchmark.py", "plan", "--estimate"])
+    assert bench.main() == 1
+    assert json.loads(capsys.readouterr().out)["refused"] == [
+        "input sizes need the golden-v2 database: add --with-db"
+    ]
 
 
 def test_sampling_plan_strict_refuses_while_allocation_unset(monkeypatch, capsys):
@@ -168,8 +270,12 @@ def test_scope_selects_pilot_or_main_records(monkeypatch):
         bench.record_ids("everything")
 
 
-def test_cut_first_d_plans_refuse_with_counts_while_gates_are_open(monkeypatch, capsys):
+def test_cut_first_d_plans_refuse_with_counts_while_gates_are_open(
+    monkeypatch, capsys, tmp_path
+):
     bench = _script("benchmark.py")
+    path = config_without(tmp_path, "judges.models", samples_gate=False)
+    monkeypatch.setattr(bench, "Benchmark", bench_with(bench, path))
     monkeypatch.setattr(
         sys, "argv", ["benchmark.py", "cache-hit-plan", "--hits", "300"]
     )
@@ -183,3 +289,15 @@ def test_cut_first_d_plans_refuse_with_counts_while_gates_are_open(monkeypatch, 
     )
     assert bench.main() == 1
     assert "--versions" in capsys.readouterr().out
+
+
+def test_cut_first_d_plans_pass_the_gates_with_the_committed_config(
+    monkeypatch, capsys
+):
+    bench = _script("benchmark.py")
+    monkeypatch.setattr(
+        sys, "argv", ["benchmark.py", "cache-hit-plan", "--hits", "300"]
+    )
+    assert bench.main() == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["preview"]["judge_calls"] == 1200 and out["makes_calls"] is False

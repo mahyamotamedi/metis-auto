@@ -391,12 +391,34 @@ class Benchmark:
                 out.append(summary)
         return out
 
+    def summary_status(self) -> dict[str, Any]:
+        """Which machines' ledger summaries exist in the summaries folder and
+        which expected ones are missing (labels only; reads file names)."""
+        folder = self.root / self.config.spend_share.summaries_dir
+        present = (
+            sorted(p.stem for p in folder.glob("*.json")) if folder.exists() else []
+        )
+        expected = self.config.spend_share.expected_machines
+        return {
+            "folder": self.config.spend_share.summaries_dir,
+            "folder_exists": folder.exists(),
+            "present": present,
+            "missing": (
+                sorted(set(expected) - set(present))
+                if expected is not None
+                else "set by owner: spend_share.expected_machines"
+            ),
+            "note": "a paid run refuses until every expected machine has exported "
+            "its summary (scripts/spend_share.py export --machine <label>)",
+        }
+
     def budget(
         self, machine: str | None, loaded: LoadedSettings | None = None
     ) -> dict[str, Any]:
         loaded = loaded or self.loaded()
         b = loaded.settings.budget
         out: dict[str, Any] = {
+            "ledger_summaries": self.summary_status(),
             "currency": b.currency,
             "lifetime_ceiling": _s(b.lifetime_ceiling),
             "local_lifetime_cap": _s(b.lifetime_cap),

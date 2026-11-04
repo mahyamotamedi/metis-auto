@@ -60,7 +60,14 @@ def main() -> int:
         if folder.exists()
         else []
     )
-    print(json.dumps(merge_summaries(summaries), indent=2))
+    out = merge_summaries(summaries)
+    status = bench.summary_status()
+    out["summary_status"] = status
+    if not status["folder_exists"] or status["missing"]:
+        print(
+            f"warning: ledger summaries missing: {status['missing']}", file=sys.stderr
+        )
+    print(json.dumps(out, indent=2))
     return 0
 
 

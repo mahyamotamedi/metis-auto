@@ -54,8 +54,11 @@ def ready_config(allowed=True):
     return parse_config(raw)
 
 
-def test_committed_config_refuses_both_checks_with_every_reason():
-    _, config = committed()
+def test_a_config_missing_a_value_and_the_gate_refuses_with_every_reason(tmp_path):
+    from tests.unit.evaluation.test_benchmark_estimate import config_without
+
+    path = config_without(tmp_path, "judges.models", samples_gate=False)
+    config = parse_config(tomllib.loads(path.read_text(encoding="utf-8")))
     reasons = readiness_reasons(config)
     assert "set by owner: judges.models" in reasons
     assert any(r.startswith("gate missing") and "O-1" in r for r in reasons)
@@ -150,3 +153,8 @@ def test_ablation_plan_counts_generation_and_judging():
     assert plan["generation"]["calls"] == 2
     assert plan["generation"]["lower_bound_usd"] is not None
     assert plan["makes_calls"] is False and CATALOGUE is not None
+
+
+def test_committed_config_passes_both_gates():
+    _, config = committed()
+    assert readiness_reasons(config) == []
