@@ -30,18 +30,27 @@ pooled_cohorts = ["Remaining accounts"]
 size = 20
 seed = "p1-pilot-2026-11-04"
 
+[reference]
+# Catalogue and price files of this benchmark (ADR-0053 amendment 5): the
+# hash-locked live defaults stay as they are; these copies add
+# deepseek-v4.1-flash and disable gpt-4.1-nano and mimo-v2.5.
+catalogue = "reference/catalogue-metis-test-2026-11-04-v41.toml"
+prices = "reference/prices-metis-2026-11-04-v41.toml"
+
 [arms]
 # The plan's callable test models (P-1). gpt-5.5 is the reference: its answers
 # exist (ADR-0030) and are never requested again. The logged answer (free) is
 # not wired yet. JEV is a decision model, never an answering arm.
-requested = ["gpt-5-nano", "gpt-4.1-nano", "gpt-4o-mini", "deepseek-v4-flash", "mimo-v2.5"]
+# 2026-11-04 (ADR-0053 amendment 5): only callable models are requested;
+# gpt-4.1-nano and mimo-v2.5 stay listed under [arms.not_callable] below.
+requested = ["gpt-5-nano", "gpt-4o-mini", "deepseek-v4-flash"]
 
 [arms.not_callable]
 # Evidence: router live check (R6) and the owner's probe, 2026-11-03
 # (docs/references/jev_model_note.md; TODO-17, Q-42). The catalogue flags are
 # the catalogue owner's change; until it lands, this list keeps them out.
-"gpt-4.1-nano" = "not callable on Metis: HTTP 404 model_not_found ('The model gpt-4.1-nano has been deprecated'), live check 2026-11-03 (TODO-17)"
-"mimo-v2.5" = "not callable on Metis: HTTP 400 'Unsupported model mimo-v2.5' in every request shape, live check 2026-11-03 (Q-42)"
+"gpt-4.1-nano" = "not callable on Metis: HTTP 404 model_not_found ('The model gpt-4.1-nano has been deprecated'), live check 2026-11-03 (TODO-17), again 2026-11-04 (docs/references/metis_model_availability_2026-11-04.md)"
+"mimo-v2.5" = "not callable on Metis: HTTP 400 'Unsupported model mimo-v2.5' in every request shape, live check 2026-11-03 (Q-42), HTTP 400 again 2026-11-04 (docs/references/metis_model_availability_2026-11-04.md)"
 "jev-latest" = "decision model, not a chat model: never an answering arm (jev_model_note.md)"
 
 [gates]
@@ -57,12 +66,11 @@ metis_answer_ref = "Project owner confirmed 2026-11-04 that Metis answered in wr
 # summaries_dir; a paid run counts every other machine's newest summary.
 summaries_dir = "reports/spend/ledgers"
 # Owner decision 2026-11-04 (Q-64): one label per machine whose summary counts.
-# reports/spend/ledgers/ does not exist yet: no summary is faked; `plan` and
-# `spend_share.py merge` report the missing ones, and a paid run refuses until
-# every machine has exported its own (scripts/spend_share.py export).
-# Owner decision 2026-11-04 (pilot): mahya, saba and parham removed because they
-# have not exported a summary; restore them before the main run if they made live calls.
-expected_machines = ["kimia"]
+# Owner decision 2026-11-04 (chat, main run): do not wait for parham and mahya;
+# the machines whose summaries count are kimia (exported) and saba (this run's
+# own ledger). Q-64 had listed four; restore them if they make live calls.
+# The team total stays under the 92 USD ceiling and the owner's 80 USD budget.
+expected_machines = ["kimia", "saba"]
 # Owner decision 2026-11-04 (Q-64): how old a summary may be, in hours.
 max_age_hours = 24
 
@@ -80,7 +88,12 @@ order_seed = "p1-order-2026-11-04"
 # Owner decision 2026-11-04 (Q-63): two models from different provider families
 # (OpenAI, DeepSeek). CAVEAT: both are also answering arms (cheap_arms below), so
 # self-preference is possible; the 60-item human spot-check is the control.
-models = ["gpt-4o-mini", "deepseek-v4-flash"]
+# 2026-11-04 (ADR-0053 amendment 5): the DeepSeek judge is deepseek-v4.1-flash
+# (accepted by the wrapper under its own ID; it reports the same model name,
+# deepseek-flash, as deepseek-v4-flash). Needs thinking = "disabled" in
+# config/local.toml [model_options] (config/local.example.toml). Scores of the
+# earlier judge are separate files (judging/deepseek-v4-flash.*), never mixed.
+models = ["gpt-4o-mini", "deepseek-v4.1-flash"]
 # Owner decision 2026-11-04 (Q-63): judge reply limit (strict JSON, short).
 max_output_tokens = 64
 # Owner decision 2026-11-04 (Q-63): instruction language.

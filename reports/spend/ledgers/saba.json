@@ -1,0 +1,30 @@
+{
+  "format": "ledger-summary-v1",
+  "machine": "saba",
+  "currency": "USD",
+  "total": "5.5869812200",
+  "charges": 4900,
+  "by_run": {
+    "judge-reply-check-20261104T103813Z": "0.000036135",
+    "p1-main-1": "0.6008491302",
+    "p1-main-1-deepseek-v4-flash": "0.6923475174",
+    "p1-main-1-gpt-4o-mini": "0.476392125",
+    "p1-main-1-gpt-5-nano": "0.476475087",
+    "p1-main-1-j-deepseek-v4.1-flash-deepseek-v4-flash": "0.1883312112",
+    "p1-main-1-j-deepseek-v4.1-flash-gpt-4o-mini": "0.2104657368",
+    "p1-main-1-j-deepseek-v4.1-flash-gpt-5-nano": "0.0919334394",
+    "p1-main-1-j-gpt-4o-mini-deepseek-v4-flash": "0.327473025",
+    "p1-main-1-j-gpt-4o-mini-gpt-4o-mini": "0.390904635",
+    "p1-main-1-j-gpt-4o-mini-gpt-5-nano": "0.314400570",
+    "p1-main-1-judge-deepseek-v4-flash": "0.0115904382",
+    "p1-main-1-judge-gpt-4o-mini": "0.0129036270",
+    "p1-main-1-judge-gpt-5-nano": "0.0096182130",
+    "pilot-1": "1.7799892488",
+    "wrapper-check-20261104T102505Z-5d33b5": "0.000162030",
+    "wrapper-check-20261104T102648Z-693a82": "0.001840245",
+    "wrapper-check-20261104T102707Z-ca4e03": "0.001268806"
+  },
+  "newest_charge": "2026-11-04T17:24:12.514454+00:00",
+  "created_at": "2026-11-04T18:24:17.113951+00:00",
+  "ledger_sha256": "f0f292ab3ca70bcc055d1bd84828e17ac98e58582dec27e1ffac7c0b11c30cc8"
+}

@@ -160,13 +160,26 @@ class SpendGuardedClient:
     cost is charged. A refused call returns a ``ModelError``
     (``spend_guard_refused``), so the E4 run records it and goes on.
 
-    A **transient** provider error (``connection`` or ``timeout``: no usage is
+    A **transient** provider error (``connection``, ``timeout`` or an
+    intermittent ``http_404:model_not_found``: no usage is
     reported, so the actual cost is unknown) charges the pre-call estimate,
     never zero, and does **not** stop the run; the run is stopped after
     ``max_consecutive_transient`` of them in a row (an outage). Any other
     uncomputable cost still stops it (ADR-0021; ADR-0053 amendment 2)."""
 
     TRANSIENT = frozenset({ErrorClass.CONNECTION, ErrorClass.TIMEOUT})
+    TRANSIENT_CODES = frozenset({"http_404:model_not_found"})
+    """Observed 2026-11-04 (ADR-0053 amendment 5): the wrapper answered
+    ``model_not_found`` for ``deepseek-v4-flash`` twice in about 60 calls, on
+    different records, while the same model answered the calls around them. A
+    model that is really gone fails every call, so the streak limit stops the
+    run after ``max_consecutive_transient`` of them in a row."""
+
+    def _is_transient(self, result: ModelResult) -> bool:
+        return isinstance(result, ModelError) and (
+            result.error_class in self.TRANSIENT
+            or result.provider_error_code in self.TRANSIENT_CODES
+        )
 
     def __init__(
         self,
@@ -198,13 +211,14 @@ class SpendGuardedClient:
                 source=self._inner.source,
             )
         result = self._inner.invoke(invocation)
-        if isinstance(result, ModelError) and result.error_class in self.TRANSIENT:
+        if isinstance(result, ModelError) and self._is_transient(result):
             assert estimate.cost.amount is not None  # allows() checked it
             self._guard.charge_amount(estimate.cost.amount)
             self._streak += 1
             if self._streak >= self.max_consecutive_transient:
                 self._guard.stop(
-                    f"{self._streak} consecutive {result.error_class.value} errors"
+                    f"{self._streak} consecutive transient errors "
+                    f"({result.provider_error_code or result.error_class.value})"
                 )
             return result
         self._streak = 0
@@ -243,10 +257,11 @@ class Benchmark:
 
     # ------------------------------------------------------------ settings
     def loaded(self, *, live: bool = False) -> LoadedSettings:
+        reference = self.config.reference.overrides()
         if live:
-            return self._load(live_overrides())
+            return self._load(live_overrides() | reference)
         if self._loaded is None:
-            self._loaded = self._load({})
+            self._loaded = self._load(dict(reference))
         return self._loaded
 
     def catalogue(
@@ -692,10 +707,13 @@ class Benchmark:
         approval: LiveApproval | None,
         http_client_factory: Callable[[], Any] | None = None,
         scope: str = "pilot",
+        only_arm: str | None = None,
     ) -> RunResult:
         """The pilot's answers from the callable arms through E4 ``execute``.
         Refuses (every reason, no call) until the gates and owner values are
-        set."""
+        set. ``only_arm`` answers with one callable arm only, so the arms can
+        run as separate processes (each with its own run ID, hence its own
+        recording file and cap; saved answers of every file replay free)."""
         reasons = self.refusals(approval=approval, step="generate")
         if reasons:
             raise BenchmarkRefused(reasons)
@@ -705,6 +723,10 @@ class Benchmark:
         if not permission.allowed:
             raise BenchmarkRefused(list(permission.reasons))
         arms = list(callable_arms(self.arms(loaded)))
+        if only_arm is not None:
+            if only_arm not in arms:
+                raise BenchmarkRefused([f"--arm {only_arm}: not a callable arm"])
+            arms = [only_arm]
         records = list(self.record_ids(scope))
         parts = self.requests(records)
         records = [r for r in records if r in parts]
@@ -748,11 +770,15 @@ class Benchmark:
         http_client_factory: Callable[[], Any] | None = None,
         scope: str = "pilot",
         only_judge: str | None = None,
+        only_arm: str | None = None,
     ) -> list[JudgeRun]:
         """Both judges on every (record, callable arm) pair against gpt-5.5,
         both orders; results written content-free under ``runs/benchmark/``.
         ``only_judge`` runs one of the configured judges (so the two can run as
-        two processes); the two-family check still covers the configured pair."""
+        two processes); the two-family check still covers the configured pair.
+        ``only_arm`` judges one arm's answers only, so the work can be split
+        further; each process then needs its own run ID (its own output folder),
+        and the per-arm files are concatenated afterwards."""
         reasons = self.refusals(approval=approval, step="judge")
         if reasons:
             raise BenchmarkRefused(reasons)
@@ -764,6 +790,10 @@ class Benchmark:
         judges = require(self.config.judges.models, "judges.models")
         require_two_families(judges, catalogue)
         arms = list(callable_arms(self.arms(loaded)))
+        if only_arm is not None:
+            if only_arm not in arms:
+                raise BenchmarkRefused([f"--arm {only_arm}: not a callable arm"])
+            arms = [only_arm]
         records = list(self.record_ids(scope))
         parts = self.requests(records)
         records = [r for r in records if r in parts]
@@ -890,7 +920,7 @@ class Benchmark:
         return summary
 
     # ------------------------------------------------- framework report
-    def framework_report(self, *, run_id: str) -> dict[str, Any]:
+    def framework_report(self, *, run_id: str, scope: str = "pilot") -> dict[str, Any]:
         """The pilot through the evaluation framework: the answering run is
         rebuilt from the recordings and given to E4's ``comparison_table``,
         quality per judge from the judging files. Content-free; no call. The
@@ -906,9 +936,18 @@ class Benchmark:
         if not recorded.exists():
             raise BenchmarkRefused([f"no recording {recorded.name}"])
         arms = list(callable_arms(self.arms(loaded)))
-        records = list(self.pilot_ids())
+        catalogue = self.catalogue(loaded)
+        records = list(self.record_ids(scope))
+        # The main set contains the pilot's records: their answers were made
+        # live under an earlier run ID and replay for free, so every live
+        # recording in the folder is read (per case and arm the best wins).
+        lines = [
+            rec
+            for f in sorted(recorded.parent.glob("live-*.jsonl"))
+            for rec in read_records(f)
+        ]
         answers = fr.recorded_run(
-            read_records(recorded),
+            lines,
             case_ids=records,
             arms=arms,
             catalogue=self.catalogue(loaded),
@@ -937,6 +976,8 @@ class Benchmark:
             bootstrap=None,
             gate=gate,
             run_id=run_id,
+            families={e.model_id: e.provider for e in catalogue.values()},
+            current_judges=self.config.judges.models,
         )
         (run / "framework_report.json").write_text(
             json.dumps(report, indent=2) + "\n", encoding="utf-8"

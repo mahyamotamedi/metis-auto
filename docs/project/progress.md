@@ -38,6 +38,7 @@ Single source of truth for stage status across sessions. Stage definitions: mast
 
 <!-- progress-index:start -->
 - 2026-11-04: [Sprint close: paid-benchmark readiness, cut-first items, resumable re-runs, open items](progress/2026-11-04-sprint-close-readiness-gaps.md)
+- 2026-11-04: [Model list probe, DeepSeek V4.1 judge and self-preference split](progress/2026-11-04-model-list-and-deepseek-v41-judge.md)
 - 2026-11-04: [Benchmark pilot, partial main run and ADR renumbering on merge](progress/2026-11-04-benchmark-pilot-and-adr-renumbering.md)
 - 2026-11-04: [Benchmark owner values, open Metis gate and reranker pins](progress/2026-11-04-benchmark-owner-values-and-reranker-pins.md)
 - 2026-11-03: [Sprint final: comparable candidates, rules-only decision router, decisions, combined run, final numbers (2026-11-03 to 2026-11-04)](progress/2026-11-03-sprint-final-stages-1-to-6.md)

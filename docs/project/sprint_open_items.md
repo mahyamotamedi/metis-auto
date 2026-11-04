@@ -20,6 +20,8 @@ Written 2026-11-04 (sprint close, branch `sprint-final-pipelines`). Decision rec
 
 Answered 2026-11-04 (Q-62 to Q-64, `docs/guides/benchmark_pilot.md` section 0) and set in `benchmark.toml`. What still blocks a paid run: the four ledger summaries in `reports/spend/ledgers/` (none exist), the golden-v2 database for the exact estimate, and the owner's per-run approval.
 
+**Update 2026-11-04 (ADR-0053 amendment 5, progress entry "Model list probe, DeepSeek V4.1 judge"):** `expected_machines` is back to kimia, mahya, saba, parham; only kimia's summary is in the repo, so **mahya and parham must each run `python scripts/spend_share.py export --machine <label>`** (saba's own is not needed by its own run). The exact estimate for the main set is printed (3.87 to 13.21 USD of the 35 USD cap). The judge is now `deepseek-v4.1-flash`; its 64-token reply was checked once (valid JSON, thinking disabled).
+
 ## Real reranker run (cut-first item (a))
 
 Real reranker not run: no GPU on the owner's machine (checked 2026-11-04: Intel Mac, no `torch` in `.venv`; the adapter accepts only `cuda` or `mps`). The fallback is the *heuristic* token-sizing results `context.reranker_cut.lexical_overlap` and `observed_relevancy`.

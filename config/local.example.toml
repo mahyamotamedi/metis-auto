@@ -42,6 +42,14 @@
 # [model_options."deepseek-v4-flash"]
 # thinking = "disabled"             # unset = DeepSeek's default (thinking on)
 
+# Paid benchmark judge (ADR-0053 amendment 5): REQUIRED for the DeepSeek judge.
+# With thinking on, hidden reasoning (about 30 tokens even for a one-word reply)
+# uses up the judge's 64-token reply limit and the reply comes back empty, which
+# the judge records as not_evaluated. Also keep the run caps high enough for the
+# benchmark (benchmark.toml run.hard_cap_usd) when you run it.
+# [model_options."deepseek-v4.1-flash"]
+# thinking = "disabled"
+
 
 # --- Decision router (ADR-0047; guide: docs/guides/router_quickstart.md) ----
 # [router]

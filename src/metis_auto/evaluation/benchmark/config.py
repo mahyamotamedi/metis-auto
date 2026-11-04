@@ -46,6 +46,23 @@ class ArmsConfig(ContractModel):
     not_callable: Mapping[str, str] = {}
 
 
+class ReferenceConfig(ContractModel):
+    """Reference files the benchmark loads instead of the defaults (the live
+    defaults keep the old, hash-locked files; ADR-0053 amendment 5). Unset =
+    the defaults."""
+
+    catalogue: str | None = None
+    prices: str | None = None
+
+    def overrides(self) -> dict[str, str]:
+        out = {}
+        if self.catalogue:
+            out["reference.catalogue"] = self.catalogue
+        if self.prices:
+            out["reference.prices"] = self.prices
+        return out
+
+
 class GatesConfig(ContractModel):
     metis_allows_samples: bool = False
     metis_answer_ref: str | None = None
@@ -100,6 +117,7 @@ class BenchmarkConfig(ContractModel):
     set: SetConfig
     pilot: PilotConfig
     arms: ArmsConfig
+    reference: ReferenceConfig = ReferenceConfig()
     gates: GatesConfig = GatesConfig()
     spend_share: SpendShareConfig
     run: RunLimits = RunLimits()
