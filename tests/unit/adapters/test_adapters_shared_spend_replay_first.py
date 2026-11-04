@@ -233,6 +233,28 @@ def test_replay_first_replays_recorded_inputs_and_calls_live_once(tmp_path):
     assert (client.replayed, client.live_calls) == (1, 1)
 
 
+class CutOffLive(Live):
+    def invoke(self, invocation):
+        self.calls += 1
+        return ModelResponse(
+            text="" if self.calls == 1 else "[SYNTHETIC] verdict",
+            finish_reason=(
+                FinishReason.LENGTH if self.calls == 1 else FinishReason.COMPLETE
+            ),
+            source=AnswerSource.LIVE,
+        )
+
+
+def test_replay_first_asks_again_after_a_cut_off_empty_recording(tmp_path):
+    live = CutOffLive()
+    recorder = RecordingModelClient(live, tmp_path / "live-run.jsonl", run_id="r1")
+    recorder.invoke(_inv("[SYNTHETIC] q1"))
+    client = ReplayFirstClient(ReplayModelClient.recorded_from(tmp_path), recorder)
+    again = client.invoke(_inv("[SYNTHETIC] q1"))
+    assert again.text == "[SYNTHETIC] verdict" and live.calls == 2
+    assert (client.replayed, client.live_calls) == (0, 1)
+
+
 def test_replay_first_needs_a_recorded_replay():
     with pytest.raises(ValueError):
         ReplayFirstClient(FakeModelClient(), Live())
