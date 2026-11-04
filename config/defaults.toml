@@ -188,6 +188,11 @@ hybrid_hosted_first = ["jev_metis", "thx01"]
 # routing-plan experiments (exp-route-002, exp-route-010) give evidence. The
 # serving default stays fixed_model; scripts/chat.py starts in sticky.
 policy = "fixed_model"
+# candidates = []   # unset/empty: every enabled model (the serving default).
+# The DEMO's non-fixed routing modes set it from config/evaluation/sprint.toml
+# [routing] candidates (the sprint's primary set; retired models are out), in
+# wiring.chat. A model outside it is excluded as `not_a_candidate`.
+# ADR-0066.
 
 [pipeline.routing.fixed_model]
 model_id = "gpt-4o-mini"
@@ -388,6 +393,16 @@ strategy = "pass_through"
 # (Stage 7.5; provisional, A-43-style placeholder). 4,096 output tokens cost
 # at most 0.0027 USD on the dearest test model (0.66 USD / 1M).
 max_output_tokens_cap = 4096
+
+[pipeline.context.dedup]
+# DEMO selection (sprint winner S-6, ADR-0066): within
+# ONE message's retrieved context, remove exact duplicate chunks (first copy
+# kept, order stable); instructions, history and the current message are never
+# touched. It acts only when `strategy` is "within_message_dedup" (or
+# "within_message_dedup_dataset_positions"), which the demo chat sets with this
+# switch. Runs before compression. Off by default: the request is then
+# byte-identical to pass_through. Provisional: cost only, pending quality.
+enabled = false
 
 [pipeline.context.compression]
 # EXPERIMENTAL (Demo milestone, context plan X3, ADR-0023): LLMLingua-2 on

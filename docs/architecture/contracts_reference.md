@@ -706,7 +706,7 @@ The chosen target and why (FR-ROUTE-02). Content-free.
 
 **Enumerations**
 
-- **`ExclusionReason`**: `modality_unsupported`, `capability_unverified`, `context_too_small`, `context_limit_unknown`, `below_min_window`, `disabled`, `unavailable`. Why the shared eligibility filter removed a model (routing.md §1.3).
+- **`ExclusionReason`**: `modality_unsupported`, `capability_unverified`, `context_too_small`, `context_limit_unknown`, `below_min_window`, `disabled`, `unavailable`, `not_a_candidate`. Why the shared eligibility filter removed a model (routing.md §1.3).
 - **`RoutingFlag`**: `unknown_price_selected`, `rerouted`, `requested_model_ignored`, `requested_model_honoured`
 
 ## `contracts.caching`
@@ -887,7 +887,7 @@ Ordered input parts for one target, plus their record.
 **Enumerations**
 
 - **`PartRole`**: `instructions`, `user`, `assistant`, `retrieved`. Generic roles of input parts. Adapters map them to provider formats.
-- **`ContextAction`**: `kept`, `trimmed`, `summarised`, `compressed`, `dropped`, `not_applicable`
+- **`ContextAction`**: `kept`, `trimmed`, `summarised`, `compressed`, `deduplicated`, `dropped`, `not_applicable`
 - **`OverflowOutcome`**: `fits`, `trimmed_to_fit`, `reroute_requested`, `rejected`
 
 ## `contracts.model_io`
@@ -1081,7 +1081,7 @@ What the pipeline returns. Expected failures are an error status, not an excepti
 
 **Enumerations**
 
-- **`SpanName`**: `request`, `measure`, `features`, `route`, `route.decide`, `cache_lookup.exact`, `cache_lookup.semantic`, `embed`, `context`, `context.compress`, `attempt`, `model_call`, `measurement_call`, `cache_store`, `respond`
+- **`SpanName`**: `request`, `measure`, `features`, `route`, `route.decide`, `cache_lookup.exact`, `cache_lookup.semantic`, `embed`, `context`, `context.dedup`, `context.compress`, `attempt`, `model_call`, `measurement_call`, `cache_store`, `respond`
 - **`LatencyCategory`**: `overhead`, `model`, `end_to_end`, `container`, `post_response`. ADR-0006 latency split.
 - **`LatencySource`**: `measured_local`, `provider_reported`, `recorded`, `simulated`
 - **`ResponseStatus`**: `ok`, `error`
@@ -1166,6 +1166,18 @@ The decision-router step (ADR-0047). Never carries the state.
 |---|---|---|---|---|
 | `event_type` | `Literal['context_built']` |  | operational | Discriminator. |
 | `record` | `CompositionRecord` | yes | derived | Composition record. |
+
+### `ContextDeduped`
+
+The within-message dedup removed exact duplicate retrieved chunks (a demo selection). Sizes only: no text, no fingerprints. Its time is overhead (span ``context.dedup``); the tokens it removes reach the decomposition's context term through the request actually sent.
+
+| Field | Type | Req. | Privacy | Description |
+|---|---|---|---|---|
+| `event_type` | `Literal['context_deduped']` |  | operational | Discriminator. |
+| `strategy` | `PolicyRef` | yes | operational | Dedup strategy and version. |
+| `items_total` | `NonNegInt` | yes | derived | Retrieved items before. |
+| `items_removed` | `NonNegInt` | yes | derived | Exact duplicate items removed (first copy kept). |
+| `chars_removed` | `NonNegInt` | yes | derived | Characters removed. |
 
 ### `CompressedComponent`
 

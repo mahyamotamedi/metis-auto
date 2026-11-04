@@ -80,7 +80,14 @@ def bots_for_features(conn: Connection) -> list[dict[str, Any]]:
 
 _DIRECTORY_SQL = """
 SELECT b.bot_id, b.instructions, b.provider_name, b.provider_model,
-       b.memory_enabled, b.summarizer_mode, b.corpus_ids_state, b.rag_top_k,
+        b.memory_enabled, b.summarizer_mode, b.corpus_ids_state, b.rag_top_k,
+        EXISTS (
+          SELECT 1 FROM src.chat_session rs
+          JOIN src.chat_message rm ON rm.session_id = rs.session_id
+          JOIN src.rag_chunk rc ON rc.message_id = rm.message_id
+          WHERE rs.bot_id = b.bot_id AND rm.type = 'AI'
+            AND rc.content ~ '[^[:space:]]'
+        ) AS has_rag,
        count(DISTINCT s.session_id) AS sessions,
        count(m.message_id) FILTER (WHERE m.type = 'USER') AS requests
 FROM src.chat_bot b
@@ -112,11 +119,13 @@ def latest_rag_texts(conn: Connection, bot_id: str) -> list[str]:
         conn.scalars(
             text(
                 """SELECT c.content FROM src.rag_chunk c
-                   WHERE c.message_id = (
+                   WHERE c.content ~ '[^[:space:]]'
+                     AND c.message_id = (
                      SELECT m.message_id FROM src.chat_message m
                      JOIN src.chat_session s USING (session_id)
                      WHERE s.bot_id = :b AND m.type = 'AI' AND EXISTS (
-                       SELECT 1 FROM src.rag_chunk x WHERE x.message_id = m.message_id)
+                        SELECT 1 FROM src.rag_chunk x WHERE x.message_id = m.message_id
+                          AND x.content ~ '[^[:space:]]')
                      ORDER BY m."timestamp" DESC NULLS LAST, m.source_ordinal DESC,
                               m.message_id COLLATE "C" DESC
                      LIMIT 1)

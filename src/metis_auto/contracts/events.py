@@ -139,6 +139,21 @@ class ContextBuilt(ContractModel):
     record: CompositionRecord = field(Privacy.DERIVED, "Composition record.")
 
 
+class ContextDeduped(ContractModel):
+    """The within-message dedup removed exact duplicate retrieved chunks (a
+    demo selection). Sizes only: no text, no fingerprints. Its time is
+    overhead (span ``context.dedup``); the tokens it removes reach the
+    decomposition's context term through the request actually sent."""
+
+    event_type: Literal["context_deduped"] = _type("context_deduped")
+    strategy: PolicyRef = field(Privacy.OPERATIONAL, "Dedup strategy and version.")
+    items_total: NonNegInt = field(Privacy.DERIVED, "Retrieved items before.")
+    items_removed: NonNegInt = field(
+        Privacy.DERIVED, "Exact duplicate items removed (first copy kept)."
+    )
+    chars_removed: NonNegInt = field(Privacy.DERIVED, "Characters removed.")
+
+
 class CompressedComponent(ContractModel):
     """What a compressor did to one component (sizes only)."""
 
@@ -258,6 +273,7 @@ EventPayload = Annotated[
     | CacheStored
     | CacheStoreSkipped
     | ContextBuilt
+    | ContextDeduped
     | ContextCompressed
     | AttemptStarted
     | AttemptFinished
@@ -281,6 +297,7 @@ PAYLOAD_TYPES: tuple[type[ContractModel], ...] = (
     CacheStored,
     CacheStoreSkipped,
     ContextBuilt,
+    ContextDeduped,
     ContextCompressed,
     AttemptStarted,
     AttemptFinished,

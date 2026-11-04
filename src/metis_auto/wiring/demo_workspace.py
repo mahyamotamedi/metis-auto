@@ -107,7 +107,12 @@ def _ltr(value: object) -> str:
 
 
 def synthetic_bots(presets: Sequence[Preset]) -> tuple[BotProfile, ...]:
-    """The SYNTHETIC presets as bots; the label carries the marker."""
+    """Prefer the dedup demo over its original sample, never list both.
+
+    All presets remain available to diagnostic scripts; the UI has one sample
+    per language. The label still carries the SYNTHETIC marker.
+    """
+    keys = {p.key for p in presets}
     return tuple(
         BotProfile(
             key=p.key,
@@ -119,6 +124,7 @@ def synthetic_bots(presets: Sequence[Preset]) -> tuple[BotProfile, ...]:
             suggested=p.suggested,
         )
         for p in presets
+        if f"{p.key}_dupes" not in keys
     )
 
 
@@ -463,6 +469,13 @@ class ChatWorkspace:
         if error:
             self._method = previous
         return error
+
+    def set_dedup(self, on: bool) -> str | None:
+        """DEMO: within-message chunk dedup (Advanced)."""
+        return self._apply(lambda: self.session.set_dedup(on))
+
+    def set_sticky_inner(self, inner: str) -> str | None:
+        return self._apply(lambda: self.session.set_sticky_inner(inner))
 
     def set_router_mode(self, mode: str) -> str | None:
         return self._apply(lambda: self.session.set_router_mode(mode))
@@ -1001,7 +1014,7 @@ class DemoWorkspace:
         if self.directory is None:
             return ()
         return filter_cards(
-            self.directory.cards,
+            tuple(card for card in self.directory.cards if card.rag),
             query=self.bot_query,
             language=self.bot_language,
             rag=self.bot_rag,

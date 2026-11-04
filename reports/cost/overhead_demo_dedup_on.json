@@ -1,0 +1,107 @@
+{
+  "measured_at": "2026-11-04T19:32:16+00:00",
+  "script": "scripts/measure_overhead.py",
+  "requests": 2000,
+  "sizes_from_sample": null,
+  "hit_ratio_requested": 0.0,
+  "served": {
+    "miss": 2000
+  },
+  "instructions_chars": 0,
+  "tokenizer": {
+    "ref": "openai-o200k-base",
+    "loaded": "tiktoken-o200k_base@0.14.0",
+    "fidelity": "exact_local",
+    "fallback_reason": null
+  },
+  "config_hash": "cfg1:98a7161b1cca3058",
+  "compression": {
+    "mode": "off",
+    "compressor": null,
+    "rate": null,
+    "token_method": null
+  },
+  "dedup": {
+    "enabled": true,
+    "dup_chunks": 8,
+    "items_total": 16000,
+    "items_removed": 8000,
+    "chars_removed": 1624000
+  },
+  "sent_input_tokens_per_context": {
+    "n": 2000,
+    "sum": 496000,
+    "p50": 248
+  },
+  "hardware": {
+    "machine": "AMD64",
+    "system": "Windows 11",
+    "python": "CPython 3.13.9",
+    "cpu": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  },
+  "spans": {
+    "miss": {
+      "cache_lookup.exact": {
+        "n": 2000,
+        "p50_ms": 0.2766,
+        "p95_ms": 0.4806,
+        "max_ms": 0.9928
+      },
+      "cache_store": {
+        "n": 2000,
+        "p50_ms": 0.0408,
+        "p95_ms": 0.0754,
+        "max_ms": 0.2924
+      },
+      "context": {
+        "n": 2000,
+        "p50_ms": 0.3995,
+        "p95_ms": 0.7817,
+        "max_ms": 4.7203
+      },
+      "context.dedup": {
+        "n": 2000,
+        "p50_ms": 0.0594,
+        "p95_ms": 0.1029,
+        "max_ms": 0.6133
+      },
+      "features": {
+        "n": 2000,
+        "p50_ms": 0.2511,
+        "p95_ms": 0.4273,
+        "max_ms": 1.2965
+      },
+      "measure": {
+        "n": 2000,
+        "p50_ms": 0.2553,
+        "p95_ms": 0.457,
+        "max_ms": 3.6328
+      },
+      "model_call": {
+        "n": 2000,
+        "p50_ms": 0.0095,
+        "p95_ms": 0.0169,
+        "max_ms": 0.2021
+      },
+      "overhead_total": {
+        "n": 2000,
+        "p50_ms": 1.3479,
+        "p95_ms": 2.2015,
+        "max_ms": 6.3273
+      },
+      "request": {
+        "n": 2000,
+        "p50_ms": 2.1514,
+        "p95_ms": 3.4633,
+        "max_ms": 88.0919
+      },
+      "route": {
+        "n": 2000,
+        "p50_ms": 0.0524,
+        "p95_ms": 0.0905,
+        "max_ms": 0.3593
+      }
+    }
+  },
+  "note": "Indicative only (A-22): synthetic requests, fake model, one machine."
+}

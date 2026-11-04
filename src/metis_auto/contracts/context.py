@@ -49,6 +49,9 @@ class ContextAction(StrEnum):
     SUMMARISED = "summarised"
     COMPRESSED = "compressed"
     """Text kept but shortened by a compressor (e.g. LLMLingua-2)."""
+    DEDUPLICATED = "deduplicated"
+    """Exact duplicate items of the component removed, first copy kept (the
+    within-message dedup, a demo selection)."""
     DROPPED = "dropped"
     NOT_APPLICABLE = "not_applicable"
     """The component was absent or unknown."""

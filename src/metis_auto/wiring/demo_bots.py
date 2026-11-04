@@ -13,8 +13,10 @@ owner's approval (``real_data_reasons``).
 
 Passages for a typed question are Option A (UI-A33): the chunk set of the bot's
 most recent logged AI turn that has retrieved chunks, read once per bot and kept
-for the session. Bots without RAG send instructions only. Option B (search over
-the bot's chunk pool) is not built.
+for the session. RAG availability is based on nonblank stored chunks, not the
+corpus configuration snapshot. The UI lists only bots with usable RAG; existing
+instruction-only profiles remain addressable for saved conversations. Option B
+(search over the bot's chunk pool) is not built.
 
 Workflow bots (provider ``workflow``, no token billing in the export) are not
 LLM bots and are not listed; their number is shown. The language of the
@@ -170,7 +172,11 @@ class BotDirectory:
 def _content_loader(source: BotSource, bot_id: str, rag: bool):
     def load() -> tuple[str, tuple[str, ...]]:
         instructions = source.instructions(bot_id) or ""
-        documents = tuple(source.rag_texts(bot_id)) if rag else ()
+        documents = (
+            tuple(text for text in source.rag_texts(bot_id) if text and text.strip())
+            if rag
+            else ()
+        )
         return instructions, documents
 
     return load
@@ -193,19 +199,30 @@ def load_directory(source_factory: Callable[[], BotSource]) -> BotDirectory:
     used = [r for r in rows if (r["sessions"] or 0) > 0]
     workflow = sum(1 for r in used if r["provider_name"] in NON_LLM_PROVIDERS)
     kept = []
+    observed_only = []
     for r in used:
         if r["provider_name"] in NON_LLM_PROVIDERS:
             continue
         has_text = bool((r["instructions"] or "").strip())
-        rag = r["corpus_ids_state"] == "ok"
-        if has_text or rag:
+        rag = bool(r["has_rag"])
+        if has_text or r["corpus_ids_state"] == "ok":
             kept.append(r)
-    kept.sort(key=lambda r: (-(r["requests"] or 0), -(r["sessions"] or 0), r["bot_id"]))
+        elif rag:
+            observed_only.append(r)
+
+    # Preserve existing bot labels (also used by saved conversations). Bots
+    # newly discoverable from their logged chunks follow the original directory.
+    def traffic(row):
+        return (-(row["requests"] or 0), -(row["sessions"] or 0), row["bot_id"])
+
+    kept.sort(key=traffic)
+    observed_only.sort(key=traffic)
+    kept.extend(observed_only)
     cards, ids = [], {}
     for rank, r in enumerate(kept, start=1):
         text = r["instructions"] or ""
         label = f"{LABEL_PREFIX}{rank:03d}"
-        rag = r["corpus_ids_state"] == "ok"
+        rag = bool(r["has_rag"])
         mode = r["summarizer_mode"]
         cards.append(
             BotCard(

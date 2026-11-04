@@ -32,6 +32,7 @@ sink).
 
 from __future__ import annotations
 
+import tomllib
 import uuid
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -117,6 +118,25 @@ ROUTER_MODES = (
 )
 
 
+DEMO_ROUTER_MODES = ("off",)
+"""The only router modes the demo toggles offer: rules only (the gate, the
+rules, then the safe tier; no router model is called and nothing is spent).
+The local, hosted and hybrid backends stay in ``ROUTER_MODES`` for
+diagnostics and tests, and are unreachable from the terminal chat and the UI
+(ADR-0066)."""
+
+STICKY_INNERS = ("rule_based", "decision_router")
+SPRINT_PATH = Path("config") / "evaluation" / "sprint.toml"
+SPRINT_LABEL = "sprint winner, provisional: cost only, pending quality"
+
+
+def sprint_candidates() -> tuple[str, ...]:
+    """The sprint's primary routing set, read from ``sprint.toml`` ``[routing]
+    candidates`` so the live demo routes over what the sprint measured."""
+    path = Path(__file__).resolve().parents[3] / SPRINT_PATH
+    return tuple(tomllib.loads(path.read_text("utf-8"))["routing"]["candidates"])
+
+
 class CompressionMode(StrEnum):
     OFF = "off"
     LLMLINGUA2 = "llmlingua2"
@@ -149,6 +169,9 @@ class TurnReport:
     features: dict[str, str] = field(default_factory=dict)
     cache: tuple[str, ...] = ()
     compression: dict[str, str] = field(default_factory=dict)
+    dedup: dict[str, str] = field(default_factory=dict)
+    """The within-message dedup of this turn and the session, content-free
+    (empty when it did not run: off, or a cache hit)."""
     settings: dict[str, str] = field(default_factory=dict)
     parts: SavingsDecomposition | None = None
     """The message's decomposition as numbers (content-free; for the UI)."""
@@ -171,13 +194,16 @@ class ChatSession:
         run_id: str | None = None,
         routing: RoutingMode | None = None,
         compression: CompressionMode = CompressionMode.OFF,
+        dedup: bool = False,
         bot_cache: bool = False,
         seed: bool = False,
         deepseek_thinking: bool = True,
         compressor_factory: CompressorFactory | None = None,
         seed_path: Path | None = None,
         seed_size: int = 5,
-        router_mode: str = "local",
+        router_mode: str = "off",
+        sticky_inner: str = "rule_based",
+        sprint_candidates_only: bool = True,
         context_layout: str | None = None,
     ) -> None:
         """``model_id`` without ``routing`` means fixed routing (Stage 7.5);
@@ -215,13 +241,20 @@ class ChatSession:
         )
         self.model_id = model_id or "gpt-4o-mini"
         self.compression = compression
+        self.dedup = dedup
+        self._dedup_savings: list[Decimal] = []
+        self._dedup_removed = 0
         self.bot_cache = bot_cache
         self.context_layout = context_layout
         self.seed = seed
         self.deepseek_thinking = deepseek_thinking
         if router_mode not in ROUTER_MODES:
             raise ValueError(f"unknown router mode {router_mode!r}")
+        if sticky_inner not in STICKY_INNERS:
+            raise ValueError(f"unknown sticky inner router {sticky_inner!r}")
         self.router_mode = router_mode
+        self.sticky_inner = sticky_inner
+        self.sprint_candidates_only = sprint_candidates_only
         self._rebuild()
 
     # --- configuration ---
@@ -245,10 +278,26 @@ class ChatSession:
         elif not fixed:
             overrides["pipeline.routing.policy"] = "sticky"
             overrides["pipeline.routing.sticky.mode"] = self.routing.value
+            overrides["pipeline.routing.sticky.inner"] = self.sticky_inner
+            if self.sticky_inner == "decision_router":
+                overrides["router.mode"] = "off"
+        if not fixed and self.sprint_candidates_only:
+            # Demo selection: route over the sprint's primary models only
+            # (the retired ones are out); serving defaults stay unchanged.
+            overrides["pipeline.routing.candidates"] = list(sprint_candidates())
         if self.context_layout:
             overrides["pipeline.context.strategy"] = self.context_layout
         if self.compression != CompressionMode.OFF:
             overrides["pipeline.context.compression.enabled"] = True
+        if self.dedup:
+            # Demo selection (ADR-0066); keeps a real
+            # bot's dataset_positions layout when that one is in force.
+            overrides["pipeline.context.dedup.enabled"] = True
+            overrides["pipeline.context.strategy"] = (
+                "within_message_dedup_dataset_positions"
+                if self.context_layout == "dataset_positions"
+                else "within_message_dedup"
+            )
         if self.bot_cache:
             overrides["pipeline.cache.scope_rule"] = "demo_bot_level"
         if self.seed:
@@ -343,6 +392,12 @@ class ChatSession:
     def set_routing(self, mode: RoutingMode) -> None:
         self._set(routing=mode)
 
+    def set_sticky_inner(self, inner: str) -> None:
+        """The router sticky routing uses for first and re-routed messages."""
+        if inner not in STICKY_INNERS:
+            raise ValueError(f"unknown sticky inner router {inner!r}")
+        self._set(sticky_inner=inner)
+
     def set_router_mode(self, mode: str) -> None:
         """The decision router's chain (R7); applies with ``decision_router``."""
         if mode not in ROUTER_MODES:
@@ -351,6 +406,10 @@ class ChatSession:
 
     def set_compression(self, mode: CompressionMode) -> None:
         self._set(compression=mode)
+
+    def set_dedup(self, on: bool) -> None:
+        """DEMO: within-message chunk dedup (sprint winner S-6)."""
+        self._set(dedup=on)
 
     def set_bot_cache(self, on: bool) -> None:
         self._set(bot_cache=on)
@@ -511,10 +570,55 @@ class ChatSession:
             features=self._features(meta.request_id),
             cache=_cache(trace),
             compression=_compression(response, trace),
+            dedup=self._dedup_report(request, response, trace, chosen),
             settings=self.settings(),
             parts=parts_obj,
             session_parts=session_obj,
         )
+
+    def _dedup_report(
+        self,
+        request: Request,
+        response: FinalResponse,
+        trace: RequestTrace,
+        chosen: str | None,
+    ) -> dict[str, str]:
+        event = trace.dedup
+        if event is None or chosen is None or response.answer is None:
+            return {}
+        out = {
+            "items_total": str(event.items_total),
+            "items_removed": str(event.items_removed),
+            "chars_removed": str(event.chars_removed),
+        }
+        if trace.deduped_request is None:  # nothing removed: exactly zero
+            tokens = self.accounting.content_tokens(request, chosen)
+            out["tokens_removed"] = f"0 ({tokens.fidelity.value})"
+            out["saving"] = _money(Decimal(0), self._currency())
+        else:
+            effect = self.accounting.dedup_effect(
+                request, trace.deduped_request, response, chosen_model_id=chosen
+            )
+            removed = effect.tokens_removed
+            out["tokens_removed"] = f"{removed.tokens} ({removed.fidelity.value})"
+            if effect.saving is not None:
+                self._dedup_savings.append(effect.saving.amount)
+                out["saving"] = _money(effect.saving.amount, effect.saving.currency)
+            else:
+                out["saving"] = "not computed"
+        self._dedup_removed += event.items_removed
+        out["session_items_removed"] = str(self._dedup_removed)
+        out["session_saving"] = _money(
+            sum(self._dedup_savings, Decimal(0)), self._currency()
+        )
+        out["note"] = (
+            "part of the context term (dedup first, then compression); "
+            "provisional: cost only, pending quality"
+        )
+        return out
+
+    def _currency(self) -> str:
+        return "USD"
 
     def settings(self) -> dict[str, str]:
         return {
@@ -523,7 +627,9 @@ class ChatSession:
             "router": self.router_mode
             if self.routing == RoutingMode.DECISION_ROUTER
             else "off",
+            "sticky_inner": self.sticky_inner,
             "compression": self.compression.value,
+            "dedup": "on [DEMO]" if self.dedup else "off",
             "cache_scope": "bot-level [DEMO]" if self.bot_cache else "session",
             "seed": "on [DEMO]" if self.seed else "off",
             "deepseek_thinking": "on (default)" if self.deepseek_thinking else "off",
@@ -541,9 +647,16 @@ class ChatSession:
             "target": decision.target_model_id or "-",
             "anchor_before": decision.anchor_model_id or "-",
             "chain": ", ".join(decision.chain) or "-",
+            "tier": "-" if decision.tier is None else str(decision.tier),
         }
         code = decision.reason_code
         final = meta.final_model_id
+        if code.endswith("safe_tier") and meta.served_by != ServedBy.CACHE:
+            out["safe_tier_note"] = (
+                f"safe tier: no gate or rule matched, so the request went to "
+                f"the cheap default tier ({final}); most traffic lands here "
+                f"[{SPRINT_LABEL}]"
+            )
         if meta.served_by == ServedBy.CACHE:
             label = "served from cache: does not anchor the session"
         elif code == "sticky.greeting.stay":
@@ -574,7 +687,7 @@ class ChatSession:
             tier = "-" if summary.mapped_tier is None else str(summary.mapped_tier)
             label = (
                 f"decision router [DEMO] ({summary.path.value}, {backend}, "
-                f"tier {tier}) → {final}"
+                f"tier {tier}) → {final} [{SPRINT_LABEL}]"
             )
         else:
             label = code
@@ -767,6 +880,14 @@ def format_report(report: TurnReport) -> str:
         session = dict(report.session_decomposition)
         for term, value in report.decomposition:
             lines.append(f"  {term:<22} {value:>24} | {session.get(term, '-')}")
+    if report.dedup:
+        d = report.dedup
+        lines.append(
+            f"dedup [DEMO]: {d['items_removed']} of {d['items_total']} retrieved "
+            f"chunks removed ({d['chars_removed']} chars, {d['tokens_removed']} "
+            f"tokens), saving {d.get('saving', '-')} | session "
+            f"{d['session_items_removed']} chunks, {d['session_saving']}; {d['note']}"
+        )
     if report.compression:
         c = report.compression
         lines.append(

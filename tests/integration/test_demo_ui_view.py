@@ -59,8 +59,18 @@ def chat(loader, **kw) -> ChatSession:
 
 def test_presets_are_synthetic_long_and_complete():
     presets = load_presets()
-    assert [p.key for p in presets] == ["fa_shop", "en_faq"]
-    for p in presets:
+    # the two original bots, then the sprint-winner bots with duplicate chunks
+    assert [p.key for p in presets] == [
+        "fa_shop",
+        "en_faq",
+        "fa_shop_dupes",
+        "en_faq_dupes",
+    ]
+    for p in presets[2:]:  # engineered duplicates: marked, and really repeated
+        assert "[SYNTHETIC]" in p.instructions and p.suggested
+        assert all("[SYNTHETIC]" in d for d in p.documents)
+        assert len(set(p.documents)) < len(p.documents)
+    for p in presets[:2]:
         assert "[SYNTHETIC]" in p.instructions
         assert 2 <= len(p.documents) <= 3
         assert all("[SYNTHETIC]" in d and len(d) >= 200 for d in p.documents)

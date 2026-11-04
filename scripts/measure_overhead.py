@@ -3,6 +3,7 @@
     python scripts/measure_overhead.py [--requests 2000] [--hit-ratio 0.5]
         [--tokenizer openai-o200k-base] [--instructions-chars 0]
         [--sizes-from-sample] [--compression off|llmlingua2|fake]
+        [--dup-chunks N] [--dedup]
         [--compress-rate 0.5] [--out reports/cost/overhead.json]
 
 Runs N SYNTHETIC requests through the real pipeline (fake model client,
@@ -25,6 +26,14 @@ Every message is unique, so every request is an exact-cache miss (the worst
 case for counting). The synthetic models' context windows are raised to
 1,000,000 placeholder tokens so large sample instructions do not overflow
 (``--requests`` and ``--hit-ratio`` are then ignored).
+
+``--dup-chunks N`` gives every request a SYNTHETIC retrieved context of N
+chunks in which every second chunk repeats an earlier one; ``--dedup`` turns
+on the within-message dedup (sprint winner S-6, a DEMO selection, strategy
+``within_message_dedup``) so its ``context.dedup`` span is measured as part of
+the overhead total. Run with and without ``--dedup`` on the same ``--dup-chunks``
+to see the saving in sent input tokens. The sprint's replay figure for this
+step is not reused: the number printed here is the demo pipeline's own.
 
 ``--compression`` (Demo milestone, brief §9 and §11): run the EXPERIMENTAL
 context compressor on every miss (history turns and retrieved items of at
@@ -69,7 +78,7 @@ from metis_auto.contracts import (
     ServedBy,
     Turn,
 )
-from metis_auto.contracts.events import ContextBuilt, ContextCompressed
+from metis_auto.contracts.events import ContextBuilt, ContextCompressed, ContextDeduped
 from metis_auto.settings import load_settings
 from metis_auto.wiring.compression import build_compressor
 from metis_auto.wiring.experiments import sample_cases
@@ -111,7 +120,9 @@ def percentile(values: list[float], q: float) -> float:
     return ordered[index]
 
 
-def requests(n: int, hit_ratio: float, instructions_chars: int) -> list[Request]:
+def requests(
+    n: int, hit_ratio: float, instructions_chars: int, dup_chunks: int = 0
+) -> list[Request]:
     """Every request is either new (a miss) or repeats the previous new one in
     the same session (an exact hit); deterministic, no randomness."""
     instructions = (FILLER * (instructions_chars // len(FILLER) + 1))[
@@ -132,13 +143,24 @@ def requests(n: int, hit_ratio: float, instructions_chars: int) -> list[Request]
             instructions=Component.present(instructions)
             if instructions.strip()
             else Component.absent(),
-            retrieved=Component.absent(),
+            retrieved=_duplicated_chunks(dup_chunks),
             attachments=Component.absent(),
             structured_input=Component.absent(),
             session_ref=f"sess-bench-{i // 50}",
         )
         out.append(last)
     return out
+
+
+def _duplicated_chunks(n: int) -> Component[RetrievedContext]:
+    """SYNTHETIC retrieved context of ``n`` chunks; every second one repeats
+    the chunk before it (exact duplicates), so about half are removable."""
+    if n <= 0:
+        return Component.absent()
+    texts = [f"{SYNTHETIC} chunk {i // 2}: " + FILLER for i in range(n)]
+    return Component.present(
+        RetrievedContext(items=tuple(RetrievedItem(text=t) for t in texts))
+    )
 
 
 def filler(n: int, salt: str = "") -> str:
@@ -235,6 +257,8 @@ def main() -> int:
         "--compression", choices=["off", "llmlingua2", "fake"], default="off"
     )
     parser.add_argument("--compress-rate", type=float, default=0.5)
+    parser.add_argument("--dup-chunks", type=int, default=0)
+    parser.add_argument("--dedup", action="store_true")
     parser.add_argument("--out", type=Path, help="also write the JSON here")
     args = parser.parse_args()
 
@@ -271,6 +295,14 @@ def main() -> int:
             if args.compression == "fake"
             else build_compressor(loaded, compression.compressor)
         )
+    if args.dedup:
+        context = config.context.model_copy(
+            update={
+                "strategy": "within_message_dedup",
+                "dedup": config.context.dedup.model_copy(update={"enabled": True}),
+            }
+        )
+        config = config.model_copy(update={"context": context})
     sink = InMemoryEventSink()
     pipeline = build_pipeline(
         config,
@@ -290,11 +322,14 @@ def main() -> int:
     if args.sizes_from_sample:
         batch, size_summary = sample_sized_requests()
     else:
-        batch = requests(args.requests, args.hit_ratio, args.instructions_chars)
+        batch = requests(
+            args.requests, args.hit_ratio, args.instructions_chars, args.dup_chunks
+        )
     spans: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
     served: dict[str, int] = defaultdict(int)
     sent_tokens: list[int] = []
     squeezed = defaultdict(int)
+    deduped = defaultdict(int)
     for request in batch:
         meta = pipeline.handle(request).metadata
         kind = "hit" if meta.served_by == ServedBy.CACHE else "miss"
@@ -309,6 +344,10 @@ def main() -> int:
             payload = event.payload
             if isinstance(payload, ContextBuilt) and payload.record.input_tokens:
                 sent_tokens.append(payload.record.input_tokens.tokens)
+            elif isinstance(payload, ContextDeduped):
+                deduped["items_total"] += payload.items_total
+                deduped["items_removed"] += payload.items_removed
+                deduped["chars_removed"] += payload.chars_removed
             elif isinstance(payload, ContextCompressed):
                 for c in payload.components:
                     squeezed["items_compressed"] += c.items_compressed
@@ -350,6 +389,11 @@ def main() -> int:
             "rate": args.compress_rate if compressor else None,
             "token_method": compressor.token_method if compressor else None,
             **dict(squeezed),
+        },
+        "dedup": {
+            "enabled": args.dedup,
+            "dup_chunks": args.dup_chunks,
+            **dict(deduped),
         },
         "sent_input_tokens_per_context": {
             "n": len(sent_tokens),

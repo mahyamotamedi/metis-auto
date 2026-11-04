@@ -15,9 +15,14 @@ fidelity), cost, the premium-baseline estimate, the savings decomposition
 compression, Metis overhead, the budget, and the current settings.
 
 Commands:
-  /mode sticky | per_request          routing mode (sticky = sticky routing v1)
+  /mode sticky | per_request | decision_router
+                                       routing mode (sticky = sticky routing v1;
+                                       decision_router = rules only, sprint
+                                       winner, provisional: cost only)
+  /inner rule_based | decision_router  the router sticky routing uses for new anchors
   /model <id>                          fixed routing to one model; /models lists them
   /compress off | on | fake            LLMLingua-2 (EXPERIMENTAL) or a labelled fake
+  /dedup on | off                      DEMO within-message chunk dedup
   /botcache on | off                   DEMO bot-level cache scope (shared by users)
   /seed on | off | list                DEMO seed of logged sample answers (local only)
   /thinking on | off                   DeepSeek thinking (on = provider default)
@@ -43,7 +48,8 @@ from pathlib import Path
 
 from metis_auto.settings import SettingsError
 from metis_auto.wiring.chat import (
-    ROUTER_MODES,
+    DEMO_ROUTER_MODES,
+    STICKY_INNERS,
     ChatSession,
     CompressionMode,
     RoutingMode,
@@ -65,10 +71,10 @@ def main() -> int:
     )
     parser.add_argument(
         "--router-mode",
-        choices=list(ROUTER_MODES),
-        default="local",
-        help="with --mode decision_router: the decision backends to ask "
-        "(local = THX-01, hosted = Jev via Metis; SYNTHETIC or your own text only)",
+        choices=list(DEMO_ROUTER_MODES),
+        default="off",
+        help="with --mode decision_router: rules only; no router model is "
+        "called (the local, hosted and hybrid backends are not offered here)",
     )
     parser.add_argument("--fake", action="store_true", help="offline fake answers")
     parser.add_argument("--instructions", default=None, help="bot instructions")
@@ -156,10 +162,26 @@ def _command(session: ChatSession, line: str) -> bool:
     elif name == "/mode":
         modes = {"sticky": RoutingMode.STICKY_V1, "sticky_v1": RoutingMode.STICKY_V1}
         modes["per_request"] = RoutingMode.PER_REQUEST
+        modes["decision_router"] = RoutingMode.DECISION_ROUTER
         if arg not in modes:
-            raise ValueError("say sticky or per_request")
+            raise ValueError("say sticky, per_request, or decision_router")
         session.set_routing(modes[arg])
         print(f"routing mode: {session.routing.value}")
+    elif name == "/inner":
+        if arg not in STICKY_INNERS:
+            raise ValueError("say rule_based or decision_router")
+        session.set_sticky_inner(arg)
+        print(f"sticky inner router: {session.sticky_inner}")
+    elif name == "/dedup":
+        session.set_dedup(_toggle(arg))
+        print(
+            "within-message dedup [DEMO]: "
+            + (
+                "on (exact duplicate chunks removed, first kept)"
+                if session.dedup
+                else "off"
+            )
+        )
     elif name == "/compress":
         modes = {"on": CompressionMode.LLMLINGUA2, "off": CompressionMode.OFF}
         modes["fake"] = CompressionMode.FAKE

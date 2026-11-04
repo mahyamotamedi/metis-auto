@@ -13,13 +13,18 @@ Traces: FR-ACCT-01…05, ADR-0002, ADR-0020.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from metis_auto.contracts import (
     AccountedUsage,
     CatalogueEntry,
+    Cost,
     CostBasis,
     CostEstimate,
+    CostStatus,
     FinalResponse,
     ModelCatalogue,
+    Money,
     Name,
     PriceTable,
     Request,
@@ -31,6 +36,18 @@ from metis_auto.contracts import (
 from metis_auto.domain import accounting
 
 from ..measurement import MeasurementService, request_roles
+
+
+@dataclass(frozen=True)
+class DedupEffect:
+    """What the within-message dedup removed from the request, counted on the
+    chosen model: tokens (with their fidelity) and the money. A figure whose
+    inputs are not computed is None, never zero."""
+
+    tokens_removed: TokenCount
+    saving: Money | None
+    cost_before: Cost
+    cost_after: Cost
 
 
 class AccountingService:
@@ -133,24 +150,9 @@ class AccountingService:
             raise ValueError("decompose needs a served answer and its model")
         hit = meta.served_by == ServedBy.CACHE
         reported = None if hit else meta.answer_usage
-        output = reported.output if reported and reported.output else None
 
         def undiscounted(req: Request) -> AccountedUsage:
-            counted = self.account(
-                req, chosen, answer, basis=CostBasis.AVOIDED_ESTIMATE
-            )
-            if output is None:
-                return counted
-            usage = counted.usage.model_copy(
-                update={
-                    "output": output,
-                    "reasoning": reported.reasoning if reported else None,
-                    "total": accounting.sum_counts((counted.usage.input, output)),
-                }
-            )
-            return self.account(
-                req, chosen, answer, usage=usage, basis=CostBasis.AVOIDED_ESTIMATE
-            )
+            return self._undiscounted(req, chosen, answer, reported)
 
         full = undiscounted(request)
         sent = full if sent_request is None else undiscounted(sent_request)
@@ -165,3 +167,68 @@ class AccountingService:
             else accounting.provider_cache_discount(reported, target, self._prices),
             actually_paid=meta.total_cost,
         )
+
+    def _undiscounted(
+        self,
+        req: Request,
+        chosen: str,
+        answer: str,
+        reported: TokenUsage | None,
+    ) -> AccountedUsage:
+        """``req`` on the chosen model with the served answer's output and no
+        provider-cache discount (the decomposition's reading of a request)."""
+        output = reported.output if reported and reported.output else None
+        counted = self.account(req, chosen, answer, basis=CostBasis.AVOIDED_ESTIMATE)
+        if output is None:
+            return counted
+        usage = counted.usage.model_copy(
+            update={
+                "output": output,
+                "reasoning": reported.reasoning if reported else None,
+                "total": accounting.sum_counts((counted.usage.input, output)),
+            }
+        )
+        return self.account(
+            req, chosen, answer, usage=usage, basis=CostBasis.AVOIDED_ESTIMATE
+        )
+
+    def dedup_effect(
+        self,
+        request: Request,
+        deduped_request: Request,
+        response: FinalResponse,
+        *,
+        chosen_model_id: str | None = None,
+    ) -> DedupEffect:
+        """The part of the context term that is the within-message dedup:
+        the chosen model's tokens and cost on ``request`` less those on
+        ``deduped_request`` (what was sent before compression). Counted from
+        the two requests with the model's tokenizer, so the tokens are exactly
+        those that left the request actually sent."""
+        meta = response.metadata
+        chosen = chosen_model_id or meta.final_model_id
+        if chosen is None or response.answer is None:
+            raise ValueError("dedup_effect needs a served answer and its model")
+        reported = None if meta.served_by == ServedBy.CACHE else meta.answer_usage
+        before = self._undiscounted(request, chosen, response.answer, reported)
+        after = self._undiscounted(deduped_request, chosen, response.answer, reported)
+        full_in = self.content_tokens(request, chosen)
+        left_in = self.content_tokens(deduped_request, chosen)
+        removed = TokenCount(
+            tokens=max(0, full_in.tokens - left_in.tokens),
+            fidelity=accounting.worst_fidelity((full_in.fidelity, left_in.fidelity))
+            or full_in.fidelity,
+            method=full_in.method,
+        )
+        saving = None
+        if (
+            before.cost.status == CostStatus.COMPUTED
+            and after.cost.status == CostStatus.COMPUTED
+            and before.cost.amount is not None
+            and after.cost.amount is not None
+        ):
+            saving = Money(
+                amount=before.cost.amount.amount - after.cost.amount.amount,
+                currency=before.cost.amount.currency,
+            )
+        return DedupEffect(removed, saving, before.cost, after.cost)

@@ -39,6 +39,8 @@ class SpanName(StrEnum):
     CACHE_LOOKUP_SEMANTIC = "cache_lookup.semantic"
     EMBED = "embed"
     CONTEXT = "context"
+    CONTEXT_DEDUP = "context.dedup"
+    """Within-message chunk dedup (local, pure): overhead."""
     CONTEXT_COMPRESS = "context.compress"
     """A local context compressor (e.g. LLMLingua-2): overhead (brief §9)."""
     ATTEMPT = "attempt"
@@ -70,6 +72,7 @@ SPAN_CATEGORY = MappingProxyType(
         SpanName.CACHE_LOOKUP_SEMANTIC: LatencyCategory.OVERHEAD,
         SpanName.EMBED: LatencyCategory.OVERHEAD,
         SpanName.CONTEXT: LatencyCategory.OVERHEAD,
+        SpanName.CONTEXT_DEDUP: LatencyCategory.OVERHEAD,
         SpanName.CONTEXT_COMPRESS: LatencyCategory.OVERHEAD,
         SpanName.MEASUREMENT_CALL: LatencyCategory.OVERHEAD,
         SpanName.ATTEMPT: LatencyCategory.CONTAINER,

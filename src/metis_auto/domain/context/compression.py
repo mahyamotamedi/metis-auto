@@ -161,7 +161,8 @@ def mark(
     the strategy name suffixed with ":<compressor>"."""
     rows = tuple(
         row.model_copy(update={"action": ContextAction.COMPRESSED})
-        if row.component in compressed and row.action == ContextAction.KEPT
+        if row.component in compressed
+        and row.action in (ContextAction.KEPT, ContextAction.DEDUPLICATED)
         else row
         for row in plan.record.components
     )

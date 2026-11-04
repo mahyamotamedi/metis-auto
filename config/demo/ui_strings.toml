@@ -286,7 +286,7 @@ budget_live_charged = { en = "Every live call is charged here.", fa = "هر تم
 not_computed = { en = "not computed", fa = "محاسبه نشده" }
 term_premium_estimate = { en = "Premium estimate", fa = "تخمین مدل گران" }
 term_routing = { en = "Routing", fa = "مسیریابی" }
-term_compression = { en = "Compression", fa = "فشرده‌سازی" }
+term_compression = { en = "Context (dedup + compression)", fa = "زمینه (حذف تکراری + فشرده‌سازی)" }
 term_cache = { en = "Cache", fa = "حافظه‌ی نهان" }
 term_provider_cache = { en = "Provider cache", fa = "حافظه‌ی نهان ارائه‌دهنده" }
 term_extra_cost = { en = "Extra cost", fa = "هزینه‌ی اضافه" }
@@ -398,7 +398,8 @@ set_focus_note = { en = "The settings are in the sidebar.", fa = "تنظیمات
 [workspace]
 # Chat workspaces (UI-S05, UI-S06), the direct-chat banner (UI-B04) and the savings panel (UI-D*).
 ws_bots = { en = "Chatbots", fa = "چت‌بات‌ها" }
-ws_bots_note = { en = "SYNTHETIC bots written for the demo; the real bot list comes later.", fa = "چت‌بات‌های ساختگی که برای دمو نوشته شده‌اند؛ فهرست چت‌بات‌های واقعی بعداً می‌آید." }
+# Updated demo-list explanation; Persian wording [PLACEHOLDER: Persian review].
+ws_bots_note = { en = "One SYNTHETIC sample per language. The Metis list below shows only bots with usable stored RAG passages.", fa = "برای هر زبان یک نمونهٔ ساختگی نمایش داده می‌شود. فهرست متیس در پایین فقط ربات‌های دارای متن بازیابی‌شدهٔ قابل استفاده را نشان می‌دهد." }
 ws_lang_fa = { en = "Persian", fa = "فارسی" }
 ws_lang_en = { en = "English", fa = "انگلیسی" }
 ws_rag_yes = { en = "RAG", fa = "با بازیابی (RAG)" }
@@ -544,3 +545,23 @@ create_err_long = { en = "The instructions or a passage is too long (8,000 chara
 create_err_many = { en = "Too many passages (10 at most).", fa = "تعداد بخش‌های دانش زیاد است (حداکثر ۱۰)." }
 create_err_write = { en = "The chatbot could not be saved on this computer (runs/demo/). Check that the folder is writable.", fa = "چت‌بات روی این رایانه ذخیره نشد (runs/demo/). قابل‌نوشتن بودن پوشه را بررسی کنید." }
 create_err_unavailable = { en = "Saving chatbots is not available in this run.", fa = "ذخیره چت‌بات در این اجرا در دسترس نیست." }
+
+# Sprint winners in the live demo (ADR-0066). All Persian
+# below is [PLACEHOLDER: Persian review].
+[sprint_demo]
+dedup_toggle = { en = "Remove duplicate chunks (DEMO)", fa = "حذف تکه‌های تکراری (نمایشی)" }
+dedup_help = { en = "Within one message, exact duplicate retrieved chunks are removed (the first copy stays; nothing else changes). Runs before compression.", fa = "در هر پیام، تکه‌های بازیابی‌شده‌ی کاملاً تکراری حذف می‌شوند (نخستین نسخه می‌ماند؛ چیز دیگری تغییر نمی‌کند). پیش از فشرده‌سازی اجرا می‌شود." }
+sticky_inner = { en = "Sticky routing: router for new anchors", fa = "مسیریابی چسبنده: مسیریاب برای لنگر تازه" }
+inner_rule_based = { en = "Rules (placeholder)", fa = "قواعد (موقت)" }
+inner_decision_router = { en = "Decision router, rules only", fa = "مسیریاب تصمیم، فقط قواعد" }
+router_rules_only = { en = "The decision router runs rules only here: no router model is called and nothing extra is spent.", fa = "مسیریاب تصمیم در اینجا فقط قواعد را اجرا می‌کند: هیچ مدل مسیریابی فراخوانی نمی‌شود و هزینه‌ی اضافه‌ای نیست." }
+routing_tier = { en = "Tier", fa = "رده" }
+routing_safe_tier = { en = "Safe tier: no rule matched, so the cheap default model took it. Most traffic lands here.", fa = "رده‌ی امن: هیچ قاعده‌ای نخورد و مدل ارزان پیش‌فرض آن را برداشت. بیشتر ترافیک اینجا می‌افتد." }
+dedup_title = { en = "Duplicate chunks removed (DEMO)", fa = "تکه‌های تکراریِ حذف‌شده (نمایشی)" }
+dedup_row_chunks = { en = "Chunks removed (this message)", fa = "تکه‌های حذف‌شده (این پیام)" }
+dedup_row_tokens = { en = "Tokens removed", fa = "توکن‌های حذف‌شده" }
+dedup_row_saving = { en = "Dedup saving (this message)", fa = "صرفه‌جویی حذف تکراری (این پیام)" }
+dedup_row_session = { en = "Dedup saving (session)", fa = "صرفه‌جویی حذف تکراری (نشست)" }
+dedup_note = { en = "The dedup saving is part of the context line above (dedup first, then compression), shown next to the routing and cache savings.", fa = "صرفه‌جویی حذف تکراری بخشی از خط زمینه در بالاست (نخست حذف تکراری، سپس فشرده‌سازی) و کنار صرفه‌جویی مسیریابی و حافظه نهان آمده است." }
+provisional_label = { en = "Provisional: cost only, pending quality.", fa = "موقت: فقط هزینه، در انتظار سنجش کیفیت." }
+mechanism_note = { en = "Live savings here are a mechanism demo on your own messages. The sprint's replay figures are on the Results page.", fa = "صرفه‌جویی‌های زنده‌ی اینجا نمایش سازوکار روی پیام‌های خودتان است. اعداد بازپخش اسپرینت در صفحه‌ی نتایج است." }

@@ -35,7 +35,7 @@ import pandas as pd
 import streamlit as st
 
 from metis_auto.wiring.chat import (
-    ROUTER_MODES,
+    STICKY_INNERS,
     CompressionMode,
     RoutingMode,
     TurnReport,
@@ -209,8 +209,8 @@ def _on_method() -> None:
         _notice("error", S("notice_setting_failed", error=error))
 
 
-def _on_router_mode() -> None:
-    error = _ws().current().set_router_mode(_s().router_mode)
+def _on_sticky_inner() -> None:
+    error = _ws().current().set_sticky_inner(_s().sticky_inner)
     if error:
         _notice("error", S("notice_setting_failed", error=error))
 
@@ -571,8 +571,18 @@ def _sidebar(chat: ChatWorkspace, banner) -> None:
     t = _s().ui_text
     direct = chat.journey == Journey.DIRECT
     with st.sidebar:
-        if not direct:
-            _bot_list()
+        _advanced(chat, banner)
+        st.html(side_title_html(S("set_header")))
+        key = "mx-settings-focus" if ws.settings_focus else "mx-settings"
+        with st.container(key=key):
+            for card in setting_cards(
+                chat, t, context_available=ws.context_available(t)
+            ):
+                _switch(card, show_label=True)
+                if card.disabled_reason:
+                    st.caption(card.disabled_reason)
+            if direct:
+                _model_selector(chat)
         st.button(
             S("ws_new_chat" if direct else "ws_new_conversation"),
             key="new_conversation",
@@ -589,18 +599,8 @@ def _sidebar(chat: ChatWorkspace, banner) -> None:
                 type="tertiary",
             )
         st.caption(ws.conversations_note(t))
-        st.html(side_title_html(S("set_header")))
-        key = "mx-settings-focus" if ws.settings_focus else "mx-settings"
-        with st.container(key=key):
-            for card in setting_cards(
-                chat, t, context_available=ws.context_available(t)
-            ):
-                _switch(card, show_label=True)
-                if card.disabled_reason:
-                    st.caption(card.disabled_reason)
-            if direct:
-                _model_selector(chat)
-        _advanced(chat, banner)
+        if not direct:
+            _bot_list()
 
 
 def _model_selector(chat: ChatWorkspace) -> None:
@@ -624,7 +624,7 @@ def _advanced(chat: ChatWorkspace, banner) -> None:
     s, ws = _s(), _ws()
     t = s.ui_text
     session = chat.session
-    with st.expander(S("set_advanced")):
+    with st.expander(S("set_advanced"), expanded=True):
         s.mode = LIVE if ws.live else FAKE
         choice = ws.live_choice(t)
         st.radio(
@@ -649,14 +649,18 @@ def _advanced(chat: ChatWorkspace, banner) -> None:
             help=S("routing_help"),
         )
         if chat.routing_method == RoutingMode.DECISION_ROUTER:
-            s.router_mode = session.router_mode
-            st.selectbox(
-                S("decision_backends"),
-                list(ROUTER_MODES),
-                key="router_mode",
-                format_func=lambda v: t(f"router_{v}"),
-                on_change=_on_router_mode,
-                help=S("decision_backends_help"),
+            # Rules only: the local, hosted and hybrid backends are not offered
+            # in the demo (ADR-0066).
+            st.caption(S("router_rules_only"))
+        if chat.routing_method == RoutingMode.STICKY_V1:
+            s.sticky_inner = session.sticky_inner
+            st.radio(
+                S("sticky_inner"),
+                list(STICKY_INNERS),
+                key="sticky_inner",
+                format_func=lambda v: t(f"inner_{v}"),
+                on_change=_on_sticky_inner,
+                horizontal=True,
             )
         if chat.journey != Journey.DIRECT:
             _model_selector(chat)
@@ -669,10 +673,16 @@ def _advanced(chat: ChatWorkspace, banner) -> None:
             on_change=_on_compression,
             horizontal=True,
         )
-        if session.compression == CompressionMode.LLMLINGUA2:
-            st.warning(S("llmlingua_warning"), icon=":material/warning:")
-        elif session.compression == CompressionMode.FAKE:
+        if session.compression == CompressionMode.FAKE:
             st.caption(S("compression_fake_note"))
+        s.dedup = session.dedup
+        st.toggle(
+            S("dedup_toggle"),
+            key="dedup",
+            on_change=_on_other,
+            args=(lambda session, v: session.set_dedup(v), "dedup"),
+            help=S("dedup_help"),
+        )
         s.seed = session.seed
         st.toggle(
             S("demo_seed"),
@@ -725,12 +735,10 @@ def _live_state(chat: ChatWorkspace):
 
 
 def _live_banner(banner) -> None:
-    """Live ON, blocked and stopped stay prominent above the chat; the calm
-    fake state is the header chip, with its reason under Advanced."""
-    if banner.state == "off":
+    """Mode stays in the header chip; only blocked/stopped errors need a banner."""
+    if banner.state in {"off", "on"}:
         return
-    show = {"on": st.warning, "blocked": st.error, "stopped": st.error}[banner.state]
-    show(f"**{banner.title}.** {banner.detail}")
+    st.error(f"**{banner.title}.** {banner.detail}")
 
 
 def _notice_once() -> None:
@@ -1222,6 +1230,11 @@ def _decomposition(p: PanelView) -> None:
     ]
     st.table(pd.DataFrame(rows).set_index(S("col_term")))
     st.caption(S("decomposition_note"))
+    if p.dedup_rows:
+        st.markdown(f"**{S('dedup_title')}**")
+        st.table(pd.DataFrame(p.dedup_rows, columns=["", ""]).set_index(""))
+        st.caption(S("dedup_note"))
+    st.caption(f"{S('provisional_label')} {S('mechanism_note')}")
 
 
 # --- the Chat page: the router (UI-S01, S04..S06)
