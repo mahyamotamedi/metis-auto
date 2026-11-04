@@ -42,6 +42,8 @@ Status: **provisional: cost only, pending quality.** Written 2026-11-03 (plan ta
 
 Not shown: A `rc-v1` with the `lexical_overlap` scorer (a 2,000-request sample, heuristic): **excluded from the combined run**, kept as a file.
 
+Real reranker not run: no GPU on the owner's machine (Intel Mac, no CUDA or MPS). The A `rc-v1` rows rest on the token-sizing results `context.reranker_cut.lexical_overlap` and `observed_relevancy`, both *heuristic* scorers, not the real `bge-reranker-v2-m3`.
+
 **Decision rule.** Context is "tokens only, quality not measured": no version can pass the plan's quality rule (loss minus win within noise + 3 points; no group more than 10 points worse; JSON validity, language and refusal rate not worse) without the paid ablation. Pick by saving, label every result accordingly.
 
 **Provisional winner: C within-message dedup** (provisional: cost only, pending quality). It removes only **exact copies** of a chunk inside one message, so it is the lowest-risk way to remove tokens, and it saves the most (6.11% as_logged).

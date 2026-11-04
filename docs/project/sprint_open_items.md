@@ -22,4 +22,6 @@ Answered 2026-11-04 (Q-62 to Q-64, `docs/guides/benchmark_pilot.md` section 0) a
 
 ## Real reranker run (cut-first item (a))
 
+Real reranker not run: no GPU on the owner's machine (checked 2026-11-04: Intel Mac, no `torch` in `.venv`; the adapter accepts only `cuda` or `mps`). The fallback is the *heuristic* token-sizing results `context.reranker_cut.lexical_overlap` and `observed_relevancy`.
+
 Pinned 2026-11-04 (`config/reference/rerankers.toml`). Not fetched, not run: on the GPU machine, `python scripts/fetch_reranker_assets.py`, then `python scripts/run_reranker_cut.py --scorers bge_reranker_v2_m3`. No data is uploaded.
