@@ -1,0 +1,86 @@
+{
+  "check": "metis-wrapper-live-check",
+  "date": "2026-11-04",
+  "time_utc": "2026-11-04T10:26:48+00:00",
+  "run_id": "wrapper-check-20261104T102648Z-693a82",
+  "synthetic_input": {
+    "instructions": "[SYNTHETIC] You are a test assistant. Reply in one short sentence.",
+    "message": "[SYNTHETIC] سلام! Please reply with the word OK."
+  },
+  "message_layout": "A-55: instructions as a system message, then the user message",
+  "config": {
+    "catalogue": "cat-metis-test-2026-11-04-v41",
+    "prices": "prices-metis-2026-10-18-s75-g55-v41",
+    "endpoints": "endpoints-metis-2026-10-18-s75-effort",
+    "baselines": "baselines-2026-10-30",
+    "tokenizers": "tokenizers-2026-10-30-g55",
+    "label_mapping": "label-mapping-sample-v1-2026-10-18",
+    "compressors": "compressors-2026-10-19",
+    "router_prices": "prices-metis-router-2026-11-02",
+    "router_questions": "router-questions-v1",
+    "routers": "routers-2026-11-03"
+  },
+  "results": [
+    {
+      "model_id": "deepseek-v4.1-flash",
+      "status": "ok",
+      "outcome": "response",
+      "provider_model": "deepseek-flash",
+      "finish_reason": "complete",
+      "answer_chars": 3,
+      "latency_ms": 2918.1,
+      "local": {
+        "content_input": 35,
+        "content_fidelity": "exact_local",
+        "content_method": "hf-deepseek-v4-8f9f37ca37fd@0.23.2",
+        "template_overhead": 30,
+        "counted_input": 65,
+        "visible_answer_tokens": 2
+      },
+      "reported": {
+        "input": {
+          "tokens": 65,
+          "field": "provider:prompt_tokens"
+        },
+        "output": {
+          "tokens": 34,
+          "field": "provider:completion_tokens"
+        },
+        "cached_input": {
+          "tokens": 0,
+          "field": "provider:prompt_tokens_details.cached_tokens"
+        },
+        "reasoning": {
+          "tokens": 31,
+          "field": "provider:reasoning_tokens"
+        }
+      },
+      "cost": "0.000033 USD",
+      "cost_caveats": [],
+      "comparison": {
+        "input_reported_minus_counted": 0,
+        "input_reported_minus_content": 30,
+        "output_reported_minus_visible": 32,
+        "output_unexplained": 1
+      }
+    },
+    {
+      "model_id": "gpt-4.1-nano",
+      "status": "error",
+      "outcome": "error",
+      "error_class": "invalid_request",
+      "provider_error_code": "http_404:model_not_found",
+      "latency_ms": 1867.4,
+      "charged": "0.001840245",
+      "live_stopped": "actual cost not computed (usage_unknown); charged the pre-call estimate and stopped live calls for this run"
+    }
+  ],
+  "budget_after": {
+    "lifetime_spent": "1.7819915238",
+    "lifetime_cap": "92",
+    "lifetime_used": "1.94%",
+    "run_spent": "0.001840245",
+    "run_cap": "7",
+    "currency": "USD"
+  }
+}

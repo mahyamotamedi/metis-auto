@@ -124,3 +124,24 @@ def test_transient_errors_cannot_overspend_the_cap():
 def test_the_default_streak_limit_is_set():
     client, *_ = _client([])
     assert client.max_consecutive_transient >= 2
+
+
+def _not_found():
+    return ModelError(
+        error_class=ErrorClass.INVALID_REQUEST,
+        retryable=False,
+        provider_error_code="http_404:model_not_found",
+        source=AnswerSource.LIVE,
+    )
+
+
+def test_an_intermittent_model_not_found_is_transient_a_real_one_stops_the_run():
+    client, guard, _, live = _client([_not_found(), _ok()], max_consecutive_transient=3)
+    client.invoke(ex.model_invocation())
+    assert guard.stopped is None  # charged the estimate, the run goes on
+    client.invoke(ex.model_invocation())
+    assert live.calls == 2
+    gone, guard2, _, live2 = _client([_not_found()] * 3, max_consecutive_transient=3)
+    for _ in range(3):
+        gone.invoke(ex.model_invocation())
+    assert guard2.stopped is not None and "consecutive" in guard2.stopped

@@ -220,7 +220,10 @@ def test_plan_counts_and_prices_with_no_call(root, tmp_path):
     assert plan["makes_calls"] is False and plan["records"] == 4
     assert plan["callable_arms"] == ["gpt-5-nano", "gpt-4o-mini", "deepseek-v4-flash"]
     refused = {a["model"]: a["reason"] for a in plan["arms"] if not a["callable"]}
-    assert set(refused) == {"gpt-4.1-nano", "mimo-v2.5"}
+    # Only callable models are requested since 2026-11-04 (amendment 5); the
+    # two retired models stay listed as not callable, so asking again is refused.
+    assert refused == {}
+    assert {"gpt-4.1-nano", "mimo-v2.5"} <= set(bench.config.arms.not_callable)
     assert plan["generation"]["calls"] == 12
     assert plan["generation"]["lower_bound_usd"] is not None
     assert plan["generation"]["ceiling_usd"] is not None

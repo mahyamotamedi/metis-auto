@@ -138,12 +138,16 @@ def framework_report(
     bootstrap: BootstrapSettings | None,
     gate: Mapping[str, str] | None,
     run_id: str,
+    families: Mapping[str, str] | None = None,
+    current_judges: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     """The framework's comparison table per judge. ``scores_by_judge``: judge ID
     → ``(case, model)`` → pairwise score. ``languages``: case → language group.
     ``gate``: framework language code → ``validated`` / ``unvalidated`` /
     ``not_configured`` (default ``not_configured``); a language is marked
-    validated only when its gate says so."""
+    validated only when its gate says so. ``families``: model ID → provider
+    family (judges and arms); with it the report adds ``self_preference`` (see
+    ``split_by_family``), over ``current_judges`` only."""
     units = {
         r.case_id: SamplingUnit(
             r.case_id,
@@ -195,7 +199,7 @@ def framework_report(
                 to_plain(merged[(r.language, r.model_id, r.effort)]) for r in order
             ]
         }
-    return {
+    report = {
         "format": FORMAT_VERSION,
         "run_id": run_id,
         "reconstructed": True,
@@ -209,6 +213,42 @@ def framework_report(
         "min_n": min_n,
         "judge_gate": judge_gate,
         "tables": tables,
+    }
+    if families is not None:
+        report["self_preference"] = split_by_family(
+            tables, families, current_judges or tuple(tables)
+        )
+    return report
+
+
+def split_by_family(
+    tables: Mapping[str, Any],
+    families: Mapping[str, str],
+    judges: Sequence[str],
+) -> dict[str, Any]:
+    """Self-preference handling (ADR-0053 amendment 5): a judge may favour an
+    answer from its own provider family. Every (judge, language, arm) row of the
+    per-judge tables goes to ``same_family`` when the judge's family equals the
+    arm's, else to ``headline``. The headline of an arm is therefore its score
+    **without its own family's judge**; the same-family rows are reported apart
+    and are never averaged into it. Judges outside ``judges`` (an earlier judge
+    version) are left out of both. An unknown family counts as not the same
+    (stated in ``unknown_family``)."""
+    headline, same, unknown = [], [], set()
+    for judge in judges:
+        if judge not in tables:
+            continue
+        for row in tables[judge]["rows"]:
+            fam_j, fam_a = families.get(judge), families.get(row["model_id"])
+            if fam_j is None or fam_a is None:
+                unknown.add(judge if fam_j is None else row["model_id"])
+            entry = {"judge": judge, "judge_family": fam_j, "arm_family": fam_a, **row}
+            (same if fam_j is not None and fam_j == fam_a else headline).append(entry)
+    return {
+        "headline": headline,
+        "same_family": same,
+        "judges": list(judges),
+        "unknown_family": sorted(unknown),
     }
 
 
@@ -254,4 +294,35 @@ def to_markdown(report: Mapping[str, Any]) -> str:
                 f"{_est(r['latency_total_ms'])} | {_est(r['quality'])} | "
                 f"{r['label']} |"
             )
+    sp = report.get("self_preference")
+    if sp is not None:
+        head = "| language | model | judge | quality |\n|---|---|---|---|"
+        lines += [
+            "",
+            "## Self-preference: headline (judge from another family than the arm)",
+            "",
+            "A judge may favour answers of its own provider family. The headline "
+            "of an arm leaves out its own family's judge; same-family rows follow "
+            "apart and are not averaged into it. Current judges: "
+            + ", ".join(sp["judges"])
+            + ".",
+            "",
+            head,
+        ]
+        lines += [
+            f"| {r['language']} | {r['model_id']} | {r['judge']} | "
+            f"{_est(r['quality'])} |"
+            for r in sp["headline"]
+        ]
+        lines += [
+            "",
+            "## Same-family pairs (judge family equals arm family; not the headline)",
+            "",
+            head,
+        ]
+        lines += [
+            f"| {r['language']} | {r['model_id']} | {r['judge']} | "
+            f"{_est(r['quality'])} |"
+            for r in sp["same_family"]
+        ]
     return "\n".join(lines) + "\n"

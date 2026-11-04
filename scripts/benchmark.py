@@ -102,7 +102,9 @@ def main() -> int:
     ap.add_argument("--hits", type=int, help="cache-hit-plan: reviewed hits (~300)")
     ap.add_argument("--records", type=int, help="ablation-plan: records")
     ap.add_argument("--versions", nargs="+", help="ablation-plan: context versions")
-    ap.add_argument("--arm", help="ablation-plan: the answering arm")
+    ap.add_argument(
+        "--arm", help="ablation-plan: the answering arm; generate, judge: only this arm"
+    )
     ap.add_argument(
         "--with-db", action="store_true", help="count input sizes from the database"
     )
@@ -144,7 +146,11 @@ def main() -> int:
                 print("refused: --run-id and --machine are required", file=sys.stderr)
                 return 2
             step = bench.generate if args.action == "generate" else bench.judge
-            extra = {"only_judge": args.judge} if args.action == "judge" else {}
+            extra = (
+                {"only_judge": args.judge, "only_arm": args.arm}
+                if args.action == "judge"
+                else {"only_arm": args.arm}
+            )
             result = step(
                 run_id=args.run_id,
                 machine=args.machine,
@@ -160,7 +166,7 @@ def main() -> int:
         elif args.action == "agreement":
             out = bench.agreement(run_id=args.run_id)
         elif args.action == "framework-report":
-            report = bench.framework_report(run_id=args.run_id)
+            report = bench.framework_report(run_id=args.run_id, scope=args.scope)
             out = {
                 "written": f"runs/benchmark/{args.run_id}/framework_report.md",
                 "judges": sorted(report["tables"]),

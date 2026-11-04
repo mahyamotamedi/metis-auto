@@ -78,9 +78,9 @@ def test_committed_config_has_every_owner_value_set():
     assert estimate_gaps(config) == []
     assert str(config.run.hard_cap_usd) == "35"
     assert config.run.max_output_tokens == 8192
-    assert config.judges.models == ("gpt-4o-mini", "deepseek-v4-flash")
+    assert config.judges.models == ("gpt-4o-mini", "deepseek-v4.1-flash")
     assert config.labels.acceptable_score == 0.5
-    assert config.spend_share.expected_machines == ("kimia",)
+    assert config.spend_share.expected_machines == ("kimia", "saba")
     assert config.gates.metis_allows_samples is True
     assert "Metis answered in writing" in (config.gates.metis_answer_ref or "")
 
@@ -111,13 +111,13 @@ def test_missing_ledger_summaries_are_reported_never_faked(tmp_path):
     bench.root = tmp_path
     status = bench.summary_status()
     assert status["folder_exists"] is False and status["present"] == []
-    assert status["missing"] == ["kimia"]
+    assert status["missing"] == ["kimia", "saba"]
     folder = tmp_path / bench.config.spend_share.summaries_dir
     folder.mkdir(parents=True)
     (folder / "kimia.json").write_text("{}", encoding="utf-8")
     again = bench.summary_status()
     assert again["present"] == ["kimia"]
-    assert again["missing"] == []
+    assert again["missing"] == ["saba"]
 
 
 def test_spend_share_merge_warns_about_missing_summaries(monkeypatch, capsys, tmp_path):
