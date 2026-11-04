@@ -118,6 +118,7 @@ def main() -> int:
     ap.add_argument("--name", help="labels: benchmark:<name>")
     ap.add_argument("--approved-by")
     ap.add_argument("--cap", help="USD cap the owner approved for this run")
+    ap.add_argument("--judge", help="judge: run only this configured judge model")
     ap.add_argument("--dataset-text-approved", action="store_true")
     args = ap.parse_args()
     bench = Benchmark()
@@ -139,11 +140,13 @@ def main() -> int:
                 print("refused: --run-id and --machine are required", file=sys.stderr)
                 return 2
             step = bench.generate if args.action == "generate" else bench.judge
+            extra = {"only_judge": args.judge} if args.action == "judge" else {}
             result = step(
                 run_id=args.run_id,
                 machine=args.machine,
                 approval=_approval(args),
                 scope=args.scope,
+                **extra,
             )
             out = {"done": args.action, "summary": str(type(result).__name__)}
         elif args.action in ("cache-hit-plan", "ablation-plan"):

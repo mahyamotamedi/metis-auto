@@ -721,9 +721,12 @@ class Benchmark:
         approval: LiveApproval | None,
         http_client_factory: Callable[[], Any] | None = None,
         scope: str = "pilot",
+        only_judge: str | None = None,
     ) -> list[JudgeRun]:
         """Both judges on every (record, callable arm) pair against gpt-5.5,
-        both orders; results written content-free under ``runs/benchmark/``."""
+        both orders; results written content-free under ``runs/benchmark/``.
+        ``only_judge`` runs one of the configured judges (so the two can run as
+        two processes); the two-family check still covers the configured pair."""
         reasons = self.refusals(approval=approval, step="judge")
         if reasons:
             raise BenchmarkRefused(reasons)
@@ -773,7 +776,11 @@ class Benchmark:
         prices = loaded.reference.prices
         out = []
         folder = self.root / RUNS_DIR / run_id / "judging"
+        if only_judge is not None and only_judge not in judges:
+            raise BenchmarkRefused([f"--judge {only_judge}: not in judges.models"])
         for model in judges:
+            if only_judge is not None and model != only_judge:
+                continue
             entry = catalogue[model]
             judge = LlmPairwiseJudge(
                 client,

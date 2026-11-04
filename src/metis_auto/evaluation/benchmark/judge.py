@@ -289,7 +289,8 @@ def judge_all(
     """E5 ``judge_items`` per pair; a refused output or failed call becomes
     ``not_evaluated`` with ``judge_output_invalid:<reason>`` or
     ``judge_call_failed:<reason>``. Costs of failed pairs are not lost: they
-    stay in the judge's ``records``."""
+    stay in the judge's ``records``. An interrupt (SIGINT) abandons the pair in
+    flight and returns the pairs finished so far; the rest are simply absent."""
     outcomes: list[PairOutcome] = []
     total = Decimal(0)
     for item in items:
@@ -303,6 +304,8 @@ def judge_all(
         except JudgeCallFailed as exc:
             outcomes.append(_failed(item, f"judge_call_failed:{exc.reason}"))
             continue
+        except KeyboardInterrupt:
+            break  # stop here: the pairs finished so far are kept and written
         outcomes.extend(run.outcomes)
         total += run.cost_usd_total
     excluded = Counter(o.reason for o in outcomes if o.state != "judged" and o.reason)
