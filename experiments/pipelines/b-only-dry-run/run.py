@@ -8,7 +8,8 @@ Units decide what may be added (ADR-0036 decisions 5 to 7):
   have no fee block, so it is **not computed in these units** there.
 - R-B2 (context) saves tokens: ``as_logged`` (recorded) and the three repriced
   baselines (before minus after, price-file units).
-- R-B3 (routing) reprices: the three repriced baselines only.
+- R-B3 (routing): all four baselines, each with its own model as the incumbent
+  (ADR-0046 points 5 and 6); ``as_logged`` at implied recorded rates.
 
 So a combined saving exists per baseline only for the steps computed in that
 baseline's units (``unit_cells``); the rest is "not computed in these units".
@@ -35,14 +36,12 @@ HERE = Path(__file__).resolve().parent
 STEP_UNITS = {
     "cache": ("as_logged",),
     "context": ("premium_gpt_5_5", "as_logged", "todays_models", "best_single_cheap"),
-    "routing": ("premium_gpt_5_5", "todays_models", "best_single_cheap"),
+    "routing": ("premium_gpt_5_5", "as_logged", "todays_models", "best_single_cheap"),
 }
 BASELINES = ("premium_gpt_5_5", "as_logged", "todays_models", "best_single_cheap")
 REASONS = {
     "cache": "not computed in these units: R-B1 saves recorded per-call fees, "
     "and the repriced baselines have no fee block",
-    "routing": "not computed in these units: the routed cost is in price-file "
-    "units and recorded units are never subtracted across",
 }
 
 

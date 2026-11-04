@@ -3,7 +3,7 @@ one target, plus a content-free composition record. Traces: FR-CTX-01…05."""
 
 from . import compression
 from .compression import CompressionConfig
-from .pass_through import PassThroughStrategy
+from .pass_through import DatasetPositionsStrategy, PassThroughStrategy
 from .policy import (
     ContextConfig,
     ContextStrategy,
@@ -16,6 +16,7 @@ __all__ = [
     "CompressionConfig",
     "ContextConfig",
     "ContextStrategy",
+    "DatasetPositionsStrategy",
     "OverflowRule",
     "PassThroughStrategy",
     "check_fit",

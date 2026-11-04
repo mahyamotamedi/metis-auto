@@ -88,11 +88,12 @@ def test_header_budget_unknown_is_never_a_made_up_number():
 
 
 def _committed_ids() -> set[str]:
+    """Lever IDs of the result files; other JSON in the folder (a summary such as
+    ``pipeline_b_overhead.json``) has no ``lever_id`` and is skipped, as
+    ``load_view`` skips it."""
     folder = REPO / LEVERS_DIR
-    return {
-        json.loads(p.read_text(encoding="utf-8"))["lever_id"]
-        for p in folder.glob("*.json")
-    }
+    data = (json.loads(p.read_text(encoding="utf-8")) for p in folder.glob("*.json"))
+    return {d["lever_id"] for d in data if isinstance(d, dict) and "lever_id" in d}
 
 
 @pytest.mark.skipif(not (REPO / LEVERS_DIR).is_dir(), reason="no lever results")

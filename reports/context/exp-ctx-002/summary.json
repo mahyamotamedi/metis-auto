@@ -27,14 +27,14 @@
       "total": "4702.739152100"
     },
     "todays_models": {
-      "n_known": "90509",
+      "n_known": "220208",
       "n_requests": "220908",
-      "n_unknown": "130399",
-      "token_cost": "27.635415161",
-      "total": "27.635415161"
+      "n_unknown": "700",
+      "token_cost": "238.710293859",
+      "total": "238.710293859"
     }
   },
-  "created_at": "2026-11-02T12:45:50.886014+00:00",
+  "created_at": "2026-11-03T10:35:58.883683+00:00",
   "data_facts": {
     "n_chunk_rows": 461387,
     "n_hash_unknown": 0,
@@ -48,6 +48,19 @@
     "tokens_per_char": 0.3384048487819899
   },
   "evidence": "tokens only, quality not measured / hypothetical reconstruction",
+  "frozen": {
+    "default": {
+      "ledger": false,
+      "pointer_tokens": 8,
+      "visible_window": 0
+    },
+    "role": "k = 0 is the default (nothing assumed visible); k <= 1 is the stated scenario; every tune scenario is reported",
+    "stated_scenario": {
+      "ledger": false,
+      "pointer_tokens": 8,
+      "visible_window": 1
+    }
+  },
   "lever": "R-B2 cross-turn chunk policy (exp-ctx-002)",
   "lever_results": [
     "rb2.cross-turn.k-0.ptr-8.pointer.as_logged",
@@ -145,8 +158,8 @@
           "total": "164.144973415"
         },
         "todays_models": {
-          "token_cost": "0.765462873",
-          "total": "0.765462873"
+          "token_cost": "9.298162383",
+          "total": "9.298162383"
         }
       },
       "scenario": {
@@ -196,8 +209,8 @@
           "total": "150.024862040"
         },
         "todays_models": {
-          "token_cost": "0.595395794",
-          "total": "0.595395794"
+          "token_cost": "8.574003866",
+          "total": "8.574003866"
         }
       },
       "scenario": {
@@ -248,8 +261,8 @@
           "total": "222.172524475"
         },
         "todays_models": {
-          "token_cost": "1.079149937",
-          "total": "1.079149937"
+          "token_cost": "12.560964143",
+          "total": "12.560964143"
         }
       },
       "scenario": {
@@ -300,8 +313,8 @@
           "total": "207.425145764"
         },
         "todays_models": {
-          "token_cost": "0.886974716",
-          "total": "0.886974716"
+          "token_cost": "11.812271340",
+          "total": "11.812271340"
         }
       },
       "scenario": {
@@ -352,8 +365,8 @@
           "total": "217.263273993"
         },
         "todays_models": {
-          "token_cost": "1.025178965",
-          "total": "1.025178965"
+          "token_cost": "12.310373600",
+          "total": "12.310373600"
         }
       },
       "scenario": {
@@ -404,8 +417,8 @@
           "total": "254.798294455"
         },
         "todays_models": {
-          "token_cost": "1.364532147",
-          "total": "1.364532147"
+          "token_cost": "14.335303723",
+          "total": "14.335303723"
         }
       },
       "scenario": {
@@ -455,8 +468,8 @@
           "total": "239.460344982"
         },
         "todays_models": {
-          "token_cost": "1.150124045",
-          "total": "1.150124045"
+          "token_cost": "13.562910522",
+          "total": "13.562910522"
         }
       },
       "scenario": {
@@ -498,10 +511,10 @@
   ],
   "scope": "shared S-3 scope (ADR-0036): period tune, no split (no fitted parameter)",
   "settings": {
-    "catalogue_version": "cat-metis-test-2026-10-18-s75-g55",
+    "catalogue_version": "cat-metis-replay-2026-11-02",
     "min_n": 30,
     "premium_model": "gpt-5.5",
-    "price_version": "prices-metis-2026-10-18-s75-g55",
+    "price_version": "prices-metis-2026-10-18-logged",
     "seed": 20261102,
     "shadow_rate": 0.01,
     "sprint_config": "sprint-2026-11-02"

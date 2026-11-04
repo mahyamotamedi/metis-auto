@@ -2,9 +2,9 @@
 
 ``collect`` reads lever result files and keeps only result JSON: the command's own
 output, non-JSON files, unreadable JSON and JSON of another shape (a summary such
-as ``final.json``) are skipped. ``write_comparison`` writes the Markdown from
-``analysis.compare``. The JSON-to-object step is the one function
-``_interim_lever_json.result_from_json`` until the shared ``LeverResult`` exists.
+as ``final.json``) are skipped. A result is read with the shared ``LeverResult``
+(S-1, ``LeverResult.model_validate``); JSON it refuses counts as another shape.
+``write_comparison`` writes the Markdown from ``analysis.compare``.
 """
 
 from __future__ import annotations
@@ -14,20 +14,17 @@ from collections.abc import Sequence
 from decimal import Decimal
 from pathlib import Path
 
-from metis_auto.analysis.compare import LeverResultLike, to_markdown
-from metis_auto.wiring._interim_lever_json import is_result, result_from_json
+from pydantic import ValidationError
 
-INTERIM_NOTE = (
-    "Results read with the interim loader: interim, not the shared implementation "
-    "(the shared LeverResult does not exist yet)."
-)
+from metis_auto.analysis.compare import to_markdown
+from metis_auto.analysis.lever_result import LeverResult
 
 
 def collect(
     paths: Sequence[Path], *, out: Path
-) -> tuple[list[LeverResultLike], list[Path]]:
+) -> tuple[list[LeverResult], list[Path]]:
     """(results, skipped paths), results in the order given."""
-    results: list[LeverResultLike] = []
+    results: list[LeverResult] = []
     skipped: list[Path] = []
     target = out.resolve()
     for path in paths:
@@ -39,10 +36,10 @@ def collect(
         except (UnicodeDecodeError, json.JSONDecodeError):
             skipped.append(path)
             continue
-        if not is_result(data):
+        try:
+            results.append(LeverResult.model_validate(data))
+        except ValidationError:
             skipped.append(path)
-            continue
-        results.append(result_from_json(data))
     return results, skipped
 
 
@@ -56,6 +53,6 @@ def write_comparison(
     """
     results, skipped = collect(paths, out=out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    text = to_markdown(results, max_tenant_share=max_tenant_share, note=INTERIM_NOTE)
+    text = to_markdown(results, max_tenant_share=max_tenant_share)
     out.write_text(text, encoding="utf-8")
     return {"results": len(results), "skipped": len(skipped), "out": str(out)}

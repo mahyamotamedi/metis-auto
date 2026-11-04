@@ -437,3 +437,94 @@ ws_chip_routing = { en = "Routing", fa = "مسیریابی" }
 ws_applied = { en = "applied", fa = "اعمال شد" }
 ws_not_applied = { en = "not applied", fa = "اعمال نشد" }
 ws_selected_by_bot = { en = "set by the chatbot", fa = "تعیین‌شده توسط چت‌بات" }
+
+# Chatbot selection from the local database (UI Stage 4: UI-S02, UI-A01..A06, UI-A33).
+# Bots are labels and derived facts only; instructions and passages are never shown.
+# Persian: [PLACEHOLDER: Persian review].
+bots_title = { en = "Your chatbots", fa = "چت‌بات‌های شما" }
+bots_db_down = { en = "The local database is not running, so the dataset's chatbots cannot be listed. Start it (docs/guides/team_setup.md); the synthetic samples below still work.", fa = "پایگاه‌داده محلی روشن نیست و چت‌بات‌های مجموعه‌داده فهرست نمی‌شوند. آن را راه‌اندازی کنید (docs/guides/team_setup.md)؛ نمونه‌های ساختگی همچنان کار می‌کنند." }
+bots_none = { en = "No chatbots were found in the local database.", fa = "هیچ چت‌باتی در پایگاه‌داده محلی پیدا نشد." }
+bots_no_match = { en = "No chatbot matches the search and filters.", fa = "هیچ چت‌باتی با جست‌وجو و پالایه‌ها مطابقت ندارد." }
+bots_create = { en = "Create new chatbot", fa = "ساخت چت‌بات جدید" }
+bots_create_unavailable = { en = "saving chatbots is not available in this run", fa = "ذخیره چت‌بات در این اجرا در دسترس نیست" }
+bots_continue = { en = "Continue", fa = "ادامه" }
+bots_back = { en = "Back", fa = "بازگشت" }
+bots_search = { en = "Search by label, for example bot-007", fa = "جست‌وجو با برچسب، مثلاً bot-007" }
+bots_more = { en = "Show more", fa = "نمایش بیشتر" }
+bots_shown = { en = "{shown} of {total} chatbots", fa = "نمایش {shown} چت‌بات از مجموع {total}" }
+bots_filters = { en = "Filters", fa = "پالایه‌ها" }
+bots_filter_language = { en = "Language of the instructions", fa = "زبان دستورالعمل‌ها" }
+bots_filter_rag = { en = "RAG", fa = "بازیابی (RAG)" }
+bots_filter_memory = { en = "Memory", fa = "حافظه" }
+bots_filter_instructions = { en = "Has instructions", fa = "دارای دستورالعمل" }
+bots_any = { en = "any", fa = "همه" }
+bots_yes = { en = "yes", fa = "بله" }
+bots_no = { en = "no", fa = "خیر" }
+bots_lang_fa = { en = "Persian", fa = "فارسی" }
+bots_lang_en = { en = "English", fa = "انگلیسی" }
+bots_lang_mixed = { en = "Persian and English", fa = "فارسی و انگلیسی" }
+bots_lang_other = { en = "other language", fa = "زبان دیگر" }
+bots_lang_none = { en = "no instructions", fa = "بدون دستورالعمل" }
+bots_chats = { en = "{n} chats", fa = "{n} گفتگو" }
+bots_chars = { en = "{n} characters", fa = "{n} نویسه" }
+bots_rag_top_k = { en = "On, top-k {k}", fa = "روشن، برای هر پرسش {k} بخش (top-k)" }
+bots_rank_of = { en = "{rank} of {total}", fa = "رتبه {rank} از مجموع {total} چت‌بات" }
+bots_traffic = { en = "{chats} chats, {messages} messages", fa = "{chats} گفتگو و {messages} پیام در گزارش‌های ثبت‌شده" }
+bots_d_language = { en = "Language of the instructions", fa = "زبان دستورالعمل‌ها" }
+bots_d_model = { en = "Model as configured", fa = "مدل تنظیم‌شده" }
+bots_d_rag = { en = "RAG", fa = "بازیابی (RAG)" }
+bots_d_memory = { en = "Memory", fa = "حافظه" }
+bots_d_summariser = { en = "Summariser", fa = "خلاصه‌ساز" }
+bots_d_instructions = { en = "Instruction length", fa = "طول دستورالعمل" }
+bots_d_rank = { en = "Traffic rank", fa = "رتبه ترافیک" }
+bots_d_traffic = { en = "Traffic in the logs", fa = "ترافیک در گزارش‌ها" }
+bots_details_note = { en = "Derived facts only. The chatbot's instructions and passages are used behind the scenes and are never shown (dataset licence). The model is the bot's configured model; Metis-Auto may route elsewhere.", fa = "فقط واقعیت‌های استخراج‌شده. دستورالعمل‌ها و بخش‌های دانش چت‌بات پشت صحنه استفاده می‌شوند و هرگز نمایش داده نمی‌شوند (مجوز مجموعه‌داده). مدل همان مدل تنظیم‌شده چت‌بات است؛ متیس‌اتو ممکن است مسیر دیگری انتخاب کند." }
+bots_synthetic_details = { en = "A SYNTHETIC sample written for the demo.", fa = "نمونه ساختگی که برای دمو نوشته شده است." }
+bots_workflow_note = { en = "{n} workflow bots are not listed (not LLM bots).", fa = "{n} ربات گردش‌کار فهرست نشده‌اند (ربات مدل زبانی نیستند)." }
+bots_content_unreadable = { en = "This chatbot's configuration could not be read from the local database. Check that it is running (docs/guides/team_setup.md).", fa = "پیکربندی این چت‌بات از پایگاه‌داده محلی خوانده نشد. روشن بودن آن را بررسی کنید (docs/guides/team_setup.md)." }
+bots_live_blocked = { en = "Real chatbots work in fake mode only until these are set: {why}", fa = "چت‌بات‌های واقعی تا زمان تنظیم این موارد فقط در حالت ساختگی کار می‌کنند: {why}" }
+live_real_needs_approval = { en = "golden_answers.real_data_approved is false in config/local.toml: sending a real chatbot's instructions and passages to a provider needs the owner's approval", fa = "golden_answers.real_data_approved در config/local.toml نادرست است: ارسال دستورالعمل‌ها و بخش‌های دانش یک چت‌بات واقعی به ارائه‌دهنده نیاز به تأیید مالک دارد" }
+ws_synthetic_samples = { en = "Synthetic samples", fa = "نمونه‌های ساختگی" }
+ws_knowledge_logged = { en = "knowledge: passages from one logged turn", fa = "دانش: بخش‌های یک نوبت ثبت‌شده" }
+ws_knowledge_none = { en = "knowledge: instructions only", fa = "دانش: فقط دستورالعمل‌ها" }
+
+# Navigation, browser history and back-tracking (UI Stage 5, owner requirement
+# 2026-11-03; ADR-0058). Persian: [PLACEHOLDER: Persian review].
+nav_steps_label = { en = "Steps", fa = "مراحل" }
+nav_step_entry = { en = "Start", fa = "شروع" }
+nav_step_bots = { en = "Chatbot", fa = "چت‌بات" }
+nav_step_settings = { en = "Settings", fa = "تنظیمات" }
+nav_step_chat = { en = "Chat", fa = "گفتگو" }
+ws_change_bot = { en = "Change chatbot", fa = "تغییر چت‌بات" }
+ws_change_settings = { en = "Change settings", fa = "تغییر تنظیمات" }
+ws_back_start = { en = "Back to start", fa = "بازگشت به شروع" }
+ws_back_help = { en = "Your conversations are kept.", fa = "گفتگوهای شما نگه داشته می‌شوند." }
+
+# Saved conversations and made chatbots (UI Stage 5: UI-A10..A12, UI-A31, UI-R11).
+ws_conversations_saved = { en = "Saved on this computer in runs/demo/ (not committed, not uploaded).", fa = "روی همین رایانه در runs/demo/ ذخیره می‌شود (در گیت ثبت و بارگذاری نمی‌شود)." }
+store_skipped = { en = "{n} saved files could not be read and were skipped.", fa = "{n} پرونده ذخیره‌شده خوانده نشد و رد شد." }
+bots_mine_title = { en = "Your own chatbots", fa = "چت‌بات‌های ساخته‌شده شما" }
+bots_yours = { en = "yours", fa = "ساخته شما" }
+bots_mine_details = { en = "A chatbot you made. It is saved on this computer only; its instructions and passages are used behind the scenes.", fa = "چت‌باتی که خودتان ساخته‌اید. فقط روی همین رایانه ذخیره شده است؛ دستورالعمل‌ها و بخش‌های دانش آن پشت صحنه استفاده می‌شوند." }
+create_title = { en = "Create a chatbot", fa = "ساخت چت‌بات" }
+create_intro = { en = "Give it a name, instructions and the text it may use as knowledge. It is saved on this computer only (runs/demo/), never uploaded or shared.", fa = "نام، دستورالعمل‌ها و متنی که می‌تواند به‌عنوان دانش استفاده کند را وارد کنید. فقط روی همین رایانه ذخیره می‌شود (runs/demo/) و بارگذاری یا هم‌رسانی نمی‌شود." }
+create_name = { en = "Name", fa = "نام" }
+create_instructions = { en = "Instructions", fa = "دستورالعمل‌ها" }
+create_instructions_help = { en = "What the chatbot should do and how it should answer.", fa = "چت‌بات چه کاری انجام دهد و چگونه پاسخ دهد." }
+create_passage = { en = "Knowledge passage {n}", fa = "بخش دانش {n}" }
+create_add_passage = { en = "Add a passage", fa = "افزودن بخش دانش" }
+create_save = { en = "Save and continue", fa = "ذخیره و ادامه" }
+create_cancel = { en = "Cancel", fa = "انصراف" }
+create_unsupported_title = { en = "Not supported in this demo", fa = "در این دمو پشتیبانی نمی‌شود" }
+create_upload = { en = "Upload files to a knowledge base", fa = "بارگذاری پرونده در پایگاه دانش" }
+create_corpus = { en = "Connect a corpus", fa = "اتصال پیکره" }
+create_share = { en = "Share this chatbot", fa = "هم‌رسانی این چت‌بات" }
+create_unsupported_reason = { en = "Not supported: paste the text as passages instead.", fa = "پشتیبانی نمی‌شود: به‌جای آن متن را به‌صورت بخش دانش بچسبانید." }
+create_share_reason = { en = "Not supported: chatbots stay on this computer.", fa = "پشتیبانی نمی‌شود: چت‌بات‌ها روی همین رایانه می‌مانند." }
+create_err_name = { en = "Enter a name.", fa = "یک نام وارد کنید." }
+create_err_name_long = { en = "The name is too long (60 characters at most).", fa = "نام بیش از حد طولانی است (حداکثر ۶۰ نویسه)." }
+create_err_empty = { en = "Enter instructions or at least one knowledge passage.", fa = "دستورالعمل‌ها یا دست‌کم یک بخش دانش وارد کنید." }
+create_err_long = { en = "The instructions or a passage is too long (8,000 characters at most).", fa = "دستورالعمل‌ها یا یک بخش دانش بیش از حد طولانی است (حداکثر ۸٬۰۰۰ نویسه)." }
+create_err_many = { en = "Too many passages (10 at most).", fa = "تعداد بخش‌های دانش زیاد است (حداکثر ۱۰)." }
+create_err_write = { en = "The chatbot could not be saved on this computer (runs/demo/). Check that the folder is writable.", fa = "چت‌بات روی این رایانه ذخیره نشد (runs/demo/). قابل‌نوشتن بودن پوشه را بررسی کنید." }
+create_err_unavailable = { en = "Saving chatbots is not available in this run.", fa = "ذخیره چت‌بات در این اجرا در دسترس نیست." }

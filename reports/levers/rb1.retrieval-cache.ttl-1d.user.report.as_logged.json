@@ -1,0 +1,133 @@
+{
+  "assumptions": [
+    "measured potential, conditional on Metis-Auto being able to intercept retrieval",
+    "fees avoided are recorded per-call amounts of skipped lookups (recorded units); token cost unchanged",
+    "fee block from recorded costBreakdown.per_call, not the 0.002 proxy; the total equals the shared as_logged total",
+    "ci is session-clustered, share of total recorded cost",
+    "candidate reuse; agreement with the later real lookup is in slice 'retrieval'; production correctness not measured",
+    "TTL chosen on split_by_session tune rows only; earlier rows of any split are cache history (owner decision 2026-11-02)",
+    "frequency bias: the tune split drops a family's tune rows if it recurs in the report period, so repeat rates are understated (ADR-0036)",
+    "no corpus-version evidence: every hit is ttl_only",
+    "retrieval settings are a configuration snapshot, not a history",
+    "timestamps are naive (Q-06)",
+    "report split (split_by_session report) scored once; tune-period rows may warm the cache (the history looks back into the tune period, as R-A1's window; owner decision 2026-11-02); TTL frozen on the tune split",
+    "Overhead: offline per-request estimate, tune period, one-row apply, no load test; machine Darwin x86_64, Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz, Python 3.13.5. n 987, 1 warm-up; p50 6.2549 ms, p95 7.4846 ms, max 35.0866 ms",
+    "Overhead caveat: one-row frame: the replay holds only this request's lookups, so this times keying, eligibility and the guard path, not a hit in a warm store; building the lookups frame is not timed.",
+    "Overhead sample: tune-period sample; Pipeline A's R-A3 figure (54.2 ms p95, route.per_bot) used report-period rows, so the two samples differ"
+  ],
+  "baseline": "as_logged",
+  "baseline_cost": {
+    "fees": "67.139800000",
+    "token_cost": "79.357775405",
+    "total": "146.497575405"
+  },
+  "ci_high": 0.014920512447432185,
+  "ci_low": 0.012571623619930144,
+  "correctness_state": "unmeasured",
+  "evidence_class": "simulation",
+  "lever_id": "rb1.retrieval-cache.ttl-1d.user.report.as_logged",
+  "manifest": {
+    "code_commit": "9f05b25e27c0505563aaa3ad25a6e4e79429e194",
+    "config_hash": "89a6d2f6eba8aa0044178cbc866622fb3890586dc4f100401f30b3da9573178c",
+    "created_at": "2026-11-03T10:56:02.021568Z",
+    "data_revision": "30f578f283b903cdbd06cd1b5f7f962f76452ded",
+    "price_version": "prices-metis-2026-10-18-logged",
+    "python_version": "3.13.5",
+    "seed": 20261102
+  },
+  "n_eligible": 20750,
+  "n_requests": 73063,
+  "overhead_ms_p50": 6.2549,
+  "overhead_ms_p95": 7.4846,
+  "saving": {
+    "fees": "2.014000000",
+    "token_cost": "0.000000000"
+  },
+  "slices": {
+    "all": {
+      "baseline:fees": "67.139800000",
+      "baseline:token_cost": "79.357775405",
+      "baseline:total": "146.497575405",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "20744",
+      "n_requests": "73063",
+      "saving:fees": "2.014000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "2.014000000",
+      "saving_share": "0.013747668"
+    },
+    "llm_only": {
+      "baseline:fees": "67.139800000",
+      "baseline:token_cost": "79.357775405",
+      "baseline:total": "146.497575405",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "20744",
+      "n_requests": "20750",
+      "saving:fees": "2.014000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "2.014000000",
+      "saving_share": "0.013747668"
+    },
+    "retrieval": {
+      "agreement_mean": "0.984690789",
+      "n_agreement_evaluable": "991",
+      "n_agreement_unknown": "0",
+      "n_guard_blocks": "0",
+      "n_hits": "991",
+      "n_ineligible": "12840",
+      "n_lookups_llm": "45105",
+      "n_requests_reused": "904",
+      "n_shadow_agree": "10",
+      "n_shadow_sampled": "10",
+      "n_shadow_unknown": "0"
+    },
+    "split": {
+      "excluded": "41257",
+      "excluded_period:report": "716",
+      "excluded_period:tune": "40541",
+      "report": "73063",
+      "tune": "234759"
+    },
+    "tenant_rank:1": {
+      "requests_share": "0.809005013",
+      "share": "1.000000000"
+    },
+    "tenant_rank:2": {
+      "requests_share": "0.066380640",
+      "share": "0.000000000"
+    },
+    "tenant_rank:3": {
+      "requests_share": "0.031237948",
+      "share": "0.000000000"
+    },
+    "tenant_rank:4": {
+      "requests_share": "0.030852295",
+      "share": "0.000000000"
+    },
+    "tenant_rank:5": {
+      "requests_share": "0.010653683",
+      "share": "0.000000000"
+    },
+    "tenant_rank:rest": {
+      "requests_share": "0.051870420",
+      "share": "0.000000000"
+    },
+    "traffic_weighted": {
+      "baseline:fees": "67.139800000",
+      "baseline:token_cost": "79.357775405",
+      "baseline:total": "146.497575405",
+      "cache_hit_rate": "0.000000000",
+      "n_cache_hits": "0",
+      "n_cost_known": "20744",
+      "n_requests": "73063",
+      "saving:fees": "2.014000000",
+      "saving:token_cost": "0.000000000",
+      "saving:total": "2.014000000",
+      "saving_share": "0.013747668"
+    }
+  },
+  "step": "cache",
+  "version": "retrieval_result_cache.ttl_1d"
+}

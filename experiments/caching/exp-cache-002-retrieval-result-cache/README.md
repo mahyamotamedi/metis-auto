@@ -4,6 +4,14 @@
 - **Evidence class:** *simulation* on logged lookups (the closest class the real `LeverResult` allows). It is **measured potential, conditional on Metis-Auto being able to intercept retrieval** (open Metis question). Three separate statements: *candidate reuse* (a hit in the replay), *verified agreement* (overlap with the later real lookup, measured offline on every hit) and *production correctness* (not measured).
 - **Status:** tune period run on full data on the shared S-3 code (2026-11-02): `replay_scope.scope`, `replay_scope.split_by_session` and `baselines_full.baseline_costs` (ADR-0036). The Day 2 interim stand-ins are retired. The report period is not read yet (read once, at the end).
 
+## Frozen settings (2026-11-03, written before the report-split run)
+
+Owner decision 2026-11-03: one report-split run, like R-A1/R-A2. Frozen on the tune split before any report-period read; nothing is changed after seeing report numbers. The tune summary (`reports/caching/exp-cache-002/summary.json`, key `frozen`) holds the same values.
+
+- **TTL 1 day**, the stated default. The full TTL grid (1, 7, 30, 90 days) stays reported on the tune split; the TTL rule's own choice on the re-run is recorded next to it (`ttl_rule_choice_days`), never substituted.
+- Scope `user` (tenant, bot, corpus version, settings, query fingerprint), guard key version `rb1-v1`, shadow rate from `sprint.toml [cache_guard]`.
+- **Report run** (`python scripts/run_pipeline_b_day2.py rb1-report`): scored rows are the report split (`split_by_session == "report"`); the cache history is every tune- and report-period row, so **tune-period lookups may warm the cache**, as R-A1's window looks back into the tune period (owner decision 2026-11-02). Results: `reports/levers/rb1.retrieval-cache.ttl-1d.user.report.<baseline>.json`, summary `reports/caching/exp-cache-002/report.json`.
+
 ## Data scope (ADR-0036; owner decision 1, 2026-11-02)
 
 - **`period`** is per row, from `a_timestamp`, with the inclusive bounds in `config/evaluation/sprint.toml [periods]` (`replay_scope.scope`). A missing provider is an error, not unknown.

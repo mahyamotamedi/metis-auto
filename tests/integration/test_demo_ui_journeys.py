@@ -52,7 +52,8 @@ def test_every_stage3_screen_renders_without_exceptions(tmp_path, theme, lang):
         "mx-cta-entry-chatbot",
         "mx-cta-entry-direct",
     ]
-    at = at.button(key="mx-cta-entry-chatbot").click().run()  # S04
+    at = at.button(key="mx-cta-entry-chatbot").click().run()  # S02
+    at = at.button(key="mx-cta-continue").click().run()  # S04
     assert not at.exception
     assert [t.key for t in at.toggle if t.key.startswith("sw_")] == [
         "sw_cache",
@@ -90,7 +91,8 @@ def test_entry_screen_has_two_cards_one_cta_each_and_no_extras(tmp_path):
 
 def test_journey_a_goes_entry_settings_chat_with_the_bot_as_title(tmp_path):
     at = page(tmp_path)
-    at = at.button(key="mx-cta-entry-chatbot").click().run()
+    at = at.button(key="mx-cta-entry-chatbot").click().run()  # S02
+    at = at.button(key="mx-cta-continue").click().run()  # S04
     ws = at.session_state["workspace"]
     assert ws.screen.value == "settings" and ws.journey.value == "chatbot"
     assert at.title[0].value == "Optimisation settings"
@@ -103,7 +105,8 @@ def test_journey_a_goes_entry_settings_chat_with_the_bot_as_title(tmp_path):
 
 def test_settings_defaults_are_the_chatsessions_and_cards_explain_them(tmp_path):
     at = page(tmp_path)
-    at = at.button(key="mx-cta-entry-chatbot").click().run()
+    at = at.button(key="mx-cta-entry-chatbot").click().run()  # S02
+    at = at.button(key="mx-cta-continue").click().run()  # S04
     assert at.toggle(key="sw_cache").value is False
     assert at.toggle(key="sw_context").value is False
     assert at.toggle(key="sw_routing").value is True  # routing on by default
@@ -114,7 +117,8 @@ def test_settings_defaults_are_the_chatsessions_and_cards_explain_them(tmp_path)
 
 def test_switching_a_setting_on_the_settings_screen_changes_the_next_request(tmp_path):
     at = page(tmp_path)
-    at = at.button(key="mx-cta-entry-chatbot").click().run()
+    at = at.button(key="mx-cta-entry-chatbot").click().run()  # S02
+    at = at.button(key="mx-cta-continue").click().run()  # S04
     at.toggle(key="sw_routing").set_value(False).run()
     chat = at.session_state["workspace"].current().session
     assert chat.routing == RoutingMode.FIXED

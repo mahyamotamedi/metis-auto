@@ -14,7 +14,6 @@ from metis_auto.analysis.baselines_full import baseline_costs
 from metis_auto.analysis.levers import ReplayContext
 
 VERSION = "routing/exp-route-011-knn-router/version.py"
-ELIG = "routing/exp-route-011-knn-router/eligibility_interim.py"
 
 # Synthetic price file: "cheap" < "mid" < "dear"; "sep" reports cached tokens
 # outside its input count; "tiered" has a long-context tier.
@@ -342,55 +341,3 @@ def test_candidate_costs_match_baselines_full(v):
 def test_unpriced_model_costs_are_unknown(v):
     costs = v.candidate_costs(frame(1), ["unlisted"], ctx(), frozenset())
     assert pd.isna(costs.loc[0, "unlisted"])
-
-
-def test_interim_eligibility(load_experiment):
-    e = load_experiment(ELIG)
-    cat = {
-        "models": [
-            {
-                "model_id": "a",
-                "price_ref": "p-cheap",
-                "enabled": True,
-                "context_window": {"value": 1000},
-                "max_output_tokens": {"value": 100},
-            },
-            {"model_id": "b", "price_ref": "p-mid", "enabled": True},  # no limits
-            {
-                "model_id": "c",
-                "price_ref": "p-none",
-                "enabled": True,
-                "context_window": {"value": 10**6},
-                "max_output_tokens": {"value": 10**5},
-            },
-            {
-                "model_id": "r",
-                "price_ref": "p-dear",
-                "enabled": True,
-                "context_window": {"value": 10**6},
-                "max_output_tokens": {"value": 10**5},
-            },
-        ]
-    }
-    rules = {"candidates": ["a", "b", "c", "r", "z"], "retiring": ["r"]}
-    row = {
-        "input_tokens": 800.0,
-        "output_tokens": 50.0,
-        "u_att_n": 0,
-        "bot_n_functions": 0,
-    }
-    assert e.interim_eligible_models(row, cat, PRICES, rules) == ("a",)
-    assert (
-        e.interim_eligible_models({**row, "input_tokens": 990.0}, cat, PRICES, rules)
-        == ()
-    )
-    assert e.interim_eligible_models({**row, "u_att_n": 1}, cat, PRICES, rules) == ()
-    assert (
-        e.interim_eligible_models({**row, "bot_n_functions": 2}, cat, PRICES, rules)
-        == ()
-    )
-    assert (
-        e.interim_eligible_models({**row, "input_tokens": np.nan}, cat, PRICES, rules)
-        == ()
-    )
-    assert "interim eligibility" in e.LABEL

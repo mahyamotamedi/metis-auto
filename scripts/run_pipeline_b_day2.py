@@ -3,6 +3,8 @@
     python scripts/run_pipeline_b_day2.py rb1
     python scripts/run_pipeline_b_day2.py f2
     python scripts/run_pipeline_b_day2.py rb2
+    python scripts/run_pipeline_b_day2.py rb1-report   # once, after rb1
+    python scripts/run_pipeline_b_day2.py rb2-report   # once, after rb2
 
 Reads the local, git-ignored derived tables (``data/derived/full_eda/``) and the
 raw export (``data/full_data/raw/``, read-only), loads the candidate code from
@@ -18,8 +20,14 @@ Scope and baselines are the shared S-3 code (ADR-0036): ``replay_scope.scope``
 ``baselines_full.baseline_costs`` (the four baselines). Every setting comes from
 ``config/evaluation/sprint.toml`` (``--sprint-config``): periods, split seed,
 shadow rate, ``min_n`` and the baseline catalogue, price table and premium
-model. The report period (August to October 2026) is not read for results: it
-is read once, at the end of the sprint. No network, no model call, no key.
+model. ``rb1``, ``f2`` and ``rb2`` read no report-period result. ``rb1`` and ``rb2``
+freeze their settings in their summary (R-B1: the 1-day TTL, the stated default,
+with the full grid reported; R-B2: ``k`` = 0 the default, ``k`` <= 1 the stated
+scenario). ``rb1-report`` and ``rb2-report`` (owner decision 2026-11-03: one
+report-split run each, like R-A1/R-A2) read those frozen settings and apply them
+once to the report split (``split_by_session == "report"``); R-B1's cache history
+looks back into the tune period, as R-A1's window does. No network, no model
+call, no key.
 """
 
 from __future__ import annotations
@@ -31,6 +39,7 @@ import platform
 import subprocess
 import sys
 import tomllib
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -156,6 +165,57 @@ def split_counts(req: pd.DataFrame) -> dict[str, int]:
     excluded = req.loc[req["split"] == "excluded", "period"].value_counts()
     out |= {f"excluded_period:{k}": int(v) for k, v in excluded.items()}
     return dict(sorted(out.items()))
+
+
+RB1_DEFAULT_TTL_DAYS = 1
+RB2_DEFAULT = (0, 8, False)  # (visible window, pointer tokens, ledger)
+RB2_STATED = (1, 8, False)
+
+
+def report_scope(req: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
+    """(cache history, scored rows) of the report run: scored = the report split;
+    history = every tune- or report-period row (and every scored row)."""
+    scored = req["split"].eq("report")
+    return req["period"].isin(["tune", "report"]) | scored, scored
+
+
+def frozen_rb1(*, chosen_ttl_days: int | None) -> dict[str, Any]:
+    """R-B1's frozen setting, written on the tune run before any report read."""
+    return {
+        "ttl_days": RB1_DEFAULT_TTL_DAYS,
+        "role": "stated default (1 day); the full TTL grid is reported",
+        "grid_ttl_days": list(TTL_DAYS),
+        "ttl_rule_choice_days": chosen_ttl_days,
+        "scope": "user",
+    }
+
+
+def _scenario(window: int | None, pointer: int, ledger: bool) -> dict[str, Any]:
+    return {"visible_window": window, "pointer_tokens": pointer, "ledger": ledger}
+
+
+def frozen_rb2() -> dict[str, Any]:
+    """R-B2's frozen scenarios, written on the tune run before any report read."""
+    return {
+        "default": _scenario(*RB2_DEFAULT),
+        "stated_scenario": _scenario(*RB2_STATED),
+        "role": "k = 0 is the default (nothing assumed visible); k <= 1 is the "
+        "stated scenario; every tune scenario is reported",
+    }
+
+
+def read_frozen(path: Path) -> dict[str, Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if "frozen" not in payload:
+        raise SystemExit(f"{path}: no frozen settings; run the tune command first")
+    return payload["frozen"]
+
+
+def report_scenarios(frozen: Mapping[str, Any]) -> list[tuple[int, int, bool]]:
+    return [
+        (s["visible_window"], s["pointer_tokens"], s["ledger"])
+        for s in (frozen["default"], frozen["stated_scenario"])
+    ]
 
 
 def write_levers(texts: dict[str, str]) -> list[str]:
@@ -334,6 +394,7 @@ def cmd_rb1(st: dict[str, Any], out_dir: Path) -> dict[str, Any]:
                 },
                 "lever_results": sorted(written),
                 "data_facts": data_facts,
+                "frozen": frozen_rb1(chosen_ttl_days=chosen),
                 **results,
                 "created_at": created.isoformat(),
             }
@@ -536,6 +597,7 @@ def cmd_rb2(st: dict[str, Any], out_dir: Path) -> dict[str, Any]:
                 },
                 "lever_results": sorted(written),
                 "data_facts": facts,
+                "frozen": frozen_rb2(),
                 "scenarios": scenarios,
                 "created_at": created.isoformat(),
             }
@@ -548,9 +610,157 @@ def cmd_rb2(st: dict[str, Any], out_dir: Path) -> dict[str, Any]:
     return payload
 
 
+def cmd_rb1_report(st: dict[str, Any], out_dir: Path) -> dict[str, Any]:
+    """The frozen R-B1 version once on the report split (tune rows warm it)."""
+    frozen = read_frozen(out_dir / "summary.json")
+    run = load(RB1)
+    ctx, shadow_rate = st["ctx"], st["shadow_rate"]
+    req = requests_frame(st)
+    counts = split_counts(req)
+    separate = cached_reported_separately(req)
+    history_mask, scored_mask = report_scope(req)
+    per_call = per_call_items()
+    history = run.fee_blocks(req[history_mask].copy(), per_call)
+    scored = scored_mask[history.index]
+    report = history.loc[scored]
+    llm = history[history["llm_request"]]
+    lookups = run.build_lookups(
+        llm, rag_json(set(llm["ai_message_id"])), per_call, scope=frozen["scope"]
+    )
+    ttl = pd.Timedelta(days=frozen["ttl_days"])
+    res = run.evaluate(history, lookups, ttl, ctx, shadow_rate, scored=scored)
+    baselines = baseline_costs(
+        report, ctx, premium_model=st["premium_model"], cached_separately=separate
+    )
+    texts = run.lever_results_json(
+        res,
+        report,
+        baselines=baselines,
+        split_counts=counts,
+        ttl=ttl,
+        ctx=ctx,
+        code_commit=code_commit(),
+        python_version=platform.python_version(),
+        created_at=datetime.now(UTC),
+        shadow_rate=shadow_rate,
+        period="report",
+    )
+    written = write_levers(texts)
+    payload = _plain(
+        _clean(
+            {
+                "lever": "R-B1 retrieval-result cache (exp-cache-002), report split",
+                "approval": "owner (Kimia, Pipeline B), 2026-11-03: one report-split "
+                "run, like R-A1/R-A2",
+                "frozen": frozen,
+                "scope": "scored: split_by_session report; cache history: every "
+                "tune- and report-period row (tune rows may warm the cache)",
+                "baselines": baselines,
+                "summary": res["summary"],
+                "rates": res["rates"],
+                "fees": res["fees"],
+                "data_facts": {
+                    "n_report": len(report),
+                    "n_report_llm": int(report["llm_request"].sum()),
+                    "n_history": len(history),
+                    "n_lookups_history": len(lookups),
+                },
+                "lever_results": sorted(written),
+            }
+        )
+    )
+    (out_dir / "report.json").write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return payload
+
+
+def cmd_rb2_report(st: dict[str, Any], out_dir: Path) -> dict[str, Any]:
+    """The frozen R-B2 scenarios once on the report split (whole sessions)."""
+    frozen = read_frozen(out_dir / "summary.json")
+    rb1, run = load(RB1), load(RB2)
+    ctx = st["ctx"]
+    req = requests_frame(st)
+    separate = cached_reported_separately(req)
+    _, scored = report_scope(req)
+    rows = rb1.fee_blocks(req[scored].copy(), per_call_items())
+    items = pd.read_parquet(
+        RAW / "derived" / "chat_message_billing.parquet",
+        columns=["message_id", "inputTokens", "costBreakdown.input_tokens"],
+    )
+    rows = run.request_inputs(rows, items, separate)
+    llm = rows[rows["llm_request"].astype(bool)]
+    ids = set(llm["ai_message_id"])
+    parts = []
+    for f in sorted((DERIVED / "chunks").glob("*.parquet")):
+        part = pd.read_parquet(
+            f, columns=["message_id", "chunk_id", "n_chars", "h_exact"]
+        )
+        parts.append(part[part["message_id"].isin(ids)])
+    chunks = run.build_chunks(llm, pd.concat(parts, ignore_index=True))
+    tpc = _ledger_value("recon.t0rag.coef_rag")
+    created = datetime.now(UTC)
+    written: list[str] = []
+    scenarios = []
+    for window, pointer, ledger in report_scenarios(frozen):
+        res = run.evaluate(
+            rows, chunks, pointer_tokens=pointer, window=window, ledger=ledger, tpc=tpc
+        )
+        repriced = run.repriced_savings(
+            res["after"],
+            ctx,
+            premium_model=st["premium_model"],
+            cached_separately=separate,
+        )
+        scenarios.append(
+            {
+                "scenario": res["scenario"],
+                "summary": res["summary"],
+                "repriced_saving": repriced["saving"],
+            }
+        )
+        texts = run.lever_results_json(
+            res,
+            rows,
+            repriced=repriced,
+            ctx=ctx,
+            code_commit=code_commit(),
+            python_version=platform.python_version(),
+            created_at=created,
+            split="report",
+        )
+        written += write_levers(texts)
+    payload = _plain(
+        _clean(
+            {
+                "lever": "R-B2 cross-turn chunk policy (exp-ctx-002), report split",
+                "approval": "owner (Kimia, Pipeline B), 2026-11-03: one report-split "
+                "run, like R-A1/R-A2",
+                "frozen": frozen,
+                "scope": "split_by_session report rows (whole sessions); LLM rows act",
+                "data_facts": {
+                    "n_report": len(rows),
+                    "n_report_llm": len(llm),
+                    "n_chunk_rows": len(chunks),
+                    "tokens_per_char": tpc,
+                },
+                "scenarios": scenarios,
+                "lever_results": sorted(written),
+                "created_at": created.isoformat(),
+            }
+        )
+    )
+    (out_dir / "report.json").write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return payload
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("task", choices=["rb1", "f2", "rb2"])
+    parser.add_argument(
+        "task", choices=["rb1", "f2", "rb2", "rb1-report", "rb2-report"]
+    )
     parser.add_argument(
         "--sprint-config",
         type=Path,
@@ -561,6 +771,10 @@ def main() -> None:
     st = sprint_settings(args.sprint_config)
     if args.task == "rb1":
         payload = cmd_rb1(st, ROOT / "reports" / "caching" / "exp-cache-002")
+    elif args.task == "rb1-report":
+        payload = cmd_rb1_report(st, ROOT / "reports" / "caching" / "exp-cache-002")
+    elif args.task == "rb2-report":
+        payload = cmd_rb2_report(st, ROOT / "reports" / "context" / "exp-ctx-002")
     elif args.task == "f2":
         payload = cmd_f2(st, ROOT / "reports" / "cost" / "exp-cost-002")
     else:

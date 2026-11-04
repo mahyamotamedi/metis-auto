@@ -1,5 +1,5 @@
-"""The paid benchmark end to end over MOCKED HTTP (ADR-XXXX
-(paid-benchmark-p1-p3)): plan with no call, every refusal listed, generation
+"""The paid benchmark end to end over MOCKED HTTP (ADR-0053): plan with no
+call, every refusal listed, generation
 through E4 with replay-first, spend-guarded, recorded live clients, a rerun
 that replays at no cost, two judges in both orders (plain chat, strict JSON,
 no ``response_format``), labels and the spot-check files. A SYNTHETIC golden

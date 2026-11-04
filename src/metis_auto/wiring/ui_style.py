@@ -615,6 +615,42 @@ _STATES = """
 """
 
 
+_NAVIGATION = """
+/* the brand reads as a link (UI-H02): pointer, hover pill, focus ring */
+.st-key-mx-brand-wrap [data-testid="stPageLink-NavLink"] { cursor: pointer;
+  transition: background-color 120ms; }
+.st-key-mx-brand-wrap [data-testid="stPageLink-NavLink"]:hover { background:
+  color-mix(in srgb, var(--elevated) 70%, transparent); }
+.st-key-mx-brand-wrap [data-testid="stPageLink-NavLink"]:focus-visible { outline:
+  var(--focus-ring) solid var(--accent); outline-offset: 2px; }
+/* step indicator of the chatbot journey and the change controls (Stage 5):
+   tertiary controls, the arrow between steps mirrors in RTL */
+.st-key-mx-steps { gap: 0; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+.st-key-mx-steps [data-testid="stElementContainer"] { display: flex;
+  align-items: center; width: auto; }
+.st-key-mx-steps [data-testid="stElementContainer"]:not(:last-child)::after {
+  content: "\\203A"; margin-inline: 6px; color: var(--text-muted); font-size: 18px;
+  display: inline-block; transform: scaleX(var(--flip)); }
+.st-key-mx-steps button:hover p { text-decoration: underline; }
+.mx-step { display: inline-flex; align-items: center; height: 28px; padding: 0 12px;
+  border-radius: var(--radius-pill); font-size: var(--font-small);
+  color: var(--text-muted); border: 1px solid transparent; white-space: nowrap; }
+.mx-step--active { background: var(--elevated); color: var(--text);
+  font-weight: 700; border-color: var(--border); }
+.st-key-mx-steps button { padding: 0 12px; border-radius: var(--radius-pill); }
+.st-key-mx-change { gap: 16px; flex-wrap: wrap; margin-bottom: 2px; }
+.st-key-mx-change button { padding: 0 8px; border-radius: var(--radius-control); }
+.st-key-mx-change button:hover { background: color-mix(in srgb, var(--elevated) 70%,
+  transparent); }
+[class*="st-key-mx-unsupported"] { gap: 8px; }
+[class*="st-key-mx-draft"] [data-testid="stTextAreaRootElement"] { min-height: 96px; }
+@media (max-width: 640px) {
+  .mx-step { padding: 0 8px; }
+  .st-key-mx-steps button { padding: 0 8px; }
+}
+"""
+
+
 def _split_selectors(head: str) -> list[str]:
     """Split a selector list at top-level commas (not inside ``:is(…)``)."""
     parts, depth, start = [], 0, 0
@@ -649,7 +685,10 @@ def page_css(theme: Theme, lang: str) -> str:
     the ``:root`` variables first, then the font, then rules that only use
     ``var(--…)``."""
     rtl = direction(lang) == "rtl"
-    variables = css_variables(theme) | {"--dir": direction(lang)}
+    variables = css_variables(theme) | {
+        "--dir": direction(lang),
+        "--flip": "-1" if rtl else "1",  # mirrors arrows (RTL-correct, Stage 5)
+    }
     variables["--brand-gradient-text"] = variables["--brand-gradient"].replace(
         "270deg", "270deg" if rtl else "90deg"
     )
@@ -667,6 +706,7 @@ def page_css(theme: Theme, lang: str) -> str:
         _CONTROLS,
         _STATES,
         _WORKSPACE,
+        _NAVIGATION,
     ]
     rules = _scoped("\n".join(b for b in blocks if b))
     rules = rules.replace("__ICON__", ICON_FONT).replace("__KNOB_ICON__", knob)
@@ -963,6 +1003,16 @@ def setting_text_html(
 
 def workspace_title_html(title: str) -> str:
     return f'<div class="mx-ws-title">{html.escape(title)}</div>'
+
+
+def step_html(label: str, state: str) -> str:
+    """The current or a coming step of the indicator (a finished step is a
+    button, drawn by the page)."""
+    current = ' aria-current="step"' if state == "active" else ""
+    return (
+        f'<span class="mx-step mx-step--{html.escape(state)}"{current}>'
+        f"{html.escape(label)}</span>"
+    )
 
 
 def side_title_html(title: str) -> str:

@@ -52,7 +52,7 @@ text = "#03050C"           # sampled 3-light-dashboard-top, KPI value (darkest p
 text_muted = "#565866"     # sampled 3-light-dashboard-top, KPI label and axis ticks; notes: #6B7280
 nav_text = "#161616"       # sampled 3-light-dashboard-top, tab label "ورکفلوها"
 accent = "#4560F6"         # sampled 2-light-login (800, 740), primary button (= dark toggle track); notes: #4361EE
-accent_text = "#4E80EE"    # sampled 3-light-dashboard-top, credit amount "20.00$" (most saturated pixel)
+accent_text = "#2F4FD8"    # estimated: darkened in Stage 5 from the sampled #4E80EE (3-light-dashboard-top) for 4.5:1 text contrast on every light surface (UI-K02)
 on_accent = "#FFFFFF"      # sampled 2-light-login, button label
 success = "#2F8F6B"        # estimated (darker than the teal series for text contrast on white)
 warning = "#B7791F"        # estimated
