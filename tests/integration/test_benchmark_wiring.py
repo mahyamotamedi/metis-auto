@@ -56,17 +56,31 @@ cheap_arms = ["gpt-5-nano"]
 """
 
 
+NO_OWNER_VALUES = """
+[gates]
+metis_allows_samples = false
+
+[spend_share]
+summaries_dir = "reports/spend/ledgers"
+
+[run]
+
+[judges]
+
+[labels]
+"""
+
+
 def _config(owner: bool) -> str:
     text = (ROOT / "config/evaluation/benchmark.toml").read_text(encoding="utf-8")
     text = text.replace(
         'shareable_ids = "reports/evaluation/golden_v2/golden_v2_shareable.parquet"',
         'shareable_ids = "syn/shareable.parquet"',
     )
-    if not owner:
-        return text
     head, _, _ = text.partition("[gates]")
     tail = text.split("[spot_check]", 1)[1]
-    return head + OWNER_VALUES + "\n[spot_check]" + tail
+    values = OWNER_VALUES if owner else NO_OWNER_VALUES  # never the live pilot values
+    return head + values + "\n[spot_check]" + tail
 
 
 @pytest.fixture
@@ -130,7 +144,9 @@ class Store:
 
 
 class Wrapper:
-    """Mock Metis wrapper: judge prompts get strict JSON, others an answer."""
+    """Mock Metis wrapper: judge prompts get strict JSON, others an answer.
+    The judge always prefers the arm's answer, in whichever position it is
+    shown (no position bias, so no pair is swap-inconsistent)."""
 
     def __init__(self):
         self.bodies = []
@@ -140,7 +156,10 @@ class Wrapper:
         self.bodies.append(body)
         system = body["messages"][0]["content"]
         judging = '{"choice": "first"}' in system
-        text = '{"choice": "first"}' if judging else "[SYNTHETIC] arm answer"
+        user = body["messages"][-1]["content"]
+        arm_first = "[First answer]\n[SYNTHETIC] arm answer" in user
+        choice = '{"choice": "first"}' if arm_first else '{"choice": "second"}'
+        text = choice if judging else "[SYNTHETIC] arm answer"
         return httpx2.Response(
             200,
             json={
@@ -168,8 +187,9 @@ class Wrapper:
         return lambda: httpx2.Client(transport=httpx2.MockTransport(self.handler))
 
 
-def _bench(root, tmp_path, owner=True):
-    (root / "config/evaluation/benchmark.toml").write_text(_config(owner), "utf-8")
+def _bench(root, tmp_path, owner=True, write_config=True):
+    if write_config:
+        (root / "config/evaluation/benchmark.toml").write_text(_config(owner), "utf-8")
     paths = {
         "paths.spend_ledger": str(tmp_path / "spend" / "ledger.jsonl"),
         "paths.recorded_dir": str(tmp_path / "recorded"),
@@ -293,6 +313,47 @@ def test_generate_judge_label_and_spot_check_over_mocked_http(root, tmp_path):
     assert "[SYNTHETIC] reference answer" in (out / "texts_LOCAL_ONLY.md").read_text(
         encoding="utf-8"
     )
+
+    # the label file carries the gate column and the summary the inconsistency rate
+    assert set(labels["judge_gate"]) == {"not_configured"}
+    assert len(summary["inconsistency"]["per_judge"]) == 2
+    assert all(v["rate"] == 0 for v in summary["inconsistency"]["per_judge"].values())
+
+    # P-2 agreement: a rater prefers the candidate on every item (SYNTHETIC)
+    with (out / "key_LOCAL_ONLY.csv").open(encoding="utf-8") as f:
+        shown = {r["spot_id"]: r["candidate_is"] for r in csv.DictReader(f)}
+    for row in sheet:
+        row["rater"], row["rating"] = "syn-rater", shown[row["spot_id"]]
+    with (out / "sheet.csv").open("w", encoding="utf-8-sig", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(sheet[0]))
+        w.writeheader()
+        w.writerows(sheet)
+    unset = bench.agreement(run_id="run-syn")
+    assert unset["gate_configured"] is False
+    assert set(unset["judge_gate"].values()) == {"not_configured"}
+    written = root / "runs/benchmark/run-syn/agreement.json"
+    assert json.loads(written.read_text("utf-8")) == json.loads(json.dumps(unset))
+    assert "SYNTHETIC" not in written.read_text("utf-8")
+    assert "syn-m-" not in written.read_text("utf-8")
+
+    cfg = root / "config/evaluation/benchmark.toml"
+    cfg.write_text(
+        cfg.read_text("utf-8").replace(
+            "[spot_check]",
+            '[gate]\nagreement_statistic = "accuracy"\nmin_agreement = 0.8\n'
+            "min_items = 1\n\n[spot_check]",
+        ),
+        "utf-8",
+    )
+    gated_bench = _bench(root, tmp_path, write_config=False)
+    report = gated_bench.agreement(run_id="run-syn")
+    assert report["gate_configured"] is True
+    assert set(report["judge_gate"].values()) == {"validated"}
+    gated_bench.labels(run_id="run-syn", name="p1-syn")
+    gated = pd.read_parquet(
+        root / "runs/benchmark/run-syn/labels/p1-syn.labels.parquet"
+    )
+    assert set(gated["judge_gate"]) == {"validated"}
 
 
 def test_spend_guard_stops_live_calls_at_the_shared_ceiling(root, tmp_path):

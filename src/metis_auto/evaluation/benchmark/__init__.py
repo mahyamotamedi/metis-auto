@@ -8,6 +8,7 @@
 - ``judge``: a real pairwise judge over a ``ModelClient`` (strict JSON).
 - ``spot_check``: the 60-item human spot-check, ID-only sheet.
 - ``labels``: judged results to R-B3 / R-C3 routing labels.
+- ``agreement``: spot-check agreement per judge and language, and the Persian gate.
 
 Decision record: ADR-0053. Status: provisional.
 """

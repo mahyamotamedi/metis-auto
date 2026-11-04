@@ -72,6 +72,13 @@ summaries_dir = "reports/spend/ledgers"
 # acceptable_score = 0.5           # pairwise score vs gpt-5.5 at or above = acceptable
 # cheap_arms = ["..."]             # arms whose acceptability defines cheap_ok
 
+[gate]
+# Persian gate for the judges (E5 GateConfig), checked on the spot-check by
+# `benchmark.py agreement`. Owner decisions; all unset = labels say not_configured.
+# agreement_statistic = "cohen_kappa"   # or "accuracy"
+# min_agreement = ...
+# min_items = ...
+
 [spot_check]
 # Final plan P-2: "a 60-item human spot-check by the team".
 size = 60
